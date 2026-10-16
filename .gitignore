@@ -1,0 +1,32 @@
+node_modules/
+.pnpm-store/
+.next/
+out/
+dist/
+build/
+coverage/
+.turbo/
+.vercel/
+.wrangler/
+*.tsbuildinfo
+next-env.d.ts
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Generated service worker
+apps/web/public/sw.js*
+apps/web/public/swe-worker-*.js
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+*.log
