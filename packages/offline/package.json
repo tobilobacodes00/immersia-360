@@ -1,0 +1,24 @@
+{
+  "name": "@immersia/offline",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./opfs-worker": "./src/opfs-worker.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.worker.json",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "dexie": "catalog:"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

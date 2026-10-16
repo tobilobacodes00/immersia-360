@@ -404,5 +404,86 @@
         "revoke": "Couldn't revoke the device."
       }
     }
+  },
+  "booth": {
+    "startBooth": "Start booth",
+    "startHint": "Check the camera, then hand over to your guests.",
+    "startingCamera": "Starting the camera…",
+    "offline": "Offline",
+    "lowStorage": "Storage low",
+    "motionArmed": "Motion start on",
+    "queue": "{count, plural, =0 {Nothing waiting} one {# take waiting} other {# takes waiting}}",
+    "recovered": "{count, plural, one {Recovered # take that was interrupted.} other {Recovered # takes that were interrupted.}}",
+    "dismiss": "Dismiss",
+    "motionHint": "Or just start spinning.",
+    "countdown": "Recording in {count}",
+    "recording": "Recording",
+    "rec": "REC",
+    "stopEarly": "Stop",
+    "saving": "Saving…",
+    "saved": "Saved. Next guest!",
+    "warnings": {
+      "storage": "This device had trouble saving the last take. Everything up to the problem was kept. Check free storage."
+    },
+    "errors": {
+      "title": "The camera isn't available",
+      "permission": "Camera access was blocked. Allow the camera for this site in the browser settings, then try again.",
+      "not_found": "No camera was found. Plug one in or choose another in settings.",
+      "in_use": "Another app is using the camera. Close it, then try again.",
+      "overconstrained": "This camera can't deliver the event's resolution or frame rate. Choose another camera or lower them in event setup.",
+      "insecure": "The camera only works over a secure (https) connection.",
+      "lost": "The camera disconnected.",
+      "recording_unsupported": "This browser can't record video. Use Chrome, Edge or Safari.",
+      "unknown": "Something went wrong starting the camera.",
+      "retry": "Try again"
+    },
+    "settings": {
+      "title": "Booth settings",
+      "close": "Close",
+      "camera": "Camera",
+      "defaultCamera": "Default camera",
+      "simulator": "Simulated camera (no hardware)",
+      "lens": {
+        "wide": "wide",
+        "ultrawide": "ultra-wide",
+        "telephoto": "telephoto",
+        "front": "front"
+      },
+      "delivering": "Delivering {width}×{height} at {fps} fps",
+      "mirror": "Mirror the preview",
+      "mirrorHelp": "Only on this screen. Recordings are never mirrored.",
+      "torch": "Torch",
+      "noTorch": "This camera has no controllable light.",
+      "motion": "Start on motion",
+      "motionHelp": "Recording starts when the platform starts turning.",
+      "sensitivity": "Motion needed",
+      "import": "Import videos",
+      "importHelp": "Add clips from files, including 120 or 240 fps slow-motion videos.",
+      "chooseFiles": "Choose files",
+      "takes": "Takes on this device",
+      "noTakes": "No takes yet.",
+      "backend": {
+        "opfs": "Saved to device storage",
+        "idb": "Saved to browser storage"
+      }
+    },
+    "takeStatus": {
+      "recording": "Recording",
+      "recorded": "Ready to render",
+      "interrupted": "Recovered",
+      "imported": "Imported",
+      "rendering": "Rendering",
+      "rendered": "Rendered",
+      "failed": "Failed"
+    },
+    "register": {
+      "title": "Register this device",
+      "body": "Booths run on registered devices so every take and upload belongs to your account. You can revoke it at any time.",
+      "name": "Device name",
+      "register": "Register and continue",
+      "error": "Couldn't register this device. Please try again.",
+      "forbidden": "Your role can't register devices. Ask the account owner.",
+      "storage": "Registered, but this browser blocks storage, so it won't remember it."
+    }
   }
 }

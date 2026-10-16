@@ -404,5 +404,86 @@
         "revoke": "Não foi possível revogar o dispositivo."
       }
     }
+  },
+  "booth": {
+    "startBooth": "Iniciar cabine",
+    "startHint": "Confira a câmera e depois passe a vez para os convidados.",
+    "startingCamera": "Iniciando a câmera…",
+    "offline": "Offline",
+    "lowStorage": "Pouco armazenamento",
+    "motionArmed": "Início por movimento ativo",
+    "queue": "{count, plural, =0 {Nada aguardando} one {# gravação aguardando} other {# gravações aguardando}}",
+    "recovered": "{count, plural, one {Recuperamos # gravação interrompida.} other {Recuperamos # gravações interrompidas.}}",
+    "dismiss": "Fechar",
+    "motionHint": "Ou simplesmente comece a girar.",
+    "countdown": "Gravando em {count}",
+    "recording": "Gravando",
+    "rec": "REC",
+    "stopEarly": "Parar",
+    "saving": "Salvando…",
+    "saved": "Salvo. Próximo convidado!",
+    "warnings": {
+      "storage": "Este dispositivo teve problemas para salvar a última gravação. Tudo até o problema foi mantido. Confira o armazenamento livre."
+    },
+    "errors": {
+      "title": "A câmera não está disponível",
+      "permission": "O acesso à câmera foi bloqueado. Permita a câmera para este site nas configurações do navegador e tente de novo.",
+      "not_found": "Nenhuma câmera encontrada. Conecte uma ou escolha outra nas configurações.",
+      "in_use": "Outro app está usando a câmera. Feche-o e tente de novo.",
+      "overconstrained": "Esta câmera não entrega a resolução ou os fps do evento. Escolha outra câmera ou reduza-os na configuração do evento.",
+      "insecure": "A câmera só funciona em uma conexão segura (https).",
+      "lost": "A câmera desconectou.",
+      "recording_unsupported": "Este navegador não consegue gravar vídeo. Use Chrome, Edge ou Safari.",
+      "unknown": "Algo deu errado ao iniciar a câmera.",
+      "retry": "Tentar de novo"
+    },
+    "settings": {
+      "title": "Configurações da cabine",
+      "close": "Fechar",
+      "camera": "Câmera",
+      "defaultCamera": "Câmera padrão",
+      "simulator": "Câmera simulada (sem hardware)",
+      "lens": {
+        "wide": "grande-angular",
+        "ultrawide": "ultra-grande-angular",
+        "telephoto": "teleobjetiva",
+        "front": "frontal"
+      },
+      "delivering": "Entregando {width}×{height} a {fps} fps",
+      "mirror": "Espelhar a prévia",
+      "mirrorHelp": "Só nesta tela. As gravações nunca são espelhadas.",
+      "torch": "Lanterna",
+      "noTorch": "Esta câmera não tem luz controlável.",
+      "motion": "Iniciar com movimento",
+      "motionHelp": "A gravação começa quando a plataforma começa a girar.",
+      "sensitivity": "Movimento necessário",
+      "import": "Importar vídeos",
+      "importHelp": "Adicione clipes de arquivos, incluindo vídeos em câmera lenta de 120 ou 240 fps.",
+      "chooseFiles": "Escolher arquivos",
+      "takes": "Gravações neste dispositivo",
+      "noTakes": "Nenhuma gravação ainda.",
+      "backend": {
+        "opfs": "Salvo no armazenamento do dispositivo",
+        "idb": "Salvo no armazenamento do navegador"
+      }
+    },
+    "takeStatus": {
+      "recording": "Gravando",
+      "recorded": "Pronta para renderizar",
+      "interrupted": "Recuperada",
+      "imported": "Importada",
+      "rendering": "Renderizando",
+      "rendered": "Renderizada",
+      "failed": "Falhou"
+    },
+    "register": {
+      "title": "Registrar este dispositivo",
+      "body": "As cabines funcionam em dispositivos registrados para que cada gravação e envio pertença à sua conta. Você pode revogá-lo quando quiser.",
+      "name": "Nome do dispositivo",
+      "register": "Registrar e continuar",
+      "error": "Não foi possível registrar este dispositivo. Tente novamente.",
+      "forbidden": "Seu papel não pode registrar dispositivos. Peça ao proprietário da conta.",
+      "storage": "Registrado, mas este navegador bloqueia o armazenamento e não vai lembrar dele."
+    }
   }
 }

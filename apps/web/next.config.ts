@@ -20,8 +20,19 @@ const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   // Workspace packages ship TypeScript source; Next compiles them.
-  transpilePackages: ['@immersia/ui', '@immersia/shared', '@immersia/i18n', '@immersia/db'],
+  transpilePackages: [
+    '@immersia/ui',
+    '@immersia/shared',
+    '@immersia/i18n',
+    '@immersia/db',
+    '@immersia/capture',
+    '@immersia/offline',
+  ],
   typedRoutes: true,
+  env: {
+    // Cache-busts public/workers/*.js per deploy (see src/lib/workers.ts).
+    NEXT_PUBLIC_BUILD_ID: process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GITHUB_SHA ?? 'dev',
+  },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },

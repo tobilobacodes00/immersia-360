@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { Images, RotateCw } from 'lucide-react';
-import { Pill } from '@immersia/ui';
+import { Images, Play, RotateCw } from 'lucide-react';
+import { Pill, buttonClass } from '@immersia/ui';
 import { formatEventDate } from '@/lib/format';
+import { roleCan } from '@/lib/permissions';
 import { getEvent } from '@/server/events';
 import { requireOperator } from '@/server/session';
 import { EventTabs } from './EventTabs';
@@ -20,7 +22,7 @@ export default async function EventLayout({
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const event = await getEvent(op.organizationId, id);
   if (!event) notFound();
-  const [t, locale] = await Promise.all([getTranslations('studio.events'), getLocale()]);
+  const [t, tb, locale] = await Promise.all([getTranslations('studio.events'), getTranslations('booth'), getLocale()]);
   return (
     <>
       <div className="mb-6 border-b border-line pb-0">
@@ -40,7 +42,14 @@ export default async function EventLayout({
           )}
           {event.status === 'archived' && <Pill>{t('status.archived')}</Pill>}
         </div>
-        <h1 className="mt-2 text-[30px] leading-[1.05] font-bold tracking-[-0.03em] sm:text-[36px]">{event.name}</h1>
+        <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
+          <h1 className="text-[30px] leading-[1.05] font-bold tracking-[-0.03em] sm:text-[36px]">{event.name}</h1>
+          {event.mode === 'video360' && event.status !== 'archived' && roleCan(op.role, { event: ['run'] }) && (
+            <Link href={`/booth/${event.id}`} className={buttonClass({ variant: 'primary', size: 'lg' })}>
+              <Play className="size-4 fill-current" aria-hidden /> {tb('startBooth')}
+            </Link>
+          )}
+        </div>
         <EventTabs id={event.id} />
       </div>
       {children}
