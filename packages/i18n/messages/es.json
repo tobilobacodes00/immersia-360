@@ -85,5 +85,324 @@
   },
   "meta": {
     "description": "Immersia 360 es una cabina 360 y de fotos gratuita que funciona en el navegador. Sin muro de pago, sin marca de agua, dispositivos ilimitados."
+  },
+  "roles": {
+    "owner": "Propietario",
+    "operator": "Operador",
+    "viewer": "Lector"
+  },
+  "signIn": {
+    "title": "Inicia sesión en Immersia 360",
+    "subtitle": "Te enviaremos un enlace por correo. Sin contraseñas que recordar.",
+    "email": "Correo electrónico",
+    "emailPlaceholder": "tu@estudio.com",
+    "sendLink": "Envíame un enlace de acceso",
+    "sending": "Enviando…",
+    "or": "o",
+    "google": "Continuar con Google",
+    "guestNote": "Los invitados nunca necesitan una cuenta. Reciben sus fotos y videos escaneando un código QR.",
+    "sent": {
+      "title": "Revisa tu bandeja de entrada",
+      "body": "Enviamos un enlace de acceso a {email}. Funciona durante 10 minutos.",
+      "resend": "Enviar de nuevo",
+      "resendIn": "Enviar de nuevo en {seconds} s",
+      "different": "Usar otro correo"
+    },
+    "errors": {
+      "generic": "Algo salió mal. Inténtalo de nuevo.",
+      "rateLimited": "Demasiados intentos. Espera un minuto e inténtalo de nuevo."
+    }
+  },
+  "email": {
+    "magicLink": {
+      "subject": "Tu enlace de acceso a Immersia 360",
+      "heading": "Inicia sesión en Immersia 360",
+      "body": "Pulsa el botón para iniciar sesión. El enlace funciona una vez y caduca en 10 minutos.",
+      "action": "Iniciar sesión",
+      "footer": "Si no solicitaste este correo, puedes ignorarlo."
+    },
+    "invitation": {
+      "subject": "Únete a {organization} en Immersia 360",
+      "heading": "Te invitaron a {organization}",
+      "body": "{inviter} te invitó a ayudar con las cabinas como {role}.",
+      "action": "Aceptar invitación",
+      "footer": "La invitación caduca en 7 días."
+    }
+  },
+  "studio": {
+    "nav": {
+      "label": "Estudio",
+      "groups": {
+        "overview": "Resumen",
+        "prepare": "Preparar",
+        "system": "Sistema"
+      },
+      "home": "Inicio",
+      "events": "Eventos",
+      "devices": "Dispositivos",
+      "signOut": "Cerrar sesión",
+      "openMenu": "Abrir menú",
+      "closeMenu": "Cerrar menú"
+    },
+    "launcher": {
+      "title": "¿Qué vamos a montar?",
+      "subtitle": "Crea un evento nuevo en cualquiera de los dos modos. Todo es gratis, en cualquier dispositivo.",
+      "newEvent": "Nuevo evento",
+      "video360": {
+        "title": "Cabina 360",
+        "body": "Videos giratorios con cámara lenta, música, marcos y efectos, renderizados en este dispositivo."
+      },
+      "photo": {
+        "title": "Cabina de fotos",
+        "body": "Tiras y collages de fotos, GIF y boomerangs, con impresión a tamaño exacto."
+      },
+      "recent": "Eventos recientes",
+      "allEvents": "Todos los eventos",
+      "emptyTitle": "Aún no hay eventos",
+      "emptyBody": "Elige un modo de cabina arriba para crear tu primer evento."
+    },
+    "events": {
+      "title": "Eventos",
+      "subtitle": "Todos los eventos de esta cuenta, en todos tus dispositivos.",
+      "new": "Nuevo evento",
+      "search": "Buscar eventos",
+      "filterMode": "Modo de cabina",
+      "from": "Desde",
+      "to": "Hasta",
+      "showArchived": "Archivados",
+      "modes": {
+        "all": "Todos",
+        "video360": "Cabina 360",
+        "photo": "Cabina de fotos"
+      },
+      "status": {
+        "live": "En vivo",
+        "draft": "Borrador",
+        "archived": "Archivado"
+      },
+      "columns": {
+        "name": "Nombre",
+        "date": "Fecha",
+        "sessions": "Sesiones",
+        "storage": "Almacenamiento",
+        "actions": "Acciones"
+      },
+      "duplicate": "Duplicar",
+      "duplicateTitle": "Duplicar evento",
+      "duplicateBody": "La copia conserva todos los ajustes, marcos y recursos. Los archivos de los invitados no se copian.",
+      "copyOf": "Copia de {name}",
+      "archive": "Archivar",
+      "unarchive": "Restaurar",
+      "cancel": "Cancelar",
+      "emptyTitle": "Aún no hay eventos",
+      "emptyBody": "Crea un evento para preparar tu cabina.",
+      "noMatchTitle": "Ningún evento coincide",
+      "noMatchBody": "Prueba otra búsqueda o quita los filtros.",
+      "noArchivedTitle": "No hay eventos archivados",
+      "errors": {
+        "duplicate": "No se pudo duplicar el evento. Inténtalo de nuevo.",
+        "archive": "No se pudo actualizar el evento. Inténtalo de nuevo."
+      }
+    },
+    "newEvent": {
+      "title": "Nuevo evento",
+      "subtitle": "Puedes cambiarlo todo después.",
+      "name": "Nombre del evento",
+      "namePlaceholder": "Boda de Ana y Tunde",
+      "date": "Fecha",
+      "mode": "Modo de cabina",
+      "modeHelp": "Cada evento usa un modo de cabina. Crea un segundo evento para la otra cabina.",
+      "expiry": "Conservar los archivos de los invitados durante",
+      "expiryHelp": "Las descargas alojadas se eliminan después. Conecta tu propia nube para conservarlas.",
+      "days": "{count, plural, one {# día} other {# días}}",
+      "create": "Crear evento",
+      "creating": "Creando…",
+      "cancel": "Cancelar",
+      "errors": {
+        "invalid": "Revisa el nombre y la fecha.",
+        "generic": "No se pudo crear el evento. Inténtalo de nuevo."
+      }
+    },
+    "eventTabs": {
+      "label": "Secciones del evento",
+      "overview": "Resumen",
+      "setup": "Configuración"
+    },
+    "dashboard": {
+      "capture": "Capturado",
+      "sessions": "Sesiones",
+      "videos": "Videos",
+      "photos": "Tiras de fotos",
+      "gifs": "{count, plural, one {más # GIF} other {más # GIF}}",
+      "storage": "Almacenamiento usado",
+      "pipeline": "Ahora mismo",
+      "renderQueue": "Cola de renderizado",
+      "renderQueueHint": "Tomas esperando renderizarse en las cabinas",
+      "uploads": "Subidas",
+      "uploadsPending": "Archivos esperando subirse",
+      "uploadsDone": "Todo está subido",
+      "devices": "Cabinas conectadas",
+      "devicesHint": "Dispositivos con este evento"
+    },
+    "setup": {
+      "title": "Configuración del evento",
+      "readOnly": "Solo lectura",
+      "days": "{count, plural, one {# día} other {# días}}",
+      "countdown": "Cuenta atrás",
+      "save": {
+        "saving": "Guardando…",
+        "saved": "Todos los cambios guardados",
+        "error": "No se pudo guardar. Tu último cambio se reintentará."
+      },
+      "issues": {
+        "slow_motion_outside_spin": "El tramo en cámara lenta debe terminar dentro del giro.",
+        "slow_motion_end_before_start": "El tramo en cámara lenta debe terminar después de empezar.",
+        "half_second_grid": "Usa pasos de medio segundo.",
+        "trim_end_before_start": "La música debe terminar después de empezar.",
+        "generic": "Algunos ajustes están fuera de rango."
+      },
+      "basics": {
+        "title": "Básico",
+        "name": "Nombre",
+        "date": "Fecha",
+        "mode": "Modo de cabina",
+        "modeHelp": "Al cambiar de modo se guardan los ajustes del otro modo para después.",
+        "expiry": "Conservar los archivos durante",
+        "expiryHelp": "Las descargas alojadas se eliminan después. Puedes ampliar el plazo antes de que termine.",
+        "prefix": "Numerar los archivos",
+        "prefixHelp": "Añade 0001_, 0002_ … delante de cada nombre de archivo."
+      },
+      "video": {
+        "title": "Video 360",
+        "subtitle": "Qué graba cada giro y cómo se renderiza.",
+        "resolution": "Resolución",
+        "resolutionHelp": "4K solo si la cámara lo admite.",
+        "fps": "Fotogramas por segundo",
+        "fpsHelp": "60 fps da una cámara lenta más fluida.",
+        "aspect": "Relación de aspecto",
+        "spin": "Duración del giro",
+        "spinHelp": "La grabación se detiene sola al cumplirse.",
+        "slowMo": "Cámara lenta",
+        "slowMoHelp": "Ralentiza una parte del giro; el resto va a velocidad normal.",
+        "slowMoRange": "Tramo en cámara lenta",
+        "slowMoRangeHelp": "Segundos desde el inicio del giro.",
+        "slowMoStart": "Inicio de la cámara lenta",
+        "slowMoEnd": "Fin de la cámara lenta",
+        "slowMoSpeed": "Velocidad de la cámara lenta",
+        "reverse": "Reversa",
+        "reverseHelp": "Reproduce el tramo adelante y atrás, o añádelo invertido al final.",
+        "reverseOptions": {
+          "none": "No",
+          "boomerang": "Boomerang",
+          "reverse": "Invertido"
+        },
+        "quality": "Calidad",
+        "qualityOptions": {
+          "small": "Pequeña",
+          "balanced": "Equilibrada",
+          "original": "Original"
+        },
+        "qualityHelp": {
+          "small": "Archivos más pequeños, los más rápidos de compartir.",
+          "balanced": "Unos 8–12 MB por clip de 15 s a 1080p.",
+          "original": "Tasa de bits máxima. Archivos grandes."
+        },
+        "microphone": "Grabar sonido",
+        "microphoneHelp": "Desactivado por defecto: la banda sonora es la música del evento."
+      },
+      "photo": {
+        "title": "Cabina de fotos",
+        "subtitle": "Fotos por sesión, formatos y la impresión.",
+        "shots": "Fotos por sesión",
+        "between": "Pausa entre fotos",
+        "retake": "Permitir repetir",
+        "size": "Tamaño del diseño",
+        "sizes": {
+          "2x6": "Tira 2×6",
+          "4x4": "4×4",
+          "4x6": "4×6 vertical",
+          "6x4": "6×4 horizontal",
+          "5x7": "5×7",
+          "story": "Historia 9:16"
+        },
+        "gif": "GIF",
+        "boomerang": "Boomerang",
+        "shortVideo": "Video corto",
+        "shortVideoHelp": "Un clip corto alrededor de cada foto, como una Live Photo.",
+        "print": "Impresión",
+        "autoPrint": "Imprimir automáticamente",
+        "autoPrintHelp": "La impresión silenciosa requiere Chrome en modo de impresión kiosco.",
+        "copies": "Copias por sesión",
+        "doubleStrip": "Dos tiras en una hoja 4×6",
+        "doubleStripHelp": "Imprime dos tiras 2×6 una al lado de la otra y luego córtalas.",
+        "confetti": "Confeti al aparecer la tira"
+      },
+      "triggers": {
+        "title": "Iniciar una captura",
+        "subtitle": "Cómo los invitados o el operador inician la grabación.",
+        "tap": "Tocar la pantalla",
+        "keyboard": "Teclado y mandos Bluetooth",
+        "keyboardHelp": "Espacio, Intro o los botones de página de un mando.",
+        "motion": "Movimiento",
+        "motionHelp": "Empieza cuando la plataforma empieza a girar.",
+        "sensitivity": "Movimiento necesario",
+        "sensitivityHelp": "Qué parte de la imagen debe moverse de lado. Más bajo empieza antes."
+      },
+      "sharing": {
+        "title": "Compartir",
+        "subtitle": "Cómo reciben los invitados sus archivos.",
+        "qr": "Código QR en pantalla",
+        "email": "Correo electrónico",
+        "sms": "Mensaje de texto",
+        "whatsapp": "WhatsApp",
+        "smaller": "Versión más ligera para mensajería",
+        "smallerHelp": "Una copia más liviana que se envía rápido por WhatsApp.",
+        "stripQr": "Código QR en las impresiones",
+        "stripQrHelp": "Un pequeño código en la esquina de cada impresión enlaza a la copia digital.",
+        "endFrame": "Código QR al final de los videos",
+        "endFrameHelp": "Una tarjeta final de 2 segundos para que un video reenviado lleve de vuelta a la descarga.",
+        "guestForm": "Pedir datos a los invitados",
+        "guestFormHelp": "Nombre y correo con una casilla de consentimiento antes de descargar.",
+        "requireName": "Exigir un nombre",
+        "consent": "Texto de consentimiento",
+        "consentHelp": "Lo que aceptan los invitados, con tus palabras."
+      }
+    },
+    "devices": {
+      "title": "Dispositivos",
+      "subtitle": "Cada portátil, tableta y teléfono que usa una cabina en esta cuenta. Sin límite.",
+      "thisBrowser": "Usar este navegador como cabina",
+      "thisBrowserBody": "Regístralo para usar cabinas aquí. Sigue subiendo archivos durante todo el evento y puedes revocarlo cuando quieras.",
+      "register": "Registrar dispositivo",
+      "registerTitle": "Registrar este dispositivo",
+      "registerBody": "Dale un nombre que reconozcas en el lugar del evento.",
+      "defaultName": "{platform} ({browser})",
+      "name": "Nombre",
+      "namePlaceholder": "iPad cabina A",
+      "rename": "Renombrar",
+      "renameTitle": "Renombrar dispositivo",
+      "revoke": "Revocar",
+      "revokeTitle": "¿Revocar {name}?",
+      "revokeBody": "Este dispositivo deja de subir archivos y no puede usar cabinas de esta cuenta hasta que se registre de nuevo. Los archivos ya subidos se conservan.",
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "thisDevice": "Este dispositivo",
+      "online": "Conectado",
+      "revoked": "Revocado",
+      "lastSeen": "visto {when}",
+      "renderPath": {
+        "local": "renderiza en el dispositivo",
+        "wasm": "renderiza en el dispositivo (más lento)",
+        "server": "renderiza en la nube"
+      },
+      "emptyTitle": "Aún no hay dispositivos",
+      "emptyBody": "Registra este navegador, o inicia sesión en otro dispositivo y regístralo allí.",
+      "errors": {
+        "register": "No se pudo registrar este dispositivo. Inténtalo de nuevo.",
+        "storage": "Registrado, pero este navegador bloquea el almacenamiento y no lo recordará. Permite los datos del sitio y regístralo de nuevo.",
+        "rename": "No se pudo renombrar el dispositivo.",
+        "revoke": "No se pudo revocar el dispositivo."
+      }
+    }
   }
 }

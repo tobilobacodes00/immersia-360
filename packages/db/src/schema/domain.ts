@@ -32,6 +32,7 @@ import { organization, user } from './auth';
 import type {
   BrandingSettings,
   DeviceCapabilities,
+  DeviceStatus,
   DisplaySettings,
   OutputSettings,
   ShareSettings,
@@ -107,6 +108,8 @@ export const device = pgTable(
     tokenHash: text('token_hash').notNull(),
     registeredBy: text('registered_by').references(() => user.id, { onDelete: 'set null' }),
     lastSeenAt: ts('last_seen_at'),
+    /** Latest heartbeat: which event it runs, render/upload queue depth (feeds EVT-3). */
+    status: jsonb('status').$type<DeviceStatus>(),
     revokedAt: ts('revoked_at'),
     createdAt: createdAt(),
   },

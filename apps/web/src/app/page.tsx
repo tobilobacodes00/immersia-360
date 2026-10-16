@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Infinity as InfinityIcon, MonitorSmartphone, WifiOff } from 'lucide-react';
-import { BrandMark } from '@immersia/ui';
+import { BrandMark, buttonClass } from '@immersia/ui';
 import { LanguagePicker } from '@/components/LanguagePicker';
 
 export default async function HomePage() {
@@ -25,7 +25,12 @@ export default async function HomePage() {
           <BrandMark size={30} />
           {tc('appName')}
         </Link>
-        <LanguagePicker className="w-36" />
+        <div className="flex items-center gap-2">
+          <LanguagePicker className="w-36" />
+          <Link href="/sign-in" className={buttonClass({ variant: 'primary' })}>
+            {t('signIn')}
+          </Link>
+        </div>
       </header>
 
       <main id="main" className="mx-auto max-w-6xl px-4 pt-14 pb-24 sm:px-8 sm:pt-24">
@@ -34,6 +39,11 @@ export default async function HomePage() {
           {t('title')}
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted">{t('lede')}</p>
+        <div className="mt-9">
+          <Link href="/sign-in" className={buttonClass({ variant: 'primary', size: 'lg' })}>
+            {t('signIn')}
+          </Link>
+        </div>
         <ul className="mt-20 grid gap-4 sm:grid-cols-3">
           {points.map(({ icon: Icon, title, body }) => (
             <li key={title} className="card p-6">

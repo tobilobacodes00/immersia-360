@@ -20,7 +20,7 @@ const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   // Workspace packages ship TypeScript source; Next compiles them.
-  transpilePackages: ['@immersia/ui', '@immersia/shared', '@immersia/i18n'],
+  transpilePackages: ['@immersia/ui', '@immersia/shared', '@immersia/i18n', '@immersia/db'],
   typedRoutes: true,
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];

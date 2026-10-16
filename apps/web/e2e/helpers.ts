@@ -1,0 +1,45 @@
+import { expect, type Page } from '@playwright/test';
+
+export const uniqueEmail = (tag = 'op') =>
+  `e2e-${tag}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}@example.com`;
+
+/** Navigate and wait until React has hydrated (fields typed earlier could be reset by hydration). */
+export async function open(page: Page, path: string) {
+  await page.goto(path);
+  await page.locator('html[data-hydrated="1"]').waitFor({ state: 'attached' });
+}
+
+/** Sign in through the real magic-link flow, reading the link from the e2e mailbox. */
+export async function signIn(page: Page, email = uniqueEmail(), next?: string): Promise<string> {
+  await open(page, next ? `/sign-in?next=${encodeURIComponent(next)}` : '/sign-in');
+  await page.getByLabel('Email', { exact: true }).fill(email);
+  await page.getByRole('button', { name: 'Email me a sign-in link' }).click();
+  await expect(page.getByRole('heading', { name: 'Check your inbox' })).toBeVisible();
+  let link: string | undefined;
+  await expect
+    .poll(
+      async () => {
+        const res = await page.request.get(`/api/test/mailbox?to=${encodeURIComponent(email)}`);
+        if (!res.ok()) return undefined;
+        const mail = (await res.json()) as { text: string };
+        link = /https?:\/\/\S+/.exec(mail.text)?.[0];
+        return link;
+      },
+      { timeout: 10_000 },
+    )
+    .toBeTruthy();
+  await page.goto(link!);
+  await expect(page).toHaveURL(new RegExp(next ? next.replace(/[/?]/g, '\\$&') : '/studio$'));
+  await page.locator('html[data-hydrated="1"]').waitFor({ state: 'attached' });
+  return email;
+}
+
+export async function createEvent(page: Page, name: string, mode: '360 Booth' | 'Photo Booth' = '360 Booth') {
+  await open(page, '/studio/events/new');
+  await page.getByLabel('Event name').fill(name);
+  await page.getByRole('radio', { name: mode }).click();
+  await page.getByRole('button', { name: 'Create event' }).click();
+  await expect(page).toHaveURL(/\/studio\/events\/[0-9a-f-]{36}\/setup$/);
+  await page.locator('html[data-hydrated="1"]').waitFor({ state: 'attached' });
+  return page.url().split('/').at(-2)!;
+}

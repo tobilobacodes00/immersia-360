@@ -6,3 +6,4 @@ export * from './routes';
 export * from './analytics';
 export * from './event';
 export * from './template';
+export * from './device';

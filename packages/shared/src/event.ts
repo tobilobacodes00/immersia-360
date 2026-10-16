@@ -8,8 +8,11 @@ import { DEFAULT_THEME } from './theme';
 
 const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 const uuid = z.uuid();
+/**
+ * Refinement messages are stable codes, not prose: the UI translates them (studio.setup.issues.*).
+ */
 /** Seconds on a 0.5 s grid (CAP-5). */
-const halfSecond = z.number().refine((n) => Number.isInteger(n * 2), 'must be a multiple of 0.5 s');
+const halfSecond = z.number().refine((n) => Number.isInteger(n * 2), 'half_second_grid');
 
 export const RESOLUTIONS = ['720p', '1080p', '2160p'] as const;
 export const ASPECTS = ['9:16', '1:1', '16:9'] as const;
@@ -34,7 +37,7 @@ export const musicSchema = z
     fadeOutMs: z.number().int().min(0).max(10_000).default(1_000),
     volume: z.number().min(0).max(1).default(0.9),
   })
-  .refine((m) => m.trimEndMs === null || m.trimEndMs > m.trimStartMs, 'trim end must be after trim start');
+  .refine((m) => m.trimEndMs === null || m.trimEndMs > m.trimStartMs, 'trim_end_before_start');
 
 export const slowMotionSchema = z
   .object({
@@ -45,7 +48,7 @@ export const slowMotionSchema = z
     /** 0.125× – 1× (VID-1). */
     speed: z.number().min(0.125).max(1).default(0.5),
   })
-  .refine((s) => s.endS > s.startS, 'slow-motion end must be after its start');
+  .refine((s) => s.endS > s.startS, 'slow_motion_end_before_start');
 
 export const video360Schema = z
   .object({
@@ -70,10 +73,7 @@ export const video360Schema = z
     /** CAP-15: no live sound in 360 mode unless the operator opts in. */
     microphone: z.boolean().default(false),
   })
-  .refine(
-    (v) => !v.slowMotion.enabled || v.slowMotion.endS <= v.spinSeconds,
-    'slow-motion segment must end within the spin',
-  );
+  .refine((v) => !v.slowMotion.enabled || v.slowMotion.endS <= v.spinSeconds, 'slow_motion_outside_spin');
 
 export const photoSchema = z.object({
   shots: z.number().int().min(1).max(4).default(3),

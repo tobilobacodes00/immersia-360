@@ -43,6 +43,23 @@ jobs:
     name: End-to-end (Chrome, WebKit)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: immersia
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/immersia
+      # Throwaway secret for the CI database only.
+      BETTER_AUTH_SECRET: ci-only-secret-0123456789abcdef0123456789abcdef
+      BETTER_AUTH_URL: http://127.0.0.1:3100
+      NEXT_PUBLIC_APP_ORIGIN: http://127.0.0.1:3100
+      E2E: '1'
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -62,6 +79,8 @@ jobs:
         working-directory: apps/web
         # Chrome stable ships on the runner image; WebKit needs Playwright's build and system deps.
         run: pnpm exec playwright install --with-deps webkit
+      - name: Migrate database
+        run: pnpm --filter @immersia/db db:migrate
       - name: Build
         run: pnpm turbo run build --filter=@immersia/web
       - name: Run Playwright

@@ -6,7 +6,19 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"],
-      "env": ["NEXT_PUBLIC_*", "DATABASE_URL", "BETTER_AUTH_*", "R2_*", "UPSTASH_*", "RESEND_*", "GOOGLE_*"]
+      "env": [
+        "NEXT_PUBLIC_*",
+        "DATABASE_URL",
+        "BETTER_AUTH_*",
+        "R2_*",
+        "UPSTASH_*",
+        "RESEND_*",
+        "GOOGLE_*",
+        "E2E",
+        "VERCEL_*",
+        "SMTP_URL",
+        "EMAIL_FROM"
+      ]
     },
     "typecheck": {
       "dependsOn": ["^typecheck"],

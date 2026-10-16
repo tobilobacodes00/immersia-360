@@ -24,7 +24,18 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "serwist": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@immersia/db": "workspace:*",
+    "better-auth": "catalog:",
+    "@better-auth/drizzle-adapter": "catalog:",
+    "drizzle-orm": "catalog:",
+    "pg": "catalog:",
+    "resend": "catalog:",
+    "@vercel/functions": "catalog:",
+    "server-only": "catalog:",
+    "@upstash/ratelimit": "catalog:",
+    "@upstash/redis": "catalog:",
+    "nodemailer": "catalog:"
   },
   "devDependencies": {
     "@axe-core/playwright": "catalog:",
@@ -36,6 +47,8 @@
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
-    "esbuild": "catalog:"
+    "esbuild": "catalog:",
+    "@types/pg": "catalog:",
+    "@types/nodemailer": "catalog:"
   }
 }

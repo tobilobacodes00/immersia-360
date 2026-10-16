@@ -17,7 +17,8 @@ function flatten(tree: Tree, prefix = ''): Map<string, string> {
   return out;
 }
 
-const placeholders = (s: string) => [...s.matchAll(/\{(\w+)/g)].map((m) => m[1]).sort();
+// ICU arguments are {name} or {name, type, …}; plural branch bodies like {plus # GIF} are text.
+const placeholders = (s: string) => [...new Set([...s.matchAll(/\{\s*(\w+)\s*[,}]/g)].map((m) => m[1]))].sort();
 
 describe('message catalogues (NFR Localisation)', () => {
   const en = flatten(load('en'));

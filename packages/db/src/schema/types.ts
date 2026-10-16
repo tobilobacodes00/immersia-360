@@ -6,6 +6,7 @@ export type {
   OutputSettings,
   ShareSettings,
 } from '@immersia/shared/event';
+export type { DeviceStatus } from '@immersia/shared/device';
 export type { TemplateCanvas, TemplateElement } from '@immersia/shared/template';
 
 /** Everything the server render worker needs to reproduce a local render exactly. */

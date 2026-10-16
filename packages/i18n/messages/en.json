@@ -85,5 +85,324 @@
   },
   "meta": {
     "description": "Immersia 360 is a free, browser-based 360 video and photo booth. No paywall, no watermark, unlimited devices."
+  },
+  "roles": {
+    "owner": "Owner",
+    "operator": "Operator",
+    "viewer": "Viewer"
+  },
+  "signIn": {
+    "title": "Sign in to Immersia 360",
+    "subtitle": "We'll email you a sign-in link. No password to remember.",
+    "email": "Email",
+    "emailPlaceholder": "you@studio.com",
+    "sendLink": "Email me a sign-in link",
+    "sending": "Sending…",
+    "or": "or",
+    "google": "Continue with Google",
+    "guestNote": "Guests never need an account. They get their photos and videos by scanning a QR code.",
+    "sent": {
+      "title": "Check your inbox",
+      "body": "We sent a sign-in link to {email}. It works for 10 minutes.",
+      "resend": "Send again",
+      "resendIn": "Send again in {seconds}s",
+      "different": "Use a different email"
+    },
+    "errors": {
+      "generic": "Something went wrong. Please try again.",
+      "rateLimited": "Too many attempts. Please wait a minute and try again."
+    }
+  },
+  "email": {
+    "magicLink": {
+      "subject": "Your Immersia 360 sign-in link",
+      "heading": "Sign in to Immersia 360",
+      "body": "Click the button below to sign in. The link works once and expires in 10 minutes.",
+      "action": "Sign in",
+      "footer": "If you didn't ask for this email, you can ignore it."
+    },
+    "invitation": {
+      "subject": "Join {organization} on Immersia 360",
+      "heading": "You're invited to {organization}",
+      "body": "{inviter} invited you to help run booths as {role}.",
+      "action": "Accept invitation",
+      "footer": "The invitation expires in 7 days."
+    }
+  },
+  "studio": {
+    "nav": {
+      "label": "Studio",
+      "groups": {
+        "overview": "Overview",
+        "prepare": "Prepare",
+        "system": "System"
+      },
+      "home": "Home",
+      "events": "Events",
+      "devices": "Devices",
+      "signOut": "Sign out",
+      "openMenu": "Open menu",
+      "closeMenu": "Close menu"
+    },
+    "launcher": {
+      "title": "What are we running?",
+      "subtitle": "Start a new event in either booth mode. Everything is free, on every device.",
+      "newEvent": "New event",
+      "video360": {
+        "title": "360 Booth",
+        "body": "Spin videos with slow motion, music, overlays and effects, rendered on this device."
+      },
+      "photo": {
+        "title": "Photo Booth",
+        "body": "Photo strips and collages, GIFs and boomerangs, with printing at exact size."
+      },
+      "recent": "Recent events",
+      "allEvents": "All events",
+      "emptyTitle": "No events yet",
+      "emptyBody": "Pick a booth mode above to create your first event."
+    },
+    "events": {
+      "title": "Events",
+      "subtitle": "Every event on this account, across all your devices.",
+      "new": "New event",
+      "search": "Search events",
+      "filterMode": "Booth mode",
+      "from": "From",
+      "to": "To",
+      "showArchived": "Archived",
+      "modes": {
+        "all": "All",
+        "video360": "360 Booth",
+        "photo": "Photo Booth"
+      },
+      "status": {
+        "live": "Live",
+        "draft": "Draft",
+        "archived": "Archived"
+      },
+      "columns": {
+        "name": "Name",
+        "date": "Date",
+        "sessions": "Sessions",
+        "storage": "Storage",
+        "actions": "Actions"
+      },
+      "duplicate": "Duplicate",
+      "duplicateTitle": "Duplicate event",
+      "duplicateBody": "The copy keeps every setting, overlay and asset. Guest files are not copied.",
+      "copyOf": "Copy of {name}",
+      "archive": "Archive",
+      "unarchive": "Restore",
+      "cancel": "Cancel",
+      "emptyTitle": "No events yet",
+      "emptyBody": "Create an event to set up your booth.",
+      "noMatchTitle": "No events match",
+      "noMatchBody": "Try a different search or clear the filters.",
+      "noArchivedTitle": "No archived events",
+      "errors": {
+        "duplicate": "Couldn't duplicate the event. Please try again.",
+        "archive": "Couldn't update the event. Please try again."
+      }
+    },
+    "newEvent": {
+      "title": "New event",
+      "subtitle": "You can change everything later.",
+      "name": "Event name",
+      "namePlaceholder": "Ada & Tunde's wedding",
+      "date": "Date",
+      "mode": "Booth mode",
+      "modeHelp": "One event runs one booth mode. Run a second event for the other booth.",
+      "expiry": "Guest files are kept for",
+      "expiryHelp": "Hosted downloads are deleted after this. Connect your own cloud to keep them for good.",
+      "days": "{count, plural, one {# day} other {# days}}",
+      "create": "Create event",
+      "creating": "Creating…",
+      "cancel": "Cancel",
+      "errors": {
+        "invalid": "Check the name and date.",
+        "generic": "Couldn't create the event. Please try again."
+      }
+    },
+    "eventTabs": {
+      "label": "Event sections",
+      "overview": "Overview",
+      "setup": "Setup"
+    },
+    "dashboard": {
+      "capture": "Captured",
+      "sessions": "Sessions",
+      "videos": "Videos",
+      "photos": "Photo strips",
+      "gifs": "{count, plural, one {plus # GIF} other {plus # GIFs}}",
+      "storage": "Storage used",
+      "pipeline": "Right now",
+      "renderQueue": "Render queue",
+      "renderQueueHint": "Takes waiting to render on booth devices",
+      "uploads": "Uploads",
+      "uploadsPending": "Files waiting to upload",
+      "uploadsDone": "Everything is uploaded",
+      "devices": "Booths online",
+      "devicesHint": "Devices running this event"
+    },
+    "setup": {
+      "title": "Event setup",
+      "readOnly": "View only",
+      "days": "{count, plural, one {# day} other {# days}}",
+      "countdown": "Countdown",
+      "save": {
+        "saving": "Saving…",
+        "saved": "All changes saved",
+        "error": "Couldn't save. Your last change will retry."
+      },
+      "issues": {
+        "slow_motion_outside_spin": "The slow-motion segment must end within the spin.",
+        "slow_motion_end_before_start": "The slow-motion segment must end after it starts.",
+        "half_second_grid": "Use steps of half a second.",
+        "trim_end_before_start": "The music must end after it starts.",
+        "generic": "Some settings are out of range."
+      },
+      "basics": {
+        "title": "Basics",
+        "name": "Name",
+        "date": "Date",
+        "mode": "Booth mode",
+        "modeHelp": "Switching mode keeps the other mode's settings for later.",
+        "expiry": "Keep guest files for",
+        "expiryHelp": "Hosted downloads are deleted after this. You can extend it before it runs out.",
+        "prefix": "Number the files",
+        "prefixHelp": "Add 0001_, 0002_ … in front of every file name."
+      },
+      "video": {
+        "title": "360 video",
+        "subtitle": "What each spin records and how it's rendered.",
+        "resolution": "Resolution",
+        "resolutionHelp": "4K only where the camera supports it.",
+        "fps": "Frame rate",
+        "fpsHelp": "60 fps gives smoother slow motion.",
+        "aspect": "Aspect ratio",
+        "spin": "Spin length",
+        "spinHelp": "Recording stops on its own after this.",
+        "slowMo": "Slow motion",
+        "slowMoHelp": "Slow down one part of the spin; the rest plays at normal speed.",
+        "slowMoRange": "Slow-motion segment",
+        "slowMoRangeHelp": "Seconds from the start of the spin.",
+        "slowMoStart": "Slow-motion start",
+        "slowMoEnd": "Slow-motion end",
+        "slowMoSpeed": "Slow-motion speed",
+        "reverse": "Reverse",
+        "reverseHelp": "Play the segment back and forth, or add it reversed at the end.",
+        "reverseOptions": {
+          "none": "Off",
+          "boomerang": "Boomerang",
+          "reverse": "Reverse"
+        },
+        "quality": "Quality",
+        "qualityOptions": {
+          "small": "Small",
+          "balanced": "Balanced",
+          "original": "Original"
+        },
+        "qualityHelp": {
+          "small": "Smallest files, fastest to share.",
+          "balanced": "About 8–12 MB per 15 s clip at 1080p.",
+          "original": "Maximum bitrate. Large files."
+        },
+        "microphone": "Record sound",
+        "microphoneHelp": "Off by default: the soundtrack comes from the event's music."
+      },
+      "photo": {
+        "title": "Photo booth",
+        "subtitle": "Shots per session, outputs and printing.",
+        "shots": "Photos per session",
+        "between": "Pause between photos",
+        "retake": "Allow retakes",
+        "size": "Layout size",
+        "sizes": {
+          "2x6": "2×6 strip",
+          "4x4": "4×4",
+          "4x6": "4×6 portrait",
+          "6x4": "6×4 landscape",
+          "5x7": "5×7",
+          "story": "9:16 story"
+        },
+        "gif": "GIF",
+        "boomerang": "Boomerang",
+        "shortVideo": "Short video",
+        "shortVideoHelp": "A short clip around each photo, like a Live Photo.",
+        "print": "Printing",
+        "autoPrint": "Print automatically",
+        "autoPrintHelp": "Silent printing needs Chrome in kiosk-printing mode.",
+        "copies": "Copies per session",
+        "doubleStrip": "Two strips on a 4×6 sheet",
+        "doubleStripHelp": "Print two 2×6 strips side by side, then cut.",
+        "confetti": "Confetti when the strip appears"
+      },
+      "triggers": {
+        "title": "Starting a capture",
+        "subtitle": "How guests or the operator start recording.",
+        "tap": "Tap the screen",
+        "keyboard": "Keyboard and Bluetooth remotes",
+        "keyboardHelp": "Space, Enter or a remote's page buttons.",
+        "motion": "Motion",
+        "motionHelp": "Start when the platform starts turning.",
+        "sensitivity": "Motion needed",
+        "sensitivityHelp": "How much of the picture must move sideways. Lower starts sooner."
+      },
+      "sharing": {
+        "title": "Sharing",
+        "subtitle": "How guests get their files.",
+        "qr": "QR code on screen",
+        "email": "Email",
+        "sms": "Text message",
+        "whatsapp": "WhatsApp",
+        "smaller": "Smaller version for messaging",
+        "smallerHelp": "A lighter copy that sends quickly over WhatsApp.",
+        "stripQr": "QR code on prints",
+        "stripQrHelp": "A small code in the corner of each print links to the digital copy.",
+        "endFrame": "QR code at the end of videos",
+        "endFrameHelp": "A 2-second end card, so a forwarded video still leads back to the download.",
+        "guestForm": "Ask guests for their details",
+        "guestFormHelp": "Name and email with a consent checkbox before download.",
+        "requireName": "Require a name",
+        "consent": "Consent text",
+        "consentHelp": "What guests agree to, in your words."
+      }
+    },
+    "devices": {
+      "title": "Devices",
+      "subtitle": "Every laptop, tablet and phone that runs a booth for this account. There's no limit.",
+      "thisBrowser": "Use this browser as a booth",
+      "thisBrowserBody": "Register it to run booths here. It keeps uploading for the whole event, and you can revoke it at any time.",
+      "register": "Register device",
+      "registerTitle": "Register this device",
+      "registerBody": "Give it a name you'll recognise at the venue.",
+      "defaultName": "{platform} ({browser})",
+      "name": "Name",
+      "namePlaceholder": "Booth A iPad",
+      "rename": "Rename",
+      "renameTitle": "Rename device",
+      "revoke": "Revoke",
+      "revokeTitle": "Revoke {name}?",
+      "revokeBody": "This device stops uploading and can't run booths for this account until it's registered again. Files already uploaded stay.",
+      "save": "Save",
+      "cancel": "Cancel",
+      "thisDevice": "This device",
+      "online": "Online",
+      "revoked": "Revoked",
+      "lastSeen": "seen {when}",
+      "renderPath": {
+        "local": "renders on device",
+        "wasm": "renders on device (slower)",
+        "server": "renders in the cloud"
+      },
+      "emptyTitle": "No devices yet",
+      "emptyBody": "Register this browser, or sign in on another device and register it there.",
+      "errors": {
+        "register": "Couldn't register this device. Please try again.",
+        "storage": "Registered, but this browser blocks storage, so it won't remember it. Allow site data and register again.",
+        "rename": "Couldn't rename the device.",
+        "revoke": "Couldn't revoke the device."
+      }
+    }
   }
 }
