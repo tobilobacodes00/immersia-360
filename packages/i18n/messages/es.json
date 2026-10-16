@@ -1,0 +1,89 @@
+{
+  "common": {
+    "appName": "Immersia 360",
+    "tagline": "La cabina 360 y de fotos gratuita que funciona en tu navegador.",
+    "language": "Idioma",
+    "skipToContent": "Saltar al contenido",
+    "loading": "Cargando…",
+    "offline": "Estás sin conexión. Todo lo que captures se guarda en este dispositivo y se sube cuando vuelva la conexión."
+  },
+  "home": {
+    "eyebrow": "Gratis para siempre · Sin marca de agua · Cualquier dispositivo",
+    "title": "Convierte cualquier pantalla en una cabina 360 y de fotos.",
+    "lede": "Captura giros y tiras de fotos en el navegador, renderiza en el dispositivo y entrega a cada invitado su archivo por QR en menos de un minuto. Dispositivos ilimitados con una sola cuenta.",
+    "signIn": "Iniciar sesión",
+    "enterCode": "¿Tienes un código de una cabina?",
+    "points": {
+      "freeTitle": "Todas las funciones, gratis",
+      "freeBody": "Sin muro de pago, sin marca de agua y sin cargo por dispositivo. Nunca.",
+      "offlineTitle": "Funciona sin conexión",
+      "offlineBody": "Sigue capturando aunque falle el wifi del lugar. Nada de lo grabado se pierde.",
+      "anyTitle": "Cualquier dispositivo",
+      "anyBody": "Portátil, tableta o teléfono con un navegador moderno. Instálala como una app."
+    }
+  },
+  "ui": {
+    "close": "Cerrar",
+    "tokenField": {
+      "insert": "Insertar un campo dinámico",
+      "preview": "Vista previa",
+      "empty": "vacío",
+      "search": "Buscar campos…"
+    }
+  },
+  "tokens": {
+    "families": {
+      "event": "Evento",
+      "session": "Sesión",
+      "date": "Fecha",
+      "functions": "Funciones"
+    },
+    "hints": {
+      "eventName": "Nombre del evento",
+      "eventDate": "Fecha del evento",
+      "hashtag": "Hashtag del evento",
+      "custom1": "Texto personalizado 1",
+      "custom2": "Texto personalizado 2",
+      "custom3": "Texto personalizado 3",
+      "shortCode": "Código corto de la sesión",
+      "sessionUrl": "Enlace de descarga del invitado",
+      "shotNumber": "Número de foto actual",
+      "shotCount": "Fotos de la sesión",
+      "dateLong": "11 de octubre de 2026",
+      "dateShort": "11.10.2026",
+      "time24": "Hora en formato 24 h",
+      "upper": "Mayúsculas",
+      "default": "Alternativa si está vacío",
+      "if": "Condición",
+      "left": "Primeros n caracteres",
+      "urlencode": "Codificar para URL"
+    }
+  },
+  "design": {
+    "title": "Sistema de diseño",
+    "subtitle": "El lenguaje editorial y luminoso de Immersia Booth: papel, tinta y un solo acento.",
+    "buttons": "Botones",
+    "controls": "Controles",
+    "status": "Estado",
+    "guest": "Pantallas de invitados",
+    "sampleToggle": "Impresión automática",
+    "sampleSlider": "Duración del giro",
+    "sampleSelect": "Calidad",
+    "sampleText": "Nombre del evento",
+    "sampleTitle": "Panel de título",
+    "presets": "Tema del evento",
+    "start": "Toca para empezar",
+    "scan": "Escanea para descargar",
+    "qrAlt": "Código QR que abre la página de descarga de esta sesión",
+    "countdown": "Foto en {count} segundos",
+    "ready": "Listo",
+    "rendering": "Renderizando",
+    "failed": "Error",
+    "queued": "En cola",
+    "statLabel": "Sesiones",
+    "statHint": "Hoy"
+  },
+  "meta": {
+    "description": "Immersia 360 es una cabina 360 y de fotos gratuita que funciona en el navegador. Sin muro de pago, sin marca de agua, dispositivos ilimitados."
+  }
+}

@@ -1,0 +1,10 @@
+pnpm-lock.yaml
+**/.next
+**/dist
+**/coverage
+**/.turbo
+**/playwright-report
+**/test-results
+**/drizzle/meta
+apps/web/public/sw.js
+apps/web/next-env.d.ts

@@ -1,0 +1,89 @@
+{
+  "common": {
+    "appName": "Immersia 360",
+    "tagline": "The free 360 and photo booth that runs in your browser.",
+    "language": "Language",
+    "skipToContent": "Skip to content",
+    "loading": "Loading…",
+    "offline": "You're offline. Everything you capture is saved on this device and uploads when the connection returns."
+  },
+  "home": {
+    "eyebrow": "Free forever · No watermark · Any device",
+    "title": "Turn any screen into a 360 and photo booth.",
+    "lede": "Capture spins and photo strips in the browser, render on the device, and hand every guest their file by QR in under a minute. Unlimited devices on one account.",
+    "signIn": "Sign in",
+    "enterCode": "Have a code from a booth?",
+    "points": {
+      "freeTitle": "Every feature, free",
+      "freeBody": "No paywall, no watermark and no per-device fee. Ever.",
+      "offlineTitle": "Works offline",
+      "offlineBody": "Keep capturing when the venue Wi-Fi drops. Nothing recorded is ever lost.",
+      "anyTitle": "Any device",
+      "anyBody": "Laptop, tablet or phone in a modern browser. Install it like an app."
+    }
+  },
+  "ui": {
+    "close": "Close",
+    "tokenField": {
+      "insert": "Insert a dynamic field",
+      "preview": "Preview",
+      "empty": "empty",
+      "search": "Search fields…"
+    }
+  },
+  "tokens": {
+    "families": {
+      "event": "Event",
+      "session": "Session",
+      "date": "Date",
+      "functions": "Functions"
+    },
+    "hints": {
+      "eventName": "Event name",
+      "eventDate": "Event date",
+      "hashtag": "Event hashtag",
+      "custom1": "Custom text 1",
+      "custom2": "Custom text 2",
+      "custom3": "Custom text 3",
+      "shortCode": "Session short code",
+      "sessionUrl": "Guest download link",
+      "shotNumber": "Current shot number",
+      "shotCount": "Shots in the session",
+      "dateLong": "11 October 2026",
+      "dateShort": "11.10.2026",
+      "time24": "24-hour time",
+      "upper": "Upper case",
+      "default": "Fallback when empty",
+      "if": "Condition",
+      "left": "First n characters",
+      "urlencode": "URL-encode"
+    }
+  },
+  "design": {
+    "title": "Design system",
+    "subtitle": "Immersia Booth's light, editorial language: paper, ink and one accent.",
+    "buttons": "Buttons",
+    "controls": "Controls",
+    "status": "Status",
+    "guest": "Guest surfaces",
+    "sampleToggle": "Auto-print",
+    "sampleSlider": "Spin length",
+    "sampleSelect": "Quality",
+    "sampleText": "Event name",
+    "sampleTitle": "Title panel",
+    "presets": "Event theme",
+    "start": "Tap to start",
+    "scan": "Scan to download",
+    "qrAlt": "QR code that opens this session's download page",
+    "countdown": "Photo in {count} seconds",
+    "ready": "Ready",
+    "rendering": "Rendering",
+    "failed": "Failed",
+    "queued": "Queued",
+    "statLabel": "Sessions",
+    "statHint": "Today"
+  },
+  "meta": {
+    "description": "Immersia 360 is a free, browser-based 360 video and photo booth. No paywall, no watermark, unlimited devices."
+  }
+}

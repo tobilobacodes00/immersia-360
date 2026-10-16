@@ -1,0 +1,261 @@
+/*
+ * Immersia design system — light, editorial. Ported from Immersia Booth (src/styles.css, 29786a1).
+ *   Primary  Ink     #111110  text, primary actions, structure
+ *   Accent   Cobalt  #2B3FE6  focus, selection, progress, live states (7.1:1 on white)
+ * Status colours are functional signals only. No gradients, no glass: flat surfaces, hairlines
+ * and type do the work.
+ *
+ * Imported by the app's globals.css after `@import "tailwindcss"`. Fonts come from next/font, which
+ * sets --font-satoshi and --font-instrument-serif on <html>.
+ */
+
+@theme {
+  /* Surfaces */
+  --color-bg: #f7f6f2; /* paper */
+  --color-elev: #ffffff; /* cards, panels */
+  --color-elev-2: #ffffff; /* popovers, menus */
+  --color-elev-3: #f1f0eb; /* sunken wells, hovers */
+  --color-sunken: #f1f0eb;
+  --color-line: #e7e5df;
+  --color-line-strong: #d5d2ca;
+
+  /* Ink */
+  --color-fg: #111110;
+  --color-muted: #55534e; /* 7.1:1 on paper */
+  --color-faint: #6b6963; /* 5.1:1 on paper: smallest legible text */
+  --color-subtle: #a3a099; /* placeholders, disabled, decoration only — never body text */
+  --color-ink: #111110;
+
+  /* One accent */
+  --color-accent: #2b3fe6;
+  --color-accent-strong: #1f2fc4;
+  --color-accent-soft: #eceefd;
+
+  /* Status (functional only) */
+  --color-ok: #1f7a4d;
+  --color-warn: #a15c00;
+  --color-bad: #c0362c;
+  --color-info: #2b3fe6;
+
+  --shadow-card: 0 1px 2px rgb(17 17 16 / 0.04), 0 1px 1px rgb(17 17 16 / 0.02);
+  --shadow-pop: 0 12px 32px -8px rgb(17 17 16 / 0.18), 0 2px 6px rgb(17 17 16 / 0.06);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/*
+ * `inline` matters for anything that references a runtime variable. Without it the theme variable
+ * (e.g. --color-g-bg) is resolved once on :root, so per-event --g-* values set on a guest root
+ * further down the tree would never apply. Inlined, `bg-g-bg` emits var(--g-bg, …) at the use site.
+ */
+@theme inline {
+  /* Guest surfaces: the event's own theme, set as CSS variables on the guest root */
+  --color-g-bg: var(--g-bg, #f7f6f2);
+  --color-g-ink: var(--g-ink, #111110);
+  --color-g-accent: var(--g-accent, #2b3fe6);
+  --color-g-on-accent: var(--g-on-accent, #ffffff);
+
+  --font-sans: var(--font-satoshi), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: var(--font-satoshi), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Optional serif for event branding (guest screens and prints only) */
+  --font-serif: var(--font-instrument-serif), Georgia, serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+/*
+ * Guest screens scale with the display: guest sizes are rem-based, so the root size follows the
+ * short side of the screen. 1080p → 16px, iPad portrait → ~13px, phones → ~9.5px, 4K TVs → 22px.
+ */
+html.booth-active {
+  font-size: clamp(9px, calc(6px + 0.93vmin), 22px);
+}
+html.booth-active body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  font-feature-settings: 'ss01', 'tnum';
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+
+::selection {
+  background: var(--color-accent-soft);
+  color: var(--color-fg);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+
+@layer components {
+  .card {
+    background: var(--color-elev);
+    border: 1px solid var(--color-line);
+    border-radius: 14px;
+    box-shadow: var(--shadow-card);
+  }
+  .surface-pop {
+    background: var(--color-elev-2);
+    border: 1px solid var(--color-line);
+    box-shadow: var(--shadow-pop);
+  }
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-faint);
+  }
+  .focus-ring {
+    outline: none;
+  }
+  .focus-ring:focus-visible {
+    box-shadow:
+      0 0 0 2px var(--color-bg),
+      0 0 0 4px var(--color-accent);
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Transparency checkerboard (hard stops: a pattern, not a gradient) */
+  .checker {
+    background-color: #f1f0eb;
+    background-image:
+      linear-gradient(45deg, #e4e2dc 25%, transparent 25%), linear-gradient(-45deg, #e4e2dc 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #e4e2dc 75%), linear-gradient(-45deg, transparent 75%, #e4e2dc 75%);
+    background-size: 16px 16px;
+    background-position:
+      0 0,
+      0 8px,
+      8px -8px,
+      -8px 0;
+  }
+}
+
+/* Visible keyboard focus everywhere, never on mouse click */
+:where(button, a, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Range input: solid fill up to the value (hard stop), white thumb */
+input[type='range'].range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 22px;
+  background: transparent;
+  cursor: pointer;
+}
+input[type='range'].range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--color-accent) var(--p, 50%), var(--color-line-strong) var(--p, 50%));
+}
+input[type='range'].range::-moz-range-track {
+  height: 4px;
+  border-radius: 99px;
+  background: var(--color-line-strong);
+}
+input[type='range'].range::-moz-range-progress {
+  height: 4px;
+  border-radius: 99px;
+  background: var(--color-accent);
+}
+input[type='range'].range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid var(--color-line-strong);
+  box-shadow: 0 1px 3px rgb(17 17 16 / 0.2);
+  transition:
+    transform 120ms var(--ease-out-expo),
+    box-shadow 120ms;
+}
+input[type='range'].range:hover::-webkit-slider-thumb {
+  transform: scale(1.1);
+}
+input[type='range'].range:focus-visible {
+  outline: none;
+}
+input[type='range'].range:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    0 0 0 4px var(--color-accent-soft),
+    0 1px 3px rgb(17 17 16 / 0.2);
+}
+input[type='range'].range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 50%;
+  background: #fff;
+}
+
+/* Loading placeholder: a quiet pulse, no sweeping gradient */
+@keyframes skeleton {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+.shimmer {
+  background: var(--color-sunken);
+  animation: skeleton 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* A card reached from a menu item briefly highlights so the operator sees where they landed */
+.anchor-flash {
+  animation: anchor-flash 1.8s ease-out;
+}
+@keyframes anchor-flash {
+  0%,
+  30% {
+    box-shadow: 0 0 0 2px var(--color-accent);
+  }
+  100% {
+    box-shadow: 0 0 0 2px transparent;
+  }
+}

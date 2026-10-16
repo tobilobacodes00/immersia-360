@@ -1,0 +1,5 @@
+@import 'tailwindcss';
+@import '@immersia/ui/styles.css';
+
+/* Workspace packages live behind node_modules symlinks, which Tailwind does not scan by default. */
+@source '../../../../packages/ui/src';
