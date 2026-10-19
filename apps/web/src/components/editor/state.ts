@@ -10,9 +10,16 @@ export interface EditorDoc {
   elements: TemplateElement[];
 }
 
-type UnionToIntersection<U> = (U extends unknown ? (x: U) => void : never) extends (x: infer I) => void ? I : never;
-/** Any element field except identity and kind (element types never share a key with different meanings). */
-export type ElementPatch = Partial<Omit<UnionToIntersection<TemplateElement>, 'id' | 'type'>>;
+// Generic helpers: conditional types distribute over a union only through a type parameter.
+type Strip<T> = T extends unknown ? Omit<T, 'id' | 'type'> : never;
+type KeysOf<T> = T extends unknown ? keyof T : never;
+type ValueOf<T, K extends PropertyKey> = T extends unknown ? (K extends keyof T ? T[K] : never) : never;
+type Fields = Strip<TemplateElement>;
+/**
+ * Any element field except identity and kind, typed by what that field can hold in any element type
+ * (an intersection of the element types would be `never`: their `type` literals conflict).
+ */
+export type ElementPatch = { [K in KeysOf<Fields>]?: ValueOf<Fields, K> };
 
 export interface EditorState {
   doc: EditorDoc;
