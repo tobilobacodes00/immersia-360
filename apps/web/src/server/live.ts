@@ -579,3 +579,15 @@ export async function setLiveOptions(
 /** Displays seen in the last two minutes count as connected on the control page. */
 export const ONLINE_WINDOW_MS = 2 * 60_000;
 export const isOnline = (d: DisplayRow) => !!d.lastSeenAt && Date.now() - d.lastSeenAt.getTime() < ONLINE_WINDOW_MS;
+
+/**
+ * A feed's ETag. Storage links (logo, background, music) are re-signed on every read, so they're
+ * compared without their signatures; the socket address carries a fresh token and is left out.
+ * Without this an event with branding files would never answer a poll with 304.
+ */
+export function feedEtag(feed: DisplayFeed): string {
+  const stable = JSON.stringify([feed.config, feed.items], (_key, value: unknown) =>
+    typeof value === 'string' && /^https?:\/\//.test(value) ? value.split('?')[0] : value,
+  );
+  return `"${createHash('sha1').update(stable).digest('base64url')}"`;
+}

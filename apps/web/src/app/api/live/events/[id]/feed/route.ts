@@ -1,8 +1,7 @@
-import { createHash } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { roleCan } from '@/lib/permissions';
 import { appOrigin } from '@/server/env';
-import { eventFeed } from '@/server/live';
+import { eventFeed, feedEtag } from '@/server/live';
 import { getOperator } from '@/server/session';
 
 /** The event's feed for a signed-in operator device: the Sharing Station (SHR-4) and the control page. */
@@ -15,9 +14,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const role = new URL(request.url).searchParams.get('role') === 'operator' ? 'operator' : 'station';
   const feed = await eventFeed(op.organizationId, id, appOrigin(), role, op.userId);
   if (!feed) return NextResponse.json({ error: 'not_found' }, { status: 404 });
-  const etag = `"${createHash('sha1')
-    .update(JSON.stringify([feed.config, feed.items]))
-    .digest('base64url')}"`;
+  const etag = feedEtag(feed);
   const headers = { etag, 'cache-control': 'no-store' };
   if (request.headers.get('if-none-match') === etag) return new NextResponse(null, { status: 304, headers });
   return NextResponse.json(feed, { headers });
