@@ -1098,5 +1098,50 @@
       "expired": "Ese evento ha terminado y sus archivos se han eliminado.",
       "too_many": "Demasiados intentos. Espera unos minutos y vuelve a intentarlo."
     }
+  },
+  "tv": {
+    "pair": {
+      "metaTitle": "Conectar una pantalla",
+      "title": "Conecta esta pantalla",
+      "body": "Escribe el código de seis caracteres que aparece en Pantalla en vivo, dentro de Estudio, o abre el enlace de emparejamiento de su código QR.",
+      "codeLabel": "Código de emparejamiento",
+      "character": "Carácter {n} de {total}",
+      "hint": "Letras y números, como K7M-2QX. Nunca I, L, O, 0 ni 1.",
+      "submit": "Conectar pantalla",
+      "connecting": "Conectando…",
+      "connected": "Conectada",
+      "backToDisplay": "Volver a la pantalla",
+      "errors": {
+        "incomplete": "Escribe los seis caracteres.",
+        "invalid": "Ese código no es correcto. Revísalo e inténtalo de nuevo.",
+        "expired": "Ese código venció. Crea uno nuevo en Estudio.",
+        "too_many": "Demasiados intentos. Espera unos minutos y vuelve a intentarlo.",
+        "offline": "Esta pantalla no tiene conexión a internet. Revisa la conexión e inténtalo de nuevo.",
+        "storage": "Este navegador no puede guardar el emparejamiento. Desactiva la navegación privada e inténtalo de nuevo.",
+        "unavailable": "Algo salió mal de nuestro lado. Inténtalo de nuevo en un momento."
+      }
+    },
+    "display": {
+      "metaTitle": "Pantalla en vivo",
+      "connecting": "Conectando…",
+      "gallery": "Galería del evento",
+      "galleryAlt": "Código QR de la galería del evento",
+      "galleryScan": "Escanea para ver todos los momentos",
+      "itemScan": "Escanea para llevarte este momento",
+      "itemAlt": "Código QR de este momento, código {code}",
+      "enterCode": "O escribe el código en {host}",
+      "justIn": "Recién llegado",
+      "recent": "Momentos recientes",
+      "moments": "{count, plural, one {momento capturado} other {momentos capturados}}",
+      "idleLive": "Los momentos de la cabina aparecen aquí en cuanto estén listos.",
+      "fullscreen": "Pantalla completa",
+      "exitFullscreen": "Salir de pantalla completa",
+      "soundHint": "Pulsa OK para activar el sonido",
+      "status": {
+        "socket": "En vivo",
+        "polling": "En vivo, actualizando",
+        "offline": "Sin conexión, repitiendo los momentos guardados"
+      }
+    }
   }
 }

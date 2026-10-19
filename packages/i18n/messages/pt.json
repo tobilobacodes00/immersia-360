@@ -1098,5 +1098,50 @@
       "expired": "Esse evento terminou e os arquivos foram removidos.",
       "too_many": "Muitas tentativas. Aguarde alguns minutos e tente de novo."
     }
+  },
+  "tv": {
+    "pair": {
+      "metaTitle": "Conectar uma tela",
+      "title": "Conecte esta tela",
+      "body": "Digite o código de seis caracteres que aparece em Tela ao vivo, dentro do Estúdio, ou abra o link de pareamento do QR code.",
+      "codeLabel": "Código de pareamento",
+      "character": "Caractere {n} de {total}",
+      "hint": "Letras e números, como K7M-2QX. Nunca I, L, O, 0 nem 1.",
+      "submit": "Conectar tela",
+      "connecting": "Conectando…",
+      "connected": "Conectada",
+      "backToDisplay": "Voltar para a tela",
+      "errors": {
+        "incomplete": "Digite os seis caracteres.",
+        "invalid": "Esse código não está certo. Confira e tente de novo.",
+        "expired": "Esse código expirou. Crie um novo no Estúdio.",
+        "too_many": "Muitas tentativas. Aguarde alguns minutos e tente de novo.",
+        "offline": "Esta tela está sem acesso à internet. Verifique a conexão e tente de novo.",
+        "storage": "Este navegador não consegue salvar o pareamento. Desative a navegação privada e tente de novo.",
+        "unavailable": "Algo deu errado do nosso lado. Tente de novo em instantes."
+      }
+    },
+    "display": {
+      "metaTitle": "Tela ao vivo",
+      "connecting": "Conectando…",
+      "gallery": "Galeria do evento",
+      "galleryAlt": "QR code da galeria do evento",
+      "galleryScan": "Escaneie para ver todos os momentos",
+      "itemScan": "Escaneie para levar este momento",
+      "itemAlt": "QR code deste momento, código {code}",
+      "enterCode": "Ou digite o código em {host}",
+      "justIn": "Acabou de chegar",
+      "recent": "Momentos recentes",
+      "moments": "{count, plural, one {momento capturado} other {momentos capturados}}",
+      "idleLive": "Os momentos da cabine aparecem aqui assim que ficarem prontos.",
+      "fullscreen": "Tela cheia",
+      "exitFullscreen": "Sair da tela cheia",
+      "soundHint": "Pressione OK para ligar o som",
+      "status": {
+        "socket": "Ao vivo",
+        "polling": "Ao vivo, atualizando",
+        "offline": "Sem conexão, repetindo os momentos salvos"
+      }
+    }
   }
 }
