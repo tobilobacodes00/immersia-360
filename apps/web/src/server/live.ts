@@ -280,7 +280,7 @@ async function eventConfig(ev: EventRow, origin: string, d: DisplayRow | null): 
     view(branding.attract.backgroundAssetId),
     view(settings.backgroundMusicAssetId),
   ]);
-  const [{ moments }] = await db()
+  const [counted] = await db()
     .select({ moments: sql<number>`count(*)`.mapWith(Number) })
     .from(captureSession)
     .where(eq(captureSession.eventId, ev.id));
@@ -306,7 +306,7 @@ async function eventConfig(ev: EventRow, origin: string, d: DisplayRow | null): 
         : null,
       backgroundMusicUrl: music?.url ?? null,
       galleryUrl: galleryUrl(origin, ev.gallerySlug, 'display'),
-      moments: moments ?? 0,
+      moments: counted?.moments ?? 0,
       live: ev.liveDisplayEnabled && ev.status !== 'archived',
     },
   };
@@ -383,7 +383,7 @@ export async function claimPairing(
       .for('update');
     if (!pairing) return 'invalid' as const;
     if (pairing.expiresAt.getTime() < Date.now()) return 'expired' as const;
-    const [{ count }] = await tx
+    const [existing] = await tx
       .select({ count: sql<number>`count(*)`.mapWith(Number) })
       .from(display)
       .where(eq(display.eventId, pairing.eventId));
@@ -392,7 +392,7 @@ export async function claimPairing(
     await tx.insert(display).values({
       id,
       eventId: pairing.eventId,
-      name: `Display ${(count ?? 0) + 1}`,
+      name: `Display ${(existing?.count ?? 0) + 1}`,
       layout: 'spotlight',
       settings: displaySettingsSchema.parse({}),
       tokenHash: hashToken(token),

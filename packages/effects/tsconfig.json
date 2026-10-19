@@ -3,10 +3,5 @@
   "compilerOptions": {
     "types": []
   },
-  "include": [
-    "src",
-    "test",
-    "test-browser",
-    "vitest.config.ts"
-  ]
+  "include": ["src", "test", "test-browser", "vitest.config.ts"]
 }
