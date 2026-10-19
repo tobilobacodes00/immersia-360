@@ -38,7 +38,10 @@ export type OutputKind = 'mp4' | 'small_mp4' | 'gif' | 'strip' | 'short_video' |
 /** A guest-facing file rendered on this device (M3), kept until uploaded and expired. */
 export interface LocalOutput {
   id: string;
-  takeId: string;
+  /** The take it was rendered from (360); null for session-level outputs (a photo strip, a GIF). */
+  takeId: string | null;
+  /** Session-level outputs belong to their guest session directly (photo booth, M5). */
+  sessionId?: string;
   eventId: string;
   kind: OutputKind;
   path: string;
@@ -133,6 +136,10 @@ export class BoothDB extends Dexie {
     this.version(3).stores({
       sessions: 'id, eventId, linkId, state, *takeIds, [eventId+capturedAt]',
       codes: 'code, eventId, [eventId+reservedAt]',
+    });
+    // v4 (M5): session-level outputs (photo strips, GIFs) are found by their session.
+    this.version(4).stores({
+      outputs: 'id, takeId, sessionId, eventId, kind, [eventId+createdAt]',
     });
   }
 }
