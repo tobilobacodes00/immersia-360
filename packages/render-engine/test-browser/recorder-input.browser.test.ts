@@ -50,14 +50,27 @@ function patternTrack() {
   };
 }
 
+/** Frames in a take made of these chunks; 0 while it isn't readable yet. */
+async function framesIn(chunks: Blob[], type: string): Promise<number> {
+  const probe = await probeTake(new Blob(chunks, { type })).catch(() => null);
+  probe?.input.dispose();
+  return probe?.pts.length ?? 0;
+}
+
 /**
- * Record the test pattern for `minMs` of encoded data and until `minChunks` chunks have arrived;
- * resolves with the chunks as the booth stores them. The take is timed from the encoder's first
- * real output, not from start(): a cold H.264 encoder took 7 s to emit anything on a laptop and over
- * 10 s on a CI runner (its first chunk is the 1-byte start of the header), which left a take that
- * was little more than a header.
+ * Record the test pattern for at least `minMs` of encoded data, then until `enough(chunks)`; resolves
+ * with the chunks as the booth stores them. These tests are about what the recorder writes, not how
+ * fast a runner encodes, so both clocks follow the encoder: the take is timed from its first real
+ * output (a cold H.264 encoder took 7 s to emit anything on a laptop, over 10 s on a CI runner, and
+ * its first chunk is the 1-byte start of the header), and `enough` can wait for frames (a runner
+ * busy with the other browser test files encoded 4 frames of H.264 in 1.5 s).
  */
-async function record(mimeType: string, minMs: number, minChunks = 1, timesliceMs = 250): Promise<Blob[]> {
+async function record(
+  mimeType: string,
+  minMs: number,
+  enough: (chunks: Blob[]) => Promise<boolean>,
+  timesliceMs = 250,
+): Promise<Blob[]> {
   const { stream, push } = patternTrack();
   const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 4_000_000 });
   const chunks: Blob[] = [];
@@ -73,8 +86,15 @@ async function record(mimeType: string, minMs: number, minChunks = 1, timesliceM
   const timer = setInterval(() => push(++i), 1000 / 30);
   recorder.start(timesliceMs);
   const giveUp = performance.now() + 60_000;
-  while (performance.now() < giveUp && (!encoding || performance.now() - encoding < minMs || chunks.length < minChunks))
+  let checked = 0;
+  while (performance.now() < giveUp) {
     await new Promise((r) => setTimeout(r, 100));
+    if (!encoding || performance.now() - encoding < minMs) continue;
+    // Probing the take so far costs a parse; twice a second is plenty.
+    if (performance.now() - checked < 500) continue;
+    checked = performance.now();
+    if (await enough([...chunks])) break;
+  }
   const stopped = new Promise((r) => (recorder.onstop = r));
   recorder.stop();
   await stopped;
@@ -95,7 +115,10 @@ describe('MediaRecorder takes render (CAP-1 → VID-8)', () => {
     const supported = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(mime);
 
     it.skipIf(!supported)(`${mime}: a complete take decodes and renders`, async () => {
-      const chunks = await record(mime, 1500, 4);
+      // WebM can be probed while it grows; MP4 is only checked once the recorder finishes it.
+      const chunks = await record(mime, 1500, async (c) =>
+        mime.startsWith('video/webm') ? (await framesIn(c, mime)) >= 8 : c.length >= 4,
+      );
       const take = new Blob(chunks, { type: mime });
       const probe = await probeTake(take);
       probe.input.dispose();
@@ -110,7 +133,12 @@ describe('MediaRecorder takes render (CAP-1 → VID-8)', () => {
     it.skipIf(!supported || !mime.startsWith('video/webm'))(
       `${mime}: a take cut short mid-recording still renders`,
       async () => {
-        const chunks = await record(mime, 2000, 6);
+        // Enough that the take still holds frames without its last two chunks.
+        const chunks = await record(
+          mime,
+          2000,
+          async (c) => c.length >= 6 && (await framesIn(c.slice(0, -2), mime)) >= 5,
+        );
         expect(chunks.length).toBeGreaterThanOrEqual(6);
         const take = new Blob(chunks.slice(0, -2), { type: mime });
         const probe = await probeTake(take);
