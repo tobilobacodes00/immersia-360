@@ -51,23 +51,29 @@ function patternTrack() {
 }
 
 /**
- * Record the test pattern for at least `minMs` and until `minChunks` chunks have arrived (busy CI
- * runners deliver frames and chunks slower than wall-clock time suggests); resolves with the chunks
- * as the booth stores them.
+ * Record the test pattern for `minMs` of encoded data and until `minChunks` chunks have arrived;
+ * resolves with the chunks as the booth stores them. The take is timed from the encoder's first
+ * real output, not from start(): a cold H.264 encoder took 7 s to emit anything on a laptop and over
+ * 10 s on a CI runner (its first chunk is the 1-byte start of the header), which left a take that
+ * was little more than a header.
  */
 async function record(mimeType: string, minMs: number, minChunks = 1, timesliceMs = 250): Promise<Blob[]> {
   const { stream, push } = patternTrack();
   const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 4_000_000 });
   const chunks: Blob[] = [];
+  let encoding = 0;
   recorder.ondataavailable = (e) => {
-    if (e.data.size) chunks.push(e.data);
+    if (!e.data.size) return;
+    chunks.push(e.data);
+    // A chunk this size carries encoded frames, not just container header bytes.
+    if (!encoding && e.data.size >= 1024) encoding = performance.now();
   };
   let i = 0;
   push(i);
   const timer = setInterval(() => push(++i), 1000 / 30);
   recorder.start(timesliceMs);
-  const started = performance.now();
-  while (performance.now() - started < minMs || (chunks.length < minChunks && performance.now() - started < 10_000))
+  const giveUp = performance.now() + 60_000;
+  while (performance.now() < giveUp && (!encoding || performance.now() - encoding < minMs || chunks.length < minChunks))
     await new Promise((r) => setTimeout(r, 100));
   const stopped = new Promise((r) => (recorder.onstop = r));
   recorder.stop();
