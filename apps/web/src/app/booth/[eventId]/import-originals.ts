@@ -24,15 +24,19 @@ export async function importVideoFiles({
   eventId,
   deviceId,
   files,
+  waitForIdle,
 }: {
   db: BoothDB;
   store: TakeStore;
   eventId: string;
   deviceId: string | null;
   files: Iterable<File>;
+  /** Resolves when the booth is free to take disk time (not mid-capture); asked before every slice. */
+  waitForIdle?: () => Promise<void>;
 }): Promise<ImportResult> {
   const result: ImportResult = { imported: 0, skipped: 0, failed: 0 };
   for (const file of files) {
+    await waitForIdle?.();
     if (!file.type.startsWith('video/')) {
       result.skipped++;
       continue;
@@ -44,7 +48,11 @@ export async function importVideoFiles({
     try {
       const meta = await videoMetadata(file);
       await store.begin(path);
-      for (let at = 0; at < file.size; at += SLICE) await store.append(path, file.slice(at, at + SLICE));
+      for (let at = 0; at < file.size; at += SLICE) {
+        // The recorder shares the storage worker: a take in progress goes first.
+        await waitForIdle?.();
+        await store.append(path, file.slice(at, at + SLICE));
+      }
       await store.finish(path);
       await importTake(db, {
         id,

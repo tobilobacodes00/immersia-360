@@ -4,7 +4,18 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useTranslations, type Messages } from 'next-intl';
 import { AnimatePresence, motion } from 'motion/react';
-import { ArrowLeft, Check, CircleDot, CloudUpload, HardDrive, Settings2, Square, Upload, WifiOff } from 'lucide-react';
+import {
+  ArrowLeft,
+  Check,
+  CircleDot,
+  CloudUpload,
+  HardDrive,
+  Images,
+  Settings2,
+  Square,
+  Upload,
+  WifiOff,
+} from 'lucide-react';
 import {
   MotionTrigger,
   TakeRecorder,
@@ -44,6 +55,7 @@ import { CountdownDisc, GuestButton, Headline, fade } from '@immersia/ui/guest';
 import { readDeviceIdentity, type DeviceIdentity } from '@/lib/device-identity';
 import { useCaptureKeys, useHeartbeat, useHeld, useLiveQuery, useOnline, useWakeLock } from './booth-hooks';
 import { importVideoFiles } from './import-originals';
+import { Gallery } from './Gallery';
 import { RegisterDevice } from './RegisterDevice';
 import { KioskLockLayer, useKioskLock } from './KioskLock';
 import { RenderQueue } from './RenderQueue';
@@ -113,6 +125,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
   const [motionOn, setMotionOn] = useState(event.triggers.motion.enabled);
   const [threshold, setThreshold] = useState(event.triggers.motion.threshold);
   const [drawer, setDrawer] = useState(false);
+  const [galleryOpen, setGalleryOpen] = useState(false);
   const [warning, setWarning] = useState<string | null>(null);
   const [lowStorage, setLowStorage] = useState(false);
   const [recovered, setRecovered] = useState(0);
@@ -377,14 +390,22 @@ export function Booth360({ event }: { event: BoothEvent }) {
 
   // CAP-13 import: the settings drawer, drag and drop and the event gallery all come through here.
   const importFiles = useCallback(
-    async (files: Iterable<File>) => {
+    async (files: Iterable<File>, opts?: { waitForIdle?: () => Promise<void> }) => {
       store.current ??= await takeStore(() => createOpfsWorker(workerUrl('opfs')));
       setBackend(store.current.backend);
-      return importVideoFiles({ db, store: store.current, eventId: event.id, deviceId: identity?.id ?? null, files });
+      return importVideoFiles({
+        db,
+        store: store.current,
+        eventId: event.id,
+        deviceId: identity?.id ?? null,
+        files,
+        waitForIdle: opts?.waitForIdle,
+      });
     },
     [db, event.id, identity?.id],
   );
 
+  const closeGallery = useCallback(() => setGalleryOpen(false), []);
   const backToReady = useCallback(() => setPhase((p) => (p.kind === 'result' ? { kind: 'ready' } : p)), []);
 
   const themeVars = useMemo(() => guestThemeVars(event.theme), [event.theme]);
@@ -484,6 +505,14 @@ export function Booth360({ event }: { event: BoothEvent }) {
                     ? t('rendering', { percent: Math.round(renderQueue.current.progress * 100) })
                     : t('queue', { count: pending })}
                 </Pill>
+              </button>
+              <button
+                type="button"
+                onClick={() => setGalleryOpen(true)}
+                aria-label={t('gallery.open')}
+                className="focus-ring grid size-11 place-items-center rounded-full bg-g-bg/95"
+              >
+                <Images className="size-5" />
               </button>
               <button
                 type="button"
@@ -672,6 +701,15 @@ export function Booth360({ event }: { event: BoothEvent }) {
         store={storeReady}
         onRetry={(id) => void renderQueue.retry(id)}
         onCancel={renderQueue.cancel}
+      />
+
+      <Gallery
+        open={galleryOpen && !kiosk.locked}
+        onClose={closeGallery}
+        eventId={event.id}
+        eventName={event.name}
+        capturing={capturing}
+        onImport={importFiles}
       />
 
       <SettingsDrawer

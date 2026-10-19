@@ -7,9 +7,11 @@ import {
   countByFilter,
   eventSlug,
   extensionOf,
+  formatWhen,
   localDateStamp,
   needsMemoryWarning,
   outputFilename,
+  thumbSource,
   totalBytes,
   uploadState,
   zipEntries,
@@ -275,6 +277,40 @@ describe('zipEntries', () => {
     expect(zipEntries([])).toEqual([]);
     const entries = zipEntries([item({ id: '1', kind: 'mp4', bytes: 300 }), item({ id: '2', kind: 'gif', bytes: 20 })]);
     expect(totalBytes(entries)).toBe(320);
+  });
+});
+
+describe('thumbSource', () => {
+  it('draws a video by its poster, and falls back to the video itself', () => {
+    const poster = { path: 'p.jpg', mime: 'image/jpeg' };
+    expect(thumbSource(item({ id: '1', kind: 'mp4', poster }))).toEqual({ ...poster, element: 'img' });
+    expect(thumbSource(item({ id: '2', kind: 'boomerang', path: 'b.mp4' }))).toEqual({
+      path: 'b.mp4',
+      mime: 'video/mp4',
+      element: 'video',
+    });
+  });
+
+  it('draws photos and GIFs as images', () => {
+    expect(thumbSource(item({ id: '3', kind: 'strip', mime: 'image/jpeg', path: 's.jpg' }))).toEqual({
+      path: 's.jpg',
+      mime: 'image/jpeg',
+      element: 'img',
+    });
+  });
+});
+
+describe('formatWhen', () => {
+  const now = new Date(2026, 9, 19, 18, 0).getTime();
+
+  it('shows only the clock for today', () => {
+    expect(formatWhen(new Date(2026, 9, 19, 14, 32).getTime(), 'en-GB', now)).toBe('14:32');
+  });
+
+  it('adds the date for another day', () => {
+    const text = formatWhen(new Date(2026, 9, 18, 14, 32).getTime(), 'en-GB', now);
+    expect(text).toContain('18/10/2026');
+    expect(text).toContain('14:32');
   });
 });
 

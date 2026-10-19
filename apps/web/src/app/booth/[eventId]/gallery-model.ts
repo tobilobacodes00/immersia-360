@@ -229,3 +229,25 @@ export const totalBytes = (entries: readonly Pick<ZipEntryPlan, 'bytes'>[]) =>
 
 /** A Blob download holds the whole archive in memory: warn before it gets big. */
 export const needsMemoryWarning = (bytes: number) => bytes > MEMORY_EXPORT_WARN_BYTES;
+
+/**
+ * What a grid card draws: a video's poster when it has one (a small JPEG, cheap to decode), else
+ * the file itself. Videos without a poster (boomerangs, short videos) load their first frame only.
+ */
+export function thumbSource(item: Pick<GalleryItem, 'path' | 'mime' | 'poster'>): {
+  path: string;
+  mime: string;
+  element: 'img' | 'video';
+} {
+  if (!isVideoMime(item.mime)) return { path: item.path, mime: item.mime, element: 'img' };
+  if (item.poster) return { ...item.poster, element: 'img' };
+  return { path: item.path, mime: item.mime, element: 'video' };
+}
+
+/** A capture time as the operator reads it: the clock today, the date and clock on another day. */
+export function formatWhen(ms: number, locale: string, now: number = Date.now()): string {
+  const date = new Date(ms);
+  const today = new Date(now).toDateString() === date.toDateString();
+  const style: Intl.DateTimeFormatOptions = today ? { timeStyle: 'short' } : { dateStyle: 'short', timeStyle: 'short' };
+  return new Intl.DateTimeFormat(locale, style).format(date);
+}
