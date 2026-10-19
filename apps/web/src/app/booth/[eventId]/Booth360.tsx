@@ -23,7 +23,6 @@ import {
   boothDb,
   completeTake,
   failTake,
-  importTake,
   mintSession,
   noteChunk,
   optOutOfDisplay,
@@ -44,6 +43,7 @@ import { Pill, cx } from '@immersia/ui';
 import { CountdownDisc, GuestButton, Headline, fade } from '@immersia/ui/guest';
 import { readDeviceIdentity, type DeviceIdentity } from '@/lib/device-identity';
 import { useCaptureKeys, useHeartbeat, useHeld, useLiveQuery, useOnline, useWakeLock } from './booth-hooks';
+import { importVideoFiles } from './import-originals';
 import { RegisterDevice } from './RegisterDevice';
 import { KioskLockLayer, useKioskLock } from './KioskLock';
 import { RenderQueue } from './RenderQueue';
@@ -375,36 +375,12 @@ export function Booth360({ event }: { event: BoothEvent }) {
     return () => clearInterval(id);
   }, [motionOn, threshold, phase.kind, trigger, event.triggers.motion.cooldownS]);
 
+  // CAP-13 import: the settings drawer, drag and drop and the event gallery all come through here.
   const importFiles = useCallback(
-    async (files: FileList | File[]) => {
+    async (files: Iterable<File>) => {
       store.current ??= await takeStore(() => createOpfsWorker(workerUrl('opfs')));
       setBackend(store.current.backend);
-      const s = store.current;
-      for (const file of Array.from(files)) {
-        if (!file.type.startsWith('video/')) continue;
-        const meta = await videoMetadata(file);
-        const id = uuidv7();
-        const ext = file.name.split('.').pop()?.toLowerCase() || extensionFor(file.type);
-        const path = `takes/${event.id}/${id}.${ext}`;
-        await s.begin(path);
-        // Stream in 8 MB slices: a 4K import never has to fit in memory at once.
-        for (let at = 0; at < file.size; at += 8 * 1024 * 1024)
-          await s.append(path, file.slice(at, at + 8 * 1024 * 1024));
-        await s.finish(path);
-        await importTake(db, {
-          id,
-          eventId: event.id,
-          deviceId: identity?.id ?? null,
-          path,
-          mimeType: file.type,
-          bytes: file.size,
-          durationMs: meta.durationMs,
-          width: meta.width,
-          height: meta.height,
-          fps: 0,
-        });
-        await mintSession(db, { eventId: event.id, takeIds: [id], capturedAt: Date.now() });
-      }
+      return importVideoFiles({ db, store: store.current, eventId: event.id, deviceId: identity?.id ?? null, files });
     },
     [db, event.id, identity?.id],
   );
@@ -737,24 +713,3 @@ const ERROR_KEYS = new Set<string>([
   'recording_unsupported',
 ]);
 const errorKey = (code: string): CameraErrorKey => (ERROR_KEYS.has(code) ? (code as CameraErrorKey) : 'unknown');
-
-function videoMetadata(file: File): Promise<{ durationMs: number; width: number; height: number }> {
-  return new Promise((resolve) => {
-    const url = URL.createObjectURL(file);
-    const v = document.createElement('video');
-    v.preload = 'metadata';
-    v.muted = true;
-    const done = (meta: { durationMs: number; width: number; height: number }) => {
-      URL.revokeObjectURL(url);
-      resolve(meta);
-    };
-    v.onloadedmetadata = () =>
-      done({
-        durationMs: Number.isFinite(v.duration) ? Math.round(v.duration * 1000) : 0,
-        width: v.videoWidth,
-        height: v.videoHeight,
-      });
-    v.onerror = () => done({ durationMs: 0, width: 0, height: 0 });
-    v.src = url;
-  });
-}
