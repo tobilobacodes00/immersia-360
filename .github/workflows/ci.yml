@@ -101,6 +101,14 @@ jobs:
         run: pnpm exec playwright install --with-deps webkit
       - name: Migrate database
         run: pnpm --filter @immersia/db db:migrate
+      # The build downloads the PHO-9 font files pinned in library.json (apps/web/scripts/fetch-font-library.mjs);
+      # cached by content hash, so a changed manifest only fetches what changed.
+      - name: Cache font library
+        uses: actions/cache@v4
+        with:
+          path: apps/web/.next/cache/font-library
+          key: font-library-${{ runner.os }}-${{ hashFiles('packages/fonts/src/library.json') }}
+          restore-keys: font-library-${{ runner.os }}-
       - name: Build
         run: pnpm turbo run build --filter=@immersia/web
       - name: Run Playwright
