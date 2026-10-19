@@ -234,7 +234,8 @@
     "eventTabs": {
       "label": "Event sections",
       "overview": "Overview",
-      "setup": "Setup"
+      "setup": "Setup",
+      "branding": "Branding"
     },
     "dashboard": {
       "capture": "Captured",
@@ -572,6 +573,318 @@
         "load": "Couldn’t load your assets.",
         "rename": "Couldn’t rename the asset.",
         "delete": "Couldn’t delete the asset."
+      }
+    },
+    "editor": {
+      "titleLayout": "Layout editor",
+      "titleOverlay": "Overlay editor",
+      "toolbar": "Editor tools",
+      "canvasLabel": "Design canvas. Click an element to select it, drag to move it, use the handles to resize or rotate it. Arrow keys nudge the selection.",
+      "pickImage": "Choose an image",
+      "undo": "Undo (Ctrl+Z)",
+      "redo": "Redo (Ctrl+Shift+Z)",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "zoomFit": "Fit to screen",
+      "label": "Element",
+      "shotN": "Photo {n}",
+      "qrHint": "Printed QR codes stay at least 18 mm wide, so phones can read them from arm's length.",
+      "add": {
+        "photo": "Add a photo slot",
+        "text": "Add text",
+        "image": "Add an image",
+        "rect": "Add a rectangle",
+        "ellipse": "Add an ellipse",
+        "qr": "Add the guest QR code"
+      },
+      "status": {
+        "saved": "All changes saved",
+        "saving": "Saving…",
+        "error": "Couldn't save. Retrying…",
+        "conflict": "Not saved: changed elsewhere"
+      },
+      "conflict": {
+        "body": "This design was changed in another tab or on another device.",
+        "theirs": "Load their version",
+        "mine": "Keep mine"
+      },
+      "issues": {
+        "qr_too_small": "QR under 18 mm",
+        "qr_off_canvas": "QR off the page"
+      },
+      "panels": {
+        "label": "Panel",
+        "layers": "Layers",
+        "templates": "Templates",
+        "inspect": "Properties"
+      },
+      "layers": {
+        "title": "Layers",
+        "empty": "Nothing here yet. Add text, an image or a shape from the toolbar.",
+        "up": "Bring forward",
+        "down": "Send backward",
+        "show": "Show",
+        "hide": "Hide",
+        "lock": "Lock",
+        "unlock": "Unlock"
+      },
+      "types": {
+        "photo": "Photo slot",
+        "image": "Image",
+        "text": "Text",
+        "shape": "Shape",
+        "qr": "QR code"
+      },
+      "sections": {
+        "text": "Text",
+        "photo": "Photo",
+        "image": "Image",
+        "shape": "Shape",
+        "qr": "QR code"
+      },
+      "actions": {
+        "duplicate": "Duplicate (Ctrl+D)",
+        "delete": "Delete"
+      },
+      "multi": {
+        "title": "{count} selected",
+        "actions": "Selection"
+      },
+      "align": {
+        "label": "Align",
+        "left": "Align left",
+        "hcenter": "Centre horizontally",
+        "right": "Align right",
+        "top": "Align top",
+        "vcenter": "Centre vertically",
+        "bottom": "Align bottom"
+      },
+      "canvas": {
+        "title": "Canvas",
+        "size": "Size",
+        "dpi": "{width} × {height} px at 300 DPI: what you see is what prints.",
+        "background": "Background",
+        "backgroundColour": "Background colour",
+        "backgroundImage": "Background image",
+        "choose": "Choose…",
+        "replace": "Replace",
+        "removeImage": "Remove the background image",
+        "overlayHint": "Keep the background transparent so the video shows through.",
+        "tip": "Select an element to edit it. Shift-click or drag across the canvas to select several."
+      },
+      "printSizes": {
+        "2x6": "2 × 6 in strip",
+        "4x4": "4 × 4 in square",
+        "4x6": "4 × 6 in portrait",
+        "6x4": "6 × 4 in landscape",
+        "5x7": "5 × 7 in portrait"
+      },
+      "fields": {
+        "name": "Name",
+        "namePlaceholder": "Optional",
+        "x": "X position",
+        "y": "Y position",
+        "width": "Width",
+        "height": "Height",
+        "rotation": "Rotation",
+        "opacity": "Opacity",
+        "text": "Text",
+        "weight": "Weight",
+        "fontSize": "Size",
+        "lineHeight": "Line height",
+        "letterSpacing": "Letter spacing",
+        "colour": "Colour",
+        "colourOpacity": "Colour opacity",
+        "align": "Alignment",
+        "verticalAlign": "Vertical alignment",
+        "uppercase": "Capitals",
+        "autoFit": "Shrink to fit",
+        "shot": "Shows",
+        "fit": "Fit",
+        "cornerRadius": "Corner radius",
+        "asset": "Image",
+        "shape": "Shape",
+        "fill": "Fill",
+        "fillOpacity": "Fill opacity",
+        "stroke": "Outline",
+        "strokeColour": "Outline colour",
+        "strokeOpacity": "Outline opacity",
+        "strokeWidth": "Outline width",
+        "qrDark": "Code colour",
+        "qrDarkOpacity": "Code opacity",
+        "qrLight": "Background",
+        "qrLightOpacity": "Background opacity",
+        "showCode": "Show the short code"
+      },
+      "weights": {
+        "100": "Thin",
+        "200": "Extra light",
+        "300": "Light",
+        "400": "Regular",
+        "500": "Medium",
+        "600": "Semibold",
+        "700": "Bold",
+        "800": "Extra bold",
+        "900": "Black"
+      },
+      "alignText": {
+        "left": "Left",
+        "center": "Centre",
+        "right": "Right",
+        "top": "Top",
+        "middle": "Middle",
+        "bottom": "Bottom"
+      },
+      "fit": {
+        "cover": "Fill",
+        "contain": "Fit"
+      },
+      "shapes": {
+        "rect": "Rectangle",
+        "ellipse": "Ellipse"
+      },
+      "fonts": {
+        "title": "Fonts",
+        "change": "Change",
+        "search": "Search fonts",
+        "category": "Category",
+        "none": "No fonts match.",
+        "licence": "{count} open-licence fonts (SIL OFL and Apache), free for print and video. Upload your own in Assets.",
+        "categories": {
+          "all": "All",
+          "sans": "Sans",
+          "serif": "Serif",
+          "display": "Display",
+          "handwriting": "Script",
+          "mono": "Mono",
+          "uploaded": "Uploaded"
+        }
+      },
+      "templates": {
+        "presets": "Start from",
+        "presetShots": "{count, plural, one {# photo} other {# photos}}",
+        "overlayStyles": {
+          "band": "Name band",
+          "frame": "Frame",
+          "pill": "Name pill",
+          "blank": "Blank"
+        },
+        "saved": "Saved templates",
+        "savedEmpty": "Save a design here to reuse it at other events.",
+        "saveCurrent": "Save",
+        "saveTitle": "Save as a template",
+        "name": "Template name",
+        "namePlaceholder": "e.g. Gold wedding strip",
+        "saveFailed": "Couldn't save the template. Try again.",
+        "save": "Save template",
+        "cancel": "Cancel",
+        "delete": "Delete {name}",
+        "applyTitle": "Use “{name}”?",
+        "applyBody": "It replaces the current design. You can undo this.",
+        "apply": "Use this design"
+      }
+    },
+    "branding": {
+      "title": "Branding",
+      "readOnly": "Read only",
+      "theme": {
+        "title": "Theme",
+        "subtitle": "One accent colour for the booth, share pages, gallery and Live Display.",
+        "presets": "Presets",
+        "names": {
+          "Cobalt": "Cobalt",
+          "Vermilion": "Vermilion",
+          "Forest": "Forest",
+          "Champagne": "Champagne",
+          "Monochrome": "Monochrome"
+        },
+        "accent": "Accent",
+        "background": "Background",
+        "ink": "Text",
+        "font": "Type",
+        "sans": "Sans",
+        "serif": "Serif"
+      },
+      "logo": {
+        "label": "Logo",
+        "help": "Shown on the attract screen, share pages and Live Display."
+      },
+      "attract": {
+        "title": "Attract screen",
+        "subtitle": "What guests see while the booth waits.",
+        "headline": "Headline",
+        "subline": "Subline",
+        "cta": "Start button",
+        "ctaPlaceholder": "Tap to start",
+        "thanks": "Thank-you message",
+        "background": "Background",
+        "backgroundHelp": "A photo or a looping video behind the attract screen."
+      },
+      "fields": {
+        "title": "Dynamic fields",
+        "subtitle": "Values for the tokens you can place in layouts, overlays and messages.",
+        "hashtag": "Hashtag",
+        "custom1": "Custom text 1",
+        "custom2": "Custom text 2",
+        "custom3": "Custom text 3",
+        "token": "Token: {token}"
+      },
+      "design": {
+        "layoutTitle": "Print layout",
+        "layoutSubtitle": "The strip or print every guest takes home.",
+        "overlayTitle": "Video overlay",
+        "overlaySubtitle": "A transparent frame drawn over every 360 video.",
+        "currentLayout": "The event's print layout",
+        "currentOverlay": "The event's video overlay",
+        "noOverlay": "No overlay: videos play clean.",
+        "defaultLayout": "Using the standard layout for the print size.",
+        "layoutHelp": "Arrange the photo slots, text, logos and QR code in the editor, or start from a preset or a saved template.",
+        "overlayHelp": "Add the event name, a logo or a frame over the video. Upload a transparent PNG in Assets to use it as is.",
+        "edit": "Open the editor",
+        "design": "Design one",
+        "choose": "Choose a design",
+        "fullScreen": "Full screen",
+        "removeOverlay": "Remove overlay",
+        "chooserTitle": "Choose a design",
+        "chooserNote": "The chosen design replaces the event's current one and opens for editing like any other.",
+        "applyFailed": "Couldn't use that design. Try again.",
+        "viewerTitle": "Preview",
+        "noSaved": "No saved templates yet. Save one from the editor.",
+        "noUploads": "No uploaded frames yet. Upload transparent PNGs in Assets.",
+        "presetShots": "{count, plural, one {# photo} other {# photos}}",
+        "overlayStyles": {
+          "band": "Name band",
+          "frame": "Frame",
+          "pill": "Name pill",
+          "blank": "Blank"
+        },
+        "tabs": {
+          "presets": "Presets",
+          "saved": "Saved ({count})",
+          "uploads": "Uploaded ({count})"
+        }
+      },
+      "cards": {
+        "title": "Intro and outro",
+        "subtitle": "A short clip or a still card before and after every video.",
+        "intro": "Intro",
+        "introHelp": "Plays before the spin.",
+        "outro": "Outro",
+        "outroHelp": "Plays after the spin.",
+        "length": "Card length",
+        "lengthHelp": "How long a still card shows. Clips play up to this long."
+      },
+      "music": {
+        "title": "Music",
+        "subtitle": "One track under every video, trimmed, faded and levelled.",
+        "track": "Track",
+        "trackHelp": "MP3, M4A/AAC or WAV, from your assets.",
+        "loading": "Loading the track"
+      },
+      "media": {
+        "choose": "Choose…",
+        "replace": "Replace",
+        "remove": "Remove {name}"
       }
     }
   },

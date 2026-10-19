@@ -318,6 +318,7 @@ export async function patchMedia(
               wanted.map((w) => w.id),
             ),
             eq(schema.asset.organizationId, organizationId),
+            eq(schema.asset.status, 'ready'),
             isNull(schema.asset.deletedAt),
           ),
         );
