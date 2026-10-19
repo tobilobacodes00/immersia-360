@@ -402,6 +402,33 @@
         "failed": "No se pudo guardar el PIN. Inténtalo de nuevo."
       }
     },
+    "audioEditor": {
+      "empty": "Añade una canción para editarla aquí.",
+      "loading": "Leyendo la canción…",
+      "decodeError": "No se pudo leer este archivo de audio. Prueba con un MP3, M4A o WAV.",
+      "song": "Canción",
+      "songHelp": "Arrastra los controles para elegir la parte de la canción que suena.",
+      "waveform": "Forma de onda de la canción",
+      "trimStart": "Inicio del recorte",
+      "trimEnd": "Fin del recorte",
+      "from": "Desde {time}",
+      "to": "Hasta {time}",
+      "length": "Duración {time}",
+      "inVideo": "En el video",
+      "inVideoHelp": "Dónde queda la música en la línea de tiempo del video y a qué volumen suena.",
+      "stripLabel": "Suena de {from} a {to} con el volumen al {volume}%.",
+      "stripEmpty": "La música no suena dentro del video. Haz que empiece antes o conserva una parte más larga de la canción.",
+      "clipped": "El video termina antes que la canción, así que el fundido de salida ocurre al final del video.",
+      "play": "Reproducir vista previa",
+      "stop": "Detener vista previa",
+      "offset": "Inicio de la música",
+      "offsetHelp": "Segundo del video en el que empieza a sonar.",
+      "fadeIn": "Fundido de entrada",
+      "fadeInHelp": "Cuánto tarda la música en subir desde el silencio.",
+      "fadeOut": "Fundido de salida",
+      "fadeOutHelp": "Cuánto tarda en bajar hasta el silencio al final.",
+      "volume": "Volumen"
+    },
     "devices": {
       "title": "Dispositivos",
       "subtitle": "Cada portátil, tableta y teléfono que usa una cabina en esta cuenta. Sin límite.",

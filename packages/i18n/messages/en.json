@@ -402,6 +402,33 @@
         "failed": "Couldn’t save the PIN. Try again."
       }
     },
+    "audioEditor": {
+      "empty": "Add a song to edit it here.",
+      "loading": "Reading the song…",
+      "decodeError": "This audio file couldn’t be read. Try an MP3, M4A or WAV file.",
+      "song": "Song",
+      "songHelp": "Drag the handles to choose the part of the song that plays.",
+      "waveform": "Song waveform",
+      "trimStart": "Trim start",
+      "trimEnd": "Trim end",
+      "from": "From {time}",
+      "to": "To {time}",
+      "length": "Length {time}",
+      "inVideo": "In the video",
+      "inVideoHelp": "Where the music sits on the video’s timeline, and how loud it is.",
+      "stripLabel": "Plays from {from} to {to} at {volume}% volume.",
+      "stripEmpty": "The music doesn’t play within the video. Start it earlier or keep a longer part of the song.",
+      "clipped": "The video ends before the song does, so the fade-out lands at the end of the video.",
+      "play": "Play preview",
+      "stop": "Stop preview",
+      "offset": "Start music at",
+      "offsetHelp": "Seconds into the video when the music begins.",
+      "fadeIn": "Fade in",
+      "fadeInHelp": "How long the music takes to rise from silence.",
+      "fadeOut": "Fade out",
+      "fadeOutHelp": "How long it takes to sink back to silence at the end.",
+      "volume": "Volume"
+    },
     "devices": {
       "title": "Devices",
       "subtitle": "Every laptop, tablet and phone that runs a booth for this account. There's no limit.",

@@ -402,6 +402,33 @@
         "failed": "Não foi possível salvar o PIN. Tente de novo."
       }
     },
+    "audioEditor": {
+      "empty": "Adicione uma música para editá-la aqui.",
+      "loading": "Lendo a música…",
+      "decodeError": "Não foi possível ler este arquivo de áudio. Tente um MP3, M4A ou WAV.",
+      "song": "Música",
+      "songHelp": "Arraste as alças para escolher o trecho da música que vai tocar.",
+      "waveform": "Forma de onda da música",
+      "trimStart": "Início do corte",
+      "trimEnd": "Fim do corte",
+      "from": "De {time}",
+      "to": "Até {time}",
+      "length": "Duração {time}",
+      "inVideo": "No vídeo",
+      "inVideoHelp": "Onde a música fica na linha do tempo do vídeo e em que volume ela toca.",
+      "stripLabel": "Toca de {from} a {to} com volume de {volume}%.",
+      "stripEmpty": "A música não toca dentro do vídeo. Faça a música começar mais cedo ou mantenha um trecho maior dela.",
+      "clipped": "O vídeo termina antes da música, então o fade-out acontece no fim do vídeo.",
+      "play": "Ouvir prévia",
+      "stop": "Parar prévia",
+      "offset": "Início da música",
+      "offsetHelp": "Segundo do vídeo em que ela começa a tocar.",
+      "fadeIn": "Fade-in",
+      "fadeInHelp": "Quanto tempo a música leva para subir do silêncio.",
+      "fadeOut": "Fade-out",
+      "fadeOutHelp": "Quanto tempo ela leva para voltar ao silêncio no final.",
+      "volume": "Volume"
+    },
     "devices": {
       "title": "Dispositivos",
       "subtitle": "Cada notebook, tablet e celular que roda uma cabine nesta conta. Sem limite.",
