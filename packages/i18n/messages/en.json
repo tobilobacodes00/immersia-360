@@ -148,6 +148,7 @@
       "events": "Events",
       "assets": "Assets",
       "devices": "Devices",
+      "integrations": "Integrations",
       "signOut": "Sign out",
       "openMenu": "Open menu",
       "closeMenu": "Close menu"
@@ -262,7 +263,13 @@
       "extend": "Extend by {days} days",
       "extendHelp": "Gives every live guest link more time. Files that have already expired can’t be brought back.",
       "extended": "{count, plural, =0 {No live links to extend} one {# link extended by {days} days} other {# links extended by {days} days}}",
-      "extendFailed": "Couldn’t extend the links. Try again."
+      "extendFailed": "Couldn’t extend the links. Try again.",
+      "cloudTitle": "Copies to {provider} need your attention",
+      "cloudNeedsReauth": "Access to {provider} was revoked or has expired, so new files aren't being copied there. They're safe on Immersia and copy by themselves, without duplicates, once you reconnect.",
+      "cloudWaiting": "{count, plural, one {# file is waiting.} other {# files are waiting.}}",
+      "cloudDisconnected": "This event copies to {provider}, but {provider} isn't connected. Connect it and this event's files catch up.",
+      "cloudFailed": "{count, plural, one {# file hasn't reached {provider}.} other {# files haven't reached {provider}.}}",
+      "cloudFix": "Open Integrations"
     },
     "setup": {
       "title": "Event setup",
@@ -389,7 +396,21 @@
         "consent": "Consent text",
         "consentHelp": "What guests agree to, in your words.",
         "contact": "Contact for guests",
-        "contactHelp": "Shown on guest pages once this event’s files have expired, so guests can reach you. An email address or phone number."
+        "contactHelp": "Shown on guest pages once this event’s files have expired, so guests can reach you. An email address or phone number.",
+        "cloud": "Also copy to my cloud",
+        "cloudHelp": "Saves every finished file to your own Google Drive or Dropbox too. Guests still get their files from Immersia.",
+        "cloudNone": "Immersia only",
+        "cloudState": {
+          "unavailable": "{provider} (not set up)",
+          "disconnected": "{provider} (not connected)",
+          "needs_reauth": "{provider} (sign in again)"
+        },
+        "cloudNote": {
+          "unavailable": "{provider} isn't set up on this server.",
+          "disconnected": "{provider} isn't connected, so this event isn't copied there.",
+          "needs_reauth": "{provider} needs you to sign in again; new files stay safe and copy once you do."
+        },
+        "cloudManage": "Manage integrations"
       },
       "kiosk": {
         "title": "Kiosk",
@@ -976,6 +997,102 @@
         "approve": "Show on screen",
         "restore": "Show again",
         "hide": "Hide from screens"
+      }
+    },
+    "integrations": {
+      "title": "Integrations",
+      "subtitle": "Copy every finished file to your own Google Drive or Dropbox, as well as the guest's Immersia link. Guests always download from Immersia; the copy is yours to keep.",
+      "providers": {
+        "drive": "Google Drive",
+        "dropbox": "Dropbox",
+        "generic": "your cloud storage"
+      },
+      "about": {
+        "drive": "Immersia only sees the folders and files it creates itself, never the rest of your Drive.",
+        "dropbox": "Immersia only works inside the folder it creates in your Dropbox."
+      },
+      "status": {
+        "connected": "Connected",
+        "needsReauth": "Sign in again",
+        "notConnected": "Not connected",
+        "notConfigured": "Not configured"
+      },
+      "notConfigured": "This Immersia server isn't set up for {provider} yet. If you host it yourself, add its credentials and INTEGRATION_TOKEN_KEY to the environment (see .env.example).",
+      "connect": "Connect {provider}",
+      "reconnect": "Reconnect {provider}",
+      "connectedAs": "Connected as {email}",
+      "ownerOnly": "Only the account owner can connect or disconnect a cloud.",
+      "folder": {
+        "label": "Folder",
+        "none": "Not created yet. It's created with the first copy.",
+        "open": "Open folder",
+        "help": "Each event gets its own subfolder named with its date. Files already copied stay where they are.",
+        "name": "Folder name",
+        "placeholder": "Immersia 360",
+        "save": "Use this folder"
+      },
+      "disconnect": {
+        "button": "Disconnect",
+        "title": "Disconnect {provider}?",
+        "body": "Immersia stops copying to {provider}, revokes its access and deletes the saved connection. Files already copied stay in your {provider}. Copies that haven't happened yet are dropped; connect again later to catch up.",
+        "confirm": "Disconnect",
+        "cancel": "Cancel"
+      },
+      "reauth": {
+        "title": "{provider} needs you to sign in again",
+        "body": "Immersia can't reach your {provider} any more: access was revoked or has expired. Nothing is lost. New files stay safe on Immersia, and every waiting copy goes through, without duplicates, as soon as you reconnect.",
+        "waiting": "{count, plural, one {# file is waiting.} other {# files are waiting.}}"
+      },
+      "failed": {
+        "title": "{count, plural, one {# file couldn't be copied to {provider}} other {# files couldn't be copied to {provider}}}",
+        "retry": "Retry",
+        "retrying": "Retrying…"
+      },
+      "flash": {
+        "connected": "{provider} is connected. Copying has started."
+      },
+      "connectErrors": {
+        "denied": "You cancelled the connection, so nothing changed. Press Connect to try again.",
+        "state": "That sign-in link expired or didn't come from this account. Press Connect to start again.",
+        "scope": "{provider} didn't grant the permission Immersia needs. Press Connect again and leave the access box ticked.",
+        "no_refresh": "{provider} didn't give Immersia lasting access. Remove Immersia from your {provider} connected apps, then connect again.",
+        "exchange": "{provider} refused the sign-in. Press Connect to try again.",
+        "unreachable": "Couldn't reach {provider}. Check the connection and try again in a minute.",
+        "unavailable": "This server isn't set up for {provider}.",
+        "forbidden": "Only the account owner can connect a cloud.",
+        "failed": "Something went wrong while connecting {provider}. Please try again."
+      },
+      "actionErrors": {
+        "reauth_required": "{provider} needs you to sign in again first. Press Reconnect.",
+        "quota_exceeded": "Your {provider} is full. Free up space, then try again.",
+        "unreachable": "Couldn't reach {provider}. Try again in a minute.",
+        "forbidden": "Only the account owner can change this.",
+        "failed": "That didn't work. Please try again."
+      },
+      "copyErrors": {
+        "reauth_required": "Access to {provider} was revoked or has expired. Reconnect {provider} and this file copies by itself.",
+        "quota_exceeded": "Your {provider} is full. Free up space, then press Retry.",
+        "transient": "Couldn't reach {provider} after several tries. Press Retry.",
+        "retrying": "{provider} didn't respond. Trying again {when}.",
+        "folder_missing": "The folder was deleted from {provider}. Choose a folder above; failed copies restart by themselves.",
+        "folder_inaccessible": "Immersia can't write to that folder. Create a new folder above; failed copies restart by themselves.",
+        "source_gone": "This file expired on Immersia before it could be copied, so it can't be sent any more.",
+        "other": "Couldn't copy this file. Press Retry; if it keeps failing, reconnect {provider}."
+      },
+      "copies": {
+        "title": "Recent copies",
+        "subtitle": "The last 20 files sent to your cloud.",
+        "emptyTitle": "Nothing copied yet",
+        "emptyBody": "Choose Google Drive or Dropbox under Sharing in an event's setup, and finished files appear here.",
+        "to": "to {provider}",
+        "open": "Open in {provider}",
+        "soon": "in a moment",
+        "status": {
+          "pending": "Waiting",
+          "uploading": "Copying",
+          "done": "Copied",
+          "failed": "Failed"
+        }
       }
     },
     "galleryCard": {

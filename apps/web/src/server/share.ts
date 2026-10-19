@@ -3,6 +3,7 @@ import { and, eq, isNull, lte, sql } from 'drizzle-orm';
 import { db, schema } from '@immersia/db';
 import { normalizeShortCode, type OutputKind } from '@immersia/shared';
 import { isExpired, type SessionState } from './share-state';
+import { EXT, slug } from './filenames';
 import { deleteObjects, presignDownload, presignView } from './storage';
 
 const { event, captureSession, output } = schema;
@@ -78,17 +79,6 @@ export async function sharePage(linkId: string): Promise<SharePage | null> {
 
 /** Display and download order on the page: the main video first. */
 const KIND_ORDER: OutputKind[] = ['mp4', 'strip', 'gif', 'boomerang', 'short_video', 'small_mp4', 'poster'];
-
-const EXT: Record<string, string> = { 'video/mp4': 'mp4', 'image/gif': 'gif', 'image/jpeg': 'jpg', 'image/png': 'png' };
-
-/** Filesystem-safe event name for download filenames. */
-const slug = (s: string) =>
-  s
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^A-Za-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 40) || 'immersia';
 
 export type DownloadResult =
   | { url: string; kind: OutputKind; bytes: number | null; eventId: string }

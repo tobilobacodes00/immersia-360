@@ -119,6 +119,24 @@ export async function objectHead(key: string, n: number): Promise<Uint8Array | n
   }
 }
 
+/**
+ * A streaming GET, for server-to-server copies to the operator's own cloud: the body is read as
+ * the destination takes it, never buffered whole. Rejects when the object is gone (see isMissingObject).
+ */
+export async function objectStream(key: string): Promise<{ body: ReadableStream<Uint8Array>; size: number }> {
+  const { s3, bucket } = storage();
+  const res = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+  if (!res.Body || res.ContentLength === undefined) throw new Error('The stored object has no body');
+  return { body: res.Body.transformToWebStream(), size: res.ContentLength };
+}
+
+/** True for the S3 "no such key" error (an expired or deleted file). */
+export const isMissingObject = (err: unknown): boolean =>
+  typeof err === 'object' &&
+  err !== null &&
+  ((err as { name?: unknown }).name === 'NoSuchKey' ||
+    (err as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode === 404);
+
 /** Delete in batches of 1000 (the S3 limit). Returns how many keys were removed. */
 export async function deleteObjects(keys: string[]): Promise<number> {
   const { s3, bucket } = storage();

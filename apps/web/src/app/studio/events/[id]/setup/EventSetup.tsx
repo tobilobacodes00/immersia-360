@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState, type ReactNode } from 'react';
+import Link from 'next/link';
 import { useTranslations, type Messages } from 'next-intl';
 import { AlertCircle, Check, Loader2 } from 'lucide-react';
 import {
@@ -25,6 +26,7 @@ import {
   Toggle,
   useHydrated,
 } from '@immersia/ui';
+import type { CloudProviderId, IntegrationState } from '@/server/cloud/types';
 import { updateBasicsAction, updateSectionAction } from '../../../actions';
 import { useAutosave, type SaveStatus } from './use-autosave';
 
@@ -136,15 +138,19 @@ export function EventSetup({
   basics: initialBasics,
   output: initialOutput,
   share: initialShare,
+  cloud: cloudStates,
 }: {
   id: string;
   readOnly: boolean;
   basics: Basics;
   output: OutputSettings;
   share: ShareSettings;
+  /** Which clouds the organization has linked (SHR-7); only a connected one can be chosen. */
+  cloud: Record<CloudProviderId, IntegrationState>;
 }) {
   const t = useTranslations('studio.setup');
   const te = useTranslations('studio.events');
+  const tint = useTranslations('studio.integrations');
   const [basics, setBasics] = useState(initialBasics);
   const [output, setOutput] = useState(initialOutput);
   const [share, setShare] = useState(initialShare);
@@ -171,6 +177,25 @@ export function EventSetup({
   const shareStatus = useAutosave(share, async (s) => (await updateSectionAction(id, 'shareSettings', s)).ok, {
     isValid: (s) => shareSettingsSchema.safeParse(s).success,
   });
+
+  // SHR-7: only a connected cloud can be chosen; the others say why they can't, and where to fix it.
+  const cloudOptions = [
+    { value: 'none' as const, label: t('sharing.cloudNone'), disabled: false },
+    ...(['drive', 'dropbox'] as const).map((p) => {
+      const state = cloudStates[p];
+      const provider = tint(`providers.${p}`);
+      return {
+        value: p,
+        label: state === 'connected' ? provider : t(`sharing.cloudState.${state}`, { provider }),
+        disabled: state !== 'connected',
+      };
+    }),
+  ];
+  const chosen = share.cloud === 'none' ? null : cloudStates[share.cloud];
+  const cloudNote =
+    share.cloud !== 'none' && chosen && chosen !== 'connected'
+      ? t(`sharing.cloudNote.${chosen}`, { provider: tint(`providers.${share.cloud}`) })
+      : null;
 
   const v = output.video360;
   // LIV-13: a second booth shows both booths' settings.
@@ -516,6 +541,22 @@ export function EventSetup({
           checked={share.smallerVersion}
           onChange={(smallerVersion) => setShare((s) => ({ ...s, smallerVersion }))}
         />
+        <Field label={t('sharing.cloud')} help={t('sharing.cloudHelp')} htmlFor="setup-cloud" stack>
+          <Select<ShareSettings['cloud']>
+            id="setup-cloud"
+            label={t('sharing.cloud')}
+            className="w-72 max-w-full"
+            value={share.cloud}
+            onChange={(cloud) => setShare((s) => ({ ...s, cloud }))}
+            options={cloudOptions}
+          />
+          <p className="mt-2 text-[13px] leading-relaxed text-muted">
+            {cloudNote && <>{cloudNote} </>}
+            <Link href="/studio/integrations" className="focus-ring rounded font-medium text-accent hover:underline">
+              {t('sharing.cloudManage')}
+            </Link>
+          </p>
+        </Field>
         <Field label={t('sharing.contact')} help={t('sharing.contactHelp')} stack>
           <TextInput
             value={share.contact}
