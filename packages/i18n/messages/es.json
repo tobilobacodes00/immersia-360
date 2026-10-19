@@ -599,7 +599,8 @@
         "image": "Agregar una imagen",
         "rect": "Agregar un rectángulo",
         "ellipse": "Agregar una elipse",
-        "qr": "Agregar el código QR del invitado"
+        "qr": "Agregar el código QR del invitado",
+        "ornament": "Agregar una decoración"
       },
       "status": {
         "saved": "Todos los cambios guardados",
@@ -637,14 +638,16 @@
         "image": "Imagen",
         "text": "Texto",
         "shape": "Forma",
-        "qr": "Código QR"
+        "qr": "Código QR",
+        "ornament": "Decoración"
       },
       "sections": {
         "text": "Texto",
         "photo": "Foto",
         "image": "Imagen",
         "shape": "Forma",
-        "qr": "Código QR"
+        "qr": "Código QR",
+        "ornament": "Decoración"
       },
       "actions": {
         "duplicate": "Duplicar (Ctrl+D)",
@@ -718,7 +721,8 @@
         "qrDarkOpacity": "Opacidad del código",
         "qrLight": "Fondo",
         "qrLightOpacity": "Opacidad del fondo",
-        "showCode": "Mostrar el código corto"
+        "showCode": "Mostrar el código corto",
+        "ornament": "Forma"
       },
       "weights": {
         "100": "Delgada",
@@ -786,6 +790,42 @@
         "applyTitle": "¿Usar «{name}»?",
         "applyBody": "Reemplaza el diseño actual. Puedes deshacerlo.",
         "apply": "Usar este diseño"
+      },
+      "ornaments": {
+        "title": "Decoraciones",
+        "names": {
+          "heart": "Corazón",
+          "hearts": "Corazones",
+          "star": "Estrella",
+          "sparkle": "Destello",
+          "burst": "Estallido",
+          "rings": "Anillos",
+          "laurel": "Laurel",
+          "leaf": "Hoja",
+          "flower": "Flor",
+          "balloon": "Globo",
+          "balloons": "Globos",
+          "confetti": "Confeti",
+          "crown": "Corona",
+          "grad-cap": "Birrete",
+          "cake": "Pastel",
+          "gift": "Regalo",
+          "champagne": "Brindis",
+          "snowflake": "Copo de nieve",
+          "tree": "Árbol",
+          "bauble": "Esfera",
+          "pumpkin": "Calabaza",
+          "bat": "Murciélago",
+          "ghost": "Fantasma",
+          "moon": "Luna",
+          "rattle": "Sonajero",
+          "bottle": "Biberón",
+          "camera": "Cámara",
+          "divider": "Separador",
+          "corner": "Esquina",
+          "frame": "Marco",
+          "wave": "Ola"
+        }
       }
     },
     "branding": {

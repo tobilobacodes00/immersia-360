@@ -102,12 +102,55 @@ export const qrElement = z.object({
   showCode: z.boolean().default(true),
 });
 
+/** Built-in vector decorations (drawn by @immersia/layout; no files, so library templates need no assets). */
+export const ORNAMENTS = [
+  'heart',
+  'hearts',
+  'star',
+  'sparkle',
+  'burst',
+  'rings',
+  'laurel',
+  'leaf',
+  'flower',
+  'balloon',
+  'balloons',
+  'confetti',
+  'crown',
+  'grad-cap',
+  'cake',
+  'gift',
+  'champagne',
+  'snowflake',
+  'tree',
+  'bauble',
+  'pumpkin',
+  'bat',
+  'ghost',
+  'moon',
+  'rattle',
+  'bottle',
+  'camera',
+  'divider',
+  'corner',
+  'frame',
+  'wave',
+] as const;
+
+export const ornamentElement = z.object({
+  ...base,
+  type: z.literal('ornament'),
+  ornament: z.enum(ORNAMENTS),
+  color: hexA,
+});
+
 export const templateElementSchema = z.discriminatedUnion('type', [
   photoSlotElement,
   imageElement,
   textElement,
   shapeElement,
   qrElement,
+  ornamentElement,
 ]);
 
 export const templateCanvasSchema = z.object({

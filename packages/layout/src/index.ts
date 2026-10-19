@@ -5,3 +5,4 @@ export * from './overlays';
 export * from './signage';
 export * from './pdf';
 export * from './png';
+export * from './ornaments';

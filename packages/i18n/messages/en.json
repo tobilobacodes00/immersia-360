@@ -599,7 +599,8 @@
         "image": "Add an image",
         "rect": "Add a rectangle",
         "ellipse": "Add an ellipse",
-        "qr": "Add the guest QR code"
+        "qr": "Add the guest QR code",
+        "ornament": "Add a decoration"
       },
       "status": {
         "saved": "All changes saved",
@@ -637,14 +638,16 @@
         "image": "Image",
         "text": "Text",
         "shape": "Shape",
-        "qr": "QR code"
+        "qr": "QR code",
+        "ornament": "Decoration"
       },
       "sections": {
         "text": "Text",
         "photo": "Photo",
         "image": "Image",
         "shape": "Shape",
-        "qr": "QR code"
+        "qr": "QR code",
+        "ornament": "Decoration"
       },
       "actions": {
         "duplicate": "Duplicate (Ctrl+D)",
@@ -718,7 +721,8 @@
         "qrDarkOpacity": "Code opacity",
         "qrLight": "Background",
         "qrLightOpacity": "Background opacity",
-        "showCode": "Show the short code"
+        "showCode": "Show the short code",
+        "ornament": "Shape"
       },
       "weights": {
         "100": "Thin",
@@ -786,6 +790,42 @@
         "applyTitle": "Use “{name}”?",
         "applyBody": "It replaces the current design. You can undo this.",
         "apply": "Use this design"
+      },
+      "ornaments": {
+        "title": "Decorations",
+        "names": {
+          "heart": "Heart",
+          "hearts": "Hearts",
+          "star": "Star",
+          "sparkle": "Sparkle",
+          "burst": "Burst",
+          "rings": "Rings",
+          "laurel": "Laurel",
+          "leaf": "Leaf",
+          "flower": "Flower",
+          "balloon": "Balloon",
+          "balloons": "Balloons",
+          "confetti": "Confetti",
+          "crown": "Crown",
+          "grad-cap": "Grad cap",
+          "cake": "Cake",
+          "gift": "Gift",
+          "champagne": "Champagne",
+          "snowflake": "Snowflake",
+          "tree": "Tree",
+          "bauble": "Bauble",
+          "pumpkin": "Pumpkin",
+          "bat": "Bat",
+          "ghost": "Ghost",
+          "moon": "Moon",
+          "rattle": "Rattle",
+          "bottle": "Baby bottle",
+          "camera": "Camera",
+          "divider": "Divider",
+          "corner": "Corner",
+          "frame": "Frame",
+          "wave": "Wave"
+        }
       }
     },
     "branding": {

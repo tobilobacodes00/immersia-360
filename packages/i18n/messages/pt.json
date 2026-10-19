@@ -599,7 +599,8 @@
         "image": "Adicionar uma imagem",
         "rect": "Adicionar um retângulo",
         "ellipse": "Adicionar uma elipse",
-        "qr": "Adicionar o QR code do convidado"
+        "qr": "Adicionar o QR code do convidado",
+        "ornament": "Adicionar uma decoração"
       },
       "status": {
         "saved": "Todas as alterações salvas",
@@ -637,14 +638,16 @@
         "image": "Imagem",
         "text": "Texto",
         "shape": "Forma",
-        "qr": "QR code"
+        "qr": "QR code",
+        "ornament": "Decoração"
       },
       "sections": {
         "text": "Texto",
         "photo": "Foto",
         "image": "Imagem",
         "shape": "Forma",
-        "qr": "QR code"
+        "qr": "QR code",
+        "ornament": "Decoração"
       },
       "actions": {
         "duplicate": "Duplicar (Ctrl+D)",
@@ -718,7 +721,8 @@
         "qrDarkOpacity": "Opacidade do código",
         "qrLight": "Fundo",
         "qrLightOpacity": "Opacidade do fundo",
-        "showCode": "Mostrar o código curto"
+        "showCode": "Mostrar o código curto",
+        "ornament": "Forma"
       },
       "weights": {
         "100": "Fina",
@@ -786,6 +790,42 @@
         "applyTitle": "Usar “{name}”?",
         "applyBody": "Ele substitui o design atual. Você pode desfazer.",
         "apply": "Usar este design"
+      },
+      "ornaments": {
+        "title": "Decorações",
+        "names": {
+          "heart": "Coração",
+          "hearts": "Corações",
+          "star": "Estrela",
+          "sparkle": "Brilho",
+          "burst": "Explosão",
+          "rings": "Alianças",
+          "laurel": "Louros",
+          "leaf": "Folha",
+          "flower": "Flor",
+          "balloon": "Balão",
+          "balloons": "Balões",
+          "confetti": "Confete",
+          "crown": "Coroa",
+          "grad-cap": "Capelo",
+          "cake": "Bolo",
+          "gift": "Presente",
+          "champagne": "Brinde",
+          "snowflake": "Floco de neve",
+          "tree": "Árvore",
+          "bauble": "Bola de Natal",
+          "pumpkin": "Abóbora",
+          "bat": "Morcego",
+          "ghost": "Fantasma",
+          "moon": "Lua",
+          "rattle": "Chocalho",
+          "bottle": "Mamadeira",
+          "camera": "Câmera",
+          "divider": "Divisor",
+          "corner": "Canto",
+          "frame": "Moldura",
+          "wave": "Onda"
+        }
       }
     },
     "branding": {
