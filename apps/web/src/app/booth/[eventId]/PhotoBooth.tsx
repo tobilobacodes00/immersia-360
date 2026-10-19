@@ -63,7 +63,8 @@ type Phase =
   | { kind: 'flash'; shot: number }
   | { kind: 'review'; preview: string }
   | { kind: 'making' }
-  | { kind: 'result'; session: LocalSession; preview: string }
+  /** `strip`: the kept strip at print resolution, for the guest's reprints. */
+  | { kind: 'result'; session: LocalSession; preview: string; strip: Blob }
   | { kind: 'error'; code: string };
 
 /** Frames per second of the motion clips (PHO-2). */
@@ -102,7 +103,6 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
   const motionBuffer = useRef<MotionBuffer | null>(null);
   const renderer = useRef<RenderClient | null>(null);
   const shots = useRef<{ still: ImageBitmap; clip: Promise<ImageBitmap[]> | null }[]>([]);
-  const strip = useRef<Blob | null>(null);
   const keepTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const p = event.photo;
@@ -315,7 +315,6 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
     setPhase({ kind: 'making' });
     const session = await mintSession(db, { eventId: event.id, takeIds: [], capturedAt: Date.now() });
     const image = await composeStrip(session, 1);
-    strip.current = image;
     const { width, height } = canvasSizeFor(p.printSize);
     await putOutput(db, s, {
       takeId: null,
@@ -329,7 +328,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
     });
     uploads.nudgeSession(session.id);
     setPrintsLeft(p.print.enabled ? p.print.maxGuestCopies : 0);
-    setPhase({ kind: 'result', session, preview: URL.createObjectURL(image) });
+    setPhase({ kind: 'result', session, preview: URL.createObjectURL(image), strip: image });
     if (p.print.enabled && p.print.autoPrint) void print(image);
     void makeExtras(session);
   }, [composeStrip, db, event.id, makeExtras, p, print, store, uploads]);
@@ -558,11 +557,11 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
             onEmail={(email) => queueEmail(db, phase.session.id, email)}
             onDone={backToReady}
             actions={
-              p.print.enabled && strip.current ? (
+              p.print.enabled ? (
                 <GuestButton
                   className="min-w-[12rem]"
                   disabled={printing || printsLeft === 0}
-                  onClick={() => strip.current && void print(strip.current)}
+                  onClick={() => void print(phase.strip)}
                 >
                   <Printer className="size-6" aria-hidden />
                   {printing ? tp('printing') : printsLeft === 0 ? tp('printLimit') : tp('print')}

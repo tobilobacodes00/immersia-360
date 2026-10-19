@@ -1,5 +1,7 @@
+// gifenc ships no types. A reference (not an import: the .d.ts declares an ambient module) carries
+// ours into every program that compiles this file, e.g. apps/web's type check.
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="./gifenc.d.ts" />
-// (The reference carries gifenc's typings into every program that compiles this file, e.g. apps/web.)
 import { GIFEncoder, applyPalette, quantize, type Palette } from 'gifenc';
 import { drawFitted, type Drawable } from './render';
 
