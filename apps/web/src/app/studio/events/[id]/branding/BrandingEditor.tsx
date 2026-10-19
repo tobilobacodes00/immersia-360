@@ -11,6 +11,7 @@ import {
   brandingSchema,
   eventTokens,
   guestThemeVars,
+  type BoothMode,
   type BrandingSettings,
   type PhotoSettings,
   type Video360Settings,
@@ -40,16 +41,21 @@ const END_CARD_S = 2;
 
 export interface BrandingEditorProps {
   eventId: string;
-  mode: 'video360' | 'photo';
+  /** The booths the event runs (LIV-13): its main one first. */
+  booths: BoothMode[];
   readOnly: boolean;
   event: { name: string; date: string };
   branding: BrandingSettings;
   video: Video360Settings;
   photo: PhotoSettings;
   endFrameQr: boolean;
-  design: { id: string; doc: Template } | null;
-  library: TemplateSummary[];
-  uploads: AssetView[];
+  /** One per booth: the print layout (photo) or the video overlay (360). */
+  designs: {
+    kind: 'layout' | 'overlay';
+    design: { id: string; doc: Template } | null;
+    library: TemplateSummary[];
+    uploads: AssetView[];
+  }[];
   assets: AssetView[];
 }
 
@@ -278,27 +284,30 @@ export function BrandingEditor(p: BrandingEditorProps) {
         ))}
       </Card>
 
-      <Card
-        title={t(p.mode === 'photo' ? 'design.layoutTitle' : 'design.overlayTitle')}
-        subtitle={t(p.mode === 'photo' ? 'design.layoutSubtitle' : 'design.overlaySubtitle')}
-      >
-        <DesignCard
-          eventId={p.eventId}
-          kind={p.mode === 'photo' ? 'layout' : 'overlay'}
-          design={p.design}
-          library={p.library}
-          uploads={p.uploads}
-          assets={[...views.values()]}
-          theme={theme}
-          tokens={tokens}
-          printSize={p.photo.printSize}
-          shots={p.photo.shots}
-          aspect={p.video.aspect}
-          readOnly={p.readOnly}
-        />
-      </Card>
+      {p.designs.map((d) => (
+        <Card
+          key={d.kind}
+          title={t(d.kind === 'layout' ? 'design.layoutTitle' : 'design.overlayTitle')}
+          subtitle={t(d.kind === 'layout' ? 'design.layoutSubtitle' : 'design.overlaySubtitle')}
+        >
+          <DesignCard
+            eventId={p.eventId}
+            kind={d.kind}
+            design={d.design}
+            library={d.library}
+            uploads={d.uploads}
+            assets={[...views.values()]}
+            theme={theme}
+            tokens={tokens}
+            printSize={p.photo.printSize}
+            shots={p.photo.shots}
+            aspect={p.video.aspect}
+            readOnly={p.readOnly}
+          />
+        </Card>
+      ))}
 
-      {p.mode === 'video360' && (
+      {p.booths.includes('video360') && (
         <>
           <Card title={t('cards.title')} subtitle={t('cards.subtitle')}>
             <MediaSlot

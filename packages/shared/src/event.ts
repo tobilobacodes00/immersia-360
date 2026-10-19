@@ -117,7 +117,17 @@ export const outputSettingsSchema = z.object({
   video360: video360Schema.default(() => video360Schema.parse({})),
   photo: photoSchema.default(() => photoSchema.parse({})),
   triggers: triggerSchema.default(() => triggerSchema.parse({})),
+  /** LIV-13: the event also runs the other booth (a 360 and a photo booth feeding one display). */
+  secondBooth: z.boolean().default(false),
 });
+
+export type BoothMode = 'video360' | 'photo';
+
+/** The booths an event runs: its main one first. */
+export function eventBooths(mode: BoothMode, output: { secondBooth: boolean }): BoothMode[] {
+  const other: BoothMode = mode === 'photo' ? 'video360' : 'photo';
+  return output.secondBooth ? [mode, other] : [mode];
+}
 
 export const shareSettingsSchema = z.object({
   qr: z.boolean().default(true),

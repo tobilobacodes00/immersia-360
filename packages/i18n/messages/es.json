@@ -289,7 +289,9 @@
         "expiry": "Conservar los archivos durante",
         "expiryHelp": "Las descargas alojadas se eliminan después. Puedes ampliar el plazo antes de que termine.",
         "prefix": "Numerar los archivos",
-        "prefixHelp": "Añade 0001_, 0002_ … delante de cada nombre de archivo."
+        "prefixHelp": "Añade 0001_, 0002_ … delante de cada nombre de archivo.",
+        "secondBooth": "También usar {booth}",
+        "secondBoothHelp": "Ambas cabinas comparten este evento: sus páginas para compartir, la galería y Live Display."
       },
       "video": {
         "title": "Video 360",
@@ -1145,7 +1147,9 @@
       "printing": "Imprimiendo…",
       "printLimit": "Ya no quedan impresiones para esta sesión",
       "flash": "Foto tomada"
-    }
+    },
+    "startOther": "Iniciar {booth}",
+    "endCard": "Escanea para tener tu video"
   },
   "share": {
     "metaTitle": "{event}: tus archivos",

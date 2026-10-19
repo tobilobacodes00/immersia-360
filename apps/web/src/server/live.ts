@@ -118,6 +118,11 @@ export async function resolveMedia(outputId: string, exp: number, sig: string): 
 
 type OutputLite = { id: string; kind: string; width: number | null; height: number | null };
 
+/** Which booth made a session (LIV-13: one event can run both): photo sessions have a strip. */
+export function sessionBooth(outputs: { kind: string }[]): EventRow['mode'] {
+  return outputs.some((o) => o.kind === 'strip' || o.kind === 'gif') ? 'photo' : 'video360';
+}
+
 /** The media a session shows on screen: the light video for a 360, the GIF (or strip) for photos. */
 export function pickMedia(booth: EventRow['mode'], outputs: OutputLite[]) {
   const of = (kind: string) => outputs.find((o) => o.kind === kind && o.width && o.height);
@@ -151,14 +156,15 @@ async function uploadedOutputs(sessionIds: string[]) {
 }
 
 async function toItems(
-  booth: EventRow['mode'],
   sessions: { id: string; shortCode: string; linkId: string; displayedAt: Date | null; capturedAt: Date }[],
   origin: string,
 ): Promise<DisplayItem[]> {
   const outputs = await uploadedOutputs(sessions.map((s) => s.id));
   const items: DisplayItem[] = [];
   for (const s of sessions) {
-    const media = pickMedia(booth, outputs.get(s.id) ?? []);
+    const own = outputs.get(s.id) ?? [];
+    const booth = sessionBooth(own);
+    const media = pickMedia(booth, own);
     if (!media) continue;
     items.push({
       id: s.id,
@@ -201,7 +207,7 @@ async function shownItems(ev: EventRow, origin: string): Promise<DisplayItem[]> 
     )
     .orderBy(desc(captureSession.displayedAt))
     .limit(DISPLAY_ITEM_LIMIT);
-  return toItems(ev.mode, sessions, origin);
+  return toItems(sessions, origin);
 }
 
 /**
@@ -223,11 +229,12 @@ export async function refreshSessionItem(sessionId: string, origin: string): Pro
     await db().update(captureSession).set({ displayStatus: 'opted_out' }).where(eq(captureSession.id, sessionId));
     return;
   }
-  const media = pickMedia(ev.mode, (await uploadedOutputs([sessionId])).get(sessionId) ?? []);
+  const own = (await uploadedOutputs([sessionId])).get(sessionId) ?? [];
+  const media = pickMedia(sessionBooth(own), own);
   if (!media) return;
   if (session.displayStatus === 'shown') {
     // Better media arrived (a photo session's GIF after its strip): refresh the item in place.
-    const [item] = await toItems(ev.mode, [session], origin);
+    const [item] = await toItems([session], origin);
     if (item) await publish(ev.id, { type: 'item', item });
     return;
   }
@@ -238,7 +245,7 @@ export async function refreshSessionItem(sessionId: string, origin: string): Pro
     .where(and(eq(captureSession.id, sessionId), eq(captureSession.displayStatus, 'pending')))
     .returning(sessionCols);
   if (!updated) return;
-  const [item] = await toItems(ev.mode, [updated], origin);
+  const [item] = await toItems([updated], origin);
   if (item) await publish(ev.id, { type: 'item', item });
 }
 
@@ -496,7 +503,7 @@ export async function moderationLists(
       .orderBy(desc(status === 'pending' ? captureSession.capturedAt : captureSession.displayedAt))
       .limit(DISPLAY_ITEM_LIMIT);
     // Pending sessions without their media yet aren't in the queue: there is nothing to approve.
-    return (await toItems(ev.mode, sessions, origin)).map((item) => ({ ...item, status }));
+    return (await toItems(sessions, origin)).map((item) => ({ ...item, status }));
   };
   const [pending, shown, hidden] = await Promise.all([list('pending'), list('shown'), list('hidden')]);
   return { pending, shown, hidden };
@@ -525,7 +532,7 @@ export async function moderate(
       .set({ displayStatus: 'shown', displayedAt: new Date() })
       .where(eq(captureSession.id, sessionId))
       .returning(sessionCols);
-    const [item] = await toItems(row.ev.mode, [updated!], origin);
+    const [item] = await toItems([updated!], origin);
     if (item) await publish(row.ev.id, { type: 'item', item });
   }
   await publish(row.ev.id, { type: 'queue' });

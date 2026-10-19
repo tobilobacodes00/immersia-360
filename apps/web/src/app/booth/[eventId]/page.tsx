@@ -1,20 +1,33 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { brandingSchema, outputSettingsSchema, shareSettingsSchema, templateAssetIds } from '@immersia/shared';
+import {
+  brandingSchema,
+  eventBooths,
+  outputSettingsSchema,
+  shareSettingsSchema,
+  templateAssetIds,
+  type BoothMode,
+} from '@immersia/shared';
 import { assetViews } from '@/server/assets';
 import { getEvent } from '@/server/events';
 import { requireOperator } from '@/server/session';
 import { getTemplate } from '@/server/templates';
+import { BoothClient } from './BoothClient';
 
 /** Long enough for a slow venue connection to fill the device cache; cached files never expire. */
 const ASSET_URL_TTL_S = 12 * 60 * 60;
-import { BoothClient } from './BoothClient';
 
 export const metadata: Metadata = { title: 'Booth', robots: { index: false } };
 
-/** Screens 10–12: the 360 booth or the photo booth, by the event's mode. */
-export default async function BoothPage({ params }: { params: Promise<{ eventId: string }> }) {
-  const { eventId } = await params;
+/** Screens 10–12: the 360 booth or the photo booth (the event's own, or its second booth, LIV-13). */
+export default async function BoothPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ eventId: string }>;
+  searchParams: Promise<{ booth?: string }>;
+}) {
+  const [{ eventId }, { booth }] = await Promise.all([params, searchParams]);
   const op = await requireOperator({ event: ['run'] });
   if (!/^[0-9a-f-]{36}$/i.test(eventId)) notFound();
   const event = await getEvent(op.organizationId, eventId);
@@ -22,13 +35,15 @@ export default async function BoothPage({ params }: { params: Promise<{ eventId:
   const output = outputSettingsSchema.parse(event.outputSettings);
   const branding = brandingSchema.parse(event.branding);
   const share = shareSettingsSchema.parse(event.shareSettings);
+  const booths = eventBooths(event.mode, output);
+  const mode: BoothMode = booths.find((b) => b === booth) ?? event.mode;
   // The design (screen 6) and every file the media draws, for the booth's offline cache.
-  const designId = event.mode === 'photo' ? output.photo.layoutTemplateId : output.video360.overlayTemplateId;
+  const designId = mode === 'photo' ? output.photo.layoutTemplateId : output.video360.overlayTemplateId;
   const design = designId ? await getTemplate(op.organizationId, designId) : null;
   const v = output.video360;
   const ids = [
     ...(design ? templateAssetIds(design.doc) : []),
-    ...(event.mode === 'video360' ? [v.introAssetId, v.outroAssetId, v.music?.assetId ?? null] : []),
+    ...(mode === 'video360' ? [v.introAssetId, v.outroAssetId, v.music?.assetId ?? null] : []),
   ].filter((x): x is string => !!x);
   const assets = await assetViews(op.organizationId, [...new Set(ids)], ASSET_URL_TTL_S);
   const media = {
@@ -48,7 +63,7 @@ export default async function BoothPage({ params }: { params: Promise<{ eventId:
     kioskPinHash: event.kioskPinHash,
     liveDisplay: event.liveDisplayEnabled,
   };
-  if (event.mode === 'photo')
+  if (mode === 'photo')
     return (
       <BoothClient
         mode="photo"
@@ -76,6 +91,7 @@ export default async function BoothPage({ params }: { params: Promise<{ eventId:
           sms: share.sms,
           whatsapp: share.whatsapp,
           smallerVersion: share.smallerVersion,
+          endFrameQr: share.endFrameQr,
         },
         media: { ...media, name: event.name, date: event.date, overlay: design?.doc ?? null },
       }}

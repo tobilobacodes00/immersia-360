@@ -289,7 +289,9 @@
         "expiry": "Keep guest files for",
         "expiryHelp": "Hosted downloads are deleted after this. You can extend it before it runs out.",
         "prefix": "Number the files",
-        "prefixHelp": "Add 0001_, 0002_ … in front of every file name."
+        "prefixHelp": "Add 0001_, 0002_ … in front of every file name.",
+        "secondBooth": "Also run a {booth}",
+        "secondBoothHelp": "Both booths share this event: its share pages, gallery and Live Display."
       },
       "video": {
         "title": "360 video",
@@ -1145,7 +1147,9 @@
       "printing": "Printing…",
       "printLimit": "That’s all the prints for this session",
       "flash": "Photo taken"
-    }
+    },
+    "startOther": "Start {booth}",
+    "endCard": "Scan to get your video"
   },
   "share": {
     "metaTitle": "{event}: your files",

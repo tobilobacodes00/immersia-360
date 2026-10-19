@@ -289,7 +289,9 @@
         "expiry": "Guardar os arquivos por",
         "expiryHelp": "Os downloads hospedados são apagados depois disso. Você pode estender o prazo antes que termine.",
         "prefix": "Numerar os arquivos",
-        "prefixHelp": "Adiciona 0001_, 0002_ … antes de cada nome de arquivo."
+        "prefixHelp": "Adiciona 0001_, 0002_ … antes de cada nome de arquivo.",
+        "secondBooth": "Também usar {booth}",
+        "secondBoothHelp": "As duas cabines compartilham este evento: as páginas de compartilhamento, a galeria e o Live Display."
       },
       "video": {
         "title": "Vídeo 360",
@@ -1145,7 +1147,9 @@
       "printing": "Imprimindo…",
       "printLimit": "Acabaram as impressões desta sessão",
       "flash": "Foto tirada"
-    }
+    },
+    "startOther": "Iniciar {booth}",
+    "endCard": "Escaneie para pegar seu vídeo"
   },
   "share": {
     "metaTitle": "{event}: seus arquivos",

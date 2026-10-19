@@ -71,9 +71,9 @@ export interface BoothEvent {
   /** KIO-1: with a PIN set, the booth runs locked full screen. Only the hash is sent. */
   kioskPinHash: string | null;
   /** SHR-1/2/3: what the result screen offers the guest. */
-  share: { qr: boolean; email: boolean; sms: boolean; whatsapp: boolean; smallerVersion: boolean };
+  share: { qr: boolean; email: boolean; sms: boolean; whatsapp: boolean; smallerVersion: boolean; endFrameQr: boolean };
   /** Overlay, intro/outro and music (screen 5), from the device's offline cache. */
-  media: EventMedia;
+  media: Omit<EventMedia, 'endCard'>;
   /** LIV-8: guests are told their capture may appear on the Live Display, and can opt out. */
   liveDisplay: boolean;
 }
@@ -142,7 +142,14 @@ export function Booth360({ event }: { event: BoothEvent }) {
   const renderPaused = useHeld(capturing, RENDER_RESUME_MS);
   const kiosk = useKioskLock(event.kioskPinHash);
   const uploads = useUploadQueue({ eventId: event.id, token: identity?.token ?? null, store: storeReady });
-  const renderMedia = useEventMedia(event.media, event.video);
+  const mediaSpec = useMemo<EventMedia>(
+    () => ({
+      ...event.media,
+      endCard: event.share.endFrameQr ? { theme: event.theme, hint: t('endCard') } : null,
+    }),
+    [event.media, event.share.endFrameQr, event.theme, t],
+  );
+  const renderMedia = useEventMedia(mediaSpec, event.video);
   const renderQueue = useRenderQueue({
     eventId: event.id,
     video: event.video,

@@ -11,6 +11,7 @@ import {
   probeTake,
   videoBitrate,
   type Card,
+  type StillCard,
 } from '@immersia/render-engine';
 import { boothDb, outputsForTake, putOutput, type LocalTake, type TakeStore } from '@immersia/offline';
 import type { Video360Settings } from '@immersia/shared';
@@ -25,6 +26,8 @@ export interface RenderAssets {
   music?: () => Promise<Blob | null>;
   intro?: () => Promise<Card | null>;
   outro?: () => Promise<Card | null>;
+  /** DL-4: the closing QR card for this take's guest session. */
+  endCard?: (take: LocalTake) => Promise<StillCard | null>;
 }
 
 export interface RenderState {
@@ -106,13 +109,15 @@ export function useRenderQueue(opts: {
         };
         // A missing or unreadable file renders the video without it rather than failing the take.
         const media = <T>(get?: () => Promise<T | null>) => (get ? get().catch(() => null) : Promise.resolve(null));
-        const [overlay, music, intro, outro] = await Promise.all([
+        const endCard = assets?.endCard;
+        const [overlay, music, intro, outro, end] = await Promise.all([
           media(assets?.overlay),
           media(assets?.music),
           media(assets?.intro),
           media(assets?.outro),
+          media(endCard ? () => endCard(take) : undefined),
         ]);
-        const base = { output, slowMotion: video.slowMotion, reverse: video.reverse, intro, outro };
+        const base = { output, slowMotion: video.slowMotion, reverse: video.reverse, intro, outro, endCard: end };
         let audio = null;
         if (music && video.music) {
           // The soundtrack is mixed to the exact output length before rendering.

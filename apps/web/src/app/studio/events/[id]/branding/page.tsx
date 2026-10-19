@@ -1,7 +1,13 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { brandingSchema, outputSettingsSchema, shareSettingsSchema, templateAssetIds } from '@immersia/shared';
+import {
+  brandingSchema,
+  eventBooths,
+  outputSettingsSchema,
+  shareSettingsSchema,
+  templateAssetIds,
+} from '@immersia/shared';
 import { roleCan } from '@/lib/permissions';
 import { assetViews, listAssets } from '@/server/assets';
 import { getEvent } from '@/server/events';
@@ -25,39 +31,45 @@ export default async function BrandingPage({ params }: { params: Promise<{ id: s
   const output = outputSettingsSchema.parse(event.outputSettings);
   const branding = brandingSchema.parse(event.branding);
   const share = shareSettingsSchema.parse(event.shareSettings);
-  const kind = event.mode === 'photo' ? 'layout' : 'overlay';
-  const designId = kind === 'layout' ? output.photo.layoutTemplateId : output.video360.overlayTemplateId;
-
-  const [design, library, uploads] = await Promise.all([
-    designId ? getTemplate(op.organizationId, designId) : null,
-    listLibraryTemplates(op.organizationId, kind),
-    // Uploaded frames and overlays can become the design directly.
-    listAssets(op.organizationId, kind === 'overlay' ? ['overlay'] : ['layout', 'overlay']),
-  ]);
+  // One design per booth the event runs: a print layout for photo booths, an overlay for 360 booths.
+  const booths = eventBooths(event.mode, output);
+  const designs = await Promise.all(
+    booths.map(async (booth) => {
+      const kind = booth === 'photo' ? ('layout' as const) : ('overlay' as const);
+      const designId = kind === 'layout' ? output.photo.layoutTemplateId : output.video360.overlayTemplateId;
+      const [design, library, uploads] = await Promise.all([
+        designId ? getTemplate(op.organizationId, designId) : null,
+        listLibraryTemplates(op.organizationId, kind),
+        // Uploaded frames and overlays can become the design directly.
+        listAssets(op.organizationId, kind === 'overlay' ? ['overlay'] : ['layout', 'overlay']),
+      ]);
+      return { kind, design: design ? { id: design.id, doc: design.doc } : null, library, uploads };
+    }),
+  );
   const referenced = [
     branding.logoAssetId,
     branding.attract.backgroundAssetId,
     output.video360.introAssetId,
     output.video360.outroAssetId,
     output.video360.music?.assetId ?? null,
-    ...(design ? templateAssetIds(design.doc) : []),
-    ...library.flatMap((l) => templateAssetIds(l.doc)),
+    ...designs.flatMap((d) => [
+      ...(d.design ? templateAssetIds(d.design.doc) : []),
+      ...d.library.flatMap((l) => templateAssetIds(l.doc)),
+    ]),
   ].filter((x): x is string => !!x);
   const assets = await assetViews(op.organizationId, [...new Set(referenced)]);
 
   return (
     <BrandingEditor
       eventId={event.id}
-      mode={event.mode}
+      booths={booths}
       readOnly={readOnly}
       event={{ name: event.name, date: event.date }}
       branding={branding}
       video={output.video360}
       photo={output.photo}
       endFrameQr={share.endFrameQr}
-      design={design ? { id: design.id, doc: design.doc } : null}
-      library={library}
-      uploads={uploads}
+      designs={designs}
       assets={assets}
     />
   );

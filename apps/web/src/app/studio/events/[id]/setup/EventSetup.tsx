@@ -173,6 +173,9 @@ export function EventSetup({
   });
 
   const v = output.video360;
+  // LIV-13: a second booth shows both booths' settings.
+  const runsVideo = basics.mode === 'video360' || output.secondBooth;
+  const runsPhoto = basics.mode === 'photo' || output.secondBooth;
   const p = output.photo;
   const setV = (patch: Partial<OutputSettings['video360']>) =>
     setOutput((o) => ({ ...o, video360: { ...o.video360, ...patch } }));
@@ -229,6 +232,12 @@ export function EventSetup({
           />
         </Field>
         <ToggleField
+          label={t('basics.secondBooth', { booth: te(`modes.${basics.mode === 'photo' ? 'video360' : 'photo'}`) })}
+          help={t('basics.secondBoothHelp')}
+          checked={output.secondBooth}
+          onChange={(secondBooth) => setOutput((o) => ({ ...o, secondBooth }))}
+        />
+        <ToggleField
           label={t('basics.prefix')}
           help={t('basics.prefixHelp')}
           checked={basics.filenamePrefixEnabled}
@@ -236,7 +245,7 @@ export function EventSetup({
         />
       </Section>
 
-      {basics.mode === 'video360' ? (
+      {runsVideo && (
         <Section id="video" title={t('video.title')} subtitle={t('video.subtitle')}>
           <Issues issues={outputIssues} />
           <Field label={t('video.resolution')} help={t('video.resolutionHelp')}>
@@ -356,7 +365,9 @@ export function EventSetup({
             onChange={(microphone) => setV({ microphone })}
           />
         </Section>
-      ) : (
+      )}
+
+      {runsPhoto && (
         <Section id="photo" title={t('photo.title')} subtitle={t('photo.subtitle')}>
           <Field label={t('photo.shots')}>
             <Segmented<'1' | '2' | '3' | '4'>
@@ -512,14 +523,15 @@ export function EventSetup({
             ariaLabel={t('sharing.contact')}
           />
         </Field>
-        {basics.mode === 'photo' ? (
+        {runsPhoto && (
           <ToggleField
             label={t('sharing.stripQr')}
             help={t('sharing.stripQrHelp')}
             checked={share.stripQr}
             onChange={(stripQr) => setShare((s) => ({ ...s, stripQr }))}
           />
-        ) : (
+        )}
+        {runsVideo && (
           <ToggleField
             label={t('sharing.endFrame')}
             help={t('sharing.endFrameHelp')}
