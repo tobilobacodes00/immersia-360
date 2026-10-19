@@ -16,26 +16,55 @@ const FORMATS = [
   'video/mp4',
 ];
 
+type GeneratedTrack = MediaStreamTrack & { readonly writable: WritableStream<VideoFrame> };
+const TrackGenerator = (globalThis as { MediaStreamTrackGenerator?: new (init: { kind: 'video' }) => GeneratedTrack })
+  .MediaStreamTrackGenerator;
+
 /**
- * Record the test pattern for at least `minMs` and until `minChunks` chunks have arrived (busy CI
- * runners deliver frames and chunks slower than wall-clock time suggests); resolves with the chunks
- * as the booth stores them.
+ * A live video track of the test pattern, one frame per `push`. A captured canvas only emits a
+ * frame when its page renders, and Vitest runs browser test files side by side in frames Chrome
+ * stops rendering while they are off screen: a CI run got 2 frames in 10 s that way, and a
+ * headless page outside Vitest recorded nothing at all. Chrome's track generator takes each frame
+ * as it is written, rendering or not, so it is used where it exists; canvas capture is the fallback.
  */
-async function record(mimeType: string, minMs: number, minChunks = 1, timesliceMs = 250): Promise<Blob[]> {
+function patternTrack() {
   const canvas = document.createElement('canvas');
   canvas.width = W;
   canvas.height = H;
   // Same drawing API as OffscreenCanvasRenderingContext2D for everything the fixture uses.
   const ctx = canvas.getContext('2d') as unknown as OffscreenCanvasRenderingContext2D;
   drawTestFrame(ctx, 0);
-  const stream = canvas.captureStream(30);
+  if (!TrackGenerator) return { stream: canvas.captureStream(30), push: (i: number) => drawTestFrame(ctx, i) };
+  const track = new TrackGenerator({ kind: 'video' });
+  const writer = track.writable.getWriter();
+  return {
+    stream: new MediaStream([track]),
+    push: (i: number) => {
+      drawTestFrame(ctx, i);
+      // Stamped with the capture time on the monotonic clock, as a camera stamps its frames (frames
+      // stamped from zero recorded nothing in Chrome).
+      const frame = new VideoFrame(canvas, { timestamp: Math.round(performance.now() * 1000) });
+      // The generator closes frames it takes; one written after the track stops is closed here.
+      writer.write(frame).catch(() => frame.close());
+    },
+  };
+}
+
+/**
+ * Record the test pattern for at least `minMs` and until `minChunks` chunks have arrived (busy CI
+ * runners deliver frames and chunks slower than wall-clock time suggests); resolves with the chunks
+ * as the booth stores them.
+ */
+async function record(mimeType: string, minMs: number, minChunks = 1, timesliceMs = 250): Promise<Blob[]> {
+  const { stream, push } = patternTrack();
   const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 4_000_000 });
   const chunks: Blob[] = [];
   recorder.ondataavailable = (e) => {
     if (e.data.size) chunks.push(e.data);
   };
   let i = 0;
-  const timer = setInterval(() => drawTestFrame(ctx, ++i), 1000 / 30);
+  push(i);
+  const timer = setInterval(() => push(++i), 1000 / 30);
   recorder.start(timesliceMs);
   const started = performance.now();
   while (performance.now() - started < minMs || (chunks.length < minChunks && performance.now() - started < 10_000))
