@@ -16,25 +16,18 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
-import { MIN_PRINT_QR_PX, printIssues, type RenderInputs } from '@immersia/layout';
-import {
-  templateAssetIds,
-  templateFontFaces,
-  type ASPECTS,
-  type PRINT_SIZES,
-  type TemplateElement,
-  type TokenContext,
-} from '@immersia/shared';
+import { MIN_PRINT_QR_PX, printIssues } from '@immersia/layout';
+import type { ASPECTS, PRINT_SIZES, TemplateElement, TokenContext } from '@immersia/shared';
 import { Button, IconButton, Pill, Segmented, cx } from '@immersia/ui';
 import { AssetPicker } from '@/components/assets/AssetPicker';
 import { saveTemplateAction, templateLatestAction } from '@/app/studio/design-actions';
-import { prepareTemplateFonts, type FontResolver, type TemplateFace } from '@/lib/template-fonts';
 import type { AssetView } from '@/server/assets';
 import type { TemplateSummary } from '@/server/templates';
 import { Inspector } from './Inspector';
 import { LayersPanel } from './LayersPanel';
 import { TemplatesPanel, type Theme } from './TemplatesPanel';
 import { editorReducer, initialEditorState, type EditorAction, type EditorDoc } from './state';
+import { useTemplateInputs } from './use-template-inputs';
 
 const EditorStage = dynamic(() => import('./EditorStage'), {
   ssr: false,
@@ -93,60 +86,14 @@ export function TemplateEditor(p: TemplateEditorProps) {
   const unit = Math.min(W, H);
 
   // ---- Assets and fonts -------------------------------------------------------------------
-  const [views, setViews] = useState(() => new Map([...p.assets, ...p.fonts].map((a) => [a.id, a])));
-  const [images, setImages] = useState<Map<string, ImageBitmap>>(() => new Map());
-  const [fonts, setFonts] = useState<{ resolve: FontResolver; version: number } | null>(null);
-  const loading = useRef(new Set<string>());
-
-  const addView = useCallback((a: AssetView) => setViews((m) => new Map(m).set(a.id, a)), []);
-  const assetName = useCallback((id: string) => views.get(id)?.name ?? null, [views]);
-
-  const neededImages = useMemo(
-    () => templateAssetIds(doc).filter((id) => views.get(id)?.type !== 'font'),
-    [doc, views],
-  );
-  useEffect(() => {
-    for (const id of neededImages) {
-      const v = views.get(id);
-      if (!v || loading.current.has(id)) continue;
-      loading.current.add(id);
-      void fetch(v.url)
-        .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status)))))
-        .then((b) => createImageBitmap(b))
-        .then((bmp) => setImages((m) => new Map(m).set(id, bmp)))
-        .catch(() => loading.current.delete(id));
-    }
-  }, [neededImages, views]);
-
-  const faceKey = useMemo(() => JSON.stringify(templateFontFaces(doc)), [doc]);
-  useEffect(() => {
-    let live = true;
-    const bytes = async (id: string) => {
-      const v = views.get(id);
-      if (!v) return null;
-      const r = await fetch(v.url);
-      return r.ok ? r.arrayBuffer() : null;
-    };
-    void prepareTemplateFonts(JSON.parse(faceKey) as TemplateFace[], bytes).then((resolve) => {
-      if (live) setFonts((f) => ({ resolve, version: (f?.version ?? 0) + 1 }));
-    });
-    return () => {
-      live = false;
-    };
-  }, [faceKey, views]);
-
-  const inputs = useMemo<RenderInputs>(
-    () => ({
-      photos: [],
-      tokens: p.event.tokens,
-      assets: (id) => images.get(id) ?? null,
-      qr: SAMPLE_QR,
-      placeholders: true,
-      fonts: fonts?.resolve,
-    }),
-    [p.event.tokens, images, fonts],
-  );
-  const redrawKey = images.size * 1000 + (fonts?.version ?? 0);
+  const docs = useMemo(() => [doc], [doc]);
+  const initialViews = useMemo(() => [...p.assets, ...p.fonts], [p.assets, p.fonts]);
+  const { inputs, redrawKey, views, addView, assetName } = useTemplateInputs({
+    docs,
+    initialViews,
+    tokens: p.event.tokens,
+    qr: SAMPLE_QR,
+  });
 
   // ---- Autosave with optimistic concurrency ------------------------------------------------
   const [saved, setSaved] = useState({ revision: 0, version: p.initialVersion });
@@ -369,7 +316,7 @@ export function TemplateEditor(p: TemplateEditorProps) {
         onLibraryChange={setLibrary}
         dispatch={dispatch}
         inputs={inputs}
-        tokens={p.event.tokens}
+        redrawKey={redrawKey}
       />
     );
   const inspector = (

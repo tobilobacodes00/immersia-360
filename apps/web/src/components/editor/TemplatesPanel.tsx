@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type Dispatch, type ReactNode } from 'react';
+import { useMemo, useState, type Dispatch, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import { BookmarkPlus, Trash2 } from 'lucide-react';
 import {
@@ -8,16 +8,16 @@ import {
   fitDocument,
   overlayPreset,
   presetTemplate,
-  renderTemplate,
   type RenderInputs,
   type Shots,
   type Template,
 } from '@immersia/layout';
-import type { ASPECTS, PRINT_SIZES, TokenContext } from '@immersia/shared';
+import type { ASPECTS, PRINT_SIZES } from '@immersia/shared';
 import { Button, IconButton, Modal, TextInput } from '@immersia/ui';
 import { deleteLibraryTemplateAction, saveToLibraryAction } from '@/app/studio/design-actions';
 import type { TemplateSummary } from '@/server/templates';
 import type { EditorAction, EditorDoc } from './state';
+import { TemplateCanvas } from './TemplateCanvas';
 
 export interface Theme {
   background: string;
@@ -26,28 +26,8 @@ export interface Theme {
   font: 'sans' | 'serif';
 }
 
-/** A small, exact preview: the same renderer as print, at thumbnail scale. */
-function Thumb({ doc, inputs, label }: { doc: Template; inputs: RenderInputs; label: string }) {
-  const ref = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const c = ref.current;
-    if (!c) return;
-    const box = 132;
-    const s = Math.min(box / doc.canvas.width, box / doc.canvas.height);
-    c.width = Math.max(1, Math.round(doc.canvas.width * s));
-    c.height = Math.max(1, Math.round(doc.canvas.height * s));
-    const ctx = c.getContext('2d');
-    if (ctx) renderTemplate(ctx, doc, { ...inputs, placeholders: true }, s);
-  }, [doc, inputs]);
-  return (
-    <canvas
-      ref={ref}
-      role="img"
-      aria-label={label}
-      className="max-h-[132px] max-w-full rounded-md shadow-[0_0_0_1px_rgba(17,17,16,0.08)]"
-    />
-  );
-}
+/** Overlays are previewed over a dark stand-in for the video. */
+export const VIDEO_BACKDROP = '#2a2925';
 
 /** Templates panel (screen 6): start from a preset or a saved template; save the current design. */
 export function TemplatesPanel({
@@ -61,7 +41,7 @@ export function TemplatesPanel({
   onLibraryChange,
   dispatch,
   inputs,
-  tokens,
+  redrawKey,
 }: {
   kind: 'layout' | 'overlay';
   /** The design as it is on screen now (saved to the library as is, not the last autosave). */
@@ -74,7 +54,7 @@ export function TemplatesPanel({
   onLibraryChange: (next: TemplateSummary[]) => void;
   dispatch: Dispatch<EditorAction>;
   inputs: RenderInputs;
-  tokens: TokenContext;
+  redrawKey: number;
 }) {
   const t = useTranslations('studio.editor.templates');
   const [saving, setSaving] = useState(false);
@@ -125,7 +105,15 @@ export function TemplatesPanel({
         onClick={() => setConfirm({ title, doc: fitted(doc) })}
         className="focus-ring flex w-full flex-col items-center gap-2 rounded-xl border border-line bg-elev p-2.5 transition-colors hover:border-line-strong"
       >
-        <Thumb doc={doc} inputs={{ ...inputs, tokens }} label={title} />
+        <TemplateCanvas
+          doc={doc}
+          inputs={inputs}
+          redrawKey={redrawKey}
+          maxWidth={132}
+          maxHeight={132}
+          label={title}
+          backdrop={kind === 'overlay' ? VIDEO_BACKDROP : undefined}
+        />
         <span className="w-full truncate text-center text-[12px] text-muted">{title}</span>
       </button>
       {extra}
