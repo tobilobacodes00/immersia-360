@@ -2,9 +2,13 @@ import type { Metadata } from 'next';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Stat } from '@immersia/ui';
 import { formatBytes } from '@/lib/format';
+import { galleryUrl } from '@immersia/shared';
+import { appOrigin } from '@/server/env';
 import { eventStats, getEvent, guestFilesSummary } from '@/server/events';
+import { galleryStats } from '@/server/gallery';
 import { requireOperator } from '@/server/session';
 import { ExtendGuestFiles } from './ExtendGuestFiles';
+import { GalleryCard } from './GalleryCard';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const op = await requireOperator();
@@ -16,11 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function EventDashboardPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const op = await requireOperator({ event: ['read'] });
-  const [t, locale, s, files] = await Promise.all([
+  const [t, locale, s, files, event, gallery] = await Promise.all([
     getTranslations('studio.dashboard'),
     getLocale(),
     eventStats(op.organizationId, id),
     guestFilesSummary(op.organizationId, id),
+    getEvent(op.organizationId, id),
+    galleryStats(id),
   ]);
   const n = (v: number) => v.toLocaleString(locale);
   return (
@@ -70,6 +76,15 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
         </div>
         <ExtendGuestFiles eventId={id} live={files.live} />
       </section>
+      {event && (
+        <GalleryCard
+          eventId={id}
+          eventName={event.name}
+          url={galleryUrl(appOrigin(), event.gallerySlug, 'direct')}
+          items={gallery.items}
+          locked={event.galleryPasswordHash !== null}
+        />
+      )}
     </div>
   );
 }

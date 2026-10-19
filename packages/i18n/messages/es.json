@@ -976,6 +976,30 @@
         "restore": "Mostrar de nuevo",
         "hide": "Ocultar de las pantallas"
       }
+    },
+    "galleryCard": {
+      "title": "Galería del evento",
+      "subtitle": "{count, plural, =0 {Cada captura, para tu cliente y para los invitados que escanean el QR del evento.} one {# captura hasta ahora, para tu cliente y para los invitados que escanean el QR del evento.} other {# capturas hasta ahora, para tu cliente y para los invitados que escanean el QR del evento.}}",
+      "link": "Enlace de la galería",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "openLink": "Abrir",
+      "password": "Contraseña",
+      "passwordHelp": "Opcional. Quien tenga el enlace la necesita una vez por navegador. Las capturas ocultas y los invitados que pidieron no salir en pantalla nunca aparecen aquí.",
+      "locked": "Protegida",
+      "unlocked": "Abierta para quien tenga el enlace",
+      "setPassword": "Definir una contraseña",
+      "newPassword": "Nueva contraseña",
+      "set": "Definir",
+      "change": "Cambiar",
+      "remove": "Quitar la contraseña",
+      "passwordSet": "Contraseña guardada. Quien ya había entrado tendrá que volver a escribirla.",
+      "passwordRemoved": "Contraseña eliminada.",
+      "passwordShort": "Usa al menos 6 caracteres.",
+      "failed": "No se pudo guardar. Inténtalo de nuevo.",
+      "export": "Todos los archivos",
+      "exportHelp": "Todos los archivos en calidad completa del evento en un solo ZIP, incluidas las capturas ocultas, guardados por tu navegador directamente desde el almacenamiento.",
+      "exportButton": "Descargar todos los archivos (ZIP)"
     }
   },
   "booth": {
@@ -1210,5 +1234,41 @@
     "scan": "Escanéalo con la cámara de tu teléfono para descargarla.",
     "close": "Volver a todas",
     "start": "Iniciar la Sharing Station"
+  },
+  "gallery": {
+    "metaTitle": "{event}: fotos y videos",
+    "notFound": "No se encontró la galería",
+    "downloadAll": "Descargar todo",
+    "filters": {
+      "label": "Cabina",
+      "all": "Todo",
+      "video360": "Videos 360",
+      "photo": "Fotos"
+    },
+    "searchLabel": "Buscar por código",
+    "searchPlaceholder": "Tu código",
+    "search": "Buscar",
+    "empty": "Las fotos y los videos aparecen aquí en cuanto se suben.",
+    "noMatch": "Todavía no hay nada con ese código. Puede que siga en camino.",
+    "open": "Abrir la captura {code}",
+    "older": "Anteriores",
+    "newest": "Volver a lo más reciente",
+    "lock": {
+      "body": "Esta galería está protegida.",
+      "label": "Contraseña",
+      "open": "Abrir",
+      "errors": {
+        "wrong": "La contraseña no es correcta.",
+        "tooMany": "Demasiados intentos. Espera unos minutos y vuelve a intentarlo.",
+        "failed": "No se pudo comprobar la contraseña. Revisa tu conexión y vuelve a intentarlo."
+      }
+    }
+  },
+  "zip": {
+    "progress": "{files, plural, one {# archivo} other {# archivos}} · {size}",
+    "cancel": "Cancelar",
+    "done": "Se guardaron {files, plural, one {# archivo} other {# archivos}}.{skipped, plural, =0 {} one { No se pudo obtener # archivo.} other { No se pudieron obtener # archivos.}}",
+    "failed": "La descarga se detuvo. Revisa tu conexión y vuelve a intentarlo.",
+    "cancelled": "Descarga cancelada."
   }
 }

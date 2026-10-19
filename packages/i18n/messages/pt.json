@@ -976,6 +976,30 @@
         "restore": "Mostrar de novo",
         "hide": "Ocultar das telas"
       }
+    },
+    "galleryCard": {
+      "title": "Galeria do evento",
+      "subtitle": "{count, plural, =0 {Todas as capturas, para o seu cliente e para os convidados que escaneiam o QR do evento.} one {# captura até agora, para o seu cliente e para os convidados que escaneiam o QR do evento.} other {# capturas até agora, para o seu cliente e para os convidados que escaneiam o QR do evento.}}",
+      "link": "Link da galeria",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "openLink": "Abrir",
+      "password": "Senha",
+      "passwordHelp": "Opcional. Quem tem o link precisa dela uma vez por navegador. Capturas ocultas e convidados que pediram para não aparecer no telão nunca aparecem aqui.",
+      "locked": "Protegida",
+      "unlocked": "Aberta para quem tem o link",
+      "setPassword": "Definir uma senha",
+      "newPassword": "Nova senha",
+      "set": "Definir",
+      "change": "Trocar",
+      "remove": "Remover a senha",
+      "passwordSet": "Senha salva. Quem já tinha entrado vai precisar digitá-la de novo.",
+      "passwordRemoved": "Senha removida.",
+      "passwordShort": "Use pelo menos 6 caracteres.",
+      "failed": "Não foi possível salvar. Tente de novo.",
+      "export": "Todos os arquivos",
+      "exportHelp": "Todos os arquivos do evento em qualidade total num único ZIP, incluindo as capturas ocultas, salvos pelo seu navegador direto do armazenamento.",
+      "exportButton": "Baixar todos os arquivos (ZIP)"
     }
   },
   "booth": {
@@ -1210,5 +1234,41 @@
     "scan": "Escaneie com a câmera do celular para baixar.",
     "close": "Voltar para todas",
     "start": "Iniciar a Sharing Station"
+  },
+  "gallery": {
+    "metaTitle": "{event}: fotos e vídeos",
+    "notFound": "Galeria não encontrada",
+    "downloadAll": "Baixar tudo",
+    "filters": {
+      "label": "Cabine",
+      "all": "Tudo",
+      "video360": "Vídeos 360",
+      "photo": "Fotos"
+    },
+    "searchLabel": "Buscar pelo código",
+    "searchPlaceholder": "Seu código",
+    "search": "Buscar",
+    "empty": "As fotos e os vídeos aparecem aqui assim que são enviados.",
+    "noMatch": "Ainda não há nada com esse código. Pode estar a caminho.",
+    "open": "Abrir a captura {code}",
+    "older": "Anteriores",
+    "newest": "Voltar para as mais recentes",
+    "lock": {
+      "body": "Esta galeria é protegida.",
+      "label": "Senha",
+      "open": "Abrir",
+      "errors": {
+        "wrong": "Senha incorreta.",
+        "tooMany": "Muitas tentativas. Aguarde alguns minutos e tente de novo.",
+        "failed": "Não foi possível verificar a senha. Confira a conexão e tente de novo."
+      }
+    }
+  },
+  "zip": {
+    "progress": "{files, plural, one {# arquivo} other {# arquivos}} · {size}",
+    "cancel": "Cancelar",
+    "done": "{files, plural, one {# arquivo salvo} other {# arquivos salvos}}.{skipped, plural, =0 {} one { Não foi possível baixar # arquivo.} other { Não foi possível baixar # arquivos.}}",
+    "failed": "O download parou. Confira a conexão e tente de novo.",
+    "cancelled": "Download cancelado."
   }
 }

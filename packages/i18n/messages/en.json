@@ -976,6 +976,30 @@
         "restore": "Show again",
         "hide": "Hide from screens"
       }
+    },
+    "galleryCard": {
+      "title": "Event gallery",
+      "subtitle": "{count, plural, =0 {Every capture, for your client and for guests who scan the event QR.} one {# capture so far, for your client and for guests who scan the event QR.} other {# captures so far, for your client and for guests who scan the event QR.}}",
+      "link": "Gallery link",
+      "copy": "Copy",
+      "copied": "Copied",
+      "openLink": "Open",
+      "password": "Password",
+      "passwordHelp": "Optional. Anyone with the link needs it once per browser. Hidden captures and guests who asked to stay off screen never appear here.",
+      "locked": "Protected",
+      "unlocked": "Open to anyone with the link",
+      "setPassword": "Set a password",
+      "newPassword": "New password",
+      "set": "Set",
+      "change": "Change",
+      "remove": "Remove password",
+      "passwordSet": "Password saved. Anyone already in needs to enter it again.",
+      "passwordRemoved": "Password removed.",
+      "passwordShort": "Use at least 6 characters.",
+      "failed": "Couldn't save. Try again.",
+      "export": "All files",
+      "exportHelp": "Every full-quality file of the event as one ZIP, including hidden captures, saved straight from storage by your browser.",
+      "exportButton": "Download every file (ZIP)"
     }
   },
   "booth": {
@@ -1210,5 +1234,41 @@
     "scan": "Scan with your phone's camera to download.",
     "close": "Back to all",
     "start": "Start the Sharing Station"
+  },
+  "gallery": {
+    "metaTitle": "{event}: photos and videos",
+    "notFound": "Gallery not found",
+    "downloadAll": "Download all",
+    "filters": {
+      "label": "Booth",
+      "all": "All",
+      "video360": "360 videos",
+      "photo": "Photos"
+    },
+    "searchLabel": "Find by code",
+    "searchPlaceholder": "Your code",
+    "search": "Find",
+    "empty": "Photos and videos appear here as soon as they're uploaded.",
+    "noMatch": "Nothing with that code yet. It may still be on its way.",
+    "open": "Open capture {code}",
+    "older": "Older",
+    "newest": "Back to the newest",
+    "lock": {
+      "body": "This gallery is protected.",
+      "label": "Password",
+      "open": "Open",
+      "errors": {
+        "wrong": "That password isn't right.",
+        "tooMany": "Too many tries. Wait a few minutes and try again.",
+        "failed": "Couldn't check the password. Check your connection and try again."
+      }
+    }
+  },
+  "zip": {
+    "progress": "{files, plural, one {# file} other {# files}} · {size}",
+    "cancel": "Cancel",
+    "done": "Saved {files, plural, one {# file} other {# files}}.{skipped, plural, =0 {} one { # file couldn't be fetched.} other { # files couldn't be fetched.}}",
+    "failed": "The download stopped. Check your connection and try again.",
+    "cancelled": "Download cancelled."
   }
 }
