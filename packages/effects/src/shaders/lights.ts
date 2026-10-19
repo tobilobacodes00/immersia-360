@@ -226,7 +226,7 @@ vec3 effect(vec2 p, vec3 src) {
     leak += tint * g;
   }
   float n = vnoise(p * 1.8 + vec2(t * 0.07, -t * 0.05), uSeed);
-  leak *= (0.6 + 0.8 * n) * (0.62 + 0.30 * uPulse);
+  leak *= (0.5 + 0.7 * n) * (0.55 + 0.28 * uPulse);
   vec3 faded = src * 0.94 + 0.025;
   return screenBlend(faded, leak);
 }
@@ -258,12 +258,12 @@ vec3 effect(vec2 p, vec3 src) {
   float t = uTime;
   float swell = 0.5 + 0.5 * sin(t * 0.62 - 1.0);
   swell = swell * swell * (3.0 - 2.0 * swell);
-  float depth = (0.03 + 0.14 * swell) * (1.0 + 0.18 * uPulse);
+  float depth = (0.025 + 0.11 * swell) * (1.0 + 0.18 * uPulse);
   float edge = min(min(p.x, res.x - p.x), 1.7 * min(p.y, res.y - p.y));
   float n = fbm(p * 2.4 + vec2(0.0, t * 0.12), uSeed);
-  float x = clamp((depth * (0.35 + 1.10 * n) - edge) / 0.09, 0.0, 1.15);
+  float x = clamp((depth * (0.35 + 1.10 * n) - edge) / 0.10, 0.0, 1.0);
   vec3 burn = burnRamp(x) * smoothstep(0.0, 0.25, x);
-  vec3 col = screenBlend(src, burn * (0.85 + 0.30 * uPulse));
+  vec3 col = screenBlend(src, burn * (0.80 + 0.25 * uPulse));
 
   float frame = floor(t * 24.0);
   col *= 1.0 + 0.03 * (hash11(frame, uSeed) - 0.5);

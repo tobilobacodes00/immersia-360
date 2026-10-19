@@ -131,7 +131,7 @@ vec3 bubbleLayer(vec3 col, vec3 src, vec2 p, float cell, float rise, float seed,
 
   // the lens: magnify the picture a little, most at the middle
   vec2 pr = p - d * cell * 0.22 * (1.0 - r * r);
-  vec3 seen = texture(uSrc, clamp(toUv(pr, uResolution), 0.0, 1.0)).rgb;
+  vec3 seen = textureLod(uSrc, clamp(toUv(pr, uResolution), 0.0, 1.0), 0.0).rgb;
   col += (seen - src) * inside * 0.9;
 
   // thin-film rim, brighter on the beat
@@ -195,7 +195,7 @@ vec3 sparkleLayer(vec2 p, float cell, float seed) {
   float s = starShape(d / reachLen);
   // glints belong on highlights: weight by the picture's brightness under the star
   vec2 cp = (id + 0.5 + centre) * cell;
-  vec3 under = texture(uSrc, clamp(toUv(cp, uResolution), 0.0, 1.0)).rgb;
+  vec3 under = textureLod(uSrc, clamp(toUv(cp, uResolution), 0.0, 1.0), 0.0).rgb;
   float onLight = 0.55 + 0.80 * smoothstep(0.25, 0.8, luma(under));
   vec3 tint = uColorMode == 0 ? mix(vec3(1.0), festive(hB.z * 1.38), 0.5) : uColor;
   return tint * s * life * onLight * 1.4;

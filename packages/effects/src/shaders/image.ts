@@ -127,7 +127,7 @@ vec3 cloneCopy(sampler2D tex, vec3 col, vec2 p, vec2 shift, vec2 centre, vec2 ra
   vec2 q = p - shift;
   float m = 1.0 - smoothstep(0.55, 1.0, length((q - centre) / radii));
   if (m <= 0.0) return col;
-  vec3 c = texture(tex, clamp(toUv(q, uResolution), 0.0, 1.0)).rgb;
+  vec3 c = textureLod(tex, clamp(toUv(q, uResolution), 0.0, 1.0), 0.0).rgb;
   c = mix(vec3(luma(c)), c, 0.85) * tint;
   return mix(col, c, m * alpha);
 }

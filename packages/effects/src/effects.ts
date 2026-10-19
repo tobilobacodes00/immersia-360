@@ -9,6 +9,13 @@ export { STROBE_MAX_BPM, STROBE_PEAK_LIFT } from './shaders/lights';
 /**
  * The video effect pack (VID-7: at least 16, original; VID-12: every one of them keeps time with the
  * music through uBeat / uPulse). Order is the order the picker shows them in.
+ *
+ * Host requirements, beyond the contract's uniforms:
+ *  - vUv follows the contract: (0, 0) is the BOTTOM-left of the picture, so things fall towards decreasing
+ *    y. A host whose vertex shader is y-down must flip vUv for these shaders, or confetti will rise.
+ *  - The strobe flashes once per beat and cannot see the tempo, so the 3-flashes-per-second ceiling holds
+ *    only while the beat grid stays at or below STROBE_MAX_BPM: fold faster tempos down before they reach
+ *    uBeat / uPulse.
  */
 export const EFFECTS: readonly EffectDef[] = [
   LIGHT_RINGS,
