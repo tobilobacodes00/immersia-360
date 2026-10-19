@@ -4,7 +4,18 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useTranslations, type Messages } from 'next-intl';
 import { AnimatePresence, motion } from 'motion/react';
-import { ArrowLeft, Check, CircleDot, CloudUpload, HardDrive, Settings2, Square, Upload, WifiOff } from 'lucide-react';
+import {
+  ArrowLeft,
+  Check,
+  CircleDot,
+  CloudUpload,
+  HardDrive,
+  Images,
+  Settings2,
+  Square,
+  Upload,
+  WifiOff,
+} from 'lucide-react';
 import {
   MotionTrigger,
   TakeRecorder,
@@ -23,7 +34,6 @@ import {
   boothDb,
   completeTake,
   failTake,
-  importTake,
   mintSession,
   noteChunk,
   optOutOfDisplay,
@@ -44,6 +54,8 @@ import { Pill, cx } from '@immersia/ui';
 import { CountdownDisc, GuestButton, Headline, fade } from '@immersia/ui/guest';
 import { readDeviceIdentity, type DeviceIdentity } from '@/lib/device-identity';
 import { useCaptureKeys, useHeartbeat, useHeld, useLiveQuery, useOnline, useWakeLock } from './booth-hooks';
+import { importVideoFiles } from './import-originals';
+import { Gallery } from './Gallery';
 import { RegisterDevice } from './RegisterDevice';
 import { KioskLockLayer, useKioskLock } from './KioskLock';
 import { RenderQueue } from './RenderQueue';
@@ -113,6 +125,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
   const [motionOn, setMotionOn] = useState(event.triggers.motion.enabled);
   const [threshold, setThreshold] = useState(event.triggers.motion.threshold);
   const [drawer, setDrawer] = useState(false);
+  const [galleryOpen, setGalleryOpen] = useState(false);
   const [warning, setWarning] = useState<string | null>(null);
   const [lowStorage, setLowStorage] = useState(false);
   const [recovered, setRecovered] = useState(0);
@@ -375,40 +388,24 @@ export function Booth360({ event }: { event: BoothEvent }) {
     return () => clearInterval(id);
   }, [motionOn, threshold, phase.kind, trigger, event.triggers.motion.cooldownS]);
 
+  // CAP-13 import: the settings drawer, drag and drop and the event gallery all come through here.
   const importFiles = useCallback(
-    async (files: FileList | File[]) => {
+    async (files: Iterable<File>, opts?: { waitForIdle?: () => Promise<void> }) => {
       store.current ??= await takeStore(() => createOpfsWorker(workerUrl('opfs')));
       setBackend(store.current.backend);
-      const s = store.current;
-      for (const file of Array.from(files)) {
-        if (!file.type.startsWith('video/')) continue;
-        const meta = await videoMetadata(file);
-        const id = uuidv7();
-        const ext = file.name.split('.').pop()?.toLowerCase() || extensionFor(file.type);
-        const path = `takes/${event.id}/${id}.${ext}`;
-        await s.begin(path);
-        // Stream in 8 MB slices: a 4K import never has to fit in memory at once.
-        for (let at = 0; at < file.size; at += 8 * 1024 * 1024)
-          await s.append(path, file.slice(at, at + 8 * 1024 * 1024));
-        await s.finish(path);
-        await importTake(db, {
-          id,
-          eventId: event.id,
-          deviceId: identity?.id ?? null,
-          path,
-          mimeType: file.type,
-          bytes: file.size,
-          durationMs: meta.durationMs,
-          width: meta.width,
-          height: meta.height,
-          fps: 0,
-        });
-        await mintSession(db, { eventId: event.id, takeIds: [id], capturedAt: Date.now() });
-      }
+      return importVideoFiles({
+        db,
+        store: store.current,
+        eventId: event.id,
+        deviceId: identity?.id ?? null,
+        files,
+        waitForIdle: opts?.waitForIdle,
+      });
     },
     [db, event.id, identity?.id],
   );
 
+  const closeGallery = useCallback(() => setGalleryOpen(false), []);
   const backToReady = useCallback(() => setPhase((p) => (p.kind === 'result' ? { kind: 'ready' } : p)), []);
 
   const themeVars = useMemo(() => guestThemeVars(event.theme), [event.theme]);
@@ -508,6 +505,14 @@ export function Booth360({ event }: { event: BoothEvent }) {
                     ? t('rendering', { percent: Math.round(renderQueue.current.progress * 100) })
                     : t('queue', { count: pending })}
                 </Pill>
+              </button>
+              <button
+                type="button"
+                onClick={() => setGalleryOpen(true)}
+                aria-label={t('gallery.open')}
+                className="focus-ring grid size-11 place-items-center rounded-full bg-g-bg/95"
+              >
+                <Images className="size-5" />
               </button>
               <button
                 type="button"
@@ -698,6 +703,15 @@ export function Booth360({ event }: { event: BoothEvent }) {
         onCancel={renderQueue.cancel}
       />
 
+      <Gallery
+        open={galleryOpen && !kiosk.locked}
+        onClose={closeGallery}
+        eventId={event.id}
+        eventName={event.name}
+        capturing={capturing}
+        onImport={importFiles}
+      />
+
       <SettingsDrawer
         open={drawer}
         onClose={() => setDrawer(false)}
@@ -737,24 +751,3 @@ const ERROR_KEYS = new Set<string>([
   'recording_unsupported',
 ]);
 const errorKey = (code: string): CameraErrorKey => (ERROR_KEYS.has(code) ? (code as CameraErrorKey) : 'unknown');
-
-function videoMetadata(file: File): Promise<{ durationMs: number; width: number; height: number }> {
-  return new Promise((resolve) => {
-    const url = URL.createObjectURL(file);
-    const v = document.createElement('video');
-    v.preload = 'metadata';
-    v.muted = true;
-    const done = (meta: { durationMs: number; width: number; height: number }) => {
-      URL.revokeObjectURL(url);
-      resolve(meta);
-    };
-    v.onloadedmetadata = () =>
-      done({
-        durationMs: Number.isFinite(v.duration) ? Math.round(v.duration * 1000) : 0,
-        width: v.videoWidth,
-        height: v.videoHeight,
-      });
-    v.onerror = () => done({ durationMs: 0, width: 0, height: 0 });
-    v.src = url;
-  });
-}
