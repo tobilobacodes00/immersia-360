@@ -6,7 +6,13 @@ import { TemplateEditor } from '@/components/editor/TemplateEditor';
 import { assetViews, listAssets } from '@/server/assets';
 import { getEvent } from '@/server/events';
 import { requireOperator } from '@/server/session';
-import { adaptToCanvas, ensureEventTemplate, listLibraryTemplates, saveTemplate, targetCanvas } from '@/server/templates';
+import {
+  adaptToCanvas,
+  ensureEventTemplate,
+  listLibraryTemplates,
+  saveTemplate,
+  targetCanvas,
+} from '@/server/templates';
 
 type Kind = 'layout' | 'overlay';
 

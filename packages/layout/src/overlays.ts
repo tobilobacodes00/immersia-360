@@ -80,7 +80,13 @@ export function overlayPreset(aspect: Aspect, style: OverlayStyle, o: OverlayOpt
     });
     const pad = Math.round(unit * 0.06);
     elements.push(
-      text('title', { x: pad, y: H - bandH + pad * 0.6, width: W - 2 * pad, height: bandH * 0.5 }, '{eventName}', unit * 0.085, o.ink),
+      text(
+        'title',
+        { x: pad, y: H - bandH + pad * 0.6, width: W - 2 * pad, height: bandH * 0.5 },
+        '{eventName}',
+        unit * 0.085,
+        o.ink,
+      ),
       dateLine('date', { x: pad, y: H - bandH * 0.38, width: W - 2 * pad, height: bandH * 0.2 }, o.ink),
     );
   } else if (style === 'frame') {
@@ -118,8 +124,18 @@ export function overlayPreset(aspect: Aspect, style: OverlayStyle, o: OverlayOpt
       cornerRadius: Math.round(unit * 0.02),
     });
     elements.push(
-      text('title', { x: inset * 2, y: labelY, width: W - inset * 4, height: labelH * 0.62 }, '{eventName}', unit * 0.07, '#ffffff'),
-      dateLine('date', { x: inset * 2, y: labelY + labelH * 0.66, width: W - inset * 4, height: labelH * 0.3 }, '#ffffff'),
+      text(
+        'title',
+        { x: inset * 2, y: labelY, width: W - inset * 4, height: labelH * 0.62 },
+        '{eventName}',
+        unit * 0.07,
+        '#ffffff',
+      ),
+      dateLine(
+        'date',
+        { x: inset * 2, y: labelY + labelH * 0.66, width: W - inset * 4, height: labelH * 0.3 },
+        '#ffffff',
+      ),
     );
   } else if (style === 'pill') {
     const pillW = Math.round(unit * 0.78);
@@ -141,7 +157,13 @@ export function overlayPreset(aspect: Aspect, style: OverlayStyle, o: OverlayOpt
         strokeWidth: 0,
         cornerRadius: Math.round(pillH / 2),
       },
-      text('title', { x: x + pillH * 0.45, y, width: pillW - pillH * 0.9, height: pillH }, '{eventName}', unit * 0.06, o.ink),
+      text(
+        'title',
+        { x: x + pillH * 0.45, y, width: pillW - pillH * 0.9, height: pillH },
+        '{eventName}',
+        unit * 0.06,
+        o.ink,
+      ),
     );
   }
 
