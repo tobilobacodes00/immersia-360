@@ -28,6 +28,9 @@ const schema = z.object({
   S3_FORCE_PATH_STYLE: z.enum(['0', '1']).default('0'),
   /** Vercel Cron sends it as a bearer token; the expiry sweep refuses requests without it. */
   CRON_SECRET: z.string().min(16).optional(),
+  // Live Display hub (apps/realtime). Without it, screens poll the feed (still within LIV-2's 5 s).
+  REALTIME_URL: z.url().optional(),
+  REALTIME_SIGNING_SECRET: z.string().min(32).optional(),
   /** Enables test-only endpoints (the e2e mailbox). Refused on any Vercel deployment. */
   E2E: z.enum(['0', '1']).default('0'),
   /** Required with E2E=1: test-only routes also demand it as the x-e2e-token header (fail closed). */

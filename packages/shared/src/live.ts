@@ -87,9 +87,11 @@ export interface DisplayFeed {
   config: DisplayConfig;
   /** Newest first, at most DISPLAY_ITEM_LIMIT. */
   items: DisplayItem[];
-  /** The realtime hub's position when this feed was read: resume the socket from here. */
-  seq: number;
-  /** WebSocket URL of the event's hub, or null when the hub isn't configured (polling only). */
+  /**
+   * WebSocket URL of the event's hub (with a short-lived token), or null when the hub isn't
+   * configured and the screen polls. A client refetches the feed once after the socket's `hello`, so
+   * nothing published between this read and the connection is missed.
+   */
   socket: string | null;
 }
 

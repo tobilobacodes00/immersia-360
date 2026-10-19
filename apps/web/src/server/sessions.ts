@@ -1,4 +1,5 @@
 import 'server-only';
+import { after } from 'next/server';
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { db, schema, type Transaction } from '@immersia/db';
 import {
@@ -12,6 +13,7 @@ import type { Locale } from '@immersia/i18n';
 import type { DeviceRow } from './devices';
 import { sendGuestLinkEmail } from './email';
 import { appOrigin } from './env';
+import { refreshSessionItem } from './live';
 import { allow } from './rate-limit';
 import { objectKey, objectSize, presignUpload } from './storage';
 
@@ -240,6 +242,9 @@ export async function completeUpload(device: DeviceRow, outputId: string): Promi
       .set({ status: 'live' })
       .where(and(eq(captureSession.id, row.sessionId), eq(captureSession.status, 'pending')));
   });
+  // LIV-2: the session may be ready for the Live Display now. After the response, so the booth's
+  // upload queue moves on at once.
+  after(() => refreshSessionItem(row.sessionId, appOrigin()));
   return 'ok';
 }
 
