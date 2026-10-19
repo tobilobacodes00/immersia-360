@@ -1270,5 +1270,50 @@
     "done": "Saved {files, plural, one {# file} other {# files}}.{skipped, plural, =0 {} one { # file couldn't be fetched.} other { # files couldn't be fetched.}}",
     "failed": "The download stopped. Check your connection and try again.",
     "cancelled": "Download cancelled."
+  },
+  "tv": {
+    "pair": {
+      "metaTitle": "Connect a screen",
+      "title": "Connect this screen",
+      "body": "Enter the six-character code from Live Display in Studio, or open the pairing link from its QR code.",
+      "codeLabel": "Pairing code",
+      "character": "Character {n} of {total}",
+      "hint": "Letters and numbers, like K7M-2QX. Never I, L, O, 0 or 1.",
+      "submit": "Connect screen",
+      "connecting": "Connecting…",
+      "connected": "Connected",
+      "backToDisplay": "Back to the display",
+      "errors": {
+        "incomplete": "Enter all six characters.",
+        "invalid": "That code isn’t right. Check it and try again.",
+        "expired": "That code has expired. Create a new one in Studio.",
+        "too_many": "Too many tries. Wait a few minutes, then try again.",
+        "offline": "This screen can’t reach the internet. Check the connection and try again.",
+        "storage": "This browser can’t save the pairing. Turn off private browsing and try again.",
+        "unavailable": "Something went wrong on our side. Try again in a moment."
+      }
+    },
+    "display": {
+      "metaTitle": "Live Display",
+      "connecting": "Connecting…",
+      "gallery": "Event gallery",
+      "galleryAlt": "QR code for the event gallery",
+      "galleryScan": "Scan to see every moment",
+      "itemScan": "Scan to get this moment",
+      "itemAlt": "QR code for this moment, code {code}",
+      "enterCode": "Or enter the code at {host}",
+      "justIn": "Just in",
+      "recent": "Recent moments",
+      "moments": "{count, plural, one {moment captured} other {moments captured}}",
+      "idleLive": "Moments from the booth appear here as soon as they’re ready.",
+      "fullscreen": "Full screen",
+      "exitFullscreen": "Exit full screen",
+      "soundHint": "Press OK to turn on sound",
+      "status": {
+        "socket": "Live",
+        "polling": "Live, refreshing",
+        "offline": "Offline, looping saved moments"
+      }
+    }
   }
 }
