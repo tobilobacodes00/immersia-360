@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatBytes, formatEventDate, formatRelative, todayIso } from './format';
+import { formatBytes, formatClock, formatEventDate, formatRelative, formatSpan, todayIso } from './format';
 
 describe('format', () => {
   it('formats bytes with sensible precision', () => {
@@ -7,6 +7,15 @@ describe('format', () => {
     expect(formatBytes(950, 'en')).toBe('950 bytes');
     expect(formatBytes(8_400_000, 'en')).toBe('8.4 MB');
     expect(formatBytes(12_000_000_000, 'en')).toBe('12 GB');
+  });
+
+  it('formats running times and limits', () => {
+    expect(formatClock(7_400)).toBe('0:07');
+    expect(formatClock(201_000)).toBe('3:21');
+    expect(formatClock(3_723_000)).toBe('1:02:03');
+    expect(formatClock(-5)).toBe('0:00');
+    expect(formatSpan(30_000, 'en')).toBe('30 seconds');
+    expect(formatSpan(900_000, 'en')).toBe('15 minutes');
   });
 
   it('never shifts an event date across midnight', () => {

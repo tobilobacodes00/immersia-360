@@ -146,6 +146,7 @@
       },
       "home": "Início",
       "events": "Eventos",
+      "assets": "Recursos",
       "devices": "Dispositivos",
       "signOut": "Sair",
       "openMenu": "Abrir menu",
@@ -463,6 +464,114 @@
         "storage": "Registrado, mas este navegador bloqueia o armazenamento e não vai lembrar dele. Permita os dados do site e registre de novo.",
         "rename": "Não foi possível renomear o dispositivo.",
         "revoke": "Não foi possível revogar o dispositivo."
+      }
+    },
+    "assets": {
+      "title": "Recursos",
+      "subtitle": "Sobreposições, aberturas, músicas, fontes e logotipos compartilhados por todos os eventos desta conta. Envie uma vez e use onde quiser.",
+      "groupsLabel": "Tipo de recurso",
+      "groups": {
+        "overlays": "Sobreposições e molduras",
+        "intros": "Aberturas e encerramentos",
+        "music": "Música",
+        "fonts": "Fontes",
+        "logos": "Logotipos",
+        "backgrounds": "Fundos"
+      },
+      "types": {
+        "overlay": "Sobreposição",
+        "layout": "Moldura",
+        "intro": "Abertura",
+        "outro": "Encerramento",
+        "audio": "Música",
+        "font": "Fonte",
+        "logo": "Logotipo",
+        "background": "Fundo"
+      },
+      "accepts": {
+        "overlays": "Sobreposições: PNG ou WebP com transparência. Molduras: PNG, JPEG ou WebP. Até 25 MB cada.",
+        "intros": "Vídeo (MP4, MOV ou WebM) de até 30 segundos e 200 MB, ou imagem (PNG, JPEG ou WebP) de até 25 MB.",
+        "music": "MP3, M4A, AAC ou WAV, até 15 minutos e 50 MB.",
+        "fonts": "WOFF2, WOFF, TTF ou OTF, até 10 MB.",
+        "logos": "PNG, JPEG ou WebP, até 10 MB. SVG não é aceito.",
+        "backgrounds": "Imagens (PNG, JPEG ou WebP) de até 25 MB, ou vídeo (MP4 ou WebM) de até 200 MB."
+      },
+      "upload": "Enviar arquivos",
+      "uploadAs": "Enviar como",
+      "dropHint": "Arraste arquivos para cá ou use o botão.",
+      "dropActive": "Solte para enviar",
+      "progress": {
+        "checking": "Verificando…",
+        "uploading": "Enviando {percent}",
+        "finishing": "Finalizando…"
+      },
+      "cancel": "Cancelar",
+      "retry": "Tentar de novo",
+      "dismiss": "Dispensar",
+      "renameNamed": "Renomear {name}",
+      "renameLabel": "Nome do recurso",
+      "play": "Reproduzir {name}",
+      "pause": "Pausar {name}",
+      "delete": "Excluir",
+      "deleteNamed": "Excluir {name}",
+      "deleteTitle": "Excluir {name}?",
+      "deleteBody": "O arquivo é removido da sua biblioteca de vez. Eventos que o usam precisam ser alterados antes.",
+      "usedTitle": "{name} ainda está em uso",
+      "usedBody": "Não dá para excluir enquanto estes itens o usarem. Troque por outro recurso e tente de novo.",
+      "usedByTemplate": "{name} (modelo)",
+      "close": "Fechar",
+      "empty": {
+        "overlays": {
+          "title": "Nenhuma sobreposição ou moldura ainda",
+          "body": "Envie PNGs ou WebPs transparentes para emoldurar seus vídeos 360, ou molduras para as tiras da cabine de fotos."
+        },
+        "intros": {
+          "title": "Nenhuma abertura ou encerramento ainda",
+          "body": "Adicione um clipe curto ou uma imagem para tocar antes ou depois de cada vídeo."
+        },
+        "music": {
+          "title": "Nenhuma música ainda",
+          "body": "Envie uma faixa para tocar sobre seus vídeos 360 e na tela ao vivo."
+        },
+        "fonts": {
+          "title": "Nenhuma fonte ainda",
+          "body": "Envie as fontes da sua marca e escolha-as em sobreposições e layouts."
+        },
+        "logos": {
+          "title": "Nenhum logotipo ainda",
+          "body": "Adicione seu logotipo para exibi-lo nas páginas dos convidados e nas sobreposições."
+        },
+        "backgrounds": {
+          "title": "Nenhum fundo ainda",
+          "body": "Envie uma imagem ou um vídeo em loop para ficar atrás das telas e dos layouts da cabine."
+        }
+      },
+      "picker": {
+        "title": "Escolher um recurso",
+        "search": "Buscar recursos",
+        "loading": "Carregando recursos…",
+        "emptyTitle": "Nada para escolher ainda",
+        "emptyBody": "Envie um arquivo e ele entra na sua biblioteca.",
+        "noMatchTitle": "Nenhum recurso encontrado",
+        "noMatchBody": "Tente outro nome.",
+        "selected": "Selecionado"
+      },
+      "storageOff": {
+        "title": "O armazenamento de arquivos não está configurado",
+        "body": "A biblioteca guarda os arquivos em armazenamento de objetos. Adicione as configurações S3 a este deploy para ativá-la."
+      },
+      "uploaded": "{name} enviado",
+      "deleted": "{name} excluído",
+      "errors": {
+        "wrongType": "Este tipo de arquivo não é aceito aqui.",
+        "tooBig": "O arquivo é maior que {max}.",
+        "tooLong": "O arquivo é mais longo que {max}.",
+        "unreadable": "Não conseguimos ler este arquivo. Ele pode estar danificado ou em um formato que este navegador não abre.",
+        "quota": "Sua biblioteca atingiu o limite de 5 GB. Exclua o que não usa mais e tente de novo.",
+        "failed": "O envio não foi concluído. Verifique sua conexão e tente de novo.",
+        "load": "Não foi possível carregar os recursos.",
+        "rename": "Não foi possível renomear o recurso.",
+        "delete": "Não foi possível excluir o recurso."
       }
     }
   },

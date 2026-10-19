@@ -9,3 +9,4 @@ export * from './template';
 export * from './device';
 export * from './session';
 export * from './kiosk';
+export * from './asset';

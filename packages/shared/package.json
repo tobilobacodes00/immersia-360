@@ -16,7 +16,8 @@
     "./template": "./src/template.ts",
     "./device": "./src/device.ts",
     "./session": "./src/session.ts",
-    "./kiosk": "./src/kiosk.ts"
+    "./kiosk": "./src/kiosk.ts",
+    "./asset": "./src/asset.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
