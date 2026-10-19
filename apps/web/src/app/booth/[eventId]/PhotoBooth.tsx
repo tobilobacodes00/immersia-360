@@ -16,12 +16,13 @@ import {
   type TakeStore,
 } from '@immersia/offline';
 import { createOpfsWorker } from '@immersia/offline/opfs-worker';
-import { encodeGif, presetTemplate, renderToBlob } from '@immersia/layout';
+import { encodeGif, presetTemplate, renderToBlob, type Template } from '@immersia/layout';
 import { browserPrint } from '@immersia/layout/print';
 import { RenderClient } from '@immersia/render-engine/client';
 import {
   PRINT_SIZE_INCHES,
   canvasSizeFor,
+  eventTokens,
   guestThemeVars,
   sessionUrl,
   type EventTheme,
@@ -32,7 +33,9 @@ import { CountdownDisc, GuestButton, Headline, fade } from '@immersia/ui/guest';
 import { readDeviceIdentity, type DeviceIdentity } from '@/lib/device-identity';
 import { workerUrl } from '@/lib/workers';
 import { useCaptureKeys, useHeartbeat, useOnline, useWakeLock } from './booth-hooks';
-import { canvasFonts } from '@/lib/canvas-fonts';
+import type { AssetView } from '@/server/assets';
+import { fillAssets } from './event-assets';
+import { fitted, templateResources } from './media';
 import { Confetti } from './Confetti';
 import { KioskLockLayer, useKioskLock } from './KioskLock';
 import { MotionBuffer } from './motion-buffer';
@@ -53,6 +56,10 @@ export interface PhotoBoothEvent {
   attract: { headline: string; cta: string };
   kioskPinHash: string | null;
   share: { qr: boolean; email: boolean; sms: boolean; whatsapp: boolean; stripQr: boolean };
+  /** The event's print layout from the editor (screen 6), or null for the preset one. */
+  layout: Template | null;
+  /** Dynamic fields and every file the layout draws (screen 5). */
+  media: { branding: { hashtag: string; custom1: string; custom2: string; custom3: string }; assets: AssetView[] };
 }
 
 type Phase =
@@ -187,37 +194,53 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
     [stopCamera, wantsClips],
   );
 
+  // The event's own layout (fitted to the print size it has now), or the preset; no QR if the
+  // operator turned the strip QR off (DL-3).
+  const design = useMemo(() => {
+    const { width, height } = canvasSizeFor(p.printSize);
+    const base = event.layout
+      ? fitted(event.layout, width, height)
+      : presetTemplate(p.printSize, {
+          shots: p.shots as 1 | 2 | 3 | 4,
+          background: event.theme.background,
+          ink: event.theme.ink,
+          font: event.theme.font,
+        });
+    return event.share.stripQr ? base : { ...base, elements: base.elements.filter((e) => e.type !== 'qr') };
+  }, [event.layout, event.share.stripQr, event.theme, p.printSize, p.shots]);
+  // Fonts and images for it, from the device's offline cache; prepared as soon as the booth opens.
+  const resources = useMemo(() => {
+    let ready: ReturnType<typeof templateResources> | null = null;
+    return () => (ready ??= fillAssets(event.media.assets).then(() => templateResources(design)));
+  }, [design, event.media.assets]);
+  useEffect(() => {
+    void resources();
+  }, [resources]);
+
   /** The strip at print resolution (or a quick half-scale preview). */
   const composeStrip = useCallback(
     async (session: LocalSession | null, scale: number) => {
-      const template = presetTemplate(p.printSize, {
-        shots: p.shots as 1 | 2 | 3 | 4,
-        background: event.theme.background,
-        ink: event.theme.ink,
-        font: event.theme.font,
-        qr: event.share.stripQr,
-      });
       const origin = window.location.origin;
+      const link = session ? sessionUrl(origin, session.linkId, 'print') : '';
       return renderToBlob(
-        template,
+        design,
         {
           photos: shots.current.map((s) => s.still),
-          tokens: {
-            eventName: event.name,
-            eventDate: event.date,
-            shortCode: session?.shortCode ?? '',
-            sessionUrl: session ? sessionUrl(origin, session.linkId, 'print') : '',
-            __date: new Date(`${event.date}T12:00:00`),
-          },
+          tokens: eventTokens(
+            { name: event.name, date: event.date },
+            event.media.branding,
+            session ? { shortCode: session.shortCode, url: link } : null,
+            { number: shots.current.length, count: p.shots },
+          ),
           // The preview shows where the QR goes; the kept strip carries the guest's own link.
-          qr: session ? { url: sessionUrl(origin, session.linkId, 'print'), code: session.shortCode } : null,
+          qr: session ? { url: link, code: session.shortCode } : null,
           placeholders: !session,
-          fonts: await canvasFonts(),
+          ...(await resources()),
         },
         { scale, type: 'image/jpeg', quality: 0.92 },
       );
     },
-    [event, p],
+    [design, event.name, event.date, event.media.branding, p.shots, resources],
   );
 
   const print = useCallback(
