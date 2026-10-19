@@ -2,12 +2,13 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { createEventSchema, registerDeviceSchema } from '@immersia/shared';
+import { KIOSK_PIN, createEventSchema, registerDeviceSchema } from '@immersia/shared';
 import { fail, ok, withOperator, type ActionResult } from '@/server/action-result';
 import {
   createEvent,
   duplicateEvent,
   extendGuestFiles,
+  setKioskPin,
   setArchived,
   updateBasics,
   updateSection,
@@ -133,5 +134,15 @@ export async function extendGuestFilesAction(
     if (extended === null) return fail('not_found');
     revalidatePath(`/studio/events/${eventId}`);
     return ok({ extended });
+  });
+}
+
+/** KIO-1: set or clear the event's kiosk PIN (4–8 digits). */
+export async function setKioskPinAction(eventId: string, pin: string | null): Promise<ActionResult> {
+  return withOperator({ event: ['update'] }, async (op) => {
+    if (!id.safeParse(eventId).success || (pin !== null && !KIOSK_PIN.test(pin))) return fail('invalid');
+    if (!(await setKioskPin(op.organizationId, eventId, pin))) return fail('not_found');
+    revalidatePath(`/studio/events/${eventId}/setup`);
+    return ok(undefined);
   });
 }

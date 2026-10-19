@@ -127,7 +127,8 @@ test('a guest gets their video by QR and by code, until the event expires (DL-1,
   await expect(guest.getByRole('heading', { name: 'Here it is' })).toBeVisible();
   // A wrong code says so (and counts against this IP's miss budget).
   await guest.goto('/c/ZZZ-ZZZ');
-  await expect(guest.getByRole('alert')).toHaveText(/couldn.t find that code/);
+  // (Next's route announcer is also role=alert after a client navigation: pick ours by its text.)
+  await expect(guest.getByRole('alert').filter({ hasText: /couldn.t find that code/ })).toBeVisible();
 
   // DL-12: the operator can give live links more time.
   await page.goto(`/studio/events/${id}`);

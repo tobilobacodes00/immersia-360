@@ -39,6 +39,16 @@ export class BoothApiError extends Error {
 /** Presigned uploads last an hour; refresh well before. */
 const TICKET_TTL_MS = 45 * 60_000;
 
+/** Every output of a session: rendered from its takes, or made for the session itself. */
+export async function sessionOutputs(db: BoothDB, session: LocalSession): Promise<LocalOutput[]> {
+  const [byTake, bySession] = await Promise.all([
+    session.takeIds.length ? db.outputs.where('takeId').anyOf(session.takeIds).toArray() : [],
+    db.outputs.where('sessionId').equals(session.id).toArray(),
+  ]);
+  const seen = new Set(byTake.map((o) => o.id));
+  return [...byTake, ...bySession.filter((o) => !seen.has(o.id))];
+}
+
 const RENDER_SETTLED: LocalTake['status'][] = ['rendered', 'failed'];
 
 /** Exponential backoff with jitter: 2 s, 4 s, 8 s … capped at 5 minutes. */
@@ -103,7 +113,7 @@ export class UploadQueue {
 
   private async advance(session: LocalSession): Promise<UploadStep> {
     const takes = (await this.db.takes.bulkGet(session.takeIds)).filter((t): t is LocalTake => Boolean(t));
-    const outputs = await this.db.outputs.where('takeId').anyOf(session.takeIds).toArray();
+    const outputs = await sessionOutputs(this.db, session);
 
     // (Re-)register whenever the server hasn't seen the session or one of its outputs yet.
     if (session.state === 'local' || outputs.some((o) => !o.serverId)) {
@@ -181,10 +191,20 @@ export class UploadQueue {
   /** Upload tickets from the last registration, per session (memory only: they expire anyway). */
   private tickets = new Map<string, { at: number; uploads: UploadTicket[] }>();
 
+  /** A session-level output (photo strip, GIF) was added: look at the session now. */
+  async nudgeSession(sessionId: string): Promise<void> {
+    const session = await this.db.sessions.get(sessionId);
+    if (session) await this.reopen(session);
+  }
+
   /** A take of this session finished rendering: look at it now rather than at its next check. */
   async nudge(takeId: string): Promise<void> {
     const session = await this.db.sessions.where('takeIds').equals(takeId).first();
-    if (!session || session.state === 'failed') return;
+    if (session) await this.reopen(session);
+  }
+
+  private async reopen(session: LocalSession): Promise<void> {
+    if (session.state === 'failed') return;
     // A later output (the messaging copy) reopens a finished session; a session in backoff waits.
     if (session.state === 'done')
       await this.db.sessions.update(session.id, { state: 'registered', nextAttemptAt: 0, updatedAt: this.now() });

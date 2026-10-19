@@ -275,4 +275,26 @@ describe('upload queue', () => {
     await queue.nudge('t1');
     expect(await drain(queue)).toEqual(['registered', 'uploaded:small_mp4', 'done']);
   });
+
+  it('uploads a photo session: no takes, outputs made for the session itself', async () => {
+    const server = new FakeServer();
+    const queue = new UploadQueue(db, store, server, now);
+    const s = await mintSession(db, { eventId: 'evt', takeIds: [], capturedAt: clock });
+    const add = (kind: 'strip' | 'gif', type: string, size: number) =>
+      putOutput(db, store, {
+        takeId: null,
+        sessionId: s.id,
+        eventId: 'evt',
+        kind,
+        blob: new Blob([new Uint8Array(size)], { type }),
+        width: 600,
+        height: 1800,
+        durationMs: 0,
+      });
+    await add('strip', 'image/jpeg', 700);
+    await add('gif', 'image/gif', 300);
+    await queue.nudgeSession(s.id);
+    expect(await drain(queue)).toEqual(['registered', 'uploaded:strip', 'uploaded:gif', 'done']);
+    expect(server.sessions.get(s.id)!.outputs.every((o) => o.takeId === null)).toBe(true);
+  });
 });

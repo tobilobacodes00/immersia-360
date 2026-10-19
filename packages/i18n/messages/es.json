@@ -384,6 +384,22 @@
         "consentHelp": "Lo que aceptan los invitados, con tus palabras.",
         "contact": "Contacto para invitados",
         "contactHelp": "Se muestra en las páginas de invitados cuando los archivos del evento han caducado, para que puedan contactarte. Un correo o un teléfono."
+      },
+      "kiosk": {
+        "title": "Quiosco",
+        "subtitle": "Bloquea la pantalla del fotomatón en eventos sin personal.",
+        "pin": "PIN de salida",
+        "newPin": "Nuevo PIN de salida",
+        "pinHelp": "De 4 a 8 dígitos. Con PIN, el fotomatón va a pantalla completa y los invitados no pueden salir; el PIN se comprueba incluso sin conexión.",
+        "set": "Guardar PIN",
+        "change": "Cambiar PIN",
+        "remove": "Quitar PIN",
+        "statusOn": "Bloqueo de quiosco activo",
+        "statusOff": "Sin PIN: la pantalla no está bloqueada",
+        "saved": "PIN guardado",
+        "removed": "PIN eliminado: el fotomatón ya no está bloqueado",
+        "invalid": "Usa de 4 a 8 dígitos.",
+        "failed": "No se pudo guardar el PIN. Inténtalo de nuevo."
       }
     },
     "devices": {
@@ -552,7 +568,10 @@
       "emailSend": "Enviar",
       "emailQueued": "En camino a {email}",
       "emailInvalid": "Eso no parece un correo electrónico.",
-      "next": "Siguiente invitado"
+      "next": "Siguiente invitado",
+      "titlePhoto": "Escanea para ver tus fotos",
+      "subtitlePhoto": "El enlace funciona ya; tus fotos llegan en un momento.",
+      "previewAlt": "Tu tira de fotos"
     },
     "uploads": {
       "waiting": "{count, plural, one {# subida pendiente} other {# subidas pendientes}}",
@@ -560,6 +579,30 @@
       "failed": "{count, plural, one {# subida requiere atención} other {# subidas requieren atención}}",
       "revoked": "Este dispositivo se eliminó: regístralo de nuevo para subir",
       "synced": "Todo subido"
+    },
+    "kiosk": {
+      "operator": "Controles del operador",
+      "title": "Introduce el PIN de salida",
+      "hint": "Solo para operadores",
+      "wrong": "PIN incorrecto. Inténtalo de nuevo.",
+      "paused": "Demasiados intentos. Espera {seconds} s.",
+      "cancel": "Cancelar",
+      "delete": "Borrar",
+      "unlock": "Desbloquear",
+      "tapToReturn": "Toca para volver al fotomatón"
+    },
+    "photo": {
+      "shotCounter": "Foto {n} de {total}",
+      "getReady": "Prepárate",
+      "lookingGood": "¡Qué bien!",
+      "keep": "Me la quedo",
+      "retake": "Repetir",
+      "making": "Preparando tu tira…",
+      "print": "Imprimir",
+      "printAnother": "Imprimir otra",
+      "printing": "Imprimiendo…",
+      "printLimit": "Ya no quedan impresiones para esta sesión",
+      "flash": "Foto tomada"
     }
   },
   "share": {

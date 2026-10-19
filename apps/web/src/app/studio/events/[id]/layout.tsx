@@ -44,7 +44,7 @@ export default async function EventLayout({
         </div>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
           <h1 className="text-[30px] leading-[1.05] font-bold tracking-[-0.03em] sm:text-[36px]">{event.name}</h1>
-          {event.mode === 'video360' && event.status !== 'archived' && roleCan(op.role, { event: ['run'] }) && (
+          {event.status !== 'archived' && roleCan(op.role, { event: ['run'] }) && (
             <Link href={`/booth/${event.id}`} className={buttonClass({ variant: 'primary', size: 'lg' })}>
               <Play className="size-4 fill-current" aria-hidden /> {tb('startBooth')}
             </Link>

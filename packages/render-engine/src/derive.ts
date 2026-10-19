@@ -2,6 +2,7 @@ import {
   ALL_FORMATS,
   BlobSource,
   BufferTarget,
+  CanvasSource,
   Conversion,
   Input,
   Mp4OutputFormat,
@@ -68,4 +69,41 @@ export async function posterFrame(mp4: Blob, at = 0.4, quality = 0.82): Promise<
   } finally {
     input.dispose();
   }
+}
+
+/**
+ * PHO-2: a short MP4 from frames captured around shutter presses (the photo booth's motion buffer):
+ * played straight through (short video) or forward then back (boomerang). Frames are drawn at the
+ * first frame's size (even dimensions for H.264) and closed as they are encoded.
+ */
+export async function encodeClip(frames: ImageBitmap[], fps: number, opts: { pingPong?: boolean } = {}): Promise<Blob> {
+  if (!frames.length) throw new Error('No frames to encode');
+  const order = opts.pingPong && frames.length > 2 ? [...frames, ...frames.slice(1, -1).reverse()] : frames;
+  const even = (n: number) => Math.max(2, Math.floor(n / 2) * 2);
+  const width = even(frames[0]!.width);
+  const height = even(frames[0]!.height);
+  const canvas = new OffscreenCanvas(width, height);
+  const ctx = canvas.getContext('2d')!;
+  const target = new BufferTarget();
+  const output = new Output({ format: new Mp4OutputFormat({ fastStart: 'in-memory' }), target });
+  const source = new CanvasSource(canvas, {
+    codec: 'avc',
+    bitrate: videoBitrate('balanced', width, height, fps),
+    keyFrameInterval: 1,
+  });
+  output.addVideoTrack(source, { frameRate: fps });
+  await output.start();
+  try {
+    for (let i = 0; i < order.length; i++) {
+      ctx.drawImage(order[i]!, 0, 0, width, height);
+      await source.add(i / fps, 1 / fps);
+    }
+    await output.finalize();
+  } catch (err) {
+    await output.cancel().catch(() => undefined);
+    throw err;
+  } finally {
+    for (const f of frames) f.close();
+  }
+  return new Blob([target.buffer!], { type: 'video/mp4' });
 }

@@ -86,7 +86,11 @@ export default async function SharePage({ params, searchParams }: Props) {
         {t('title')}
       </h1>
 
-      <Media file={primary} poster={poster?.viewUrl ?? null} label={t('player')} />
+      <Media
+        file={primary}
+        poster={poster?.viewUrl ?? null}
+        label={primary.mime.startsWith('video/') ? t('player') : t(`kinds.${primary.kind}`)}
+      />
 
       <div className="mt-5 flex flex-wrap gap-3">
         <a
