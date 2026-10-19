@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, type Messages } from 'next-intl';
 import { Check } from 'lucide-react';
 import { EFFECTS, LOOKS, PHOTO_EFFECTS, StillRunner, type ColorMode } from '@immersia/effects';
 import { GradePreview } from '@immersia/render-engine/preview';
@@ -12,6 +12,9 @@ import { sampleScene } from '@/lib/sample-image';
 import { useAutosave } from '../setup/use-autosave';
 
 type Effect = { id: string; intensity: number; colorMode?: ColorMode };
+/** Every look and photo effect id has a name in each catalogue (checked by effect-names.test.ts). */
+type LookKey = keyof Messages['effects']['looks'];
+type PhotoEffectKey = keyof Messages['effects']['photo'];
 const MAX_EFFECTS = 8;
 const THUMB = { width: 120, height: 150 };
 
@@ -180,6 +183,9 @@ export function LooksCard({
   };
 }) {
   const t = useTranslations('studio.branding.looks');
+  const names = useTranslations('effects');
+  const looks = LOOKS.map((l) => ({ id: l.id, name: names(`looks.${l.id as LookKey}`) }));
+  const photoEffects = PHOTO_EFFECTS.map((e) => ({ id: e.id, name: names(`photo.${e.id as PhotoEffectKey}`) }));
   const thumbs = useThumbnails();
   const [value, setValue] = useState(initial);
   useAutosave(value, async (v) => (await patchMediaAction(eventId, v)).ok);
@@ -204,7 +210,7 @@ export function LooksCard({
           <Field label={t(photo ? 'videoLook' : 'look')} help={t('lookHelp')} stack>
             <Picker
               label={t(photo ? 'videoLook' : 'look')}
-              items={LOOKS}
+              items={looks}
               value={value.filterId}
               onChange={(filterId) => set({ filterId })}
               thumb={(id) => thumbs.get(`look:${id}`)}
@@ -284,7 +290,7 @@ export function LooksCard({
           <Field label={t(video ? 'photoLook' : 'look')} help={t('lookHelp')} stack>
             <Picker
               label={t(video ? 'photoLook' : 'look')}
-              items={LOOKS}
+              items={looks}
               value={value.photoFilterId}
               onChange={(photoFilterId) => set({ photoFilterId })}
               thumb={(id) => thumbs.get(`look:${id}`)}
@@ -296,7 +302,7 @@ export function LooksCard({
           <Field label={t('photoEffect')} help={t('photoEffectHelp')} stack>
             <Picker
               label={t('photoEffect')}
-              items={PHOTO_EFFECTS}
+              items={photoEffects}
               value={value.photoEffectId}
               onChange={(photoEffectId) => set({ photoEffectId })}
               thumb={(id) => thumbs.get(`photo:${id}`)}

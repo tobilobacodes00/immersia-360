@@ -1622,5 +1622,56 @@
         "offline": "Sin conexión, repitiendo los momentos guardados"
       }
     }
+  },
+  "effects": {
+    "looks": {
+      "none": "Original",
+      "mono": "Monocromo",
+      "noir": "Noir",
+      "silver": "Plata",
+      "sepia": "Sepia",
+      "vivid": "Vívido",
+      "cinematic": "Cinematográfico",
+      "film": "Película",
+      "golden-hour": "Hora dorada",
+      "soft-pastel": "Pastel suave",
+      "cool-breeze": "Brisa fresca",
+      "warm-portrait": "Retrato cálido",
+      "matte": "Mate",
+      "bleach-bypass": "Bleach bypass",
+      "cross-process": "Proceso cruzado",
+      "retro-70s": "Retro años 70",
+      "night-neon": "Neón nocturno",
+      "rose-gold": "Oro rosa",
+      "emerald": "Esmeralda",
+      "high-key": "Clave alta",
+      "blue-hour": "Hora azul",
+      "duotone-midnight": "Duotono medianoche",
+      "duotone-sunset": "Duotono atardecer",
+      "duotone-ocean": "Duotono océano",
+      "black-gold": "Negro y oro"
+    },
+    "photo": {
+      "none": "Ninguno",
+      "mirror": "Espejo",
+      "bulge": "Esferizar",
+      "pinch": "Pellizcar",
+      "swirl": "Molinete",
+      "ripple": "Ondas",
+      "glass": "Cristal",
+      "prism": "Prisma",
+      "kaleidoscope": "Caleidoscopio",
+      "op-art": "Op art",
+      "halftone": "Semitono",
+      "thermal": "Térmico",
+      "pop-art": "Pop art",
+      "pixelate": "Pixelado",
+      "sketch": "Boceto",
+      "posterize": "Posterizar",
+      "duotone-pop": "Duotono pop",
+      "comic": "Cómic",
+      "neon-edges": "Bordes neón",
+      "glitch": "Glitch"
+    }
   }
 }

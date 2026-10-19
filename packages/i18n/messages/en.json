@@ -1622,5 +1622,56 @@
         "offline": "Offline, looping saved moments"
       }
     }
+  },
+  "effects": {
+    "looks": {
+      "none": "Original",
+      "mono": "Mono",
+      "noir": "Noir",
+      "silver": "Silver",
+      "sepia": "Sepia",
+      "vivid": "Vivid",
+      "cinematic": "Cinematic",
+      "film": "Film",
+      "golden-hour": "Golden hour",
+      "soft-pastel": "Soft pastel",
+      "cool-breeze": "Cool breeze",
+      "warm-portrait": "Warm portrait",
+      "matte": "Matte",
+      "bleach-bypass": "Bleach bypass",
+      "cross-process": "Cross process",
+      "retro-70s": "Retro 70s",
+      "night-neon": "Night neon",
+      "rose-gold": "Rose gold",
+      "emerald": "Emerald",
+      "high-key": "High key",
+      "blue-hour": "Blue hour",
+      "duotone-midnight": "Midnight duotone",
+      "duotone-sunset": "Sunset duotone",
+      "duotone-ocean": "Ocean duotone",
+      "black-gold": "Black & gold"
+    },
+    "photo": {
+      "none": "None",
+      "mirror": "Mirror",
+      "bulge": "Bulge",
+      "pinch": "Pinch",
+      "swirl": "Swirl",
+      "ripple": "Ripple",
+      "glass": "Glass",
+      "prism": "Prism",
+      "kaleidoscope": "Kaleidoscope",
+      "op-art": "Op art",
+      "halftone": "Halftone",
+      "thermal": "Thermal",
+      "pop-art": "Pop art",
+      "pixelate": "Pixelate",
+      "sketch": "Sketch",
+      "posterize": "Posterize",
+      "duotone-pop": "Duotone pop",
+      "comic": "Comic",
+      "neon-edges": "Neon edges",
+      "glitch": "Glitch"
+    }
   }
 }
