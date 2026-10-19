@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import { e2eHeaders } from './helpers';
 import {
   expectRecording,
   expectResult,
@@ -134,7 +135,7 @@ test('a guest gets their video by QR and by code, until the event expires (DL-1,
   await expect(page.getByText('1 link extended by 7 days')).toBeVisible();
 
   // DL-9 / acceptance #8: once the event's retention runs out, the link answers 410.
-  expect((await request.post(`/api/test/expire?linkId=${minted.linkId}`)).ok()).toBe(true);
+  expect((await request.post(`/api/test/expire?linkId=${minted.linkId}`, { headers: e2eHeaders })).ok()).toBe(true);
   const gone = await guest.goto(`/s/${minted.linkId}`);
   expect(gone!.status()).toBe(410);
   await expect(guest.getByRole('heading', { name: 'This event has ended' })).toBeVisible();

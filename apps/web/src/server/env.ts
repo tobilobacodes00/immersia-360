@@ -30,6 +30,8 @@ const schema = z.object({
   CRON_SECRET: z.string().min(16).optional(),
   /** Enables test-only endpoints (the e2e mailbox). Refused on any Vercel deployment. */
   E2E: z.enum(['0', '1']).default('0'),
+  /** Required with E2E=1: test-only routes also demand it as the x-e2e-token header (fail closed). */
+  E2E_TOKEN: z.string().min(32).optional(),
 });
 
 export type ServerEnv = z.infer<typeof schema>;
@@ -41,6 +43,9 @@ export function env(): ServerEnv {
     const parsed = schema.safeParse(process.env);
     if (!parsed.success) {
       throw new Error(`Invalid server environment:\n${z.prettifyError(parsed.error)}`);
+    }
+    if (parsed.data.E2E === '1' && !parsed.data.E2E_TOKEN) {
+      throw new Error('E2E test mode needs E2E_TOKEN (at least 32 characters)');
     }
     if (parsed.data.E2E === '1' && process.env.VERCEL_ENV) {
       throw new Error('E2E test mode must never be enabled on a Vercel deployment');

@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node scripts/build-workers.mjs && next dev",
-    "build": "node scripts/build-workers.mjs && next build",
+    "dev": "node scripts/fetch-fonts.mjs && node scripts/build-workers.mjs && next dev",
+    "build": "node scripts/fetch-fonts.mjs && node scripts/build-workers.mjs && next build",
     "start": "next start",
     "typecheck": "next typegen && tsc --noEmit && tsc --noEmit -p tsconfig.sw.json",
     "lint": "eslint .",

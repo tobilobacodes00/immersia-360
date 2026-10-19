@@ -31,3 +31,6 @@ apps/web/public/workers/
 Thumbs.db
 .idea/
 *.log
+
+# Satoshi is fetched from Fontshare at build time (its licence forbids redistributing the files).
+apps/web/src/fonts/*.woff2

@@ -1,5 +1,8 @@
 import { expect, type Page } from '@playwright/test';
 
+/** The test-only routes demand this run's secret (see src/server/e2e.ts). */
+export const e2eHeaders = { 'x-e2e-token': process.env.E2E_TOKEN ?? '' };
+
 export const uniqueEmail = (tag = 'op') =>
   `e2e-${tag}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}@example.com`;
 
@@ -19,7 +22,9 @@ export async function signIn(page: Page, email = uniqueEmail(), next?: string): 
   await expect
     .poll(
       async () => {
-        const res = await page.request.get(`/api/test/mailbox?to=${encodeURIComponent(email)}`);
+        const res = await page.request.get(`/api/test/mailbox?to=${encodeURIComponent(email)}`, {
+          headers: e2eHeaders,
+        });
         if (!res.ok()) return undefined;
         const mail = (await res.json()) as { text: string };
         link = /https?:\/\/\S+/.exec(mail.text)?.[0];

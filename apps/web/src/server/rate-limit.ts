@@ -32,7 +32,12 @@ let upstash: Map<Name, Ratelimit> | null | undefined;
 function upstashLimiters(): Map<Name, Ratelimit> | null {
   if (upstash !== undefined) return upstash;
   const { UPSTASH_REDIS_REST_URL: url, UPSTASH_REDIS_REST_TOKEN: token } = env();
-  if (!url || !token) return (upstash = null);
+  if (!url || !token) {
+    // Per-instance memory is no real limit across serverless instances: say so loudly in production.
+    if (process.env.VERCEL_ENV === 'production')
+      console.error('[rate-limit] UPSTASH_REDIS_REST_URL/TOKEN are not set: limits only apply per instance');
+    return (upstash = null);
+  }
   const redis = new Redis({ url, token });
   upstash = new Map(
     (Object.keys(LIMITS) as Name[]).map((name) => [
