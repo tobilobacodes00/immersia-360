@@ -26,6 +26,7 @@ import {
   importTake,
   mintSession,
   noteChunk,
+  optOutOfDisplay,
   queueEmail,
   recoverInterrupted,
   requestPersistence,
@@ -73,6 +74,8 @@ export interface BoothEvent {
   share: { qr: boolean; email: boolean; sms: boolean; whatsapp: boolean; smallerVersion: boolean };
   /** Overlay, intro/outro and music (screen 5), from the device's offline cache. */
   media: EventMedia;
+  /** LIV-8: guests are told their capture may appear on the Live Display, and can opt out. */
+  liveDisplay: boolean;
 }
 
 type Phase =
@@ -647,6 +650,8 @@ export function Booth360({ event }: { event: BoothEvent }) {
             event={{ name: event.name, font: event.theme.font, share: event.share }}
             onEmail={(email) => queueEmail(db, phase.session.id, email)}
             onDone={backToReady}
+            liveDisplay={event.liveDisplay}
+            onOptOut={() => optOutOfDisplay(db, phase.session.id).then(() => uploads.nudgeSession(phase.session.id))}
           />
         )}
 

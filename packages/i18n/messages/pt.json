@@ -235,7 +235,8 @@
       "label": "Seções do evento",
       "overview": "Visão geral",
       "setup": "Configuração",
-      "branding": "Marca"
+      "branding": "Marca",
+      "live": "Live Display"
     },
     "dashboard": {
       "capture": "Capturado",
@@ -886,6 +887,93 @@
         "replace": "Substituir",
         "remove": "Remover {name}"
       }
+    },
+    "live": {
+      "title": "Live Display",
+      "settings": {
+        "title": "Live Display",
+        "subtitle": "Cada vídeo, tira e GIF numa TV ou num projetor, cada um com o próprio QR code.",
+        "enabled": "Mostrar as capturas nas telas",
+        "enabledHelp": "Desligado até você ligar. Na tela de resultado, os convidados são avisados de que a captura pode aparecer e podem deixar a sua de fora.",
+        "moderation": "Publicação",
+        "moderationHelp": "Com aprovação prévia, as novas capturas esperam aqui até você mostrá-las.",
+        "auto": "Mostrar automaticamente",
+        "approve": "Aprovar antes",
+        "station": "Abrir a Sharing Station"
+      },
+      "displays": {
+        "title": "Telas",
+        "subtitle": "Cada tela tem o próprio layout e reprodução. As mudanças chegam em menos de um segundo.",
+        "pair": "Parear uma tela",
+        "emptyTitle": "Nenhuma tela ainda",
+        "emptyBody": "Abra a página de pareamento no navegador de qualquer TV, notebook ligado por HDMI ou dispositivo de transmissão e digite o código.",
+        "name": "Nome da tela",
+        "rename": "Renomear",
+        "online": "On-line",
+        "offline": "Off-line",
+        "remove": "Remover {name}",
+        "removeTitle": "Remover {name}?",
+        "removeBody": "A tela para de mostrar capturas na hora e volta para a página de pareamento.",
+        "removeConfirm": "Remover a tela",
+        "cancel": "Cancelar",
+        "layout": "Layout",
+        "layouts": {
+          "spotlight": "Destaque",
+          "mosaic": "Mosaico",
+          "ticker": "Faixa",
+          "counter": "Contador"
+        },
+        "dwell": "Tempo por item",
+        "dwellHelp": "Os vídeos tocam até o fim, até três vezes esse tempo.",
+        "muted": "Silenciar vídeos",
+        "qrSize": "Tamanho do QR",
+        "qrSizes": {
+          "s": "Pequeno",
+          "m": "Médio",
+          "l": "Grande"
+        },
+        "qrPosition": "Canto do QR do evento",
+        "positions": {
+          "top-left": "Superior esquerdo",
+          "top-right": "Superior direito",
+          "bottom-left": "Inferior esquerdo",
+          "bottom-right": "Inferior direito"
+        },
+        "verticalFill": "Vídeos verticais",
+        "verticalFillHelp": "Como os vídeos 9:16 preenchem uma tela horizontal.",
+        "fills": {
+          "blur": "Fundo desfocado",
+          "columns": "Lado a lado"
+        }
+      },
+      "pair": {
+        "title": "Parear uma tela",
+        "steps": "Na TV, abra {url} e digite este código. Ou escaneie o QR com o dispositivo que vai ser a tela.",
+        "codeLabel": "Código de pareamento",
+        "expires": "Expira em {minutes}:{seconds}",
+        "newCode": "Gerar um código novo",
+        "failed": "Não foi possível gerar um código de pareamento. Tente de novo.",
+        "qrLabel": "QR code que pareia o dispositivo que o escanear",
+        "qrHint": "Para um tablet ou celular que vai ser a tela.",
+        "paired": "Tela pareada. Ela já está mostrando o seu evento.",
+        "done": "Pronto"
+      },
+      "moderation": {
+        "title": "Na tela",
+        "subtitle": "Oculte qualquer coisa na hora; some de todas as telas.",
+        "pending": "Aguardando ({count})",
+        "shown": "Na tela ({count})",
+        "hidden": "Ocultos ({count})",
+        "empty": {
+          "pending": "Nada aguardando aprovação.",
+          "shown": "Nada na tela ainda. As novas capturas aparecem aqui segundos depois do envio.",
+          "hidden": "Nada oculto."
+        },
+        "itemLabel": "Captura {code}",
+        "approve": "Mostrar na tela",
+        "restore": "Mostrar de novo",
+        "hide": "Ocultar das telas"
+      }
     }
   },
   "booth": {
@@ -1020,7 +1108,12 @@
       "next": "Próximo convidado",
       "titlePhoto": "Escaneie para ver suas fotos",
       "subtitlePhoto": "O link já funciona; suas fotos chegam lá em instantes.",
-      "previewAlt": "Sua tira de fotos"
+      "previewAlt": "Sua tira de fotos",
+      "display": {
+        "notice": "Sua captura pode aparecer no telão do evento.",
+        "optOut": "Não mostrar a minha no telão",
+        "optedOut": "A sua não vai aparecer no telão"
+      }
     },
     "uploads": {
       "waiting": "{count, plural, one {# envio pendente} other {# envios pendentes}}",
@@ -1098,5 +1191,20 @@
       "expired": "Esse evento terminou e os arquivos foram removidos.",
       "too_many": "Muitas tentativas. Aguarde alguns minutos e tente de novo."
     }
+  },
+  "station": {
+    "subtitle": "Encontre a sua, toque nela e escaneie o código.",
+    "findLabel": "Buscar pelo código",
+    "findPlaceholder": "Seu código",
+    "clear": "Limpar",
+    "empty": "Novas fotos e vídeos aparecem aqui alguns segundos depois de feitos.",
+    "noMatch": "Ainda não há captura com esse código. Ela pode estar a caminho.",
+    "open": "Abrir a captura {code}",
+    "offline": "Off-line: mostrando o que já estava aqui",
+    "detail": "Captura {code}",
+    "qr": "QR code desta captura",
+    "scan": "Escaneie com a câmera do celular para baixar.",
+    "close": "Voltar para todas",
+    "start": "Iniciar a Sharing Station"
   }
 }

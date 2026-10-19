@@ -235,7 +235,8 @@
       "label": "Event sections",
       "overview": "Overview",
       "setup": "Setup",
-      "branding": "Branding"
+      "branding": "Branding",
+      "live": "Live Display"
     },
     "dashboard": {
       "capture": "Captured",
@@ -886,6 +887,93 @@
         "replace": "Replace",
         "remove": "Remove {name}"
       }
+    },
+    "live": {
+      "title": "Live Display",
+      "settings": {
+        "title": "Live Display",
+        "subtitle": "Every video, strip and GIF on a TV or projector, each with its own QR code.",
+        "enabled": "Show captures on screens",
+        "enabledHelp": "Off until you turn it on. Guests are told on the result screen that their capture may appear, and can keep theirs off.",
+        "moderation": "Publishing",
+        "moderationHelp": "Approve first holds new captures here until you show them.",
+        "auto": "Show automatically",
+        "approve": "Approve first",
+        "station": "Open the Sharing Station"
+      },
+      "displays": {
+        "title": "Displays",
+        "subtitle": "Each screen has its own layout and playback. Changes reach it within a second.",
+        "pair": "Pair a display",
+        "emptyTitle": "No displays yet",
+        "emptyBody": "Open the pairing page on any TV browser, laptop on HDMI or casting device, and type the code.",
+        "name": "Display name",
+        "rename": "Rename",
+        "online": "Online",
+        "offline": "Offline",
+        "remove": "Remove {name}",
+        "removeTitle": "Remove {name}?",
+        "removeBody": "The screen stops showing captures at once and goes back to its pairing page.",
+        "removeConfirm": "Remove display",
+        "cancel": "Cancel",
+        "layout": "Layout",
+        "layouts": {
+          "spotlight": "Spotlight",
+          "mosaic": "Mosaic",
+          "ticker": "Ticker",
+          "counter": "Counter"
+        },
+        "dwell": "Time per item",
+        "dwellHelp": "Videos play to the end, up to three times this.",
+        "muted": "Mute videos",
+        "qrSize": "QR size",
+        "qrSizes": {
+          "s": "Small",
+          "m": "Medium",
+          "l": "Large"
+        },
+        "qrPosition": "Event QR corner",
+        "positions": {
+          "top-left": "Top left",
+          "top-right": "Top right",
+          "bottom-left": "Bottom left",
+          "bottom-right": "Bottom right"
+        },
+        "verticalFill": "Vertical videos",
+        "verticalFillHelp": "How 9:16 videos fill a landscape screen.",
+        "fills": {
+          "blur": "Blurred fill",
+          "columns": "Side by side"
+        }
+      },
+      "pair": {
+        "title": "Pair a display",
+        "steps": "On the TV, open {url} and type this code. Or scan the QR with the device that will be the display.",
+        "codeLabel": "Pairing code",
+        "expires": "Expires in {minutes}:{seconds}",
+        "newCode": "Get a new code",
+        "failed": "Couldn't make a pairing code. Try again.",
+        "qrLabel": "QR code that pairs the device that scans it",
+        "qrHint": "For a tablet or phone that will be the display.",
+        "paired": "Display paired. It's showing your event now.",
+        "done": "Done"
+      },
+      "moderation": {
+        "title": "On screen",
+        "subtitle": "Hide anything at once; it disappears from every display.",
+        "pending": "Waiting ({count})",
+        "shown": "On screen ({count})",
+        "hidden": "Hidden ({count})",
+        "empty": {
+          "pending": "Nothing waiting for approval.",
+          "shown": "Nothing on screen yet. New captures appear here within seconds of their upload.",
+          "hidden": "Nothing hidden."
+        },
+        "itemLabel": "Capture {code}",
+        "approve": "Show on screen",
+        "restore": "Show again",
+        "hide": "Hide from screens"
+      }
     }
   },
   "booth": {
@@ -1020,7 +1108,12 @@
       "next": "Next guest",
       "titlePhoto": "Scan for your photos",
       "subtitlePhoto": "The link works right away; your photos land there in a moment.",
-      "previewAlt": "Your photo strip"
+      "previewAlt": "Your photo strip",
+      "display": {
+        "notice": "Your capture may appear on the event's big screen.",
+        "optOut": "Keep mine off the screen",
+        "optedOut": "Yours won't be shown on screen"
+      }
     },
     "uploads": {
       "waiting": "{count, plural, one {# upload waiting} other {# uploads waiting}}",
@@ -1098,5 +1191,20 @@
       "expired": "That event has ended and its files have been removed.",
       "too_many": "Too many tries. Wait a few minutes, then try again."
     }
+  },
+  "station": {
+    "subtitle": "Find yours, tap it and scan the code.",
+    "findLabel": "Find by code",
+    "findPlaceholder": "Your code",
+    "clear": "Clear",
+    "empty": "New photos and videos appear here a few seconds after they're taken.",
+    "noMatch": "No capture with that code yet. It may still be on its way.",
+    "open": "Open capture {code}",
+    "offline": "Offline: showing what was already here",
+    "detail": "Capture {code}",
+    "qr": "QR code for this capture",
+    "scan": "Scan with your phone's camera to download.",
+    "close": "Back to all",
+    "start": "Start the Sharing Station"
   }
 }

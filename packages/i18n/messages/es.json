@@ -235,7 +235,8 @@
       "label": "Secciones del evento",
       "overview": "Resumen",
       "setup": "Configuración",
-      "branding": "Marca"
+      "branding": "Marca",
+      "live": "Live Display"
     },
     "dashboard": {
       "capture": "Capturado",
@@ -886,6 +887,93 @@
         "replace": "Reemplazar",
         "remove": "Quitar {name}"
       }
+    },
+    "live": {
+      "title": "Live Display",
+      "settings": {
+        "title": "Live Display",
+        "subtitle": "Cada video, tira y GIF en una TV o un proyector, cada uno con su propio código QR.",
+        "enabled": "Mostrar las capturas en pantallas",
+        "enabledHelp": "Apagado hasta que lo actives. En la pantalla de resultado se avisa a los invitados de que su captura puede aparecer, y pueden excluir la suya.",
+        "moderation": "Publicación",
+        "moderationHelp": "Con aprobación previa, las nuevas capturas esperan aquí hasta que las muestres.",
+        "auto": "Mostrar automáticamente",
+        "approve": "Aprobar primero",
+        "station": "Abrir la Sharing Station"
+      },
+      "displays": {
+        "title": "Pantallas",
+        "subtitle": "Cada pantalla tiene su propio diseño y reproducción. Los cambios llegan en menos de un segundo.",
+        "pair": "Vincular una pantalla",
+        "emptyTitle": "Todavía no hay pantallas",
+        "emptyBody": "Abre la página de vinculación en el navegador de cualquier TV, laptop conectada por HDMI o dispositivo de transmisión, y escribe el código.",
+        "name": "Nombre de la pantalla",
+        "rename": "Renombrar",
+        "online": "En línea",
+        "offline": "Sin conexión",
+        "remove": "Quitar {name}",
+        "removeTitle": "¿Quitar {name}?",
+        "removeBody": "La pantalla deja de mostrar capturas de inmediato y vuelve a su página de vinculación.",
+        "removeConfirm": "Quitar la pantalla",
+        "cancel": "Cancelar",
+        "layout": "Diseño",
+        "layouts": {
+          "spotlight": "Destacado",
+          "mosaic": "Mosaico",
+          "ticker": "Cinta",
+          "counter": "Contador"
+        },
+        "dwell": "Tiempo por elemento",
+        "dwellHelp": "Los videos se reproducen hasta el final, hasta tres veces este tiempo.",
+        "muted": "Silenciar videos",
+        "qrSize": "Tamaño del QR",
+        "qrSizes": {
+          "s": "Pequeño",
+          "m": "Mediano",
+          "l": "Grande"
+        },
+        "qrPosition": "Esquina del QR del evento",
+        "positions": {
+          "top-left": "Arriba a la izquierda",
+          "top-right": "Arriba a la derecha",
+          "bottom-left": "Abajo a la izquierda",
+          "bottom-right": "Abajo a la derecha"
+        },
+        "verticalFill": "Videos verticales",
+        "verticalFillHelp": "Cómo llenan los videos 9:16 una pantalla horizontal.",
+        "fills": {
+          "blur": "Relleno difuminado",
+          "columns": "Lado a lado"
+        }
+      },
+      "pair": {
+        "title": "Vincular una pantalla",
+        "steps": "En la TV, abre {url} y escribe este código. O escanea el QR con el dispositivo que será la pantalla.",
+        "codeLabel": "Código de vinculación",
+        "expires": "Vence en {minutes}:{seconds}",
+        "newCode": "Obtener un código nuevo",
+        "failed": "No se pudo crear un código de vinculación. Inténtalo de nuevo.",
+        "qrLabel": "Código QR que vincula el dispositivo que lo escanea",
+        "qrHint": "Para una tableta o un teléfono que será la pantalla.",
+        "paired": "Pantalla vinculada. Ya está mostrando tu evento.",
+        "done": "Listo"
+      },
+      "moderation": {
+        "title": "En pantalla",
+        "subtitle": "Oculta cualquier cosa al instante; desaparece de todas las pantallas.",
+        "pending": "En espera ({count})",
+        "shown": "En pantalla ({count})",
+        "hidden": "Ocultos ({count})",
+        "empty": {
+          "pending": "Nada esperando aprobación.",
+          "shown": "Todavía no hay nada en pantalla. Las nuevas capturas aparecen aquí segundos después de subirse.",
+          "hidden": "Nada oculto."
+        },
+        "itemLabel": "Captura {code}",
+        "approve": "Mostrar en pantalla",
+        "restore": "Mostrar de nuevo",
+        "hide": "Ocultar de las pantallas"
+      }
     }
   },
   "booth": {
@@ -1020,7 +1108,12 @@
       "next": "Siguiente invitado",
       "titlePhoto": "Escanea para ver tus fotos",
       "subtitlePhoto": "El enlace funciona ya; tus fotos llegan en un momento.",
-      "previewAlt": "Tu tira de fotos"
+      "previewAlt": "Tu tira de fotos",
+      "display": {
+        "notice": "Tu captura puede aparecer en la pantalla grande del evento.",
+        "optOut": "No mostrar la mía en pantalla",
+        "optedOut": "La tuya no se mostrará en pantalla"
+      }
     },
     "uploads": {
       "waiting": "{count, plural, one {# subida pendiente} other {# subidas pendientes}}",
@@ -1098,5 +1191,20 @@
       "expired": "Ese evento ha terminado y sus archivos se han eliminado.",
       "too_many": "Demasiados intentos. Espera unos minutos y vuelve a intentarlo."
     }
+  },
+  "station": {
+    "subtitle": "Busca la tuya, tócala y escanea el código.",
+    "findLabel": "Buscar por código",
+    "findPlaceholder": "Tu código",
+    "clear": "Borrar",
+    "empty": "Las nuevas fotos y videos aparecen aquí unos segundos después de tomarse.",
+    "noMatch": "Todavía no hay una captura con ese código. Puede que siga en camino.",
+    "open": "Abrir la captura {code}",
+    "offline": "Sin conexión: se muestra lo que ya estaba aquí",
+    "detail": "Captura {code}",
+    "qr": "Código QR de esta captura",
+    "scan": "Escanéalo con la cámara de tu teléfono para descargarla.",
+    "close": "Volver a todas",
+    "start": "Iniciar la Sharing Station"
   }
 }

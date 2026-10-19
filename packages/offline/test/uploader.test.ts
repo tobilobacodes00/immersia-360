@@ -8,6 +8,7 @@ import {
   CODE_POOL_LOW,
   codesLeft,
   mintSession,
+  optOutOfDisplay,
   queueEmail,
   takeCode,
   topUpCodes,
@@ -79,6 +80,13 @@ class FakeServer implements BoothApi {
     this.maybeFail('email');
     if (!this.sessions.has(sessionId)) throw new BoothApiError(404, 'not_found', false);
     this.emails.push(to);
+  }
+
+  optedOut: string[] = [];
+  async optOutOfDisplay(sessionId: string) {
+    this.maybeFail('optOut');
+    if (!this.sessions.has(sessionId)) throw new BoothApiError(404, 'not_found', false);
+    this.optedOut.push(sessionId);
   }
 
   async complete(outputId: string) {
@@ -261,6 +269,26 @@ describe('upload queue', () => {
     await queueEmail(db, s.id, 'friend@example.com');
     expect(await drain(queue)).toEqual(['emailed', 'done']);
     expect(server.emails).toEqual(['guest@example.com', 'friend@example.com']);
+  });
+
+  it('a guest opting out of the display: sent with the registration, or later through the queue (LIV-8)', async () => {
+    const server = new FakeServer();
+    const queue = new UploadQueue(db, store, server, now);
+    await addTake('t1', 'rendered');
+    await addOutput('t1', 'mp4', 1000);
+    const before = await mintSession(db, { eventId: 'evt', takeIds: ['t1'], capturedAt: clock });
+    await optOutOfDisplay(db, before.id);
+    expect(await drain(queue)).toEqual(['registered', 'uploaded:mp4', 'done']);
+    expect(server.sessions.get(before.id)?.optedOutOfDisplay).toBe(true);
+    expect(server.optedOut).toEqual([]);
+
+    await addTake('t2', 'rendered');
+    await addOutput('t2', 'mp4', 1000);
+    const after = await mintSession(db, { eventId: 'evt', takeIds: ['t2'], capturedAt: clock });
+    expect(await drain(queue)).toEqual(['registered', 'uploaded:mp4', 'done']);
+    await optOutOfDisplay(db, after.id);
+    expect(await drain(queue)).toEqual(['opted_out', 'done']);
+    expect(server.optedOut).toEqual([after.id]);
   });
 
   it('a later output (the messaging copy) reopens a finished session', async () => {

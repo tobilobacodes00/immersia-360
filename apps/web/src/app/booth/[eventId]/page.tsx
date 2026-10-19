@@ -46,6 +46,7 @@ export default async function BoothPage({ params }: { params: Promise<{ eventId:
     theme: branding.theme,
     attract: { headline: branding.attract.headline, cta: branding.attract.cta },
     kioskPinHash: event.kioskPinHash,
+    liveDisplay: event.liveDisplayEnabled,
   };
   if (event.mode === 'photo')
     return (

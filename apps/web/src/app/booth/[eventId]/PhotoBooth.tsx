@@ -10,6 +10,7 @@ import {
   boothDb,
   mintSession,
   putOutput,
+  optOutOfDisplay,
   queueEmail,
   takeStore,
   type LocalSession,
@@ -58,6 +59,8 @@ export interface PhotoBoothEvent {
   share: { qr: boolean; email: boolean; sms: boolean; whatsapp: boolean; stripQr: boolean };
   /** The event's print layout from the editor (screen 6), or null for the preset one. */
   layout: Template | null;
+  /** LIV-8: guests are told their capture may appear on the Live Display, and can opt out. */
+  liveDisplay: boolean;
   /** Dynamic fields and every file the layout draws (screen 5). */
   media: { branding: { hashtag: string; custom1: string; custom2: string; custom3: string }; assets: AssetView[] };
 }
@@ -578,6 +581,8 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
             preview={phase.preview}
             event={{ name: event.name, font: event.theme.font, share: event.share }}
             onEmail={(email) => queueEmail(db, phase.session.id, email)}
+            liveDisplay={event.liveDisplay}
+            onOptOut={() => optOutOfDisplay(db, phase.session.id).then(() => uploads.nudgeSession(phase.session.id))}
             onDone={backToReady}
             actions={
               p.print.enabled ? (
