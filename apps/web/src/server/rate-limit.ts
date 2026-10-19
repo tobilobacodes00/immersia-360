@@ -27,6 +27,8 @@ export const LIMITS = {
   assetUploadPerOrg: { limit: 300, windowS: 3600 },
   /** LIV-1: a six-character pairing code must not be guessable by brute force. */
   displayPairPerIp: { limit: 20, windowS: 600 },
+  /** SHR-5: gallery passwords are short; slow guessing right down. */
+  galleryUnlockPerIp: { limit: 10, windowS: 600 },
 } satisfies Record<string, Limit>;
 
 type Name = keyof typeof LIMITS;

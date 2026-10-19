@@ -237,7 +237,8 @@
       "overview": "Overview",
       "setup": "Setup",
       "branding": "Branding",
-      "live": "Live Display"
+      "live": "Live Display",
+      "signage": "QR signage"
     },
     "dashboard": {
       "capture": "Captured",
@@ -1093,6 +1094,76 @@
           "failed": "Failed"
         }
       }
+    },
+    "galleryCard": {
+      "title": "Event gallery",
+      "subtitle": "{count, plural, =0 {Every capture, for your client and for guests who scan the event QR.} one {# capture so far, for your client and for guests who scan the event QR.} other {# captures so far, for your client and for guests who scan the event QR.}}",
+      "link": "Gallery link",
+      "copy": "Copy",
+      "copied": "Copied",
+      "openLink": "Open",
+      "password": "Password",
+      "passwordHelp": "Optional. Anyone with the link needs it once per browser. Hidden captures and guests who asked to stay off screen never appear here.",
+      "locked": "Protected",
+      "unlocked": "Open to anyone with the link",
+      "setPassword": "Set a password",
+      "newPassword": "New password",
+      "set": "Set",
+      "change": "Change",
+      "remove": "Remove password",
+      "passwordSet": "Password saved. Anyone already in needs to enter it again.",
+      "passwordRemoved": "Password removed.",
+      "passwordShort": "Use at least 6 characters.",
+      "failed": "Couldn't save. Try again.",
+      "export": "All files",
+      "exportHelp": "Every full-quality file of the event as one ZIP, including hidden captures, saved straight from storage by your browser.",
+      "exportButton": "Download every file (ZIP)"
+    },
+    "signage": {
+      "title": "QR signage",
+      "format": {
+        "title": "Format",
+        "subtitle": "One QR code for the whole event gallery, in your event’s colours and logo.",
+        "label": "Signage format"
+      },
+      "formats": {
+        "a4": "A4 poster",
+        "a5": "A5 flyer",
+        "tent": "Table tent"
+      },
+      "hints": {
+        "a4": "For a wall, a door or an easel. 210 × 297 mm.",
+        "a5": "For tables, hand-outs and the bar. 148 × 210 mm.",
+        "tent": "Print on A4, fold along the dashed line and stand it on the table: both sides read upright. 210 × 297 mm sheet."
+      },
+      "wording": {
+        "title": "Wording",
+        "subtitle": "Change the text, or leave a line empty to drop it. The event name, logo and hashtag come from Branding.",
+        "headline": "Headline",
+        "cta": "Call to action"
+      },
+      "defaults": {
+        "headline": "Get your photos & videos",
+        "cta": "Scan with your phone camera"
+      },
+      "link": {
+        "title": "Gallery link",
+        "subtitle": "What the code opens. You can share it in a message too.",
+        "label": "Gallery link",
+        "copy": "Copy link",
+        "copied": "Copied"
+      },
+      "preview": {
+        "title": "Preview",
+        "label": "Preview of the {format}",
+        "loading": "Loading fonts and your logo…",
+        "tip": "Print at actual size (100%), not “fit to page”. Nothing is printed closer than {mm} mm to the edge, so office printers won’t cut it off."
+      },
+      "download": {
+        "pdf": "Download PDF",
+        "png": "Download PNG",
+        "failed": "Couldn’t make the file. Try again."
+      }
     }
   },
   "booth": {
@@ -1265,6 +1336,85 @@
       "printLimit": "That’s all the prints for this session",
       "flash": "Photo taken"
     },
+    "gallery": {
+      "open": "Gallery",
+      "title": "Event gallery",
+      "close": "Close gallery",
+      "loading": "Loading…",
+      "summary": "{count, plural, =0 {Nothing on this device yet} one {# file on this device} other {# files on this device}}",
+      "filters": "Filter by type",
+      "filter": {
+        "all": "All",
+        "videos": "Videos",
+        "strips": "Strips",
+        "motion": "GIFs & motion"
+      },
+      "kinds": {
+        "mp4": "Video",
+        "small_mp4": "Smaller video",
+        "gif": "GIF",
+        "strip": "Photo strip",
+        "short_video": "Short video",
+        "boomerang": "Boomerang"
+      },
+      "upload": {
+        "local": "On this device",
+        "uploading": "Uploading",
+        "uploaded": "Uploaded",
+        "failed": "Needs attention"
+      },
+      "codePending": "Code pending",
+      "card": "{kind}, {code}",
+      "previewAlt": "{kind} preview",
+      "empty": "Nothing here yet",
+      "emptyBody": "Videos and photo strips appear here as soon as they are made.",
+      "emptyFilter": "Nothing of this type yet",
+      "select": "Select",
+      "selected": "{count, plural, =0 {None selected} one {# selected} other {# selected}}",
+      "selectAll": "Select all",
+      "clearSelection": "Clear",
+      "importOriginals": "Import originals",
+      "importing": "Importing…",
+      "importDone": "{count, plural, one {Imported # video. It renders in the background.} other {Imported # videos. They render in the background.}}",
+      "importSkipped": "{count, plural, one {# file wasn’t a video and was skipped.} other {# files weren’t videos and were skipped.}}",
+      "importFailed": "{count, plural, one {# video couldn’t be saved. Check free storage.} other {# videos couldn’t be saved. Check free storage.}}",
+      "exportAll": "Export all ({count})",
+      "exportSelected": "Export selected ({count})",
+      "exporting": "Exporting file {index} of {count} · {done} of {total}",
+      "exportPaused": "Export paused while a guest is at the booth",
+      "exportProgress": "Export progress",
+      "exportSaved": "Saved {name}.",
+      "exportDownloaded": "{name} was sent to this browser’s downloads.",
+      "exportMissing": "{count, plural, one {# file couldn’t be read from this device and was left out.} other {# files couldn’t be read from this device and were left out.}}",
+      "exportCancelled": "Export cancelled. Nothing was saved.",
+      "exportFailed": "The export didn’t finish. Check free storage, then try again.",
+      "capturingNote": "Exports and imports wait while a guest is at the booth.",
+      "cancel": "Cancel",
+      "dismiss": "Dismiss",
+      "memoryTitle": "This export is large",
+      "memoryBody": "This browser can’t stream a file to disk, so the whole ZIP ({size}) is built in memory first, and that can fail on this device. Export a few at a time with Select, or use Chrome or Edge on a computer.",
+      "exportAnyway": "Export anyway",
+      "stopTitle": "Stop the export?",
+      "stopBody": "Closing the gallery cancels the export in progress. Nothing is saved.",
+      "keepExporting": "Keep exporting",
+      "stopAndClose": "Stop and close",
+      "detail": {
+        "reshare": "Reshare",
+        "qrAlt": "QR code for this guest’s files",
+        "reshareHint": "A guest who missed their QR can scan this one to open their files.",
+        "noLink": "This file has no guest link.",
+        "type": "Type",
+        "status": "Upload",
+        "made": "Made",
+        "size": "Size",
+        "dimensions": "Dimensions",
+        "pixels": "{width}×{height}",
+        "duration": "Length",
+        "file": "File name",
+        "save": "Save to this device",
+        "saveFailed": "Couldn’t read this file from the device."
+      }
+    },
     "startOther": "Start {booth}",
     "endCard": "Scan to get your video"
   },
@@ -1327,5 +1477,86 @@
     "scan": "Scan with your phone's camera to download.",
     "close": "Back to all",
     "start": "Start the Sharing Station"
+  },
+  "gallery": {
+    "metaTitle": "{event}: photos and videos",
+    "notFound": "Gallery not found",
+    "downloadAll": "Download all",
+    "filters": {
+      "label": "Booth",
+      "all": "All",
+      "video360": "360 videos",
+      "photo": "Photos"
+    },
+    "searchLabel": "Find by code",
+    "searchPlaceholder": "Your code",
+    "search": "Find",
+    "empty": "Photos and videos appear here as soon as they're uploaded.",
+    "noMatch": "Nothing with that code yet. It may still be on its way.",
+    "open": "Open capture {code}",
+    "older": "Older",
+    "newest": "Back to the newest",
+    "lock": {
+      "body": "This gallery is protected.",
+      "label": "Password",
+      "open": "Open",
+      "errors": {
+        "wrong": "That password isn't right.",
+        "tooMany": "Too many tries. Wait a few minutes and try again.",
+        "failed": "Couldn't check the password. Check your connection and try again."
+      }
+    }
+  },
+  "zip": {
+    "progress": "{files, plural, one {# file} other {# files}} · {size}",
+    "cancel": "Cancel",
+    "done": "Saved {files, plural, one {# file} other {# files}}.{skipped, plural, =0 {} one { # file couldn't be fetched.} other { # files couldn't be fetched.}}",
+    "failed": "The download stopped. Check your connection and try again.",
+    "cancelled": "Download cancelled."
+  },
+  "tv": {
+    "pair": {
+      "metaTitle": "Connect a screen",
+      "title": "Connect this screen",
+      "body": "Enter the six-character code from Live Display in Studio, or open the pairing link from its QR code.",
+      "codeLabel": "Pairing code",
+      "character": "Character {n} of {total}",
+      "hint": "Letters and numbers, like K7M-2QX. Never I, L, O, 0 or 1.",
+      "submit": "Connect screen",
+      "connecting": "Connecting…",
+      "connected": "Connected",
+      "backToDisplay": "Back to the display",
+      "errors": {
+        "incomplete": "Enter all six characters.",
+        "invalid": "That code isn’t right. Check it and try again.",
+        "expired": "That code has expired. Create a new one in Studio.",
+        "too_many": "Too many tries. Wait a few minutes, then try again.",
+        "offline": "This screen can’t reach the internet. Check the connection and try again.",
+        "storage": "This browser can’t save the pairing. Turn off private browsing and try again.",
+        "unavailable": "Something went wrong on our side. Try again in a moment."
+      }
+    },
+    "display": {
+      "metaTitle": "Live Display",
+      "connecting": "Connecting…",
+      "gallery": "Event gallery",
+      "galleryAlt": "QR code for the event gallery",
+      "galleryScan": "Scan to see every moment",
+      "itemScan": "Scan to get this moment",
+      "itemAlt": "QR code for this moment, code {code}",
+      "enterCode": "Or enter the code at {host}",
+      "justIn": "Just in",
+      "recent": "Recent moments",
+      "moments": "{count, plural, one {moment captured} other {moments captured}}",
+      "idleLive": "Moments from the booth appear here as soon as they’re ready.",
+      "fullscreen": "Full screen",
+      "exitFullscreen": "Exit full screen",
+      "soundHint": "Press OK to turn on sound",
+      "status": {
+        "socket": "Live",
+        "polling": "Live, refreshing",
+        "offline": "Offline, looping saved moments"
+      }
+    }
   }
 }

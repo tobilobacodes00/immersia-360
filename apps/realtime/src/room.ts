@@ -76,7 +76,7 @@ export class EventRoom extends DurableObject {
   override async fetch(request: Request): Promise<Response> {
     const { pathname } = new URL(request.url);
     if (pathname === '/publish' && request.method === 'POST') return this.publish(request);
-    if (pathname === '/socket' && request.method === 'GET') return this.connect(request);
+    if (pathname === '/socket' && request.method === 'GET') return this.acceptScreen(request);
     return new Response('not found', { status: 404 });
   }
 
@@ -103,7 +103,8 @@ export class EventRoom extends DurableObject {
   }
 
   /** Accepts a screen's socket. The Worker has verified its token and passes who it is in headers. */
-  private connect(request: Request): Response {
+  // Not `connect`: DurableObject declares that name (outbound TCP sockets).
+  private acceptScreen(request: Request): Response {
     if (request.headers.get('upgrade')?.toLowerCase() !== 'websocket') {
       return new Response('expected a websocket upgrade', { status: 426 });
     }

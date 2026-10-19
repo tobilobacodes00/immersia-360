@@ -237,7 +237,8 @@
       "overview": "Resumen",
       "setup": "Configuración",
       "branding": "Marca",
-      "live": "Live Display"
+      "live": "Live Display",
+      "signage": "Carteles con QR"
     },
     "dashboard": {
       "capture": "Capturado",
@@ -1093,6 +1094,76 @@
           "failed": "Falló"
         }
       }
+    },
+    "galleryCard": {
+      "title": "Galería del evento",
+      "subtitle": "{count, plural, =0 {Cada captura, para tu cliente y para los invitados que escanean el QR del evento.} one {# captura hasta ahora, para tu cliente y para los invitados que escanean el QR del evento.} other {# capturas hasta ahora, para tu cliente y para los invitados que escanean el QR del evento.}}",
+      "link": "Enlace de la galería",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "openLink": "Abrir",
+      "password": "Contraseña",
+      "passwordHelp": "Opcional. Quien tenga el enlace la necesita una vez por navegador. Las capturas ocultas y los invitados que pidieron no salir en pantalla nunca aparecen aquí.",
+      "locked": "Protegida",
+      "unlocked": "Abierta para quien tenga el enlace",
+      "setPassword": "Definir una contraseña",
+      "newPassword": "Nueva contraseña",
+      "set": "Definir",
+      "change": "Cambiar",
+      "remove": "Quitar la contraseña",
+      "passwordSet": "Contraseña guardada. Quien ya había entrado tendrá que volver a escribirla.",
+      "passwordRemoved": "Contraseña eliminada.",
+      "passwordShort": "Usa al menos 6 caracteres.",
+      "failed": "No se pudo guardar. Inténtalo de nuevo.",
+      "export": "Todos los archivos",
+      "exportHelp": "Todos los archivos en calidad completa del evento en un solo ZIP, incluidas las capturas ocultas, guardados por tu navegador directamente desde el almacenamiento.",
+      "exportButton": "Descargar todos los archivos (ZIP)"
+    },
+    "signage": {
+      "title": "Carteles con QR",
+      "format": {
+        "title": "Formato",
+        "subtitle": "Un solo código QR para toda la galería del evento, con los colores y el logo de tu evento.",
+        "label": "Formato del cartel"
+      },
+      "formats": {
+        "a4": "Póster A4",
+        "a5": "Volante A5",
+        "tent": "Cartel de mesa"
+      },
+      "hints": {
+        "a4": "Para una pared, una puerta o un caballete. 210 × 297 mm.",
+        "a5": "Para mesas, para entregar en mano y para la barra. 148 × 210 mm.",
+        "tent": "Imprime en A4, dobla por la línea punteada y colócalo sobre la mesa: los dos lados se leen derechos. Hoja de 210 × 297 mm."
+      },
+      "wording": {
+        "title": "Texto",
+        "subtitle": "Cambia el texto o deja una línea vacía para quitarla. El nombre del evento, el logo y el hashtag vienen de Marca.",
+        "headline": "Titular",
+        "cta": "Llamada a la acción"
+      },
+      "defaults": {
+        "headline": "Recibe tus fotos y videos",
+        "cta": "Escanea con la cámara de tu teléfono"
+      },
+      "link": {
+        "title": "Enlace de la galería",
+        "subtitle": "Es lo que abre el código. También puedes compartirlo en un mensaje.",
+        "label": "Enlace de la galería",
+        "copy": "Copiar enlace",
+        "copied": "Copiado"
+      },
+      "preview": {
+        "title": "Vista previa",
+        "label": "Vista previa: {format}",
+        "loading": "Cargando tipografías y tu logo…",
+        "tip": "Imprime a tamaño real (100 %), no con “ajustar a la página”. Nada se imprime a menos de {mm} mm del borde, así las impresoras de oficina no lo cortan."
+      },
+      "download": {
+        "pdf": "Descargar PDF",
+        "png": "Descargar PNG",
+        "failed": "No se pudo crear el archivo. Inténtalo de nuevo."
+      }
     }
   },
   "booth": {
@@ -1265,6 +1336,85 @@
       "printLimit": "Ya no quedan impresiones para esta sesión",
       "flash": "Foto tomada"
     },
+    "gallery": {
+      "open": "Galería",
+      "title": "Galería del evento",
+      "close": "Cerrar la galería",
+      "loading": "Cargando…",
+      "summary": "{count, plural, =0 {Aún no hay nada en este dispositivo} one {# archivo en este dispositivo} other {# archivos en este dispositivo}}",
+      "filters": "Filtrar por tipo",
+      "filter": {
+        "all": "Todo",
+        "videos": "Videos",
+        "strips": "Tiras",
+        "motion": "GIF y movimiento"
+      },
+      "kinds": {
+        "mp4": "Video",
+        "small_mp4": "Video más ligero",
+        "gif": "GIF",
+        "strip": "Tira de fotos",
+        "short_video": "Video corto",
+        "boomerang": "Boomerang"
+      },
+      "upload": {
+        "local": "En este dispositivo",
+        "uploading": "Subiendo",
+        "uploaded": "Subido",
+        "failed": "Requiere atención"
+      },
+      "codePending": "Código pendiente",
+      "card": "{kind}, {code}",
+      "previewAlt": "Vista previa: {kind}",
+      "empty": "Aún no hay nada",
+      "emptyBody": "Los videos y las tiras de fotos aparecen aquí en cuanto se crean.",
+      "emptyFilter": "Aún no hay nada de este tipo",
+      "select": "Seleccionar",
+      "selected": "{count, plural, =0 {Ninguno seleccionado} one {# seleccionado} other {# seleccionados}}",
+      "selectAll": "Seleccionar todo",
+      "clearSelection": "Quitar selección",
+      "importOriginals": "Importar originales",
+      "importing": "Importando…",
+      "importDone": "{count, plural, one {Se importó # video. Se renderiza en segundo plano.} other {Se importaron # videos. Se renderizan en segundo plano.}}",
+      "importSkipped": "{count, plural, one {# archivo no era un video y se omitió.} other {# archivos no eran videos y se omitieron.}}",
+      "importFailed": "{count, plural, one {No se pudo guardar # video. Revisa el almacenamiento libre.} other {No se pudieron guardar # videos. Revisa el almacenamiento libre.}}",
+      "exportAll": "Exportar todo ({count})",
+      "exportSelected": "Exportar selección ({count})",
+      "exporting": "Exportando archivo {index} de {count} · {done} de {total}",
+      "exportPaused": "Exportación en pausa mientras un invitado está en la cabina",
+      "exportProgress": "Progreso de la exportación",
+      "exportSaved": "Se guardó {name}.",
+      "exportDownloaded": "{name} se envió a las descargas de este navegador.",
+      "exportMissing": "{count, plural, one {No se pudo leer # archivo de este dispositivo y se dejó fuera.} other {No se pudieron leer # archivos de este dispositivo y se dejaron fuera.}}",
+      "exportCancelled": "Exportación cancelada. No se guardó nada.",
+      "exportFailed": "La exportación no terminó. Revisa el almacenamiento libre y vuelve a intentarlo.",
+      "capturingNote": "Las exportaciones y las importaciones esperan mientras un invitado está en la cabina.",
+      "cancel": "Cancelar",
+      "dismiss": "Cerrar",
+      "memoryTitle": "Esta exportación es grande",
+      "memoryBody": "Este navegador no puede transmitir un archivo al disco, así que todo el ZIP ({size}) se arma primero en la memoria y puede fallar en este dispositivo. Exporta unos cuantos a la vez con Seleccionar, o usa Chrome o Edge en una computadora.",
+      "exportAnyway": "Exportar de todos modos",
+      "stopTitle": "¿Detener la exportación?",
+      "stopBody": "Al cerrar la galería se cancela la exportación en curso. No se guarda nada.",
+      "keepExporting": "Seguir exportando",
+      "stopAndClose": "Detener y cerrar",
+      "detail": {
+        "reshare": "Volver a compartir",
+        "qrAlt": "Código QR de los archivos de este invitado",
+        "reshareHint": "Un invitado que se perdió su QR puede escanear este para abrir sus archivos.",
+        "noLink": "Este archivo no tiene enlace para el invitado.",
+        "type": "Tipo",
+        "status": "Subida",
+        "made": "Creado",
+        "size": "Tamaño",
+        "dimensions": "Dimensiones",
+        "pixels": "{width}×{height}",
+        "duration": "Duración",
+        "file": "Nombre del archivo",
+        "save": "Guardar en este dispositivo",
+        "saveFailed": "No se pudo leer este archivo del dispositivo."
+      }
+    },
     "startOther": "Iniciar {booth}",
     "endCard": "Escanea para tener tu video"
   },
@@ -1327,5 +1477,86 @@
     "scan": "Escanéalo con la cámara de tu teléfono para descargarla.",
     "close": "Volver a todas",
     "start": "Iniciar la Sharing Station"
+  },
+  "gallery": {
+    "metaTitle": "{event}: fotos y videos",
+    "notFound": "No se encontró la galería",
+    "downloadAll": "Descargar todo",
+    "filters": {
+      "label": "Cabina",
+      "all": "Todo",
+      "video360": "Videos 360",
+      "photo": "Fotos"
+    },
+    "searchLabel": "Buscar por código",
+    "searchPlaceholder": "Tu código",
+    "search": "Buscar",
+    "empty": "Las fotos y los videos aparecen aquí en cuanto se suben.",
+    "noMatch": "Todavía no hay nada con ese código. Puede que siga en camino.",
+    "open": "Abrir la captura {code}",
+    "older": "Anteriores",
+    "newest": "Volver a lo más reciente",
+    "lock": {
+      "body": "Esta galería está protegida.",
+      "label": "Contraseña",
+      "open": "Abrir",
+      "errors": {
+        "wrong": "La contraseña no es correcta.",
+        "tooMany": "Demasiados intentos. Espera unos minutos y vuelve a intentarlo.",
+        "failed": "No se pudo comprobar la contraseña. Revisa tu conexión y vuelve a intentarlo."
+      }
+    }
+  },
+  "zip": {
+    "progress": "{files, plural, one {# archivo} other {# archivos}} · {size}",
+    "cancel": "Cancelar",
+    "done": "Se guardaron {files, plural, one {# archivo} other {# archivos}}.{skipped, plural, =0 {} one { No se pudo obtener # archivo.} other { No se pudieron obtener # archivos.}}",
+    "failed": "La descarga se detuvo. Revisa tu conexión y vuelve a intentarlo.",
+    "cancelled": "Descarga cancelada."
+  },
+  "tv": {
+    "pair": {
+      "metaTitle": "Conectar una pantalla",
+      "title": "Conecta esta pantalla",
+      "body": "Escribe el código de seis caracteres que aparece en Pantalla en vivo, dentro de Estudio, o abre el enlace de emparejamiento de su código QR.",
+      "codeLabel": "Código de emparejamiento",
+      "character": "Carácter {n} de {total}",
+      "hint": "Letras y números, como K7M-2QX. Nunca I, L, O, 0 ni 1.",
+      "submit": "Conectar pantalla",
+      "connecting": "Conectando…",
+      "connected": "Conectada",
+      "backToDisplay": "Volver a la pantalla",
+      "errors": {
+        "incomplete": "Escribe los seis caracteres.",
+        "invalid": "Ese código no es correcto. Revísalo e inténtalo de nuevo.",
+        "expired": "Ese código venció. Crea uno nuevo en Estudio.",
+        "too_many": "Demasiados intentos. Espera unos minutos y vuelve a intentarlo.",
+        "offline": "Esta pantalla no tiene conexión a internet. Revisa la conexión e inténtalo de nuevo.",
+        "storage": "Este navegador no puede guardar el emparejamiento. Desactiva la navegación privada e inténtalo de nuevo.",
+        "unavailable": "Algo salió mal de nuestro lado. Inténtalo de nuevo en un momento."
+      }
+    },
+    "display": {
+      "metaTitle": "Pantalla en vivo",
+      "connecting": "Conectando…",
+      "gallery": "Galería del evento",
+      "galleryAlt": "Código QR de la galería del evento",
+      "galleryScan": "Escanea para ver todos los momentos",
+      "itemScan": "Escanea para llevarte este momento",
+      "itemAlt": "Código QR de este momento, código {code}",
+      "enterCode": "O escribe el código en {host}",
+      "justIn": "Recién llegado",
+      "recent": "Momentos recientes",
+      "moments": "{count, plural, one {momento capturado} other {momentos capturados}}",
+      "idleLive": "Los momentos de la cabina aparecen aquí en cuanto estén listos.",
+      "fullscreen": "Pantalla completa",
+      "exitFullscreen": "Salir de pantalla completa",
+      "soundHint": "Pulsa OK para activar el sonido",
+      "status": {
+        "socket": "En vivo",
+        "polling": "En vivo, actualizando",
+        "offline": "Sin conexión, repitiendo los momentos guardados"
+      }
+    }
   }
 }

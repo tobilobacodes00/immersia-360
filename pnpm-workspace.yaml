@@ -16,6 +16,8 @@ catalog:
   # Layout and overlay editor (PHO-4, PHO-6)
   konva: 10.7.0
   react-konva: 19.3.0
+  # Streaming ZIP downloads (EVT-4, SHR-5, screen 15)
+  client-zip: 2.5.1
   zod: 4.6.7
   '@serwist/turbopack': 9.5.13
   serwist: 9.5.13

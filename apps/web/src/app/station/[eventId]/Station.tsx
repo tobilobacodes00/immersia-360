@@ -4,7 +4,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { AnimatePresence, motion } from 'motion/react';
 import { Search, X } from 'lucide-react';
-import { SHORT_CODE_ALPHABET, formatShortCode, guestThemeVars, type DisplayItem, type EventTheme } from '@immersia/shared';
+import {
+  SHORT_CODE_ALPHABET,
+  formatShortCode,
+  guestThemeVars,
+  type DisplayItem,
+  type EventTheme,
+} from '@immersia/shared';
 import { QrCode, cx } from '@immersia/ui';
 import { GuestButton, Headline, fade } from '@immersia/ui/guest';
 import { useLiveFeed } from '@/lib/live-feed';
@@ -33,7 +39,15 @@ function Media({ item, large }: { item: DisplayItem; large?: boolean }) {
   const cls = cx('size-full', large ? 'object-contain' : 'object-cover');
   if (item.media.type === 'video')
     return large ? (
-      <video src={item.media.url} poster={item.media.poster ?? undefined} autoPlay muted loop playsInline className={cls} />
+      <video
+        src={item.media.url}
+        poster={item.media.poster ?? undefined}
+        autoPlay
+        muted
+        loop
+        playsInline
+        className={cls}
+      />
     ) : item.media.poster ? (
       // eslint-disable-next-line @next/next/no-img-element -- signed same-origin media links
       <img src={item.media.poster} alt="" className={cls} />
@@ -113,7 +127,12 @@ export function Station({ event }: { event: StationEvent }) {
             className="tabular w-full bg-transparent font-mono text-[1.3rem] tracking-[0.12em] outline-none placeholder:font-sans placeholder:tracking-normal"
           />
           {code && (
-            <button type="button" aria-label={t('clear')} onClick={() => setCode('')} className="focus-ring rounded-full p-1">
+            <button
+              type="button"
+              aria-label={t('clear')}
+              onClick={() => setCode('')}
+              className="focus-ring rounded-full p-1"
+            >
               <X className="size-5" aria-hidden />
             </button>
           )}
@@ -123,7 +142,9 @@ export function Station({ event }: { event: StationEvent }) {
       <main className="min-h-0 flex-1 overflow-y-auto px-[4vmin] pb-[4vmin]">
         {shown.length === 0 ? (
           <div className="grid h-full place-items-center text-center">
-            <p className="max-w-md text-[clamp(1.1rem,2.4vmin,1.6rem)] opacity-70">{code ? t('noMatch') : t('empty')}</p>
+            <p className="max-w-md text-[clamp(1.1rem,2.4vmin,1.6rem)] opacity-70">
+              {code ? t('noMatch') : t('empty')}
+            </p>
           </div>
         ) : (
           <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(13rem,40vw),1fr))] gap-[2vmin]">
@@ -149,7 +170,10 @@ export function Station({ event }: { event: StationEvent }) {
       </main>
 
       {connection === 'offline' && (
-        <p role="status" className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-g-ink/80 px-4 py-1.5 text-sm text-g-bg">
+        <p
+          role="status"
+          className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-g-ink/80 px-4 py-1.5 text-sm text-g-bg"
+        >
           {t('offline')}
         </p>
       )}

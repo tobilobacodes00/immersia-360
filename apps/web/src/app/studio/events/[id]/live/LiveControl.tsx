@@ -77,12 +77,15 @@ function PairingModal({
   const [error, setError] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
-  const mint = useCallback(async () => {
-    setError(false);
-    const res = await createPairingAction(eventId);
-    if (res.ok) setPairing(res.data);
-    else setError(true);
-  }, [eventId]);
+  // State is only set once the server answers (never synchronously inside the effect).
+  const mint = useCallback(
+    () =>
+      createPairingAction(eventId).then((res) => {
+        setError(!res.ok);
+        if (res.ok) setPairing(res.data);
+      }),
+    [eventId],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -278,14 +281,20 @@ export function LiveControl({
   const [tab, setTab] = useState<keyof Lists>(initial.moderation === 'approve' ? 'pending' : 'shown');
   const [pairing, setPairing] = useState<{ open: boolean; before: number }>({ open: false, before: 0 });
 
-  const refreshDisplays = useCallback(async () => {
-    const res = await listDisplaysAction(eventId);
-    if (res.ok) setDisplays(res.data);
-  }, [eventId]);
-  const refreshLists = useCallback(async () => {
-    const res = await moderationListsAction(eventId);
-    if (res.ok) setLists(res.data);
-  }, [eventId]);
+  const refreshDisplays = useCallback(
+    () =>
+      listDisplaysAction(eventId).then((res) => {
+        if (res.ok) setDisplays(res.data);
+      }),
+    [eventId],
+  );
+  const refreshLists = useCallback(
+    () =>
+      moderationListsAction(eventId).then((res) => {
+        if (res.ok) setLists(res.data);
+      }),
+    [eventId],
+  );
 
   // The hub (or polling) tells us when items or the approval queue change.
   const { items } = useLiveFeed({
