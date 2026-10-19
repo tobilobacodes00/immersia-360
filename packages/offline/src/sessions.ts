@@ -70,6 +70,25 @@ export function sessionForTake(db: BoothDB, takeId: string): Promise<LocalSessio
   return db.sessions.where('takeIds').equals(takeId).first();
 }
 
+/**
+ * LIV-8: the guest said "don't show mine on screen" on the result screen. Before registration the
+ * flag travels with the registration; after it, the upload queue tells the server (offline-safe).
+ */
+export async function optOutOfDisplay(db: BoothDB, sessionId: string): Promise<void> {
+  await db.transaction('rw', db.sessions, async () => {
+    const s = await db.sessions.get(sessionId);
+    if (!s || s.optedOutOfDisplay) return;
+    const known = s.state !== 'local';
+    await db.sessions.update(sessionId, {
+      optedOutOfDisplay: true,
+      displayOptOutPending: known,
+      state: s.state === 'done' ? 'registered' : s.state,
+      nextAttemptAt: 0,
+      updatedAt: Date.now(),
+    });
+  });
+}
+
 /** SHR-2: queue the session link for an email address; the upload queue sends it once registered. */
 export async function queueEmail(db: BoothDB, sessionId: string, email: string): Promise<void> {
   await db.transaction('rw', db.sessions, async () => {

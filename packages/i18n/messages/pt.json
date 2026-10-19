@@ -148,6 +148,7 @@
       "events": "Eventos",
       "assets": "Recursos",
       "devices": "Dispositivos",
+      "integrations": "Integrações",
       "signOut": "Sair",
       "openMenu": "Abrir menu",
       "closeMenu": "Fechar menu"
@@ -235,7 +236,9 @@
       "label": "Seções do evento",
       "overview": "Visão geral",
       "setup": "Configuração",
-      "branding": "Marca"
+      "branding": "Marca",
+      "live": "Live Display",
+      "signage": "Cartazes com QR"
     },
     "dashboard": {
       "capture": "Capturado",
@@ -260,7 +263,13 @@
       "extend": "Estender por {days} dias",
       "extendHelp": "Dá mais tempo a todos os links ativos. Arquivos já expirados não podem ser recuperados.",
       "extended": "{count, plural, =0 {Nenhum link ativo para estender} one {# link estendido por {days} dias} other {# links estendidos por {days} dias}}",
-      "extendFailed": "Não foi possível estender os links. Tente de novo."
+      "extendFailed": "Não foi possível estender os links. Tente de novo.",
+      "cloudTitle": "As cópias para o {provider} precisam da sua atenção",
+      "cloudNeedsReauth": "O acesso ao {provider} foi revogado ou expirou, então os arquivos novos não estão sendo copiados para lá. Eles estão seguros na Immersia e serão copiados sozinhos, sem duplicatas, quando você reconectar.",
+      "cloudWaiting": "{count, plural, one {# arquivo em espera.} other {# arquivos em espera.}}",
+      "cloudDisconnected": "Este evento é copiado para o {provider}, mas o {provider} não está conectado. Conecte e os arquivos deste evento serão atualizados.",
+      "cloudFailed": "{count, plural, one {# arquivo não chegou ao {provider}.} other {# arquivos não chegaram ao {provider}.}}",
+      "cloudFix": "Abrir Integrações"
     },
     "setup": {
       "title": "Configuração do evento",
@@ -288,7 +297,9 @@
         "expiry": "Guardar os arquivos por",
         "expiryHelp": "Os downloads hospedados são apagados depois disso. Você pode estender o prazo antes que termine.",
         "prefix": "Numerar os arquivos",
-        "prefixHelp": "Adiciona 0001_, 0002_ … antes de cada nome de arquivo."
+        "prefixHelp": "Adiciona 0001_, 0002_ … antes de cada nome de arquivo.",
+        "secondBooth": "Também usar {booth}",
+        "secondBoothHelp": "As duas cabines compartilham este evento: as páginas de compartilhamento, a galeria e o Live Display."
       },
       "video": {
         "title": "Vídeo 360",
@@ -385,7 +396,21 @@
         "consent": "Texto de consentimento",
         "consentHelp": "Com o que os convidados concordam, nas suas palavras.",
         "contact": "Contato para convidados",
-        "contactHelp": "Aparece nas páginas dos convidados quando os arquivos do evento expiram, para que possam falar com você. Um e-mail ou telefone."
+        "contactHelp": "Aparece nas páginas dos convidados quando os arquivos do evento expiram, para que possam falar com você. Um e-mail ou telefone.",
+        "cloud": "Copiar também para a minha nuvem",
+        "cloudHelp": "Salva cada arquivo finalizado também no seu próprio Google Drive ou Dropbox. Os convidados continuam recebendo os arquivos pela Immersia.",
+        "cloudNone": "Só a Immersia",
+        "cloudState": {
+          "unavailable": "{provider} (não configurado)",
+          "disconnected": "{provider} (não conectado)",
+          "needs_reauth": "{provider} (entre novamente)"
+        },
+        "cloudNote": {
+          "unavailable": "O {provider} não está configurado neste servidor.",
+          "disconnected": "O {provider} não está conectado, então este evento não é copiado para lá.",
+          "needs_reauth": "O {provider} precisa que você entre novamente; os arquivos novos ficam seguros e são copiados quando você entrar."
+        },
+        "cloudManage": "Gerenciar integrações"
       },
       "kiosk": {
         "title": "Quiosque",
@@ -886,6 +911,259 @@
         "replace": "Substituir",
         "remove": "Remover {name}"
       }
+    },
+    "live": {
+      "title": "Live Display",
+      "settings": {
+        "title": "Live Display",
+        "subtitle": "Cada vídeo, tira e GIF numa TV ou num projetor, cada um com o próprio QR code.",
+        "enabled": "Mostrar as capturas nas telas",
+        "enabledHelp": "Desligado até você ligar. Na tela de resultado, os convidados são avisados de que a captura pode aparecer e podem deixar a sua de fora.",
+        "moderation": "Publicação",
+        "moderationHelp": "Com aprovação prévia, as novas capturas esperam aqui até você mostrá-las.",
+        "auto": "Mostrar automaticamente",
+        "approve": "Aprovar antes",
+        "station": "Abrir a Sharing Station"
+      },
+      "displays": {
+        "title": "Telas",
+        "subtitle": "Cada tela tem o próprio layout e reprodução. As mudanças chegam em menos de um segundo.",
+        "pair": "Parear uma tela",
+        "emptyTitle": "Nenhuma tela ainda",
+        "emptyBody": "Abra a página de pareamento no navegador de qualquer TV, notebook ligado por HDMI ou dispositivo de transmissão e digite o código.",
+        "name": "Nome da tela",
+        "rename": "Renomear",
+        "online": "On-line",
+        "offline": "Off-line",
+        "remove": "Remover {name}",
+        "removeTitle": "Remover {name}?",
+        "removeBody": "A tela para de mostrar capturas na hora e volta para a página de pareamento.",
+        "removeConfirm": "Remover a tela",
+        "cancel": "Cancelar",
+        "layout": "Layout",
+        "layouts": {
+          "spotlight": "Destaque",
+          "mosaic": "Mosaico",
+          "ticker": "Faixa",
+          "counter": "Contador"
+        },
+        "dwell": "Tempo por item",
+        "dwellHelp": "Os vídeos tocam até o fim, até três vezes esse tempo.",
+        "muted": "Silenciar vídeos",
+        "qrSize": "Tamanho do QR",
+        "qrSizes": {
+          "s": "Pequeno",
+          "m": "Médio",
+          "l": "Grande"
+        },
+        "qrPosition": "Canto do QR do evento",
+        "positions": {
+          "top-left": "Superior esquerdo",
+          "top-right": "Superior direito",
+          "bottom-left": "Inferior esquerdo",
+          "bottom-right": "Inferior direito"
+        },
+        "verticalFill": "Vídeos verticais",
+        "verticalFillHelp": "Como os vídeos 9:16 preenchem uma tela horizontal.",
+        "fills": {
+          "blur": "Fundo desfocado",
+          "columns": "Lado a lado"
+        }
+      },
+      "pair": {
+        "title": "Parear uma tela",
+        "steps": "Na TV, abra {url} e digite este código. Ou escaneie o QR com o dispositivo que vai ser a tela.",
+        "codeLabel": "Código de pareamento",
+        "expires": "Expira em {minutes}:{seconds}",
+        "newCode": "Gerar um código novo",
+        "failed": "Não foi possível gerar um código de pareamento. Tente de novo.",
+        "qrLabel": "QR code que pareia o dispositivo que o escanear",
+        "qrHint": "Para um tablet ou celular que vai ser a tela.",
+        "paired": "Tela pareada. Ela já está mostrando o seu evento.",
+        "done": "Pronto"
+      },
+      "moderation": {
+        "title": "Na tela",
+        "subtitle": "Oculte qualquer coisa na hora; some de todas as telas.",
+        "pending": "Aguardando ({count})",
+        "shown": "Na tela ({count})",
+        "hidden": "Ocultos ({count})",
+        "empty": {
+          "pending": "Nada aguardando aprovação.",
+          "shown": "Nada na tela ainda. As novas capturas aparecem aqui segundos depois do envio.",
+          "hidden": "Nada oculto."
+        },
+        "itemLabel": "Captura {code}",
+        "approve": "Mostrar na tela",
+        "restore": "Mostrar de novo",
+        "hide": "Ocultar das telas"
+      }
+    },
+    "integrations": {
+      "title": "Integrações",
+      "subtitle": "Copie cada arquivo finalizado para o seu próprio Google Drive ou Dropbox, além do link da Immersia para o convidado. Os convidados sempre baixam pela Immersia; a cópia é sua.",
+      "providers": {
+        "drive": "Google Drive",
+        "dropbox": "Dropbox",
+        "generic": "seu armazenamento na nuvem"
+      },
+      "about": {
+        "drive": "A Immersia só enxerga as pastas e os arquivos que ela mesma cria, nunca o resto do seu Drive.",
+        "dropbox": "A Immersia só trabalha dentro da pasta que cria no seu Dropbox."
+      },
+      "status": {
+        "connected": "Conectado",
+        "needsReauth": "Entre novamente",
+        "notConnected": "Não conectado",
+        "notConfigured": "Não configurado"
+      },
+      "notConfigured": "Este servidor da Immersia ainda não está configurado para o {provider}. Se você hospeda por conta própria, adicione as credenciais dele e a INTEGRATION_TOKEN_KEY ao ambiente (veja o .env.example).",
+      "connect": "Conectar {provider}",
+      "reconnect": "Reconectar {provider}",
+      "connectedAs": "Conectado como {email}",
+      "ownerOnly": "Só o proprietário da conta pode conectar ou desconectar uma nuvem.",
+      "folder": {
+        "label": "Pasta",
+        "none": "Ainda não foi criada. Ela é criada com a primeira cópia.",
+        "open": "Abrir pasta",
+        "help": "Cada evento tem a própria subpasta, com a data no nome. Os arquivos já copiados continuam onde estão.",
+        "name": "Nome da pasta",
+        "placeholder": "Immersia 360",
+        "save": "Usar esta pasta"
+      },
+      "disconnect": {
+        "button": "Desconectar",
+        "title": "Desconectar o {provider}?",
+        "body": "A Immersia vai parar de copiar para o {provider}, revogar o acesso e apagar a conexão salva. Os arquivos já copiados continuam no seu {provider}. As cópias que ainda não aconteceram são descartadas; conecte de novo depois para se atualizar.",
+        "confirm": "Desconectar",
+        "cancel": "Cancelar"
+      },
+      "reauth": {
+        "title": "O {provider} precisa que você entre novamente",
+        "body": "A Immersia não consegue mais acessar o seu {provider}: o acesso foi revogado ou expirou. Nada se perde. Os arquivos novos ficam seguros na Immersia e cada cópia em espera é concluída, sem duplicatas, assim que você reconectar.",
+        "waiting": "{count, plural, one {# arquivo em espera.} other {# arquivos em espera.}}"
+      },
+      "failed": {
+        "title": "{count, plural, one {Não foi possível copiar # arquivo para o {provider}} other {Não foi possível copiar # arquivos para o {provider}}}",
+        "retry": "Tentar de novo",
+        "retrying": "Tentando de novo…"
+      },
+      "flash": {
+        "connected": "O {provider} está conectado. A cópia já começou."
+      },
+      "connectErrors": {
+        "denied": "Você cancelou a conexão, então nada mudou. Toque em Conectar para tentar de novo.",
+        "state": "Esse link de login expirou ou não foi gerado por esta conta. Toque em Conectar para recomeçar.",
+        "scope": "O {provider} não concedeu a permissão de que a Immersia precisa. Toque em Conectar de novo e deixe a caixa de acesso marcada.",
+        "no_refresh": "O {provider} não deu à Immersia um acesso duradouro. Remova a Immersia dos aplicativos conectados do seu {provider} e conecte de novo.",
+        "exchange": "O {provider} recusou o login. Toque em Conectar para tentar de novo.",
+        "unreachable": "Não foi possível falar com o {provider}. Verifique a conexão e tente de novo em um minuto.",
+        "unavailable": "Este servidor não está configurado para o {provider}.",
+        "forbidden": "Só o proprietário da conta pode conectar uma nuvem.",
+        "failed": "Algo deu errado ao conectar o {provider}. Tente de novo."
+      },
+      "actionErrors": {
+        "reauth_required": "O {provider} precisa que você entre novamente primeiro. Toque em Reconectar.",
+        "quota_exceeded": "Seu {provider} está cheio. Libere espaço e tente de novo.",
+        "unreachable": "Não foi possível falar com o {provider}. Tente de novo em um minuto.",
+        "forbidden": "Só o proprietário da conta pode alterar isso.",
+        "failed": "Não funcionou. Tente de novo."
+      },
+      "copyErrors": {
+        "reauth_required": "O acesso ao {provider} foi revogado ou expirou. Reconecte o {provider} e este arquivo será copiado sozinho.",
+        "quota_exceeded": "Seu {provider} está cheio. Libere espaço e toque em Tentar de novo.",
+        "transient": "Não foi possível falar com o {provider} após várias tentativas. Toque em Tentar de novo.",
+        "retrying": "O {provider} não respondeu. Vamos tentar de novo {when}.",
+        "folder_missing": "A pasta foi apagada do {provider}. Escolha uma pasta acima; as cópias com falha recomeçam sozinhas.",
+        "folder_inaccessible": "A Immersia não consegue gravar nessa pasta. Crie uma pasta nova acima; as cópias com falha recomeçam sozinhas.",
+        "source_gone": "Este arquivo expirou na Immersia antes de ser copiado, então não pode mais ser enviado.",
+        "other": "Não foi possível copiar este arquivo. Toque em Tentar de novo; se continuar falhando, reconecte o {provider}."
+      },
+      "copies": {
+        "title": "Cópias recentes",
+        "subtitle": "Os últimos 20 arquivos enviados para a sua nuvem.",
+        "emptyTitle": "Nada foi copiado ainda",
+        "emptyBody": "Escolha Google Drive ou Dropbox em Compartilhamento, na configuração de um evento, e os arquivos finalizados aparecem aqui.",
+        "to": "para o {provider}",
+        "open": "Abrir no {provider}",
+        "soon": "em instantes",
+        "status": {
+          "pending": "Em espera",
+          "uploading": "Copiando",
+          "done": "Copiado",
+          "failed": "Falhou"
+        }
+      }
+    },
+    "galleryCard": {
+      "title": "Galeria do evento",
+      "subtitle": "{count, plural, =0 {Todas as capturas, para o seu cliente e para os convidados que escaneiam o QR do evento.} one {# captura até agora, para o seu cliente e para os convidados que escaneiam o QR do evento.} other {# capturas até agora, para o seu cliente e para os convidados que escaneiam o QR do evento.}}",
+      "link": "Link da galeria",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "openLink": "Abrir",
+      "password": "Senha",
+      "passwordHelp": "Opcional. Quem tem o link precisa dela uma vez por navegador. Capturas ocultas e convidados que pediram para não aparecer no telão nunca aparecem aqui.",
+      "locked": "Protegida",
+      "unlocked": "Aberta para quem tem o link",
+      "setPassword": "Definir uma senha",
+      "newPassword": "Nova senha",
+      "set": "Definir",
+      "change": "Trocar",
+      "remove": "Remover a senha",
+      "passwordSet": "Senha salva. Quem já tinha entrado vai precisar digitá-la de novo.",
+      "passwordRemoved": "Senha removida.",
+      "passwordShort": "Use pelo menos 6 caracteres.",
+      "failed": "Não foi possível salvar. Tente de novo.",
+      "export": "Todos os arquivos",
+      "exportHelp": "Todos os arquivos do evento em qualidade total num único ZIP, incluindo as capturas ocultas, salvos pelo seu navegador direto do armazenamento.",
+      "exportButton": "Baixar todos os arquivos (ZIP)"
+    },
+    "signage": {
+      "title": "Cartazes com QR",
+      "format": {
+        "title": "Formato",
+        "subtitle": "Um único QR code para toda a galeria do evento, com as cores e o logo do seu evento.",
+        "label": "Formato do cartaz"
+      },
+      "formats": {
+        "a4": "Pôster A4",
+        "a5": "Panfleto A5",
+        "tent": "Display de mesa"
+      },
+      "hints": {
+        "a4": "Para uma parede, uma porta ou um cavalete. 210 × 297 mm.",
+        "a5": "Para mesas, para entregar em mãos e para o balcão. 148 × 210 mm.",
+        "tent": "Imprima em A4, dobre na linha tracejada e apoie na mesa: os dois lados ficam na posição certa para leitura. Folha de 210 × 297 mm."
+      },
+      "wording": {
+        "title": "Texto",
+        "subtitle": "Mude o texto ou deixe uma linha vazia para removê-la. O nome do evento, o logo e a hashtag vêm de Marca.",
+        "headline": "Título",
+        "cta": "Chamada para ação"
+      },
+      "defaults": {
+        "headline": "Receba suas fotos e vídeos",
+        "cta": "Escaneie com a câmera do celular"
+      },
+      "link": {
+        "title": "Link da galeria",
+        "subtitle": "É o que o código abre. Você também pode compartilhá-lo em uma mensagem.",
+        "label": "Link da galeria",
+        "copy": "Copiar link",
+        "copied": "Copiado"
+      },
+      "preview": {
+        "title": "Pré-visualização",
+        "label": "Pré-visualização: {format}",
+        "loading": "Carregando fontes e o seu logo…",
+        "tip": "Imprima em tamanho real (100%), não em “ajustar à página”. Nada é impresso a menos de {mm} mm da borda, então impressoras de escritório não cortam o conteúdo."
+      },
+      "download": {
+        "pdf": "Baixar PDF",
+        "png": "Baixar PNG",
+        "failed": "Não foi possível criar o arquivo. Tente novamente."
+      }
     }
   },
   "booth": {
@@ -1020,7 +1298,12 @@
       "next": "Próximo convidado",
       "titlePhoto": "Escaneie para ver suas fotos",
       "subtitlePhoto": "O link já funciona; suas fotos chegam lá em instantes.",
-      "previewAlt": "Sua tira de fotos"
+      "previewAlt": "Sua tira de fotos",
+      "display": {
+        "notice": "Sua captura pode aparecer no telão do evento.",
+        "optOut": "Não mostrar a minha no telão",
+        "optedOut": "A sua não vai aparecer no telão"
+      }
     },
     "uploads": {
       "waiting": "{count, plural, one {# envio pendente} other {# envios pendentes}}",
@@ -1052,7 +1335,88 @@
       "printing": "Imprimindo…",
       "printLimit": "Acabaram as impressões desta sessão",
       "flash": "Foto tirada"
-    }
+    },
+    "gallery": {
+      "open": "Galeria",
+      "title": "Galeria do evento",
+      "close": "Fechar a galeria",
+      "loading": "Carregando…",
+      "summary": "{count, plural, =0 {Nada neste dispositivo ainda} one {# arquivo neste dispositivo} other {# arquivos neste dispositivo}}",
+      "filters": "Filtrar por tipo",
+      "filter": {
+        "all": "Tudo",
+        "videos": "Vídeos",
+        "strips": "Tiras",
+        "motion": "GIFs e movimento"
+      },
+      "kinds": {
+        "mp4": "Vídeo",
+        "small_mp4": "Vídeo mais leve",
+        "gif": "GIF",
+        "strip": "Tira de fotos",
+        "short_video": "Vídeo curto",
+        "boomerang": "Boomerang"
+      },
+      "upload": {
+        "local": "Neste dispositivo",
+        "uploading": "Enviando",
+        "uploaded": "Enviado",
+        "failed": "Precisa de atenção"
+      },
+      "codePending": "Código pendente",
+      "card": "{kind}, {code}",
+      "previewAlt": "Prévia: {kind}",
+      "empty": "Nada por aqui ainda",
+      "emptyBody": "Vídeos e tiras de fotos aparecem aqui assim que ficam prontos.",
+      "emptyFilter": "Nada deste tipo ainda",
+      "select": "Selecionar",
+      "selected": "{count, plural, =0 {Nenhum selecionado} one {# selecionado} other {# selecionados}}",
+      "selectAll": "Selecionar tudo",
+      "clearSelection": "Limpar seleção",
+      "importOriginals": "Importar originais",
+      "importing": "Importando…",
+      "importDone": "{count, plural, one {# vídeo importado. Ele é renderizado em segundo plano.} other {# vídeos importados. Eles são renderizados em segundo plano.}}",
+      "importSkipped": "{count, plural, one {# arquivo não era um vídeo e foi ignorado.} other {# arquivos não eram vídeos e foram ignorados.}}",
+      "importFailed": "{count, plural, one {Não foi possível salvar # vídeo. Confira o armazenamento livre.} other {Não foi possível salvar # vídeos. Confira o armazenamento livre.}}",
+      "exportAll": "Exportar tudo ({count})",
+      "exportSelected": "Exportar seleção ({count})",
+      "exporting": "Exportando arquivo {index} de {count} · {done} de {total}",
+      "exportPaused": "Exportação em pausa enquanto um convidado está na cabine",
+      "exportProgress": "Progresso da exportação",
+      "exportSaved": "{name} foi salvo.",
+      "exportDownloaded": "{name} foi enviado para os downloads deste navegador.",
+      "exportMissing": "{count, plural, one {# arquivo não pôde ser lido neste dispositivo e ficou de fora.} other {# arquivos não puderam ser lidos neste dispositivo e ficaram de fora.}}",
+      "exportCancelled": "Exportação cancelada. Nada foi salvo.",
+      "exportFailed": "A exportação não terminou. Confira o armazenamento livre e tente de novo.",
+      "capturingNote": "Exportações e importações aguardam enquanto um convidado está na cabine.",
+      "cancel": "Cancelar",
+      "dismiss": "Fechar",
+      "memoryTitle": "Esta exportação é grande",
+      "memoryBody": "Este navegador não consegue gravar um arquivo direto no disco, então o ZIP inteiro ({size}) é montado primeiro na memória, e isso pode falhar neste dispositivo. Exporte alguns de cada vez com Selecionar, ou use Chrome ou Edge em um computador.",
+      "exportAnyway": "Exportar mesmo assim",
+      "stopTitle": "Parar a exportação?",
+      "stopBody": "Fechar a galeria cancela a exportação em andamento. Nada será salvo.",
+      "keepExporting": "Continuar exportando",
+      "stopAndClose": "Parar e fechar",
+      "detail": {
+        "reshare": "Compartilhar de novo",
+        "qrAlt": "QR code dos arquivos deste convidado",
+        "reshareHint": "Um convidado que perdeu o QR pode escanear este para abrir seus arquivos.",
+        "noLink": "Este arquivo não tem link de convidado.",
+        "type": "Tipo",
+        "status": "Envio",
+        "made": "Criado em",
+        "size": "Tamanho",
+        "dimensions": "Dimensões",
+        "pixels": "{width}×{height}",
+        "duration": "Duração",
+        "file": "Nome do arquivo",
+        "save": "Salvar neste dispositivo",
+        "saveFailed": "Não foi possível ler este arquivo do dispositivo."
+      }
+    },
+    "startOther": "Iniciar {booth}",
+    "endCard": "Escaneie para pegar seu vídeo"
   },
   "share": {
     "metaTitle": "{event}: seus arquivos",
@@ -1097,6 +1461,102 @@
       "not_found": "Não encontramos esse código. Confira e tente de novo.",
       "expired": "Esse evento terminou e os arquivos foram removidos.",
       "too_many": "Muitas tentativas. Aguarde alguns minutos e tente de novo."
+    }
+  },
+  "station": {
+    "subtitle": "Encontre a sua, toque nela e escaneie o código.",
+    "findLabel": "Buscar pelo código",
+    "findPlaceholder": "Seu código",
+    "clear": "Limpar",
+    "empty": "Novas fotos e vídeos aparecem aqui alguns segundos depois de feitos.",
+    "noMatch": "Ainda não há captura com esse código. Ela pode estar a caminho.",
+    "open": "Abrir a captura {code}",
+    "offline": "Off-line: mostrando o que já estava aqui",
+    "detail": "Captura {code}",
+    "qr": "QR code desta captura",
+    "scan": "Escaneie com a câmera do celular para baixar.",
+    "close": "Voltar para todas",
+    "start": "Iniciar a Sharing Station"
+  },
+  "gallery": {
+    "metaTitle": "{event}: fotos e vídeos",
+    "notFound": "Galeria não encontrada",
+    "downloadAll": "Baixar tudo",
+    "filters": {
+      "label": "Cabine",
+      "all": "Tudo",
+      "video360": "Vídeos 360",
+      "photo": "Fotos"
+    },
+    "searchLabel": "Buscar pelo código",
+    "searchPlaceholder": "Seu código",
+    "search": "Buscar",
+    "empty": "As fotos e os vídeos aparecem aqui assim que são enviados.",
+    "noMatch": "Ainda não há nada com esse código. Pode estar a caminho.",
+    "open": "Abrir a captura {code}",
+    "older": "Anteriores",
+    "newest": "Voltar para as mais recentes",
+    "lock": {
+      "body": "Esta galeria é protegida.",
+      "label": "Senha",
+      "open": "Abrir",
+      "errors": {
+        "wrong": "Senha incorreta.",
+        "tooMany": "Muitas tentativas. Aguarde alguns minutos e tente de novo.",
+        "failed": "Não foi possível verificar a senha. Confira a conexão e tente de novo."
+      }
+    }
+  },
+  "zip": {
+    "progress": "{files, plural, one {# arquivo} other {# arquivos}} · {size}",
+    "cancel": "Cancelar",
+    "done": "{files, plural, one {# arquivo salvo} other {# arquivos salvos}}.{skipped, plural, =0 {} one { Não foi possível baixar # arquivo.} other { Não foi possível baixar # arquivos.}}",
+    "failed": "O download parou. Confira a conexão e tente de novo.",
+    "cancelled": "Download cancelado."
+  },
+  "tv": {
+    "pair": {
+      "metaTitle": "Conectar uma tela",
+      "title": "Conecte esta tela",
+      "body": "Digite o código de seis caracteres que aparece em Tela ao vivo, dentro do Estúdio, ou abra o link de pareamento do QR code.",
+      "codeLabel": "Código de pareamento",
+      "character": "Caractere {n} de {total}",
+      "hint": "Letras e números, como K7M-2QX. Nunca I, L, O, 0 nem 1.",
+      "submit": "Conectar tela",
+      "connecting": "Conectando…",
+      "connected": "Conectada",
+      "backToDisplay": "Voltar para a tela",
+      "errors": {
+        "incomplete": "Digite os seis caracteres.",
+        "invalid": "Esse código não está certo. Confira e tente de novo.",
+        "expired": "Esse código expirou. Crie um novo no Estúdio.",
+        "too_many": "Muitas tentativas. Aguarde alguns minutos e tente de novo.",
+        "offline": "Esta tela está sem acesso à internet. Verifique a conexão e tente de novo.",
+        "storage": "Este navegador não consegue salvar o pareamento. Desative a navegação privada e tente de novo.",
+        "unavailable": "Algo deu errado do nosso lado. Tente de novo em instantes."
+      }
+    },
+    "display": {
+      "metaTitle": "Tela ao vivo",
+      "connecting": "Conectando…",
+      "gallery": "Galeria do evento",
+      "galleryAlt": "QR code da galeria do evento",
+      "galleryScan": "Escaneie para ver todos os momentos",
+      "itemScan": "Escaneie para levar este momento",
+      "itemAlt": "QR code deste momento, código {code}",
+      "enterCode": "Ou digite o código em {host}",
+      "justIn": "Acabou de chegar",
+      "recent": "Momentos recentes",
+      "moments": "{count, plural, one {momento capturado} other {momentos capturados}}",
+      "idleLive": "Os momentos da cabine aparecem aqui assim que ficarem prontos.",
+      "fullscreen": "Tela cheia",
+      "exitFullscreen": "Sair da tela cheia",
+      "soundHint": "Pressione OK para ligar o som",
+      "status": {
+        "socket": "Ao vivo",
+        "polling": "Ao vivo, atualizando",
+        "offline": "Sem conexão, repetindo os momentos salvos"
+      }
     }
   }
 }

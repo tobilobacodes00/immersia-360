@@ -8,6 +8,7 @@ import {
   CODE_POOL_LOW,
   codesLeft,
   mintSession,
+  optOutOfDisplay,
   queueEmail,
   takeCode,
   topUpCodes,
@@ -38,6 +39,8 @@ class FakeServer implements BoothApi {
   >();
   calls: string[] = [];
   failNext: BoothApiError | Error | null = null;
+  /** What the server assigns at registration (EVT-5). */
+  filenamePrefix = '';
 
   private maybeFail(call: string) {
     this.calls.push(call);
@@ -66,7 +69,7 @@ class FakeServer implements BoothApi {
         method: 'PUT',
         headers: {},
       }));
-    return { shortCode: input.shortCode ?? 'SRV234', filenamePrefix: '', uploads };
+    return { shortCode: input.shortCode ?? 'SRV234', filenamePrefix: this.filenamePrefix, uploads };
   }
 
   async put(ticket: UploadTicket, body: Blob): Promise<void> {
@@ -79,6 +82,13 @@ class FakeServer implements BoothApi {
     this.maybeFail('email');
     if (!this.sessions.has(sessionId)) throw new BoothApiError(404, 'not_found', false);
     this.emails.push(to);
+  }
+
+  optedOut: string[] = [];
+  async optOutOfDisplay(sessionId: string) {
+    this.maybeFail('optOut');
+    if (!this.sessions.has(sessionId)) throw new BoothApiError(404, 'not_found', false);
+    this.optedOut.push(sessionId);
   }
 
   async complete(outputId: string) {
@@ -263,6 +273,26 @@ describe('upload queue', () => {
     expect(server.emails).toEqual(['guest@example.com', 'friend@example.com']);
   });
 
+  it('a guest opting out of the display: sent with the registration, or later through the queue (LIV-8)', async () => {
+    const server = new FakeServer();
+    const queue = new UploadQueue(db, store, server, now);
+    await addTake('t1', 'rendered');
+    await addOutput('t1', 'mp4', 1000);
+    const before = await mintSession(db, { eventId: 'evt', takeIds: ['t1'], capturedAt: clock });
+    await optOutOfDisplay(db, before.id);
+    expect(await drain(queue)).toEqual(['registered', 'uploaded:mp4', 'done']);
+    expect(server.sessions.get(before.id)?.optedOutOfDisplay).toBe(true);
+    expect(server.optedOut).toEqual([]);
+
+    await addTake('t2', 'rendered');
+    await addOutput('t2', 'mp4', 1000);
+    const after = await mintSession(db, { eventId: 'evt', takeIds: ['t2'], capturedAt: clock });
+    expect(await drain(queue)).toEqual(['registered', 'uploaded:mp4', 'done']);
+    await optOutOfDisplay(db, after.id);
+    expect(await drain(queue)).toEqual(['opted_out', 'done']);
+    expect(server.optedOut).toEqual([after.id]);
+  });
+
   it('a later output (the messaging copy) reopens a finished session', async () => {
     const server = new FakeServer();
     const queue = new UploadQueue(db, store, server, now);
@@ -274,6 +304,18 @@ describe('upload queue', () => {
     await addOutput('t1', 'small_mp4', 400);
     await queue.nudge('t1');
     expect(await drain(queue)).toEqual(['registered', 'uploaded:small_mp4', 'done']);
+  });
+
+  it('keeps the filename prefix the server assigned, for the gallery to name files by', async () => {
+    const server = new FakeServer();
+    server.filenamePrefix = '0007_';
+    const queue = new UploadQueue(db, store, server, now);
+    await addTake('t1', 'rendered');
+    await addOutput('t1', 'mp4', 1000);
+    const session = await mintSession(db, { eventId: 'evt', takeIds: ['t1'], capturedAt: clock });
+    expect((await db.sessions.get(session.id))!.filenamePrefix).toBeUndefined();
+    await drain(queue);
+    expect((await db.sessions.get(session.id))!.filenamePrefix).toBe('0007_');
   });
 
   it('uploads a photo session: no takes, outputs made for the session itself', async () => {

@@ -16,6 +16,8 @@ export interface BoothApi {
   complete(outputId: string): Promise<'ok' | 'incomplete' | 'not_found'>;
   /** SHR-2: email the session link (the session must be registered). */
   sendEmail(sessionId: string, to: string): Promise<void>;
+  /** LIV-8: take the session off every display (the session must be registered). */
+  optOutOfDisplay(sessionId: string): Promise<void>;
 }
 
 /**
@@ -62,6 +64,7 @@ export type UploadStep =
   | { kind: 'uploaded'; sessionId: string; outputId: string; bytes: number }
   | { kind: 'registered'; sessionId: string }
   | { kind: 'emailed'; sessionId: string }
+  | { kind: 'opted_out'; sessionId: string }
   | { kind: 'done'; sessionId: string }
   | { kind: 'retry'; sessionId: string; error: string; inMs: number }
   | { kind: 'failed'; sessionId: string; error: string }
@@ -130,6 +133,7 @@ export class UploadQueue {
         await this.db.sessions.update(session.id, {
           state: 'registered',
           shortCode: result.shortCode,
+          filenamePrefix: result.filenamePrefix,
           attempts: 0,
           lastError: undefined,
           updatedAt: this.now(),
@@ -137,6 +141,18 @@ export class UploadQueue {
       });
       this.tickets.set(session.id, { at: this.now(), uploads: result.uploads });
       return { kind: 'registered', sessionId: session.id };
+    }
+
+    // LIV-8 first of all: a guest who asked not to be on screen must come off it as soon as possible.
+    if (session.displayOptOutPending) {
+      await this.api.optOutOfDisplay(session.id);
+      await this.db.sessions.update(session.id, {
+        displayOptOutPending: false,
+        attempts: 0,
+        lastError: undefined,
+        updatedAt: this.now(),
+      });
+      return { kind: 'opted_out', sessionId: session.id };
     }
 
     // SHR-2 emails go before uploads: the link works before the files arrive.

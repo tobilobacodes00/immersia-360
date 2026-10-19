@@ -1,11 +1,17 @@
 import 'server-only';
 import { z } from 'zod';
+import { parseKey } from './crypto-box';
 
 /**
  * Server environment, validated on first use (not at import, so `next build` works without
  * secrets). Optional integrations degrade gracefully: no Google keys hides the Google button, no
  * Resend key outside production routes mail to the dev mailbox.
  */
+
+/** Optional string that treats an empty value (`KEY=` copied from .env.example) as unset. */
+const optional = <T extends z.ZodType>(type: T) =>
+  z.preprocess((v) => (typeof v === 'string' && v.trim() === '' ? undefined : v), type.optional());
+
 const schema = z.object({
   DATABASE_URL: z.url(),
   BETTER_AUTH_SECRET: z.string().min(32, 'BETTER_AUTH_SECRET must be at least 32 characters'),
@@ -28,6 +34,29 @@ const schema = z.object({
   S3_FORCE_PATH_STYLE: z.enum(['0', '1']).default('0'),
   /** Vercel Cron sends it as a bearer token; the expiry sweep refuses requests without it. */
   CRON_SECRET: z.string().min(16).optional(),
+  /**
+   * Bring-your-own cloud (SHR-7). INTEGRATION_TOKEN_KEY is base64 of 32 random bytes (the AES-256-GCM
+   * key for refresh tokens at rest); without it the Integrations screen shows every provider as not
+   * configured. Drive falls back to the sign-in Google credentials when its own are unset (that OAuth
+   * client then needs the Drive redirect URI registered as well).
+   */
+  INTEGRATION_TOKEN_KEY: optional(
+    z.string().refine((v) => {
+      try {
+        parseKey(v);
+        return true;
+      } catch {
+        return false;
+      }
+    }, 'INTEGRATION_TOKEN_KEY must be base64 of exactly 32 bytes (openssl rand -base64 32)'),
+  ),
+  GOOGLE_DRIVE_CLIENT_ID: optional(z.string().min(1)),
+  GOOGLE_DRIVE_CLIENT_SECRET: optional(z.string().min(1)),
+  DROPBOX_APP_KEY: optional(z.string().min(1)),
+  DROPBOX_APP_SECRET: optional(z.string().min(1)),
+  // Live Display hub (apps/realtime). Without it, screens poll the feed (still within LIV-2's 5 s).
+  REALTIME_URL: z.url().optional(),
+  REALTIME_SIGNING_SECRET: z.string().min(32).optional(),
   /** Enables test-only endpoints (the e2e mailbox). Refused on any Vercel deployment. */
   E2E: z.enum(['0', '1']).default('0'),
   /** Required with E2E=1: test-only routes also demand it as the x-e2e-token header (fail closed). */

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { brandingSchema, eventTokens, outputSettingsSchema, templateAssetIds } from '@immersia/shared';
+import { brandingSchema, eventBooths, eventTokens, outputSettingsSchema, templateAssetIds } from '@immersia/shared';
 import { TemplateEditor } from '@/components/editor/TemplateEditor';
 import { assetViews, listAssets } from '@/server/assets';
 import { getEvent } from '@/server/events';
@@ -31,8 +31,13 @@ export default async function DesignPage({ params }: { params: Promise<{ id: str
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const event = await getEvent(op.organizationId, id);
   if (!event || event.status === 'archived') notFound();
-  // Photo events print a layout; 360 events draw an overlay over the video.
-  if ((kind === 'layout') !== (event.mode === 'photo')) notFound();
+  // Photo booths print a layout; 360 booths draw an overlay over the video (either, or both: LIV-13).
+  if (
+    !eventBooths(event.mode, outputSettingsSchema.parse(event.outputSettings)).includes(
+      kind === 'layout' ? 'photo' : 'video360',
+    )
+  )
+    notFound();
 
   const record = await ensureEventTemplate(op, id, kind);
   if (!record) notFound();

@@ -45,7 +45,8 @@
     "@immersia/layout": "workspace:*",
     "@immersia/fonts": "workspace:*",
     "konva": "catalog:",
-    "react-konva": "catalog:"
+    "react-konva": "catalog:",
+    "client-zip": "catalog:"
   },
   "devDependencies": {
     "@axe-core/playwright": "catalog:",

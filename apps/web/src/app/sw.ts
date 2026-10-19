@@ -1,6 +1,13 @@
 /// <reference lib="webworker" />
 import { defaultCache } from '@serwist/turbopack/worker';
-import { ExpirationPlugin, Serwist, StaleWhileRevalidate, type PrecacheEntry, type SerwistGlobalConfig } from 'serwist';
+import {
+  ExpirationPlugin,
+  NetworkOnly,
+  Serwist,
+  StaleWhileRevalidate,
+  type PrecacheEntry,
+  type SerwistGlobalConfig,
+} from 'serwist';
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -21,6 +28,13 @@ const serwist = new Serwist({
   clientsClaim: false,
   navigationPreload: true,
   runtimeCaching: [
+    // Live Display (LIV-12): a screen keeps its own copy of the feed (localStorage) and of the media
+    // bytes (Cache Storage, see app/tv/live/media-cache.ts). The default rule for /api/ would cache
+    // the token-authenticated feed by URL alone and copy every video it plays into a second cache.
+    {
+      matcher: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/api/live/'),
+      handler: new NetworkOnly(),
+    },
     // The PHO-9 font library: a booth must draw its event's fonts offline, and the default font rule
     // keeps only a handful of files.
     {

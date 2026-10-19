@@ -70,3 +70,88 @@ export async function loadCard(asset: AssetView | null, cardSeconds: number): Pr
   // The plan (and the music mixed to it) uses the real length of a clip shorter than the card.
   return { kind: 'clip', file: blob, maxSeconds: Math.min(cardSeconds, clipS) };
 }
+
+/** DL-4: how long the QR end card stays on screen. */
+export const END_CARD_SECONDS = 2;
+
+/**
+ * DL-4: the closing card of a guest's video: the event name, the guest's own QR and short code, so a
+ * video forwarded to friends still leads back to the download. Drawn by the template renderer in the
+ * event's theme, at the output resolution.
+ */
+export async function renderEndCard(o: {
+  target: { width: number; height: number };
+  size: { width: number; height: number };
+  theme: { background: string; ink: string; font: 'sans' | 'serif' };
+  eventName: string;
+  hint: string;
+  link: string;
+  code: string | null;
+}): Promise<ImageBitmap> {
+  const { width: W, height: H } = o.target;
+  const unit = Math.min(W, H);
+  const qrSide = Math.round(unit * 0.5);
+  const qrH = Math.round(qrSide / 0.84);
+  const family = o.theme.font === 'serif' ? 'Instrument Serif' : 'Satoshi';
+  const common = { rotation: 0, opacity: 1, locked: false, hidden: false } as const;
+  const text = (id: string, y: number, h: number, value: string, size: number, weight: number) =>
+    ({
+      ...common,
+      id,
+      type: 'text',
+      x: Math.round(unit * 0.08),
+      y,
+      width: Math.round(W - unit * 0.16),
+      height: h,
+      text: value,
+      fontFamily: family,
+      fontWeight: weight,
+      fontStyle: 'normal',
+      fontSize: Math.round(size),
+      lineHeight: 1.15,
+      letterSpacing: 0,
+      color: o.theme.ink,
+      align: 'center',
+      verticalAlign: 'middle',
+      uppercase: false,
+      autoFit: true,
+    }) as const;
+  const top = Math.round((H - qrH) / 2);
+  const doc: Template = {
+    canvas: { width: W, height: H, dpi: 72, printSize: null, background: o.theme.background, backgroundAssetId: null },
+    elements: [
+      text(
+        'name',
+        Math.max(0, top - Math.round(unit * 0.2)),
+        Math.round(unit * 0.16),
+        o.eventName,
+        unit * 0.075,
+        o.theme.font === 'serif' ? 400 : 700,
+      ),
+      {
+        ...common,
+        id: 'qr',
+        type: 'qr',
+        x: Math.round((W - qrSide) / 2),
+        y: top,
+        width: qrSide,
+        height: qrH,
+        dark: '#111110',
+        light: '#ffffff',
+        showCode: true,
+      },
+      text('hint', top + qrH + Math.round(unit * 0.03), Math.round(unit * 0.08), o.hint, unit * 0.04, 500),
+    ],
+  };
+  const resources = await templateResources(doc);
+  const canvas = new OffscreenCanvas(o.size.width, o.size.height);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('2d context unavailable');
+  renderTemplate(
+    ctx,
+    doc,
+    { photos: [], tokens: {}, qr: { url: o.link, code: o.code }, placeholders: false, ...resources },
+    o.size.width / W,
+  );
+  return canvas.transferToImageBitmap();
+}
