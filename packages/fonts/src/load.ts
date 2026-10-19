@@ -1,5 +1,5 @@
 import { CATALOGUE, type FontCategory } from './catalogue';
-import { findFamily, type FontFile, type LibraryFamily } from './library';
+import { findFamily } from './library';
 
 /**
  * Loading fonts for canvas text. The layout renderer draws with `ctx.font = "<weight> <size>px
@@ -76,15 +76,6 @@ function once(key: string, start: () => Promise<void>): Promise<void> {
   return request;
 }
 
-/**
- * Variable fonts serve one file for every weight, saved once per weight in the library. Point every
- * weight at the first copy so the browser fetches and caches it once.
- */
-function urlOf(family: LibraryFamily, file: FontFile, base: string): string {
-  const canonical = family.files.find((f) => f.sha256 === file.sha256) ?? file;
-  return `${base}/${canonical.file}`;
-}
-
 export interface LoadOptions {
   /** Only these weights (default: every weight the library has for the family). */
   weights?: number[];
@@ -110,7 +101,8 @@ export async function loadLibraryFamily(family: string, opts: LoadOptions = {}):
           set,
           entry.family,
           (name) =>
-            new FontFace(name, `url(${cssString(urlOf(entry, file, base))}) format('woff2')`, {
+            // Variable fonts: every weight loads the same canonical file, so the browser fetches it once.
+            new FontFace(name, `url(${cssString(`${base}/${file.canonical}`)}) format('woff2')`, {
               weight: String(file.weight),
               style: file.style,
               unicodeRange: file.unicodeRange,

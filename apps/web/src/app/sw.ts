@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 import { defaultCache } from '@serwist/turbopack/worker';
-import { Serwist, type PrecacheEntry, type SerwistGlobalConfig } from 'serwist';
+import { ExpirationPlugin, Serwist, StaleWhileRevalidate, type PrecacheEntry, type SerwistGlobalConfig } from 'serwist';
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -20,7 +20,18 @@ const serwist = new Serwist({
   skipWaiting: false,
   clientsClaim: false,
   navigationPreload: true,
-  runtimeCaching: defaultCache,
+  runtimeCaching: [
+    // The PHO-9 font library: a booth must draw its event's fonts offline, and the default font rule
+    // keeps only a handful of files.
+    {
+      matcher: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/fonts/lib/'),
+      handler: new StaleWhileRevalidate({
+        cacheName: 'font-library',
+        plugins: [new ExpirationPlugin({ maxEntries: 600, maxAgeSeconds: 365 * 24 * 60 * 60 })],
+      }),
+    },
+    ...defaultCache,
+  ],
   fallbacks: {
     entries: [
       {

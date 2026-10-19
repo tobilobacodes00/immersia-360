@@ -1,32 +1,52 @@
 import type { CatalogueFamily } from './catalogue';
-// Pinned by scripts/generate.mjs: every file's URL on Google's static host, sha256, size, copyright.
-import data from './library.json';
+import type { FontStyle, FontSubset } from './manifest';
+// The browser view of the library (scripts/runtime.mjs): faces and subsets, ~27 KB instead of the
+// ~300 KB build manifest with its URLs, hashes and copyright lines.
+import data from './runtime.json';
 
-export type FontSubset = 'latin' | 'latin-ext';
-export type FontStyle = 'normal' | 'italic';
+export type { FontStyle, FontSubset };
 
 export interface FontFile {
   weight: number;
   style: FontStyle;
   subset: FontSubset;
-  /** The subset's unicode-range, as Google serves it: the browser only fetches a file for text it covers. */
+  /** The subset's unicode-range, as Google serves it. */
   unicodeRange: string;
   /** Path under the library root (/fonts/lib): `<slug>/<weight>-<style>-<subset>.woff2`. */
   file: string;
-  /** Where the build downloads it from (a versioned fonts.gstatic.com URL). */
-  source: string;
-  sha256: string;
-  bytes: number;
+  /**
+   * The file holding these bytes. Variable fonts are one file for every weight, saved once per
+   * weight; loading every weight from the first copy means the browser fetches it once.
+   */
+  canonical: string;
 }
 
 export interface LibraryFamily extends CatalogueFamily {
-  /** The font's own copyright line (name table ID 0), kept for attribution. */
-  copyright: string;
   files: FontFile[];
 }
 
-// The JSON is checked against the catalogue by the unit tests; TypeScript only sees plain strings in it.
-export const FONT_LIBRARY: readonly LibraryFamily[] = data as LibraryFamily[];
+interface RuntimeData {
+  ranges: Record<FontSubset, string>;
+  families: (CatalogueFamily & { files: [number, FontStyle, FontSubset, number][] })[];
+}
+
+const runtime = data as RuntimeData;
+const path = (slug: string, weight: number, style: FontStyle, subset: FontSubset) =>
+  `${slug}/${weight}-${style}-${subset}.woff2`;
+
+export const FONT_LIBRARY: readonly LibraryFamily[] = runtime.families.map((f) => {
+  const files = f.files.map(([weight, style, subset]) => ({
+    weight,
+    style,
+    subset,
+    unicodeRange: runtime.ranges[subset],
+    file: path(f.slug, weight, style, subset),
+  }));
+  return {
+    ...f,
+    files: files.map((x, i) => ({ ...x, canonical: files[f.files[i]![3]]!.file })),
+  };
+});
 
 let byName: Map<string, LibraryFamily> | undefined;
 

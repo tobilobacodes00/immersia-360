@@ -127,7 +127,7 @@ describe('loadLibraryFamily', () => {
     const variable = FONT_LIBRARY.find((f) => {
       const a = f.files.find((x) => x.weight === 400 && x.style === 'normal' && x.subset === 'latin');
       const b = f.files.find((x) => x.weight === 700 && x.style === 'normal' && x.subset === 'latin');
-      return a && b && a.sha256 === b.sha256;
+      return a && b && a.canonical === b.canonical;
     });
     expect(variable, 'some library family is a variable font with 400 and 700').toBeDefined();
     const { loadLibraryFamily } = await loader();

@@ -15,6 +15,7 @@
 // Needs Node 22.18+ (it loads src/catalogue.ts directly through type stripping).
 import { createHash } from 'node:crypto';
 import { writeFile } from 'node:fs/promises';
+import { writeRuntime } from './runtime.mjs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { brotliDecompressSync } from 'node:zlib';
@@ -352,6 +353,8 @@ async function main() {
   }
   await writeFile(OUT, `${JSON.stringify(library, null, 2)}\n`);
   log(`Wrote ${OUT}`);
+  await writeRuntime();
+  log('Wrote the browser view, src/runtime.json');
 }
 
 // Set the exit code rather than calling process.exit(): after network use that can trip a libuv assertion on Windows.

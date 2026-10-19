@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { CATALOGUE, FONT_CATEGORIES, slugOf } from '../src/catalogue';
 import { FONT_LIBRARY, findFamily } from '../src/library';
+import { FONT_MANIFEST } from '../src/manifest';
+import { deriveRuntime } from '../scripts/runtime.mjs';
+import runtime from '../src/runtime.json';
 import { fontStack } from '../src/load';
 
 const MINIMUM = { sans: 30, serif: 25, display: 25, handwriting: 20, mono: 5 };
@@ -103,7 +106,7 @@ describe('font library manifest (library.json)', () => {
   it('pins every file by a static gstatic URL, sha256 and size', () => {
     const bySha = new Map<string, number>();
     const bySource = new Map<string, string>();
-    for (const f of FONT_LIBRARY)
+    for (const f of FONT_MANIFEST)
       for (const x of f.files) {
         expect(x.sha256, x.file).toMatch(/^[0-9a-f]{64}$/);
         expect(x.bytes, x.file).toBeGreaterThan(1000);
@@ -118,7 +121,15 @@ describe('font library manifest (library.json)', () => {
   });
 
   it("keeps each font's own copyright line", () => {
-    for (const f of FONT_LIBRARY) expect(f.copyright.trim().length, f.family).toBeGreaterThan(0);
+    for (const f of FONT_MANIFEST) expect(f.copyright.trim().length, f.family).toBeGreaterThan(0);
+  });
+
+  it('ships browsers a runtime view that matches the manifest exactly', () => {
+    // runtime.json is generated from library.json (scripts/runtime.mjs); a stale copy fails here.
+    expect(runtime).toEqual(deriveRuntime(FONT_MANIFEST));
+    expect(FONT_LIBRARY.map((f) => f.files.map((x) => x.file))).toEqual(
+      FONT_MANIFEST.map((f) => f.files.map((x) => x.file)),
+    );
   });
 
   it('finds a family by name, ignoring case', () => {

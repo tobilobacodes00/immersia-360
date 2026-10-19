@@ -9,3 +9,4 @@ pnpm-lock.yaml
 apps/web/public/sw.js
 apps/web/next-env.d.ts
 packages/fonts/src/library.json
+packages/fonts/src/runtime.json
