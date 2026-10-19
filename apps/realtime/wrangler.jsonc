@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "immersia-realtime",
+  "main": "src/index.ts",
+  // WebCrypto and WebSocket are built in, so nodejs_compat is not needed.
+  "compatibility_date": "2026-09-01",
+  "durable_objects": {
+    "bindings": [{ "name": "ROOMS", "class_name": "EventRoom" }],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["EventRoom"] }],
+  "vars": {
+    // Comma-separated page origins allowed to open a socket, e.g. "https://immersia.example". Empty allows any.
+    "ALLOWED_ORIGINS": "",
+  },
+  // Secret, never committed: `wrangler secret put REALTIME_SIGNING_SECRET` (see README.md).
+}
