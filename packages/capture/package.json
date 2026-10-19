@@ -5,12 +5,16 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./segment": "./src/segment.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "catalog:"
   },
   "devDependencies": {
     "typescript": "catalog:",

@@ -18,6 +18,7 @@
     "./session": "./src/session.ts",
     "./kiosk": "./src/kiosk.ts",
     "./asset": "./src/asset.ts",
+    "./media-refs": "./src/media-refs.ts",
     "./live": "./src/live.ts"
   },
   "scripts": {
