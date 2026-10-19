@@ -232,7 +232,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
           tokens: eventTokens(
             { name: event.name, date: event.date },
             event.media.branding,
-            session ? { shortCode: session.shortCode, url: link } : null,
+            session ? { shortCode: session.shortCode ?? '', url: link } : null,
             { number: shots.current.length, count: p.shots },
           ),
           // The preview shows where the QR goes; the kept strip carries the guest's own link.
