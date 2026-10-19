@@ -52,7 +52,7 @@ const IMAGE_TYPES: AssetType[] = ['overlay', 'layout', 'logo', 'background'];
 
 export function Inspector(p: InspectorProps) {
   const t = useTranslations('studio.editor');
-  const { doc, selection, dispatch } = p;
+  const { doc, selection } = p;
   const selected = doc.elements.filter((e) => selection.includes(e.id));
   const [picker, setPicker] = useState<null | {
     types: AssetType[];

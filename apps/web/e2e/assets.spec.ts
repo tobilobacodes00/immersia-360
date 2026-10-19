@@ -154,15 +154,15 @@ test.describe('assets library (screen 8)', () => {
     await signIn(page);
     await open(page, '/studio/assets');
     const scan = () => new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();
-    expect((await scan()).violations.map((v) => `${v.id}: ${v.nodes.length}`)).toEqual([]);
+    expect((await scan()).violations.map((v) => `${v.id}: ${v.nodes.map((node) => node.target.join(' ')).join(' | ')}`)).toEqual([]);
 
     await fileInput(page).setInputFiles({ name: 'Gold frame.png', mimeType: 'image/png', buffer: png(64, 64) });
     await expect(page.getByRole('button', { name: 'Rename Gold frame' })).toBeVisible({ timeout: 20_000 });
-    expect((await scan()).violations.map((v) => `${v.id}: ${v.nodes.length}`)).toEqual([]);
+    expect((await scan()).violations.map((v) => `${v.id}: ${v.nodes.map((node) => node.target.join(' ')).join(' | ')}`)).toEqual([]);
 
     await page.getByRole('button', { name: 'Delete Gold frame' }).click();
     await expect(page.getByRole('dialog')).toBeVisible();
-    expect((await scan()).violations.map((v) => `${v.id}: ${v.nodes.length}`)).toEqual([]);
+    expect((await scan()).violations.map((v) => `${v.id}: ${v.nodes.map((node) => node.target.join(' ')).join(' | ')}`)).toEqual([]);
   });
 
   test('the hourly sweep reports what it removed from the library', async ({ request }) => {
