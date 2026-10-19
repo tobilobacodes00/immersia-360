@@ -28,6 +28,7 @@ import { LayersPanel } from './LayersPanel';
 import { TemplatesPanel, type Theme } from './TemplatesPanel';
 import { editorReducer, initialEditorState, type EditorAction, type EditorDoc } from './state';
 import { useTemplateInputs } from './use-template-inputs';
+import { useMediaQuery } from './use-media-query';
 
 const EditorStage = dynamic(() => import('./EditorStage'), {
   ssr: false,
@@ -289,6 +290,8 @@ export function TemplateEditor(p: TemplateEditorProps) {
   const zoomBy = (f: number) => setZoom(Math.min(8, Math.max(0.05, scale * f)));
 
   // ---- Panels --------------------------------------------------------------------------------
+  // Three columns from the lg breakpoint; below it, one panel at a time under the canvas.
+  const wide = useMediaQuery('(min-width: 1024px)', true);
   const [left, setLeft] = useState<'layers' | 'templates'>('layers');
   const [mobile, setMobile] = useState<'layers' | 'templates' | 'inspect'>('inspect');
   const [library, setLibrary] = useState(p.library);
@@ -331,6 +334,23 @@ export function TemplateEditor(p: TemplateEditorProps) {
       assetName={assetName}
       textFieldId={textFieldId}
       onDuplicate={duplicate}
+    />
+  );
+
+  const stage = (
+    <EditorStage
+      doc={doc}
+      selection={selection}
+      dispatch={dispatch}
+      inputs={inputs}
+      redrawKey={redrawKey}
+      zoom={zoom}
+      onFitScale={setFitScale}
+      transparent={p.kind === 'overlay'}
+      guidesColor={ACCENT}
+      selectionColor={ACCENT}
+      onEditText={editText}
+      label={t('canvasLabel')}
     />
   );
 
@@ -419,63 +439,51 @@ export function TemplateEditor(p: TemplateEditorProps) {
         </div>
       )}
 
-      <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)_auto] lg:grid-cols-[250px_minmax(0,1fr)_310px] lg:grid-rows-1">
-        <aside className="hidden min-h-0 flex-col border-r border-line lg:flex">
-          <div className="border-b border-line p-2">
-            <Segmented
-              size="sm"
-              value={left}
-              onChange={setLeft}
-              label={t('panels.label')}
-              options={[
-                { value: 'layers', label: t('panels.layers') },
-                { value: 'templates', label: t('panels.templates') },
-              ]}
-            />
-          </div>
-          <div className="min-h-0 flex-1 overflow-y-auto">{leftPanel}</div>
-        </aside>
-
-        <div className="relative min-h-0">
-          <EditorStage
-            doc={doc}
-            selection={selection}
-            dispatch={dispatch}
-            inputs={inputs}
-            redrawKey={redrawKey}
-            zoom={zoom}
-            onFitScale={setFitScale}
-            transparent={p.kind === 'overlay'}
-            guidesColor={ACCENT}
-            selectionColor={ACCENT}
-            onEditText={editText}
-            label={t('canvasLabel')}
-          />
+      {wide ? (
+        <div className="grid min-h-0 flex-1 grid-cols-[250px_minmax(0,1fr)_310px]">
+          <aside className="flex min-h-0 flex-col border-r border-line">
+            <div className="border-b border-line p-2">
+              <Segmented
+                size="sm"
+                value={left}
+                onChange={setLeft}
+                label={t('panels.label')}
+                options={[
+                  { value: 'layers', label: t('panels.layers') },
+                  { value: 'templates', label: t('panels.templates') },
+                ]}
+              />
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto">{leftPanel}</div>
+          </aside>
+          <div className="relative min-h-0">{stage}</div>
+          <aside className="min-h-0 overflow-y-auto border-l border-line">{inspector}</aside>
         </div>
-
-        <aside className="hidden min-h-0 overflow-y-auto border-l border-line lg:block">{inspector}</aside>
-
-        {/* Narrow screens: one panel at a time under the canvas. */}
-        <div className="max-h-[42vh] min-h-0 overflow-y-auto border-t border-line lg:hidden">
-          <div className="sticky top-0 z-10 border-b border-line bg-elev p-2">
-            <Segmented
-              size="sm"
-              value={mobile}
-              onChange={(v) => {
-                setMobile(v);
-                if (v !== 'inspect') setLeft(v);
-              }}
-              label={t('panels.label')}
-              options={[
-                { value: 'inspect', label: t('panels.inspect') },
-                { value: 'layers', label: t('panels.layers') },
-                { value: 'templates', label: t('panels.templates') },
-              ]}
-            />
+      ) : (
+        // Narrow screens: the canvas, then one panel at a time under it.
+        <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)_auto]">
+          <div className="relative min-h-0">{stage}</div>
+          <div className="max-h-[42vh] min-h-0 overflow-y-auto border-t border-line">
+            <div className="sticky top-0 z-10 border-b border-line bg-elev p-2">
+              <Segmented
+                size="sm"
+                value={mobile}
+                onChange={(v) => {
+                  setMobile(v);
+                  if (v !== 'inspect') setLeft(v);
+                }}
+                label={t('panels.label')}
+                options={[
+                  { value: 'inspect', label: t('panels.inspect') },
+                  { value: 'layers', label: t('panels.layers') },
+                  { value: 'templates', label: t('panels.templates') },
+                ]}
+              />
+            </div>
+            {mobile === 'inspect' ? inspector : leftPanel}
           </div>
-          {mobile === 'inspect' ? inspector : leftPanel}
         </div>
-      </div>
+      )}
 
       <AssetPicker
         open={imagePicker}

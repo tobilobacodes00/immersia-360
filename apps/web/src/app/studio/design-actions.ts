@@ -6,6 +6,7 @@ import { templateDocumentSchema } from '@immersia/shared';
 import { fail, ok, withOperator, type ActionResult } from '@/server/action-result';
 import { mediaPatchSchema, patchMedia } from '@/server/events';
 import {
+  applyEventDesign,
   deleteLibraryTemplate,
   getTemplate,
   listLibraryTemplates,
@@ -52,6 +53,22 @@ export async function patchMediaAction(eventId: string, patch: unknown): Promise
     if (!res.ok) return fail('invalid', res.issues);
     revalidatePath(`/studio/events/${eventId}`, 'layout');
     return ok(undefined);
+  });
+}
+
+/** Screen 5 "Choose a design": a preset, a saved template or an uploaded overlay becomes the event's. */
+export async function applyDesignAction(
+  eventId: string,
+  templateKind: string,
+  doc: unknown,
+): Promise<ActionResult<{ templateId: string }>> {
+  return withOperator({ event: ['update'] }, async (op) => {
+    const k = kind.safeParse(templateKind);
+    if (!id.safeParse(eventId).success || !k.success) return fail('invalid');
+    const res = await applyEventDesign(op, eventId, k.data, doc);
+    if (!res.ok) return fail(res.reason);
+    revalidatePath(`/studio/events/${eventId}`, 'layout');
+    return ok({ templateId: res.id });
   });
 }
 

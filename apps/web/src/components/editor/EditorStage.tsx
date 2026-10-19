@@ -226,9 +226,11 @@ export default function EditorStage(p: StageProps) {
   return (
     <div
       ref={host}
-      className="relative h-full min-h-[320px] w-full overflow-auto overscroll-contain bg-sunken"
+      className="focus-ring relative h-full min-h-[320px] w-full overflow-auto overscroll-contain bg-sunken"
       role="application"
       aria-label={p.label}
+      // Focusable, so keyboard users can reach the canvas and its shortcuts (and scroll it when zoomed).
+      tabIndex={0}
     >
       {size.width > 0 && (
         <Stage

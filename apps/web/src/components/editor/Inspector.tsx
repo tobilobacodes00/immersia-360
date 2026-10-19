@@ -252,7 +252,11 @@ function ElementPanel(p: InspectorProps & { el: TemplateElement; openPicker: Pic
       <NumberInput
         value={Math.round(el[key] * 10) / 10}
         min={key === 'width' || key === 'height' ? 1 : undefined}
-        onChange={(v) => set({ [key]: v })}
+        onChange={(v) => {
+          const patch: ElementPatch = {};
+          patch[key] = v;
+          set(patch);
+        }}
         label={t(`fields.${key}`)}
         className="w-full"
       />

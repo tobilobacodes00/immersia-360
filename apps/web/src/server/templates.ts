@@ -5,6 +5,7 @@ import {
   brandingSchema,
   canvasSizeFor,
   outputSettingsSchema,
+  type OutputSettings,
   overlayCanvasFor,
   templateDocumentSchema,
   uuidv7,
@@ -83,6 +84,20 @@ export async function ensureEventTemplate(
         .limit(1);
       if (row) return toRecord(row);
     }
+    // An event that dropped its overlay and wants one again gets its previous design back.
+    const [previous] = await tx
+      .select()
+      .from(template)
+      .where(and(eq(template.eventId, eventId), eq(template.kind, kind)))
+      .orderBy(desc(template.updatedAt))
+      .limit(1);
+    if (previous) {
+      await tx
+        .update(event)
+        .set({ outputSettings: pointAt(output, kind, previous.id) })
+        .where(eq(event.id, eventId));
+      return toRecord(previous);
+    }
     const theme = brandingSchema.parse(ev.branding).theme;
     const doc =
       kind === 'layout'
@@ -109,13 +124,46 @@ export async function ensureEventTemplate(
         updatedAt: new Date(),
       })
       .returning();
-    const next =
-      kind === 'layout'
-        ? { ...output, photo: { ...output.photo, layoutTemplateId: id } }
-        : { ...output, video360: { ...output.video360, overlayTemplateId: id } };
-    await tx.update(event).set({ outputSettings: next }).where(eq(event.id, eventId));
+    await tx
+      .update(event)
+      .set({ outputSettings: pointAt(output, kind, id) })
+      .where(eq(event.id, eventId));
     return toRecord(row!);
   });
+}
+
+function pointAt(output: OutputSettings, kind: TemplateKind, id: string): OutputSettings {
+  return kind === 'layout'
+    ? { ...output, photo: { ...output.photo, layoutTemplateId: id } }
+    : { ...output, video360: { ...output.video360, overlayTemplateId: id } };
+}
+
+/**
+ * The operator picked another design (a preset, a library template, an uploaded overlay PNG) for
+ * the event: it replaces the event's working copy outright, fitted to the event's canvas.
+ */
+export async function applyEventDesign(
+  op: Operator,
+  eventId: string,
+  kind: TemplateKind,
+  input: unknown,
+): Promise<{ ok: true; id: string } | { ok: false; reason: 'not_found' | 'invalid' }> {
+  const parsed = templateDocumentSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, reason: 'invalid' };
+  const record = await ensureEventTemplate(op, eventId, kind);
+  if (!record) return { ok: false, reason: 'not_found' };
+  const [ev] = await db()
+    .select({ outputSettings: event.outputSettings })
+    .from(event)
+    .where(eq(event.id, eventId))
+    .limit(1);
+  const target = targetCanvas(kind, outputSettingsSchema.parse(ev!.outputSettings));
+  const doc = adaptToCanvas(parsed.data, target.width, target.height);
+  await db()
+    .update(template)
+    .set({ canvas: doc.canvas, elements: doc.elements, updatedAt: new Date() })
+    .where(and(eq(template.id, record.id), eq(template.organizationId, op.organizationId)));
+  return { ok: true, id: record.id };
 }
 
 export type SaveResult =
