@@ -384,6 +384,22 @@
         "consentHelp": "Com o que os convidados concordam, nas suas palavras.",
         "contact": "Contato para convidados",
         "contactHelp": "Aparece nas páginas dos convidados quando os arquivos do evento expiram, para que possam falar com você. Um e-mail ou telefone."
+      },
+      "kiosk": {
+        "title": "Quiosque",
+        "subtitle": "Bloqueie a tela da cabine em eventos sem operador.",
+        "pin": "PIN de saída",
+        "newPin": "Novo PIN de saída",
+        "pinHelp": "De 4 a 8 dígitos. Com PIN, a cabine roda em tela cheia e os convidados não conseguem sair; o PIN é verificado mesmo offline.",
+        "set": "Salvar PIN",
+        "change": "Trocar PIN",
+        "remove": "Remover PIN",
+        "statusOn": "Bloqueio de quiosque ativo",
+        "statusOff": "Sem PIN: a tela da cabine não está bloqueada",
+        "saved": "PIN salvo",
+        "removed": "PIN removido: a cabine não está mais bloqueada",
+        "invalid": "Use de 4 a 8 dígitos.",
+        "failed": "Não foi possível salvar o PIN. Tente de novo."
       }
     },
     "devices": {
@@ -552,7 +568,10 @@
       "emailSend": "Enviar",
       "emailQueued": "A caminho de {email}",
       "emailInvalid": "Isso não parece um e-mail.",
-      "next": "Próximo convidado"
+      "next": "Próximo convidado",
+      "titlePhoto": "Escaneie para ver suas fotos",
+      "subtitlePhoto": "O link já funciona; suas fotos chegam lá em instantes.",
+      "previewAlt": "Sua tira de fotos"
     },
     "uploads": {
       "waiting": "{count, plural, one {# envio pendente} other {# envios pendentes}}",
@@ -560,6 +579,30 @@
       "failed": "{count, plural, one {# envio precisa de atenção} other {# envios precisam de atenção}}",
       "revoked": "Este dispositivo foi removido: registre-o de novo para enviar",
       "synced": "Tudo enviado"
+    },
+    "kiosk": {
+      "operator": "Controles do operador",
+      "title": "Digite o PIN de saída",
+      "hint": "Somente operadores",
+      "wrong": "PIN incorreto. Tente de novo.",
+      "paused": "Muitas tentativas. Aguarde {seconds} s.",
+      "cancel": "Cancelar",
+      "delete": "Apagar",
+      "unlock": "Desbloquear",
+      "tapToReturn": "Toque para voltar à cabine"
+    },
+    "photo": {
+      "shotCounter": "Foto {n} de {total}",
+      "getReady": "Prepare-se",
+      "lookingGood": "Ficou ótimo!",
+      "keep": "Ficar com esta",
+      "retake": "Refazer",
+      "making": "Montando sua tira…",
+      "print": "Imprimir",
+      "printAnother": "Imprimir outra",
+      "printing": "Imprimindo…",
+      "printLimit": "Acabaram as impressões desta sessão",
+      "flash": "Foto tirada"
     }
   },
   "share": {

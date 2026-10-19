@@ -106,5 +106,7 @@ export function useUploadQueue(opts: { eventId: string; token: string | null; st
     status,
     /** A take finished rendering: let its session upload now. */
     nudge: (takeId: string) => void queueRef.current?.nudge(takeId).then(() => kickRef.current()),
+    /** A session-level output (photo strip, GIF…) was saved: upload it now. */
+    nudgeSession: (sessionId: string) => void queueRef.current?.nudgeSession(sessionId).then(() => kickRef.current()),
   };
 }

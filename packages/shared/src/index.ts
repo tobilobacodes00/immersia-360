@@ -8,3 +8,4 @@ export * from './event';
 export * from './template';
 export * from './device';
 export * from './session';
+export * from './kiosk';

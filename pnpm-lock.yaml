@@ -217,6 +217,9 @@ importers:
       '@immersia/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@immersia/layout':
+        specifier: workspace:*
+        version: link:../../packages/layout
       '@immersia/offline':
         specifier: workspace:*
         version: link:../../packages/offline

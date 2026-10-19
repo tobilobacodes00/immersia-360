@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion } from 'motion/react';
 import { Mail, MessageCircle, MessageSquareText, Link2, Check } from 'lucide-react';
@@ -34,8 +34,17 @@ export function ResultScreen({
   event,
   onEmail,
   onDone,
+  kind = 'video',
+  preview,
+  actions,
 }: {
   session: LocalSession;
+  /** Wording: a video (360) or photos (photo booth). */
+  kind?: 'video' | 'photo';
+  /** The guest's strip, shown beside the QR (photo booth). */
+  preview?: string | null;
+  /** Extra guest actions under the share options (e.g. Print). */
+  actions?: ReactNode;
   event: { name: string; font: DisplayFont; share: { email: boolean; sms: boolean; whatsapp: boolean } };
   onEmail: (email: string) => Promise<void>;
   onDone: () => void;
@@ -89,6 +98,14 @@ export function ResultScreen({
       onPointerDown={() => setTouched((n) => n + 1)}
     >
       <div className="mx-auto flex min-h-full max-w-5xl flex-col items-center justify-center gap-8 landscape:flex-row landscape:gap-14">
+        {preview && (
+          // eslint-disable-next-line @next/next/no-img-element -- a local object URL, nothing to optimise
+          <img
+            src={preview}
+            alt={t('previewAlt')}
+            className="max-h-[70vh] w-auto max-w-[min(22rem,80vw)] rounded-[0.75rem] shadow-pop"
+          />
+        )}
         <div className="flex w-[min(20rem,70vw)] shrink-0 flex-col items-center gap-4">
           <div className="w-full rounded-[1.5rem] border border-black/10 bg-white p-4">
             <QrCode value={values[channel]} label={t(`qrAlt.${channel}`)} />
@@ -116,9 +133,9 @@ export function ResultScreen({
 
         <div className="flex max-w-md flex-col items-center text-center landscape:items-start landscape:text-left">
           <Headline font={event.font} className="text-[clamp(2.25rem,5vw,3.75rem)]">
-            {t('title')}
+            {kind === 'photo' ? t('titlePhoto') : t('title')}
           </Headline>
-          <p className="mt-3 text-[1.15rem] opacity-70">{t('subtitle')}</p>
+          <p className="mt-3 text-[1.15rem] opacity-70">{kind === 'photo' ? t('subtitlePhoto') : t('subtitle')}</p>
 
           <p className="mt-6 text-[1rem] opacity-70">
             {session.shortCode ? t('codeHint', { url: codeEntry() }) : t('codePending')}
@@ -181,6 +198,8 @@ export function ResultScreen({
               </div>
             </div>
           )}
+
+          {actions && <div className="mt-6 flex flex-wrap gap-3">{actions}</div>}
 
           <GuestButton primary className="mt-8 min-w-[14rem]" onClick={onDone}>
             {t('next')}

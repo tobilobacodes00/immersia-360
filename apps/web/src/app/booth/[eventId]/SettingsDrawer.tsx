@@ -48,30 +48,19 @@ export function SettingsDrawer({
   choice,
   onChoice,
   camera,
-  motion: motionSettings,
-  onMotion,
-  takes,
-  onImport,
-  storeBackend,
-  importIcon,
+  capture360,
 }: {
   open: boolean;
   onClose: () => void;
   choice: CameraChoice;
   onChoice: (c: CameraChoice) => void;
   camera: ActiveCamera | null;
-  motion: { enabled: boolean; threshold: number };
-  onMotion: (m: { enabled: boolean; threshold: number }) => void;
-  takes: LocalTake[];
-  onImport: (files: FileList) => void;
-  storeBackend: 'opfs' | 'idb' | null;
-  importIcon: ReactNode;
+  /** The 360 booth's motion trigger, video import and takes; the photo booth has none of these. */
+  capture360?: Capture360Props;
 }) {
   const t = useTranslations('booth.settings');
-  const locale = useLocale();
   const [cameras, setCameras] = useState<CameraInfo[]>([]);
   const [torch, setTorch] = useState(false);
-  const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -164,68 +153,7 @@ export function SettingsDrawer({
                   />
                 </Field>
               )}
-              <Field label={t('motion')} help={t('motionHelp')}>
-                <Toggle
-                  checked={motionSettings.enabled}
-                  onChange={(enabled) => onMotion({ ...motionSettings, enabled })}
-                  label={t('motion')}
-                />
-              </Field>
-              {motionSettings.enabled && (
-                <Field label={t('sensitivity')} stack>
-                  <Slider
-                    label={t('sensitivity')}
-                    value={Math.round(motionSettings.threshold * 100)}
-                    min={1}
-                    max={60}
-                    unit="%"
-                    onChange={(n) => onMotion({ ...motionSettings, threshold: n / 100 })}
-                  />
-                </Field>
-              )}
-              <Field label={t('import')} help={t('importHelp')}>
-                <input
-                  ref={fileInput}
-                  type="file"
-                  accept="video/*"
-                  multiple
-                  className="sr-only"
-                  aria-label={t('import')}
-                  onChange={(e) => {
-                    if (e.target.files?.length) onImport(e.target.files);
-                    e.target.value = '';
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInput.current?.click()}
-                  className="focus-ring inline-flex h-9 items-center gap-2 rounded-[10px] border border-line-strong bg-elev px-3.5 text-sm font-medium shadow-card hover:bg-sunken"
-                >
-                  {importIcon}
-                  {t('chooseFiles')}
-                </button>
-              </Field>
-              <div className="py-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <h3 className="text-sm font-medium">{t('takes')}</h3>
-                  {storeBackend && <span className="text-[12px] text-faint">{t(`backend.${storeBackend}`)}</span>}
-                </div>
-                {takes.length === 0 ? (
-                  <p className="text-[13px] text-muted">{t('noTakes')}</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {takes.slice(0, 12).map((tk2) => (
-                      <li key={tk2.id} className="flex items-center justify-between gap-3 text-[13px]">
-                        <span className="text-muted">{formatRelative(new Date(tk2.capturedAt), locale)}</span>
-                        <span className="tabular text-faint">
-                          {(tk2.durationMs / 1000).toFixed(1)} s · {formatBytes(tk2.bytes, locale)}
-                        </span>
-                        <TakeBadges take={tk2} />
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+              {capture360 && <Capture360 {...capture360} />}
             </div>
             {camera?.torch.supported === false && choice.source === 'camera' && (
               <p className="flex items-center gap-2 border-t border-line px-6 py-3 text-[12px] text-faint">
@@ -236,5 +164,87 @@ export function SettingsDrawer({
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+interface Capture360Props {
+  motion: { enabled: boolean; threshold: number };
+  onMotion: (m: { enabled: boolean; threshold: number }) => void;
+  takes: LocalTake[];
+  onImport: (files: FileList) => void;
+  storeBackend: 'opfs' | 'idb' | null;
+  importIcon: ReactNode;
+}
+
+/** 360 booth only: the motion trigger (CAP-4), video import (CAP-12) and the takes on this device. */
+function Capture360({ motion: motionSettings, onMotion, takes, onImport, storeBackend, importIcon }: Capture360Props) {
+  const t = useTranslations('booth.settings');
+  const locale = useLocale();
+  const fileInput = useRef<HTMLInputElement>(null);
+  return (
+    <>
+      <Field label={t('motion')} help={t('motionHelp')}>
+        <Toggle
+          checked={motionSettings.enabled}
+          onChange={(enabled) => onMotion({ ...motionSettings, enabled })}
+          label={t('motion')}
+        />
+      </Field>
+      {motionSettings.enabled && (
+        <Field label={t('sensitivity')} stack>
+          <Slider
+            label={t('sensitivity')}
+            value={Math.round(motionSettings.threshold * 100)}
+            min={1}
+            max={60}
+            unit="%"
+            onChange={(n) => onMotion({ ...motionSettings, threshold: n / 100 })}
+          />
+        </Field>
+      )}
+      <Field label={t('import')} help={t('importHelp')}>
+        <input
+          ref={fileInput}
+          type="file"
+          accept="video/*"
+          multiple
+          className="sr-only"
+          aria-label={t('import')}
+          onChange={(e) => {
+            if (e.target.files?.length) onImport(e.target.files);
+            e.target.value = '';
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => fileInput.current?.click()}
+          className="focus-ring inline-flex h-9 items-center gap-2 rounded-[10px] border border-line-strong bg-elev px-3.5 text-sm font-medium shadow-card hover:bg-sunken"
+        >
+          {importIcon}
+          {t('chooseFiles')}
+        </button>
+      </Field>
+      <div className="py-4">
+        <div className="mb-2 flex items-center justify-between">
+          <h3 className="text-sm font-medium">{t('takes')}</h3>
+          {storeBackend && <span className="text-[12px] text-faint">{t(`backend.${storeBackend}`)}</span>}
+        </div>
+        {takes.length === 0 ? (
+          <p className="text-[13px] text-muted">{t('noTakes')}</p>
+        ) : (
+          <ul className="space-y-2">
+            {takes.slice(0, 12).map((tk2) => (
+              <li key={tk2.id} className="flex items-center justify-between gap-3 text-[13px]">
+                <span className="text-muted">{formatRelative(new Date(tk2.capturedAt), locale)}</span>
+                <span className="tabular text-faint">
+                  {(tk2.durationMs / 1000).toFixed(1)} s · {formatBytes(tk2.bytes, locale)}
+                </span>
+                <TakeBadges take={tk2} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </>
   );
 }

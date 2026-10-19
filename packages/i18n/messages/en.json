@@ -384,6 +384,22 @@
         "consentHelp": "What guests agree to, in your words.",
         "contact": "Contact for guests",
         "contactHelp": "Shown on guest pages once this event’s files have expired, so guests can reach you. An email address or phone number."
+      },
+      "kiosk": {
+        "title": "Kiosk",
+        "subtitle": "Lock the booth screen for events that run unattended.",
+        "pin": "Exit PIN",
+        "newPin": "New exit PIN",
+        "pinHelp": "4 to 8 digits. With a PIN set, the booth runs full screen and guests can’t leave it; the booth checks the PIN even offline.",
+        "set": "Set PIN",
+        "change": "Change PIN",
+        "remove": "Remove PIN",
+        "statusOn": "Kiosk lock on",
+        "statusOff": "No PIN: the booth screen isn’t locked",
+        "saved": "PIN saved",
+        "removed": "PIN removed: the booth is no longer locked",
+        "invalid": "Use 4 to 8 digits.",
+        "failed": "Couldn’t save the PIN. Try again."
       }
     },
     "devices": {
@@ -552,7 +568,10 @@
       "emailSend": "Send",
       "emailQueued": "On its way to {email}",
       "emailInvalid": "That doesn’t look like an email address.",
-      "next": "Next guest"
+      "next": "Next guest",
+      "titlePhoto": "Scan for your photos",
+      "subtitlePhoto": "The link works right away; your photos land there in a moment.",
+      "previewAlt": "Your photo strip"
     },
     "uploads": {
       "waiting": "{count, plural, one {# upload waiting} other {# uploads waiting}}",
@@ -560,6 +579,30 @@
       "failed": "{count, plural, one {# upload needs attention} other {# uploads need attention}}",
       "revoked": "This device was removed: register it again to upload",
       "synced": "All uploaded"
+    },
+    "kiosk": {
+      "operator": "Operator controls",
+      "title": "Enter the exit PIN",
+      "hint": "Operators only",
+      "wrong": "Wrong PIN. Try again.",
+      "paused": "Too many tries. Wait {seconds} s.",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "unlock": "Unlock",
+      "tapToReturn": "Tap to return to the booth"
+    },
+    "photo": {
+      "shotCounter": "Photo {n} of {total}",
+      "getReady": "Get ready",
+      "lookingGood": "Looking good!",
+      "keep": "Keep it",
+      "retake": "Retake",
+      "making": "Making your strip…",
+      "print": "Print",
+      "printAnother": "Print another",
+      "printing": "Printing…",
+      "printLimit": "That’s all the prints for this session",
+      "flash": "Photo taken"
     }
   },
   "share": {

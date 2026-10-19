@@ -30,7 +30,11 @@ export class RenderClient {
   private worker: Worker | null = null;
   private pending = new Map<
     string,
-    { resolve: (r: RenderResult | Derived) => void; reject: (e: Error) => void; onProgress?: (p: number) => void }
+    {
+      resolve: (r: RenderResult | Derived | Blob) => void;
+      reject: (e: Error) => void;
+      onProgress?: (p: number) => void;
+    }
   >();
   private chain: Promise<unknown> = Promise.resolve();
   private paused = false;
@@ -61,6 +65,7 @@ export class RenderClient {
         this.pending.delete(m.id);
         if (m.type === 'done') p.resolve(m.result);
         else if (m.type === 'derived') p.resolve({ poster: m.poster, small: m.small } satisfies Derived);
+        else if (m.type === 'clipped') p.resolve(m.mp4);
         else p.reject(new RenderFailure(m.code, m.message));
       }
     };
@@ -141,6 +146,30 @@ export class RenderClient {
                 },
               });
               this.ensure().postMessage({ type: 'derive', id, mp4, fps, ...want } satisfies WorkerMessage);
+            }),
+        );
+    });
+  }
+
+  /** PHO-2: encode photo-booth motion frames into an MP4 (boomerang or short video). Takes ownership of the frames. */
+  clip(id: string, frames: ImageBitmap[], fps: number, pingPong: boolean): Promise<Blob> {
+    return new Promise<Blob>((resolve, reject) => {
+      this.chain = this.chain
+        .catch(() => undefined)
+        .then(
+          () =>
+            new Promise<void>((done) => {
+              this.pending.set(id, {
+                resolve: (r) => {
+                  resolve(r as Blob);
+                  done();
+                },
+                reject: (e) => {
+                  reject(e);
+                  done();
+                },
+              });
+              this.ensure().postMessage({ type: 'clip', id, frames, fps, pingPong } satisfies WorkerMessage, frames);
             }),
         );
     });

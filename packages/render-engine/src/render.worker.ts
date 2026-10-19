@@ -3,7 +3,7 @@
  * The render worker: decoding, WebGL compositing and encoding all happen here, off the main thread,
  * so the booth UI stays responsive and the operator can keep recording (VID-9).
  */
-import { messagingCopy, posterFrame } from './derive';
+import { encodeClip, messagingCopy, posterFrame } from './derive';
 import { RenderError, render, type RenderJob } from './render';
 
 export {};
@@ -13,6 +13,8 @@ export type WorkerMessage =
   | { type: 'render'; id: string; job: RenderJob }
   /** Poster and (optionally) the messaging copy of a finished render (DL-8). */
   | { type: 'derive'; id: string; mp4: Blob; fps: number; poster: boolean; small: boolean }
+  /** A short MP4 from photo-booth motion frames (PHO-2). The bitmaps are transferred. */
+  | { type: 'clip'; id: string; frames: ImageBitmap[]; fps: number; pingPong: boolean }
   | { type: 'cancel'; id: string }
   | { type: 'pause' }
   | { type: 'resume' };
@@ -21,6 +23,7 @@ export type WorkerReply =
   | { type: 'progress'; id: string; progress: number }
   | { type: 'done'; id: string; result: Awaited<ReturnType<typeof render>> }
   | { type: 'derived'; id: string; poster: Blob | null; small: Blob | null }
+  | { type: 'clipped'; id: string; mp4: Blob }
   | { type: 'error'; id: string; code: RenderError['code']; message: string };
 
 const running = new Map<string, AbortController>();
@@ -48,6 +51,16 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
   if (msg.type === 'cancel') {
     running.get(msg.id)?.abort();
     release();
+    return;
+  }
+  if (msg.type === 'clip') {
+    try {
+      const mp4 = await encodeClip(msg.frames, msg.fps, { pingPong: msg.pingPong });
+      self.postMessage({ type: 'clipped', id: msg.id, mp4 } satisfies WorkerReply);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      self.postMessage({ type: 'error', id: msg.id, code: 'failed', message } satisfies WorkerReply);
+    }
     return;
   }
   if (msg.type === 'derive') {
