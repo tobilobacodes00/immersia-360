@@ -236,7 +236,8 @@
       "overview": "Visão geral",
       "setup": "Configuração",
       "branding": "Marca",
-      "live": "Live Display"
+      "live": "Live Display",
+      "signage": "Cartazes com QR"
     },
     "dashboard": {
       "capture": "Capturado",
@@ -1000,6 +1001,52 @@
       "export": "Todos os arquivos",
       "exportHelp": "Todos os arquivos do evento em qualidade total num único ZIP, incluindo as capturas ocultas, salvos pelo seu navegador direto do armazenamento.",
       "exportButton": "Baixar todos os arquivos (ZIP)"
+    },
+    "signage": {
+      "title": "Cartazes com QR",
+      "format": {
+        "title": "Formato",
+        "subtitle": "Um único QR code para toda a galeria do evento, com as cores e o logo do seu evento.",
+        "label": "Formato do cartaz"
+      },
+      "formats": {
+        "a4": "Pôster A4",
+        "a5": "Panfleto A5",
+        "tent": "Display de mesa"
+      },
+      "hints": {
+        "a4": "Para uma parede, uma porta ou um cavalete. 210 × 297 mm.",
+        "a5": "Para mesas, para entregar em mãos e para o balcão. 148 × 210 mm.",
+        "tent": "Imprima em A4, dobre na linha tracejada e apoie na mesa: os dois lados ficam na posição certa para leitura. Folha de 210 × 297 mm."
+      },
+      "wording": {
+        "title": "Texto",
+        "subtitle": "Mude o texto ou deixe uma linha vazia para removê-la. O nome do evento, o logo e a hashtag vêm de Marca.",
+        "headline": "Título",
+        "cta": "Chamada para ação"
+      },
+      "defaults": {
+        "headline": "Receba suas fotos e vídeos",
+        "cta": "Escaneie com a câmera do celular"
+      },
+      "link": {
+        "title": "Link da galeria",
+        "subtitle": "É o que o código abre. Você também pode compartilhá-lo em uma mensagem.",
+        "label": "Link da galeria",
+        "copy": "Copiar link",
+        "copied": "Copiado"
+      },
+      "preview": {
+        "title": "Pré-visualização",
+        "label": "Pré-visualização: {format}",
+        "loading": "Carregando fontes e o seu logo…",
+        "tip": "Imprima em tamanho real (100%), não em “ajustar à página”. Nada é impresso a menos de {mm} mm da borda, então impressoras de escritório não cortam o conteúdo."
+      },
+      "download": {
+        "pdf": "Baixar PDF",
+        "png": "Baixar PNG",
+        "failed": "Não foi possível criar o arquivo. Tente novamente."
+      }
     }
   },
   "booth": {

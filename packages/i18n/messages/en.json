@@ -236,7 +236,8 @@
       "overview": "Overview",
       "setup": "Setup",
       "branding": "Branding",
-      "live": "Live Display"
+      "live": "Live Display",
+      "signage": "QR signage"
     },
     "dashboard": {
       "capture": "Captured",
@@ -1000,6 +1001,52 @@
       "export": "All files",
       "exportHelp": "Every full-quality file of the event as one ZIP, including hidden captures, saved straight from storage by your browser.",
       "exportButton": "Download every file (ZIP)"
+    },
+    "signage": {
+      "title": "QR signage",
+      "format": {
+        "title": "Format",
+        "subtitle": "One QR code for the whole event gallery, in your event’s colours and logo.",
+        "label": "Signage format"
+      },
+      "formats": {
+        "a4": "A4 poster",
+        "a5": "A5 flyer",
+        "tent": "Table tent"
+      },
+      "hints": {
+        "a4": "For a wall, a door or an easel. 210 × 297 mm.",
+        "a5": "For tables, hand-outs and the bar. 148 × 210 mm.",
+        "tent": "Print on A4, fold along the dashed line and stand it on the table: both sides read upright. 210 × 297 mm sheet."
+      },
+      "wording": {
+        "title": "Wording",
+        "subtitle": "Change the text, or leave a line empty to drop it. The event name, logo and hashtag come from Branding.",
+        "headline": "Headline",
+        "cta": "Call to action"
+      },
+      "defaults": {
+        "headline": "Get your photos & videos",
+        "cta": "Scan with your phone camera"
+      },
+      "link": {
+        "title": "Gallery link",
+        "subtitle": "What the code opens. You can share it in a message too.",
+        "label": "Gallery link",
+        "copy": "Copy link",
+        "copied": "Copied"
+      },
+      "preview": {
+        "title": "Preview",
+        "label": "Preview of the {format}",
+        "loading": "Loading fonts and your logo…",
+        "tip": "Print at actual size (100%), not “fit to page”. Nothing is printed closer than {mm} mm to the edge, so office printers won’t cut it off."
+      },
+      "download": {
+        "pdf": "Download PDF",
+        "png": "Download PNG",
+        "failed": "Couldn’t make the file. Try again."
+      }
     }
   },
   "booth": {
