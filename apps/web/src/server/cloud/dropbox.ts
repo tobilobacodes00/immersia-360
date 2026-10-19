@@ -224,9 +224,12 @@ export function dropbox(config: DropboxConfig, overrides?: Partial<HttpDeps>): C
       let accountEmail: string | null = null;
       const access = str(body.access_token);
       if (access) {
-        const { res, body: account } = await api(access, 'users/get_current_account');
-        // The email is only a label; a connection without one is still a connection.
-        if (res.ok) accountEmail = str(asRecord(account).email) ?? null;
+        try {
+          const { res, body: account } = await api(access, 'users/get_current_account');
+          if (res.ok) accountEmail = str(asRecord(account).email) ?? null;
+        } catch {
+          // The email is only a label; a connection without one is still a connection.
+        }
       }
       return { refreshToken, accountEmail };
     },

@@ -27,8 +27,11 @@ const { event, captureSession, output, uploadObject, integration } = schema;
  * retry after a crash find the file instead of uploading it twice. Hosted files are never touched.
  */
 
-/** `share_settings.cloud` of the event the output belongs to. */
-const cloudOf = sql<CloudProviderId | 'none' | null>`${event.shareSettings}->>'cloud'`;
+/**
+ * `share_settings.cloud` of the event the output belongs to. Parenthesised: `->>` and `||` share a
+ * precedence level in Postgres, so inside `a || b || cloud` it would otherwise apply to the whole concatenation.
+ */
+const cloudOf = sql<CloudProviderId | 'none' | null>`(${event.shareSettings}->>'cloud')`;
 
 const isProvider = (v: unknown): v is CloudProviderId => (CLOUD_PROVIDERS as readonly unknown[]).includes(v);
 

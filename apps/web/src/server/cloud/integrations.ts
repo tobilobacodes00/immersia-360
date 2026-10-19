@@ -194,6 +194,43 @@ export async function markNeedsReauth(integrationId: string, code = 'reauth_requ
     .where(and(eq(integration.id, integrationId), eq(integration.status, 'connected')));
 }
 
+/**
+ * Notice revoked or expired connections without waiting for a file to fail on them: ask each
+ * connected provider for a fresh access token (a revoked grant answers `invalid_grant`). Run by the
+ * hourly cron, so the Integrations screen and the event dashboard (HLP-3) turn to "sign in again"
+ * even on a quiet day. Anything other than a lapsed grant (an outage, say) is left alone.
+ */
+export async function verifyConnections(limit = 200, budgetMs = 30_000): Promise<{ checked: number; lapsed: number }> {
+  const rows = await db()
+    .select({
+      id: integration.id,
+      organizationId: integration.organizationId,
+      provider: integration.provider,
+      token: integration.encryptedRefreshToken,
+    })
+    .from(integration)
+    .where(eq(integration.status, 'connected'))
+    .limit(limit);
+  const deadline = Date.now() + budgetMs;
+  let checked = 0;
+  let lapsed = 0;
+  for (const row of rows) {
+    if (Date.now() > deadline) break;
+    const p = cloudProvider(row.provider);
+    if (!p) continue;
+    checked++;
+    try {
+      await p.accessToken(openRefreshToken(row.token, row.organizationId, row.provider));
+    } catch (err) {
+      if (err instanceof ReauthRequired) {
+        await markNeedsReauth(row.id);
+        lapsed++;
+      }
+    }
+  }
+  return { checked, lapsed };
+}
+
 export type FolderError = 'not_connected' | 'reauth_required' | 'quota_exceeded' | 'unreachable' | 'failed';
 
 /**
