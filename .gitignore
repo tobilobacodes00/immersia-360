@@ -35,5 +35,8 @@ Thumbs.db
 # Satoshi is fetched from Fontshare at build time (its licence forbids redistributing the files).
 apps/web/src/fonts/*.woff2
 
+# The PHO-9 font library is fetched from Google Fonts' static host at build time (pinned by URL and sha256).
+apps/web/public/fonts/lib/
+
 # Local Claude Code state (agent worktrees)
 .claude/
