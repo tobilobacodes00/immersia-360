@@ -58,6 +58,7 @@ import { importVideoFiles } from './import-originals';
 import { Gallery } from './Gallery';
 import { RegisterDevice } from './RegisterDevice';
 import { KioskLockLayer, useKioskLock } from './KioskLock';
+import { LookPreview } from './LookPreview';
 import { RenderQueue } from './RenderQueue';
 import { ResultScreen } from './ResultScreen';
 import { useUploadQueue } from './use-upload-queue';
@@ -437,6 +438,16 @@ export function Booth360({ event }: { event: BoothEvent }) {
         playsInline
         autoPlay
         aria-hidden
+        className={cx(
+          'absolute inset-0 size-full object-cover transition-opacity duration-300',
+          live ? 'opacity-100' : 'opacity-0',
+          cameraChoice.mirror && '-scale-x-100',
+        )}
+      />
+      {/* CAP-9: the event's look on the live preview. */}
+      <LookPreview
+        video={videoRef}
+        lookId={event.video.filterId}
         className={cx(
           'absolute inset-0 size-full object-cover transition-opacity duration-300',
           live ? 'opacity-100' : 'opacity-0',

@@ -248,6 +248,9 @@ importers:
       '@immersia/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@immersia/effects':
+        specifier: workspace:*
+        version: link:../../packages/effects
       '@immersia/fonts':
         specifier: workspace:*
         version: link:../../packages/fonts

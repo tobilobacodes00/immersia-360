@@ -17,6 +17,7 @@ import {
   type TakeStore,
 } from '@immersia/offline';
 import { createOpfsWorker } from '@immersia/offline/opfs-worker';
+import { StillRunner, findLook, findPhotoEffect } from '@immersia/effects';
 import { encodeGif, presetTemplate, renderToBlob, type Template } from '@immersia/layout';
 import { browserPrint } from '@immersia/layout/print';
 import { RenderClient } from '@immersia/render-engine/client';
@@ -40,6 +41,7 @@ import { fitted, templateResources } from './media';
 import { Confetti } from './Confetti';
 import { Gallery } from './Gallery';
 import { KioskLockLayer, useKioskLock } from './KioskLock';
+import { LookPreview } from './LookPreview';
 import { MotionBuffer } from './motion-buffer';
 import { RegisterDevice } from './RegisterDevice';
 import { ResultScreen } from './ResultScreen';
@@ -280,6 +282,35 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
   );
 
   /** PHO-2 extras, made after the guest already has their QR: GIF, boomerang, short video. */
+  // PHO-10 and VID-11: the event's photo effect, then its look, on every still and clip frame.
+  const runner = useRef<StillRunner | null>(null);
+  const grade = useCallback(
+    async (image: ImageBitmap): Promise<ImageBitmap> => {
+      const look = p.filterId ? findLook(p.filterId) : null;
+      const effect = p.effectId ? findPhotoEffect(p.effectId) : null;
+      if ((!look || look.id === 'none') && (!effect || effect.id === 'none')) return image;
+      try {
+        runner.current ??= new StillRunner();
+        const out = await runner.current.toImageBitmap(image, {
+          look,
+          lookIntensity: 1,
+          effect,
+          effectIntensity: effect?.defaultIntensity ?? 1,
+          width: image.width,
+          height: image.height,
+        });
+        image.close();
+        return out;
+      } catch (err) {
+        // No WebGL2 on this device: the guest still gets their photos, ungraded.
+        console.warn('[photo] look/effect unavailable', err);
+        return image;
+      }
+    },
+    [p.filterId, p.effectId],
+  );
+  useEffect(() => () => runner.current?.dispose(), []);
+
   const makeExtras = useCallback(
     async (session: LocalSession) => {
       const s = store;
@@ -316,7 +347,9 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
           );
           await save('gif', gif, w, h, taken.length * 700);
         }
-        const clips = await Promise.all(taken.map((x) => x.clip ?? Promise.resolve([] as ImageBitmap[])));
+        const raw = await Promise.all(taken.map((x) => x.clip ?? Promise.resolve([] as ImageBitmap[])));
+        // The motion clips get the same look and effect as the stills (PHO-10, VID-11).
+        const clips = await Promise.all(raw.map((frames) => Promise.all(frames.map(grade))));
         const client = renderer.current;
         if (client && p.outputs.boomerang && clips.at(-1)?.length) {
           // The last shot's moment, forward and back. The worker takes ownership of the frames it
@@ -340,7 +373,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
         for (const x of taken) x.still.close();
       }
     },
-    [db, event.id, p.outputs, store, uploads],
+    [db, event.id, grade, p.outputs, store, uploads],
   );
 
   const keep = useCallback(async () => {
@@ -385,7 +418,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
         }
         // The clip around this shot starts from the buffered second before it (PHO-2).
         const clip = motionBuffer.current ? motionBuffer.current.clip(500) : null;
-        const still = await createImageBitmap(v);
+        const still = await grade(await createImageBitmap(v));
         shots.current.push({ still, clip });
         setPhase({ kind: 'flash', shot });
         await wait(450);
@@ -395,7 +428,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
       clearTimeout(keepTimer.current);
       keepTimer.current = setTimeout(() => void keep(), REVIEW_TIMEOUT_MS);
     },
-    [composeStrip, keep, p, releaseShots],
+    [composeStrip, grade, keep, p, releaseShots],
   );
 
   const retake = () => {
@@ -429,6 +462,12 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
   return (
     <div style={themeVars} className="fixed inset-0 overflow-hidden bg-[#111110] text-g-ink select-none">
       <video ref={videoRef} muted playsInline className={`absolute inset-0 size-full object-cover ${mirrored}`} />
+      {/* CAP-9: the event's look on the live preview. */}
+      <LookPreview
+        video={videoRef}
+        lookId={p.filterId}
+        className={`absolute inset-0 size-full object-cover ${mirrored}`}
+      />
 
       {/* Top bar: operator controls hide in kiosk mode. */}
       <div className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 p-[1.25rem]">

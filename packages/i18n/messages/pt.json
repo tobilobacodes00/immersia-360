@@ -889,6 +889,30 @@
         "choose": "Escolher…",
         "replace": "Substituir",
         "remove": "Remover {name}"
+      },
+      "looks": {
+        "title": "Estilo e efeitos",
+        "subtitle": "Um estilo de cor para cada captura, efeitos sobre os vídeos 360 e um efeito de foto para a tira.",
+        "look": "Estilo",
+        "videoLook": "Estilo dos vídeos 360",
+        "photoLook": "Estilo das fotos",
+        "lookHelp": "Um único estilo de cor para todo o evento, aplicado ao criar cada captura.",
+        "effects": "Efeitos de vídeo",
+        "effectsHelp": "Até {max}. Aparecem sobre as imagens dos convidados, não sobre a abertura, o encerramento ou a sobreposição.",
+        "strength": "Intensidade de {effect}",
+        "colourMode": "Cor de {effect}",
+        "modes": {
+          "colour": "Colorido",
+          "white": "Branco",
+          "silver": "Prata",
+          "gold": "Dourado"
+        },
+        "preview": "Prévia do estilo e dos efeitos escolhidos",
+        "beatSync": "Sincronizar com a batida",
+        "beatSyncHelp": "Os efeitos pulsam com a batida da música, e a câmera lenta começa e termina numa batida.",
+        "beatSyncNeedsMusic": "Adicione uma música ao evento para sincronizar os efeitos com a batida.",
+        "photoEffect": "Efeito de foto",
+        "photoEffectHelp": "Aplicado a cada foto antes de montar a tira."
       }
     },
     "live": {

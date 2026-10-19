@@ -82,7 +82,9 @@ export const photoSchema = z.object({
   retake: z.boolean().default(true),
   layoutTemplateId: uuid.nullable().default(null),
   printSize: z.enum(PRINT_SIZES).default('2x6'),
+  /** VID-11 looks apply to photos too; PHO-10 adds one photo effect per event. */
   filterId: z.string().nullable().default(null),
+  effectId: z.string().nullable().default(null),
   /** PHO-2: extra outputs per session. */
   outputs: z
     .object({ gif: z.boolean(), boomerang: z.boolean(), shortVideo: z.boolean() })

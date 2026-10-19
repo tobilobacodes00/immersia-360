@@ -25,6 +25,7 @@ import type { TemplateSummary } from '@/server/templates';
 import { SaveIndicator } from '../setup/EventSetup';
 import { useAutosave } from '../setup/use-autosave';
 import { DesignCard } from './DesignCard';
+import { LooksCard } from './LooksCard';
 import { MediaSlot } from './MediaSlot';
 
 type Music = NonNullable<Video360Settings['music']>;
@@ -306,6 +307,20 @@ export function BrandingEditor(p: BrandingEditorProps) {
           />
         </Card>
       ))}
+
+      <LooksCard
+        eventId={p.eventId}
+        booths={p.booths}
+        readOnly={p.readOnly}
+        hasMusic={media.music !== null}
+        initial={{
+          filterId: p.video.filterId,
+          effects: p.video.effects,
+          beatSync: p.video.beatSync,
+          photoFilterId: p.photo.filterId,
+          photoEffectId: p.photo.effectId,
+        }}
+      />
 
       {p.booths.includes('video360') && (
         <>

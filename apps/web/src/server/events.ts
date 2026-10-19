@@ -4,6 +4,7 @@ import { db, schema } from '@immersia/db';
 import { z } from 'zod';
 import {
   brandingSchema,
+  effectSchema,
   musicSchema,
   defaultBranding,
   defaultOutputSettings,
@@ -245,11 +246,27 @@ export async function updateSection<S extends JsonSection>(
 
 /** `next` with the media references (overlay, intro, outro, music, layout) taken from `from`. */
 function withMedia(next: OutputSettings, from: OutputSettings): OutputSettings {
-  const { overlayTemplateId, introAssetId, outroAssetId, cardSeconds, music } = from.video360;
+  const { overlayTemplateId, introAssetId, outroAssetId, cardSeconds, music, filterId, effects, beatSync } =
+    from.video360;
   return {
     ...next,
-    video360: { ...next.video360, overlayTemplateId, introAssetId, outroAssetId, cardSeconds, music },
-    photo: { ...next.photo, layoutTemplateId: from.photo.layoutTemplateId },
+    video360: {
+      ...next.video360,
+      overlayTemplateId,
+      introAssetId,
+      outroAssetId,
+      cardSeconds,
+      music,
+      filterId,
+      effects,
+      beatSync,
+    },
+    photo: {
+      ...next.photo,
+      layoutTemplateId: from.photo.layoutTemplateId,
+      filterId: from.photo.filterId,
+      effectId: from.photo.effectId,
+    },
   };
 }
 
@@ -262,6 +279,12 @@ export const mediaPatchSchema = z
     cardSeconds: z.number().min(1).max(5),
     music: musicSchema.nullable(),
     layoutTemplateId: z.uuid().nullable(),
+    // Looks and effects (VID-7, VID-11, VID-12, PHO-10): ids are checked against the library on render.
+    filterId: z.string().max(60).nullable(),
+    effects: z.array(effectSchema).max(8),
+    beatSync: z.boolean(),
+    photoFilterId: z.string().max(60).nullable(),
+    photoEffectId: z.string().max(60).nullable(),
   })
   .partial();
 export type MediaPatch = z.infer<typeof mediaPatchSchema>;
@@ -328,11 +351,16 @@ export async function patchMedia(
     }
 
     const out = outputSettingsSchema.parse(current.outputSettings);
-    const { layoutTemplateId, ...video } = patch;
+    const { layoutTemplateId, photoFilterId, photoEffectId, ...video } = patch;
     const next = outputSettingsSchema.safeParse({
       ...out,
       video360: { ...out.video360, ...video },
-      photo: layoutTemplateId === undefined ? out.photo : { ...out.photo, layoutTemplateId },
+      photo: {
+        ...out.photo,
+        ...(layoutTemplateId !== undefined ? { layoutTemplateId } : {}),
+        ...(photoFilterId !== undefined ? { filterId: photoFilterId } : {}),
+        ...(photoEffectId !== undefined ? { effectId: photoEffectId } : {}),
+      },
     });
     if (!next.success) return { ok: false as const, issues: next.error.issues.map((i) => i.path.join('.')) };
     await tx.update(event).set({ outputSettings: next.data }).where(eq(event.id, eventId));

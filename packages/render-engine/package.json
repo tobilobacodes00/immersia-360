@@ -9,7 +9,8 @@
     "./client": "./src/client.ts",
     "./audio": "./src/audio.ts",
     "./timeline": "./src/timeline.ts",
-    "./beats": "./src/beats.ts"
+    "./beats": "./src/beats.ts",
+    "./preview": "./src/preview.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.worker.json",
