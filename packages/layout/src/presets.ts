@@ -2,6 +2,7 @@ import { canvasSizeFor, mmToPx, type PRINT_SIZES, type TemplateElement } from '@
 import type { Template } from './render';
 
 export type PrintSize = (typeof PRINT_SIZES)[number];
+type TextElement = Extract<TemplateElement, { type: 'text' }>;
 export type Shots = 1 | 2 | 3 | 4;
 
 export interface PresetOptions {
@@ -64,7 +65,13 @@ function photoBoxes(area: Box, a: Arrangement, shots: Shots, gap: number): Box[]
   return boxes;
 }
 
-const round = (b: Box): Box => ({ x: Math.round(b.x), y: Math.round(b.y), w: Math.round(b.w), h: Math.round(b.h) });
+/** A layout box as element geometry, on whole pixels. */
+const rect = (b: Box) => ({
+  x: Math.round(b.x),
+  y: Math.round(b.y),
+  width: Math.round(b.w),
+  height: Math.round(b.h),
+});
 
 /**
  * A ready-made layout for any print size and shot count (PHO-1, PHO-3): photos tiled over a title
@@ -81,7 +88,7 @@ export function presetTemplate(size: PrintSize, o: PresetOptions): Template {
   const area: Box = { x: margin, y: margin, w: W - 2 * margin, h: H - 2 * margin - footerH };
   const elements: TemplateElement[] = photoBoxes(area, arrangement(size, o.shots), o.shots, gap).map(
     (b, shot): TemplateElement => ({
-      ...round(b),
+      ...rect(b),
       id: `photo-${shot}`,
       type: 'photo',
       shot,
@@ -105,29 +112,34 @@ export function presetTemplate(size: PrintSize, o: PresetOptions): Template {
   const titleW = wantQr ? footer.w - qrSide - gap : footer.w;
   const family = o.font === 'serif' ? 'Instrument Serif' : 'Satoshi';
   const titleSize = Math.round(Math.min(footer.h * 0.38, unit * 0.11));
-  const text = (id: string, box: Box, text: string, fontSize: number, extra: Partial<TemplateElement> = {}) =>
-    ({
-      ...round(box),
-      id,
-      type: 'text',
-      text,
-      fontFamily: family,
-      fontWeight: o.font === 'serif' ? 400 : 700,
-      fontStyle: 'normal',
-      fontSize,
-      lineHeight: 1.1,
-      letterSpacing: o.font === 'serif' ? 0 : -fontSize * 0.03,
-      color: o.ink,
-      align: wantQr ? 'left' : 'center',
-      verticalAlign: 'middle',
-      uppercase: false,
-      autoFit: true,
-      rotation: 0,
-      opacity: 1,
-      locked: false,
-      hidden: false,
-      ...extra,
-    }) as TemplateElement;
+  const text = (
+    id: string,
+    box: Box,
+    text: string,
+    fontSize: number,
+    extra: Partial<TextElement> = {},
+  ): TextElement => ({
+    ...rect(box),
+    id,
+    type: 'text',
+    text,
+    fontFamily: family,
+    fontWeight: o.font === 'serif' ? 400 : 700,
+    fontStyle: 'normal',
+    fontSize,
+    lineHeight: 1.1,
+    letterSpacing: o.font === 'serif' ? 0 : -fontSize * 0.03,
+    color: o.ink,
+    align: wantQr ? 'left' : 'center',
+    verticalAlign: 'middle',
+    uppercase: false,
+    autoFit: true,
+    rotation: 0,
+    opacity: 1,
+    locked: false,
+    hidden: false,
+    ...extra,
+  });
   elements.push(text('title', { x: footer.x, y: footer.y, w: titleW, h: footer.h * 0.62 }, '{eventName}', titleSize));
   elements.push(
     text(
@@ -140,7 +152,7 @@ export function presetTemplate(size: PrintSize, o: PresetOptions): Template {
         fontWeight: 500,
         letterSpacing: Math.round(titleSize * 0.36 * 0.08),
         uppercase: true,
-      } as Partial<TemplateElement>,
+      },
     ),
   );
   if (wantQr)

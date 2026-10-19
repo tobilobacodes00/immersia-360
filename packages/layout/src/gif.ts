@@ -1,3 +1,5 @@
+/// <reference path="./gifenc.d.ts" />
+// (The reference carries gifenc's typings into every program that compiles this file, e.g. apps/web.)
 import { GIFEncoder, applyPalette, quantize, type Palette } from 'gifenc';
 import { drawFitted, type Drawable } from './render';
 
