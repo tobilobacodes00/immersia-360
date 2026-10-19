@@ -72,6 +72,9 @@ catalogs:
     better-auth:
       specifier: 1.7.10
       version: 1.7.10
+    client-zip:
+      specifier: 2.5.1
+      version: 2.5.1
     dexie:
       specifier: 4.4.6
       version: 4.4.6
@@ -281,6 +284,9 @@ importers:
       better-auth:
         specifier: 'catalog:'
         version: 1.7.10(drizzle-kit@1.0.0-rc.4)(drizzle-orm@1.0.0-rc.4(@cloudflare/workers-types@5.20261003.1)(@neondatabase/serverless@1.2.0)(@types/pg@8.23.1)(@upstash/redis@1.39.0)(pg@8.23.1)(zod@4.6.7))(next@16.4.2(@babel/core@7.29.7)(@playwright/test@1.64.1)(@types/node@22.20.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(pg@8.23.1)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(vitest@5.0.5)
+      client-zip:
+        specifier: 'catalog:'
+        version: 2.5.1
       dexie:
         specifier: 'catalog:'
         version: 4.4.6
@@ -2749,6 +2755,9 @@ packages:
 
   client-only@0.0.1:
     resolution: {integrity: sha512-IV3Ou0jSMzZrd3pZ48nLkT9DA7Ag1pnPzaiQhpW7c3RbcqqzvzzVu+L8gfqMp/8IM2MQtSiqaCxrrcfu8I8rMA==}
+
+  client-zip@2.5.1:
+    resolution: {integrity: sha512-yOvNSBsQX1B7wtdvIVXJEIIShrlPiX+adhli7sWvQhsx3nX1DjvpSt+AwOxaX+3DCsT/Yx0nRy5hIjRLIYfebw==}
 
   common-tags@1.8.2:
     resolution: {integrity: sha512-gk/Z852D2Wtb//0I+kRFNKKE9dIIVirjoqPoA1wJU+XePVXZfGeBpk45+A1rKO4Q43prqWBNY/MiIeRLbPWUaA==}
@@ -5899,6 +5908,8 @@ snapshots:
   chai@6.3.0: {}
 
   client-only@0.0.1: {}
+
+  client-zip@2.5.1: {}
 
   common-tags@1.8.2: {}
 
