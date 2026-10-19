@@ -133,6 +133,7 @@ export class UploadQueue {
         await this.db.sessions.update(session.id, {
           state: 'registered',
           shortCode: result.shortCode,
+          filenamePrefix: result.filenamePrefix,
           attempts: 0,
           lastError: undefined,
           updatedAt: this.now(),
