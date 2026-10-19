@@ -108,6 +108,17 @@ export async function objectSize(key: string): Promise<number | null> {
   }
 }
 
+/** The first `n` bytes of an object (a ranged GET), or null when it doesn't exist or is empty. */
+export async function objectHead(key: string, n: number): Promise<Uint8Array | null> {
+  const { s3, bucket } = storage();
+  try {
+    const res = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key, Range: `bytes=0-${n - 1}` }));
+    return (await res.Body?.transformToByteArray()) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Delete in batches of 1000 (the S3 limit). Returns how many keys were removed. */
 export async function deleteObjects(keys: string[]): Promise<number> {
   const { s3, bucket } = storage();
@@ -125,3 +136,6 @@ export async function deleteObjects(keys: string[]): Promise<number> {
 /** Object key layout: one prefix per event, so an event's files are easy to export or purge. */
 export const objectKey = (organizationId: string, eventId: string, outputId: string, ext: string) =>
   `o/${organizationId}/e/${eventId}/${outputId}.${ext}`;
+
+/** Library assets belong to the organization, not an event, so events can share them. */
+export const assetObjectKey = (organizationId: string, assetId: string) => `o/${organizationId}/a/${assetId}`;
