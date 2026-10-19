@@ -20,6 +20,9 @@ const RETRY_FAILED_MS = 60_000;
  * Plays the feed's items (LIV-2, LIV-10): newest first, each for its dwell, a new arrival next. The
  * rules live in playback.ts; this connects them to the clock. `items` is null until a feed exists.
  */
+/** Milliseconds since `start` (kept outside the hook: the clock is read in effects only). */
+const since = (start: number) => performance.now() - start;
+
 export function usePlayback(items: readonly DisplayItem[] | null, dwellSeconds: number) {
   const [state, dispatch] = useReducer(playerReducer, initialPlayer);
   // The list is folded into the player while rendering (not in an effect), so a new arrival is
@@ -41,7 +44,7 @@ export function usePlayback(items: readonly DisplayItem[] | null, dwellSeconds: 
 
   useEffect(() => {
     if (state.currentId === null) return;
-    const delay = advanceDelayMs({ durationMs, elapsedMs: performance.now() - startedAt.current, jump });
+    const delay = advanceDelayMs({ durationMs, elapsedMs: since(startedAt.current), jump });
     const timer = setTimeout(() => dispatch({ type: 'advance' }), delay);
     return () => clearTimeout(timer);
   }, [state.playId, state.currentId, durationMs, jump]);
