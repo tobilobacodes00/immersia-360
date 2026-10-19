@@ -18,8 +18,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pro
   if (!isCloudProvider(provider)) return new NextResponse(null, { status: 404 });
   const op = await getOperator();
   if (!op) return to('/sign-in?next=%2Fstudio%2Fintegrations');
-  if (!roleCan(op.role, { integration: ['connect'] })) return to('/studio/integrations?error=forbidden');
+  if (!roleCan(op.role, { integration: ['connect'] }))
+    return to(`/studio/integrations?error=forbidden&provider=${provider}`);
   const url = beginConnect(op, provider);
-  if (!url) return to('/studio/integrations?error=unavailable');
+  if (!url) return to(`/studio/integrations?error=unavailable&provider=${provider}`);
   return NextResponse.redirect(url, { status: 302, headers: { 'cache-control': 'no-store' } });
 }

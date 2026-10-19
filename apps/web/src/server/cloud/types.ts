@@ -10,6 +10,9 @@ export type CloudProviderId = (typeof CLOUD_PROVIDERS)[number];
 export const isCloudProvider = (value: unknown): value is CloudProviderId =>
   typeof value === 'string' && (CLOUD_PROVIDERS as readonly string[]).includes(value);
 
+/** What the operator sees of a provider: not set up on this server, not linked, linked, or linked but needing a new sign-in. */
+export type IntegrationState = 'unavailable' | 'disconnected' | 'connected' | 'needs_reauth';
+
 /** Parts sent to the provider in this size (a multiple of 256 KiB, which Google Drive requires). */
 export const CHUNK_BYTES = 8 * 1024 * 1024;
 

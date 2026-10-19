@@ -16,6 +16,7 @@ import {
   ReauthRequired,
   Transient,
   type CloudProviderId,
+  type IntegrationState,
 } from './providers';
 import { sanitizeName } from './util';
 
@@ -41,8 +42,6 @@ export function openRefreshToken(sealed: string, organizationId: string, provide
     throw err;
   }
 }
-
-export type IntegrationState = 'unavailable' | 'disconnected' | 'connected' | 'needs_reauth';
 
 export interface IntegrationView {
   provider: CloudProviderId;

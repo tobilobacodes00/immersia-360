@@ -24,21 +24,22 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
   if (!isCloudProvider(provider)) return new NextResponse(null, { status: 404 });
   const op = await getOperator();
   if (!op) return to('/sign-in?next=%2Fstudio%2Fintegrations');
-  if (!roleCan(op.role, { integration: ['connect'] })) return to('/studio/integrations?error=forbidden');
+  const fail = (code: string) => to(`/studio/integrations?error=${code}&provider=${provider}`);
+  if (!roleCan(op.role, { integration: ['connect'] })) return fail('forbidden');
 
   const query = new URL(request.url).searchParams;
   // The operator pressed "Cancel" on the consent screen.
-  if (query.get('error')) return to('/studio/integrations?error=denied');
+  if (query.get('error')) return fail('denied');
   const code = query.get('code');
   const state = query.get('state');
-  if (!code || !state) return to('/studio/integrations?error=state');
+  if (!code || !state) return fail('state');
 
   try {
     const result = await completeConnect(op, provider, { code, state });
-    if (!result.ok) return to(`/studio/integrations?error=${result.error}`);
+    if (!result.ok) return fail(result.error);
   } catch (err) {
     console.error('[integrations] connect failed', err instanceof Error ? err.name : err);
-    return to('/studio/integrations?error=failed');
+    return fail('failed');
   }
   // Reconnecting resumes everything that waited: queue what was missed, then start copying.
   after(() =>
