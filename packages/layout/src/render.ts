@@ -36,8 +36,11 @@ export interface RenderInputs {
   qr?: { url: string; code: string | null } | null;
   /** Editor and previews: numbered slots for missing photos, outlines for missing assets. */
   placeholders?: boolean;
-  /** Template font family → CSS font-family stack (fonts must be loaded before rendering). */
-  fonts?: Record<string, string>;
+  /**
+   * Template font family → CSS font-family stack. Fonts must be loaded before rendering; the hosts
+   * (editor, booth) resolve library, built-in and uploaded (`asset:<id>`) families through this.
+   */
+  fonts?: Record<string, string> | ((family: string) => string | undefined);
 }
 
 /** Size of anything drawable. */
@@ -86,6 +89,12 @@ const DEFAULT_FONTS: Record<string, string> = {
   'Instrument Serif': '"Instrument Serif", Georgia, serif',
 };
 
+function resolveFamily(name: string, fonts: RenderInputs['fonts']): string {
+  const custom = typeof fonts === 'function' ? fonts(name) : fonts?.[name];
+  // Unknown names are quoted so families with spaces or digits stay valid CSS.
+  return custom ?? DEFAULT_FONTS[name] ?? `"${name.replace(/"/g, '')}", sans-serif`;
+}
+
 /** Greedy word wrap; a single word wider than the box is kept on its own line (and shrunk by autoFit). */
 export function wrapText(ctx: Ctx2D, text: string, width: number): string[] {
   const lines: string[] = [];
@@ -106,7 +115,7 @@ export function wrapText(ctx: Ctx2D, text: string, width: number): string[] {
 function drawText(ctx: Ctx2D, el: Extract<TemplateElement, { type: 'text' }>, inp: RenderInputs) {
   let text = evaluate(el.text, inp.tokens);
   if (el.uppercase) text = text.toUpperCase();
-  const family = (inp.fonts ?? DEFAULT_FONTS)[el.fontFamily] ?? DEFAULT_FONTS[el.fontFamily] ?? el.fontFamily;
+  const family = resolveFamily(el.fontFamily, inp.fonts);
   const setFont = (size: number) => {
     ctx.font = `${el.fontStyle === 'italic' ? 'italic ' : ''}${el.fontWeight} ${size}px ${family}`;
     if ('letterSpacing' in ctx) ctx.letterSpacing = `${(el.letterSpacing * size) / el.fontSize}px`;
@@ -166,55 +175,70 @@ function drawQr(ctx: Ctx2D, el: Extract<TemplateElement, { type: 'qr' }>, inp: R
 
 export function drawElement(ctx: Ctx2D, el: TemplateElement, inp: RenderInputs) {
   if (el.hidden) return;
-  inBox(ctx, el, () => {
-    switch (el.type) {
-      case 'photo': {
-        const img = inp.photos[el.shot] ?? null;
-        roundedRect(ctx, el.width, el.height, el.cornerRadius);
-        ctx.clip();
-        if (img) drawFitted(ctx, img, el.width, el.height, el.fit);
-        else if (inp.placeholders) {
-          ctx.fillStyle = '#e4e1da';
-          ctx.fillRect(0, 0, el.width, el.height);
-          ctx.fillStyle = 'rgba(17,17,16,0.45)';
-          ctx.font = `600 ${Math.max(18, Math.min(el.width, el.height) * 0.18)}px Satoshi, system-ui, sans-serif`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(String(el.shot + 1), el.width / 2, el.height / 2);
-        }
-        return;
+  inBox(ctx, el, () => drawElementContent(ctx, el, inp));
+}
+
+/**
+ * An element's pixels in its own box ((0,0)–(width,height)), without position, rotation or opacity.
+ * The editor's canvas nodes draw through this, so the editor shows exactly what prints.
+ */
+export function drawElementContent(ctx: Ctx2D, el: TemplateElement, inp: RenderInputs) {
+  ctx.save();
+  try {
+    drawContent(ctx, el, inp);
+  } finally {
+    ctx.restore();
+  }
+}
+
+function drawContent(ctx: Ctx2D, el: TemplateElement, inp: RenderInputs) {
+  switch (el.type) {
+    case 'photo': {
+      const img = inp.photos[el.shot] ?? null;
+      roundedRect(ctx, el.width, el.height, el.cornerRadius);
+      ctx.clip();
+      if (img) drawFitted(ctx, img, el.width, el.height, el.fit);
+      else if (inp.placeholders) {
+        ctx.fillStyle = '#e4e1da';
+        ctx.fillRect(0, 0, el.width, el.height);
+        ctx.fillStyle = 'rgba(17,17,16,0.45)';
+        ctx.font = `600 ${Math.max(18, Math.min(el.width, el.height) * 0.18)}px Satoshi, system-ui, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(el.shot + 1), el.width / 2, el.height / 2);
       }
-      case 'image': {
-        const img = inp.assets?.(el.assetId) ?? null;
-        if (img) drawFitted(ctx, img, el.width, el.height, el.fit);
-        else if (inp.placeholders) {
-          ctx.strokeStyle = 'rgba(17,17,16,0.4)';
-          ctx.setLineDash([8, 6]);
-          ctx.lineWidth = 2;
-          ctx.strokeRect(1, 1, el.width - 2, el.height - 2);
-        }
-        return;
-      }
-      case 'text':
-        return drawText(ctx, el, inp);
-      case 'shape': {
-        if (el.shape === 'ellipse') {
-          ctx.beginPath();
-          ctx.ellipse(el.width / 2, el.height / 2, el.width / 2, el.height / 2, 0, 0, Math.PI * 2);
-        } else roundedRect(ctx, el.width, el.height, el.cornerRadius);
-        ctx.fillStyle = el.fill;
-        ctx.fill();
-        if (el.stroke && el.strokeWidth > 0) {
-          ctx.strokeStyle = el.stroke;
-          ctx.lineWidth = el.strokeWidth;
-          ctx.stroke();
-        }
-        return;
-      }
-      case 'qr':
-        return drawQr(ctx, el, inp);
+      return;
     }
-  });
+    case 'image': {
+      const img = inp.assets?.(el.assetId) ?? null;
+      if (img) drawFitted(ctx, img, el.width, el.height, el.fit);
+      else if (inp.placeholders) {
+        ctx.strokeStyle = 'rgba(17,17,16,0.4)';
+        ctx.setLineDash([8, 6]);
+        ctx.lineWidth = 2;
+        ctx.strokeRect(1, 1, el.width - 2, el.height - 2);
+      }
+      return;
+    }
+    case 'text':
+      return drawText(ctx, el, inp);
+    case 'shape': {
+      if (el.shape === 'ellipse') {
+        ctx.beginPath();
+        ctx.ellipse(el.width / 2, el.height / 2, el.width / 2, el.height / 2, 0, 0, Math.PI * 2);
+      } else roundedRect(ctx, el.width, el.height, el.cornerRadius);
+      ctx.fillStyle = el.fill;
+      ctx.fill();
+      if (el.stroke && el.strokeWidth > 0) {
+        ctx.strokeStyle = el.stroke;
+        ctx.lineWidth = el.strokeWidth;
+        ctx.stroke();
+      }
+      return;
+    }
+    case 'qr':
+      return drawQr(ctx, el, inp);
+  }
 }
 
 /**

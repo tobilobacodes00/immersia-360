@@ -2,7 +2,7 @@ import 'server-only';
 import { ForbiddenError, getOperator, type Operator } from './session';
 import { roleCan, type Permission } from '@/lib/permissions';
 
-export type ActionError = 'unauthenticated' | 'forbidden' | 'invalid' | 'not_found' | 'failed';
+export type ActionError = 'unauthenticated' | 'forbidden' | 'invalid' | 'not_found' | 'conflict' | 'failed';
 export type ActionResult<T = undefined> = { ok: true; data: T } | { ok: false; error: ActionError; issues?: string[] };
 
 export const ok = <T>(data: T): ActionResult<T> => ({ ok: true, data });

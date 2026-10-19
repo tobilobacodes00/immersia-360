@@ -42,7 +42,9 @@
     "@immersia/render-engine": "workspace:*",
     "@aws-sdk/client-s3": "catalog:",
     "@aws-sdk/s3-request-presigner": "catalog:",
-    "@immersia/layout": "workspace:*"
+    "@immersia/layout": "workspace:*",
+    "konva": "catalog:",
+    "react-konva": "catalog:"
   },
   "devDependencies": {
     "@axe-core/playwright": "catalog:",

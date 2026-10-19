@@ -32,7 +32,7 @@ import { CountdownDisc, GuestButton, Headline, fade } from '@immersia/ui/guest';
 import { readDeviceIdentity, type DeviceIdentity } from '@/lib/device-identity';
 import { workerUrl } from '@/lib/workers';
 import { useCaptureKeys, useHeartbeat, useOnline, useWakeLock } from './booth-hooks';
-import { canvasFonts } from './canvas-fonts';
+import { canvasFonts } from '@/lib/canvas-fonts';
 import { Confetti } from './Confetti';
 import { KioskLockLayer, useKioskLock } from './KioskLock';
 import { MotionBuffer } from './motion-buffer';

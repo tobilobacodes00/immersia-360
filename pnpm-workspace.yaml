@@ -13,6 +13,9 @@ catalog:
   lucide-react: 1.58.0
   uqr: 0.1.3
   gifenc: 1.0.3
+  # Layout and overlay editor (PHO-4, PHO-6)
+  konva: 10.7.0
+  react-konva: 19.3.0
   zod: 4.6.7
   '@serwist/turbopack': 9.5.13
   serwist: 9.5.13
