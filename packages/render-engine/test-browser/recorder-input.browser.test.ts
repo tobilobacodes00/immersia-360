@@ -16,8 +16,12 @@ const FORMATS = [
   'video/mp4',
 ];
 
-/** Record ~`seconds` of the test pattern; resolves with the chunks as the booth stores them. */
-async function record(mimeType: string, seconds: number, timesliceMs = 250): Promise<Blob[]> {
+/**
+ * Record the test pattern for at least `minMs` and until `minChunks` chunks have arrived (busy CI
+ * runners deliver frames and chunks slower than wall-clock time suggests); resolves with the chunks
+ * as the booth stores them.
+ */
+async function record(mimeType: string, minMs: number, minChunks = 1, timesliceMs = 250): Promise<Blob[]> {
   const canvas = document.createElement('canvas');
   canvas.width = W;
   canvas.height = H;
@@ -33,7 +37,9 @@ async function record(mimeType: string, seconds: number, timesliceMs = 250): Pro
   let i = 0;
   const timer = setInterval(() => drawTestFrame(ctx, ++i), 1000 / 30);
   recorder.start(timesliceMs);
-  await new Promise((r) => setTimeout(r, seconds * 1000));
+  const started = performance.now();
+  while (performance.now() - started < minMs || (chunks.length < minChunks && performance.now() - started < 10_000))
+    await new Promise((r) => setTimeout(r, 100));
   const stopped = new Promise((r) => (recorder.onstop = r));
   recorder.stop();
   await stopped;
@@ -54,27 +60,30 @@ describe('MediaRecorder takes render (CAP-1 → VID-8)', () => {
     const supported = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(mime);
 
     it.skipIf(!supported)(`${mime}: a complete take decodes and renders`, async () => {
-      const chunks = await record(mime, 1.5);
+      const chunks = await record(mime, 1500, 4);
       const take = new Blob(chunks, { type: mime });
       const probe = await probeTake(take);
       probe.input.dispose();
       expect(probe.decodable, `${mime} → decoder config ${probe.decoderCodec}`).toBe(true);
+      expect(probe.pts.length).toBeGreaterThan(5);
       const result = await render(job(take));
-      expect(result.frames).toBeGreaterThan(20);
+      // Every output frame of the take's real duration is rendered (30 fps output).
+      expect(result.frames).toBeGreaterThanOrEqual(Math.floor(probe.durationS * 30) - 1);
     });
 
     // WebM is the crash-safe container: a take whose last chunks never reached storage must render.
     it.skipIf(!supported || !mime.startsWith('video/webm'))(
       `${mime}: a take cut short mid-recording still renders`,
       async () => {
-        const chunks = await record(mime, 2);
-        expect(chunks.length).toBeGreaterThan(3);
+        const chunks = await record(mime, 2000, 6);
+        expect(chunks.length).toBeGreaterThanOrEqual(6);
         const take = new Blob(chunks.slice(0, -2), { type: mime });
         const probe = await probeTake(take);
         probe.input.dispose();
         expect(probe.decodable, `${mime} (truncated) → decoder config ${probe.decoderCodec}`).toBe(true);
+        expect(probe.pts.length).toBeGreaterThan(3);
         const result = await render(job(take));
-        expect(result.frames).toBeGreaterThan(10);
+        expect(result.frames).toBeGreaterThanOrEqual(Math.floor(probe.durationS * 30) - 1);
       },
     );
   }
