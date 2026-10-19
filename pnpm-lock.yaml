@@ -498,6 +498,9 @@ importers:
 
   packages/render-engine:
     dependencies:
+      '@immersia/effects':
+        specifier: workspace:*
+        version: link:../effects
       '@immersia/shared':
         specifier: workspace:*
         version: link:../shared

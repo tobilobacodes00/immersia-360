@@ -23,7 +23,7 @@ export const PRINT_SIZES = ['2x6', '4x4', '4x6', '6x4', '5x7', 'story'] as const
 export const effectSchema = z.object({
   id: z.string().min(1),
   /** Colour mode for effects that have one, e.g. confetti colour/white/silver/gold (VID-7). */
-  colorMode: z.string().optional(),
+  colorMode: z.enum(['colour', 'white', 'silver', 'gold']).optional(),
   intensity: z.number().min(0).max(1).default(1),
 });
 

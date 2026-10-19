@@ -8,7 +8,8 @@
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
     "./audio": "./src/audio.ts",
-    "./timeline": "./src/timeline.ts"
+    "./timeline": "./src/timeline.ts",
+    "./beats": "./src/beats.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.worker.json",
@@ -18,7 +19,8 @@
   "dependencies": {
     "@immersia/shared": "workspace:*",
     "@mediabunny/aac-encoder": "catalog:",
-    "mediabunny": "catalog:"
+    "mediabunny": "catalog:",
+    "@immersia/effects": "workspace:*"
   },
   "devDependencies": {
     "@vitest/browser": "catalog:",

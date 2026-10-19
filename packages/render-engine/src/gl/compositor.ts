@@ -11,6 +11,7 @@ import {
   type Program,
   type Target,
 } from './gl';
+import { GradeStage, type Clock, type EffectPass, type LookPass } from './grade';
 import { BLIT, CARD, DOWN, FINAL, LK, LUMA, SMOOTH, SYNTH } from './shaders';
 
 // Five levels: coarse-to-fine reach of roughly 200 px of motion per frame at 1080p output, which
@@ -48,6 +49,8 @@ export class Compositor {
   private srcA: WebGLTexture;
   private srcB: WebGLTexture;
   private overlayTex: WebGLTexture | null = null;
+  /** Look and effects (VID-7, VID-11), created on first use. */
+  private grade: GradeStage | null = null;
   private frame: Target;
   /** The source pair whose frames and flow are currently loaded (see drawBlend). */
   private flowKey: string | null = null;
@@ -106,6 +109,18 @@ export class Compositor {
     }
     this.overlayTex ??= texture(gl);
     upload(gl, this.overlayTex, image);
+  }
+
+  /** The event's look and effects for the guest footage (cards and the overlay are never graded). */
+  setGrade(look: LookPass | null, effects: EffectPass[], seed: number) {
+    if (!look && effects.length === 0 && !this.grade) return;
+    this.grade ??= new GradeStage(this.gl, this.vao, this.width, this.height);
+    this.grade.configure(look, effects, seed);
+  }
+
+  /** Where the next frame sits in the footage and on the beat (VID-12). */
+  setClock(clock: Clock) {
+    this.grade?.setClock(clock);
   }
 
   private use(prog: Program, out: Target | null) {
@@ -190,9 +205,11 @@ export class Compositor {
   /** Composite the frame and overlay into the canvas (what the encoder reads). */
   private finish() {
     const gl = this.gl;
+    const graded = this.grade && !this.grade.idle ? this.grade.apply(this.frame.texture) : null;
     this.use(this.p.final, null);
-    bindTexture(gl, 0, this.frame.texture);
+    bindTexture(gl, 0, graded ?? this.frame.texture);
     gl.uniform1i(this.p.final.uniform('uFrame'), 0);
+    gl.uniform1i(this.p.final.uniform('uFrameYUp'), graded ? 1 : 0);
     gl.uniform1i(this.p.final.uniform('uHasOverlay'), this.overlayTex ? 1 : 0);
     if (this.overlayTex) {
       bindTexture(gl, 1, this.overlayTex);
@@ -344,6 +361,7 @@ export class Compositor {
       deleteTarget(gl, this.flow.smoothBA);
     }
     for (const t of [this.srcA, this.srcB, this.overlayTex]) if (t) gl.deleteTexture(t);
+    this.grade?.dispose();
     gl.getExtension('WEBGL_lose_context')?.loseContext();
   }
 }

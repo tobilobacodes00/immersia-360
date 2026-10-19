@@ -8,6 +8,8 @@ import {
   VideoSampleSink,
   canEncodeAudio,
 } from 'mediabunny';
+import { LOOK_FRAG, findEffect, findLook, lookUniforms, type ColorMode } from '@immersia/effects';
+import { beatState } from './beats';
 import { FrameSource } from './frame-source';
 import { Compositor } from './gl/compositor';
 import { probeTake, type TakeProbe } from './probe';
@@ -43,6 +45,14 @@ export interface RenderJob {
   endCard?: StillCard | null;
   /** Pre-mixed soundtrack covering the whole output (planar float32). */
   audio?: { sampleRate: number; channels: Float32Array[] } | null;
+  /** VID-11: the event's colour look (an @immersia/effects id). */
+  look?: { id: string; intensity: number } | null;
+  /** VID-7: effects in order, each with its strength and colour mode. */
+  effects?: { id: string; intensity: number; colorMode: ColorMode | null }[];
+  /** VID-12: beat times on the output timeline in seconds; none = a steady 120 BPM grid. */
+  beats?: number[];
+  /** Makes effects' randomness repeatable: the same take always renders the same way. */
+  seed?: number;
 }
 
 export interface RenderResult {
@@ -156,6 +166,21 @@ export async function render(
   } catch (err) {
     throw new RenderError('gpu', err instanceof Error ? err.message : String(err));
   }
+  try {
+    const look = job.look ? findLook(job.look.id) : null;
+    compositor.setGrade(
+      look && look.id !== 'none' ? { frag: LOOK_FRAG, uniforms: lookUniforms(look.params, job.look!.intensity) } : null,
+      (job.effects ?? []).flatMap((e) => {
+        const def = findEffect(e.id);
+        return def ? [{ def, intensity: e.intensity, colorMode: e.colorMode }] : [];
+      }),
+      job.seed ?? 0,
+    );
+  } catch (err) {
+    // A shader that won't compile on this GPU: render without the look and effects, never fail the take.
+    console.warn('[render] look/effects unavailable', err);
+    compositor.setGrade(null, [], 0);
+  }
   const target = new BufferTarget();
   const output = new Output({ format: new Mp4OutputFormat({ fastStart: 'in-memory' }), target });
   const video = new CanvasSource(compositor.canvas, {
@@ -207,6 +232,9 @@ export async function render(
     for await (const pair of frames.pairs(refs, signal)) {
       check();
       const geo = { width: probe.width, height: probe.height, rotation: probe.rotation };
+      const takeT = pair.index / fps;
+      const { phase, pulse } = beatState(introFrames / fps + takeT, job.beats ?? []);
+      compositor.setClock({ time: takeT, duration: refs.length / fps, beat: phase, pulse });
       const a = pair.a.toVideoFrame();
       try {
         if (pair.b) {
