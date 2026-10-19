@@ -146,6 +146,7 @@
       },
       "home": "Home",
       "events": "Events",
+      "assets": "Assets",
       "devices": "Devices",
       "signOut": "Sign out",
       "openMenu": "Open menu",
@@ -420,6 +421,114 @@
         "storage": "Registered, but this browser blocks storage, so it won't remember it. Allow site data and register again.",
         "rename": "Couldn't rename the device.",
         "revoke": "Couldn't revoke the device."
+      }
+    },
+    "assets": {
+      "title": "Assets",
+      "subtitle": "Overlays, intros, music, fonts and logos, shared by every event on this account. Upload once, use anywhere.",
+      "groupsLabel": "Asset type",
+      "groups": {
+        "overlays": "Overlays & frames",
+        "intros": "Intros & outros",
+        "music": "Music",
+        "fonts": "Fonts",
+        "logos": "Logos",
+        "backgrounds": "Backgrounds"
+      },
+      "types": {
+        "overlay": "Overlay",
+        "layout": "Frame",
+        "intro": "Intro",
+        "outro": "Outro",
+        "audio": "Music",
+        "font": "Font",
+        "logo": "Logo",
+        "background": "Background"
+      },
+      "accepts": {
+        "overlays": "Overlays: PNG or WebP with transparency. Frames: PNG, JPEG or WebP. Up to 25 MB each.",
+        "intros": "Video (MP4, MOV or WebM) up to 30 seconds and 200 MB, or an image (PNG, JPEG or WebP) up to 25 MB.",
+        "music": "MP3, M4A, AAC or WAV, up to 15 minutes and 50 MB.",
+        "fonts": "WOFF2, WOFF, TTF or OTF, up to 10 MB.",
+        "logos": "PNG, JPEG or WebP, up to 10 MB. SVG isn’t supported.",
+        "backgrounds": "Images (PNG, JPEG or WebP) up to 25 MB, or video (MP4 or WebM) up to 200 MB."
+      },
+      "upload": "Upload files",
+      "uploadAs": "Upload as",
+      "dropHint": "Drag files here, or use the button.",
+      "dropActive": "Drop to upload",
+      "progress": {
+        "checking": "Checking…",
+        "uploading": "Uploading {percent}",
+        "finishing": "Finishing…"
+      },
+      "cancel": "Cancel",
+      "retry": "Retry",
+      "dismiss": "Dismiss",
+      "renameNamed": "Rename {name}",
+      "renameLabel": "Asset name",
+      "play": "Play {name}",
+      "pause": "Pause {name}",
+      "delete": "Delete",
+      "deleteNamed": "Delete {name}",
+      "deleteTitle": "Delete {name}?",
+      "deleteBody": "The file is removed from your library for good. Events that use it have to be changed first.",
+      "usedTitle": "{name} is still in use",
+      "usedBody": "It can’t be deleted while these use it. Switch them to something else first, then delete it.",
+      "usedByTemplate": "{name} (template)",
+      "close": "Close",
+      "empty": {
+        "overlays": {
+          "title": "No overlays or frames yet",
+          "body": "Upload transparent PNGs or WebPs to frame your 360 videos, or frames for Photo Booth strips."
+        },
+        "intros": {
+          "title": "No intros or outros yet",
+          "body": "Add a short clip or an image to play before or after each video."
+        },
+        "music": {
+          "title": "No music yet",
+          "body": "Upload a track to play over your 360 videos and on the live display."
+        },
+        "fonts": {
+          "title": "No fonts yet",
+          "body": "Upload your brand’s typefaces, then pick them in overlays and layouts."
+        },
+        "logos": {
+          "title": "No logos yet",
+          "body": "Add your logo to show it on guest pages and in overlays."
+        },
+        "backgrounds": {
+          "title": "No backgrounds yet",
+          "body": "Upload an image or a looping video to sit behind your booth screens and layouts."
+        }
+      },
+      "picker": {
+        "title": "Choose an asset",
+        "search": "Search assets",
+        "loading": "Loading assets…",
+        "emptyTitle": "Nothing to choose yet",
+        "emptyBody": "Upload a file and it joins your library.",
+        "noMatchTitle": "No assets match",
+        "noMatchBody": "Try a different name.",
+        "selected": "Selected"
+      },
+      "storageOff": {
+        "title": "File storage isn’t set up",
+        "body": "The asset library keeps files in object storage. Add the S3 settings to this deployment to turn it on."
+      },
+      "uploaded": "Uploaded {name}",
+      "deleted": "Deleted {name}",
+      "errors": {
+        "wrongType": "This file type isn’t accepted here.",
+        "tooBig": "That file is larger than {max}.",
+        "tooLong": "That file is longer than {max}.",
+        "unreadable": "We couldn’t read this file. It may be damaged or in a format this browser can’t open.",
+        "quota": "Your asset library has reached its 5 GB limit. Delete something you no longer use, then try again.",
+        "failed": "The upload didn’t go through. Check your connection and try again.",
+        "load": "Couldn’t load your assets.",
+        "rename": "Couldn’t rename the asset.",
+        "delete": "Couldn’t delete the asset."
       }
     }
   },
