@@ -4,4 +4,4 @@
  */
 const BUILD = process.env.NEXT_PUBLIC_BUILD_ID ?? 'dev';
 
-export const workerUrl = (name: 'opfs') => `/workers/${name}.js?v=${BUILD}`;
+export const workerUrl = (name: 'opfs' | 'render') => `/workers/${name}.js?v=${BUILD}`;

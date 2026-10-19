@@ -1,59 +1,14 @@
-import { expect, test, type Page } from '@playwright/test';
-import { createEvent, open, signIn } from './helpers';
+import { expect, test } from '@playwright/test';
+import { open } from './helpers';
+import { expectRecording, reportPageErrors, setupEvent, startBooth } from './booth-helpers';
 
 /**
  * 360 capture (M2). Chrome uses its fake camera; WebKit has none in CI, so those runs pick the
  * simulated camera (a real canvas MediaStream), which exercises the same recorder and storage.
  */
 
-// Surface what the page itself reports, so a CI failure explains itself.
-test.beforeEach(({ page }) => {
-  page.on('pageerror', (err) => console.log(`[pageerror] ${err.message}`));
-  page.on('console', (msg) => {
-    if (msg.type() === 'error' || msg.type() === 'warning') console.log(`[console.${msg.type()}] ${msg.text()}`);
-  });
-});
+test.beforeEach(({ page }) => reportPageErrors(page));
 
-/** Fail with the booth's own error message instead of a bare timeout. */
-async function expectRecording(page: Page, timeout = 5_000) {
-  const recording = page.getByRole('status', { name: 'Recording' });
-  const failure = page.locator('[role=alert]').filter({ hasText: /camera|record|browser/i });
-  await expect(recording.or(failure)).toBeVisible({ timeout });
-  if (await failure.isVisible()) throw new Error(`Booth error: ${await failure.innerText()}`);
-}
-
-async function setupEvent(page: Page, { spin = 3, countdown = 0 } = {}) {
-  await signIn(page);
-  const id = await createEvent(page, 'Booth test');
-  const spinField = page.getByRole('textbox', { name: 'Spin length' });
-  // Slow motion must end within the spin: turn it off for short test spins.
-  await page.getByRole('switch', { name: 'Slow motion' }).click();
-  await spinField.fill(String(spin));
-  await spinField.press('Enter');
-  const cd = page.getByRole('textbox', { name: 'Countdown' });
-  await cd.fill(String(countdown));
-  await cd.press('Enter');
-  await expect(page.getByText('All changes saved')).toBeVisible({ timeout: 10_000 });
-  return id;
-}
-
-async function startBooth(page: Page, eventId: string, browserName: string) {
-  // WebKit in CI has no camera device: choose the simulator before starting.
-  if (browserName === 'webkit') {
-    await page.addInitScript(() =>
-      localStorage.setItem(
-        'immersia.booth.camera.v1',
-        JSON.stringify({ source: 'simulator', deviceId: null, mirror: false }),
-      ),
-    );
-  }
-  await open(page, `/booth/${eventId}`);
-  await page.getByRole('button', { name: 'Register and continue' }).click();
-  await page.getByRole('button', { name: 'Start booth' }).click();
-  await expect(page.getByRole('button', { name: 'Tap to start' })).toBeVisible({ timeout: 15_000 });
-}
-
-// @media: needs MediaRecorder, which Playwright's Linux WebKit lacks (real Safari has it; see the run sheets).
 test.describe('360 capture (CAP-1, 3, 5, 7, 8) @media', () => {
   test('records a spin, auto-stops, and keeps the camera open for the next guest', async ({ page, browserName }) => {
     const id = await setupEvent(page, { spin: 3 });
@@ -63,11 +18,13 @@ test.describe('360 capture (CAP-1, 3, 5, 7, 8) @media', () => {
     await expect(page.getByText('Saved. Next guest!')).toBeVisible({ timeout: 10_000 });
     // CAP-7: straight back to ready without restarting the camera.
     await expect(page.getByRole('button', { name: 'Tap to start' })).toBeVisible({ timeout: 5_000 });
-    await expect(page.getByText('1 take waiting')).toBeVisible();
+    // The take renders in the background once the ready screen settles (VID-9), so it is waiting,
+    // rendering or already rendered — never failed.
+    await expect(page.getByRole('button', { name: /^(1 take waiting|Nothing waiting)$/ })).toBeVisible();
 
     await page.getByRole('button', { name: 'Booth settings' }).click();
     const drawer = page.getByRole('dialog', { name: 'Booth settings' });
-    await expect(drawer.getByText('Ready to render')).toBeVisible();
+    await expect(drawer.getByText(/^(Ready to render|Rendering|Rendered)$/)).toBeVisible();
     await expect(drawer.getByText(/Saved to (device|browser) storage/)).toBeVisible();
   });
 
@@ -192,6 +149,8 @@ test.describe('graceful degradation', () => {
     const id = await setupEvent(page, { spin: 3 });
     await startBooth(page, id, browserName);
     await page.getByRole('button', { name: 'Tap to start' }).click();
-    await expect(page.getByRole('alert').filter({ hasText: "This browser can't record video" })).toBeVisible();
+    await expect(page.getByRole('alert').filter({ hasText: "This browser can't record video" })).toBeVisible({
+      timeout: 10_000,
+    });
   });
 });

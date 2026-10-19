@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { useTranslations, type Messages } from 'next-intl';
 import { AnimatePresence, motion } from 'motion/react';
 import { ArrowLeft, Check, CircleDot, HardDrive, Settings2, Square, Upload, WifiOff } from 'lucide-react';
 import {
@@ -39,8 +39,10 @@ import { guestThemeVars, uuidv7, type EventTheme, type Video360Settings } from '
 import { Pill, cx } from '@immersia/ui';
 import { CountdownDisc, GuestButton, Headline, fade } from '@immersia/ui/guest';
 import { readDeviceIdentity, type DeviceIdentity } from '@/lib/device-identity';
-import { useCaptureKeys, useHeartbeat, useLiveQuery, useOnline, useWakeLock } from './booth-hooks';
+import { useCaptureKeys, useHeartbeat, useHeld, useLiveQuery, useOnline, useWakeLock } from './booth-hooks';
 import { RegisterDevice } from './RegisterDevice';
+import { RenderQueue } from './RenderQueue';
+import { RENDERABLE, useRenderQueue } from './use-render-queue';
 import { SettingsDrawer, readCameraChoice, type CameraChoice } from './SettingsDrawer';
 
 export interface ActiveCamera {
@@ -70,8 +72,10 @@ type Phase =
   | { kind: 'saved' }
   | { kind: 'error'; code: string };
 
-const PENDING: LocalTake['status'][] = ['recorded', 'interrupted', 'imported'];
+const PENDING: LocalTake['status'][] = [...RENDERABLE, 'rendering'];
 const SAVED_HOLD_MS = 1400;
+/** How long the ready screen settles before background rendering resumes. */
+const RENDER_RESUME_MS = 2000;
 
 export function Booth360({ event }: { event: BoothEvent }) {
   const t = useTranslations('booth');
@@ -83,6 +87,9 @@ export function Booth360({ event }: { event: BoothEvent }) {
   const [cameraChoice, setCameraChoice] = useState<CameraChoice>(readCameraChoice);
   const [activeCamera, setActiveCamera] = useState<ActiveCamera | null>(null);
   const [backend, setBackend] = useState<TakeStore['backend'] | null>(null);
+  // The store as state too, so the render queue starts as soon as storage is ready.
+  const [storeReady, setStoreReady] = useState<TakeStore | null>(null);
+  const [queueOpen, setQueueOpen] = useState(false);
   const [motionOn, setMotionOn] = useState(event.triggers.motion.enabled);
   const [threshold, setThreshold] = useState(event.triggers.motion.threshold);
   const [drawer, setDrawer] = useState(false);
@@ -104,6 +111,21 @@ export function Booth360({ event }: { event: BoothEvent }) {
 
   const takes = useLiveQuery(() => takesForEvent(db, event.id), [event.id], [] as LocalTake[]);
   const pending = takes.filter((tk) => PENDING.includes(tk.status)).length;
+  // Rendering competes with the camera, the recorder and the guest-facing animations for the GPU and
+  // CPU: it pauses from camera start to "saved" and resumes once the ready screen has settled.
+  const capturing =
+    phase.kind === 'starting' ||
+    phase.kind === 'countdown' ||
+    phase.kind === 'recording' ||
+    phase.kind === 'saving' ||
+    phase.kind === 'saved';
+  const renderPaused = useHeld(capturing, RENDER_RESUME_MS);
+  const renderQueue = useRenderQueue({
+    eventId: event.id,
+    video: event.video,
+    store: storeReady,
+    paused: renderPaused,
+  });
 
   useWakeLock(phase.kind !== 'idle');
   useHeartbeat(
@@ -157,6 +179,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
       try {
         store.current ??= await takeStore(() => createOpfsWorker(workerUrl('opfs')));
         setBackend(store.current.backend);
+        setStoreReady(store.current);
         const cam =
           choice.source === 'simulator'
             ? openSimulatedCamera({ resolution: event.video.resolution, frameRate: event.video.fps })
@@ -406,7 +429,22 @@ export function Booth360({ event }: { event: BoothEvent }) {
               {t('motionArmed')}
             </Pill>
           )}
-          <Pill className="text-[0.8rem]">{t('queue', { count: pending })}</Pill>
+          <button
+            type="button"
+            onClick={() => setQueueOpen(true)}
+            className="focus-ring rounded-full"
+            aria-label={t('queue', { count: pending })}
+          >
+            <Pill
+              tone={renderQueue.current ? 'info' : 'neutral'}
+              dot={Boolean(renderQueue.current)}
+              className="text-[0.8rem]"
+            >
+              {renderQueue.current
+                ? t('rendering', { percent: Math.round(renderQueue.current.progress * 100) })
+                : t('queue', { count: pending })}
+            </Pill>
+          </button>
           <button
             type="button"
             onClick={() => setDrawer(true)}
@@ -565,6 +603,16 @@ export function Booth360({ event }: { event: BoothEvent }) {
         )}
       </AnimatePresence>
 
+      <RenderQueue
+        open={queueOpen}
+        onClose={() => setQueueOpen(false)}
+        takes={takes}
+        current={renderQueue.current}
+        store={storeReady}
+        onRetry={(id) => void renderQueue.retry(id)}
+        onCancel={renderQueue.cancel}
+      />
+
       <SettingsDrawer
         open={drawer}
         onClose={() => setDrawer(false)}
@@ -588,7 +636,9 @@ export function Booth360({ event }: { event: BoothEvent }) {
   );
 }
 
-const ERROR_KEYS = new Set([
+type CameraErrorKey = keyof Messages['booth']['errors'];
+
+const ERROR_KEYS = new Set<string>([
   'permission',
   'not_found',
   'in_use',
@@ -597,7 +647,7 @@ const ERROR_KEYS = new Set([
   'lost',
   'recording_unsupported',
 ]);
-const errorKey = (code: string) => (ERROR_KEYS.has(code) ? code : 'unknown');
+const errorKey = (code: string): CameraErrorKey => (ERROR_KEYS.has(code) ? (code as CameraErrorKey) : 'unknown');
 
 function videoMetadata(file: File): Promise<{ durationMs: number; width: number; height: number }> {
   return new Promise((resolve) => {

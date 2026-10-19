@@ -17,6 +17,7 @@ await mkdir(outdir, { recursive: true });
 
 const entries = {
   opfs: `${root}/../../packages/offline/src/opfs.worker.ts`,
+  render: `${root}/../../packages/render-engine/src/render.worker.ts`,
 };
 
 await build({
@@ -24,6 +25,9 @@ await build({
   outdir,
   bundle: true,
   format: 'esm',
+  // Lazy imports (the ~1 MB AAC encoder) become their own chunks, fetched only where needed.
+  splitting: true,
+  chunkNames: 'chunks/[name]-[hash]',
   platform: 'browser',
   target: ['es2022', 'safari16', 'chrome110', 'firefox115'],
   minify: true,

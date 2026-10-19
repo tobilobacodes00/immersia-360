@@ -1,0 +1,8 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": []
+  },
+  "include": ["src", "test", "test-browser", "vitest.config.ts"],
+  "exclude": ["src/render.worker.ts"]
+}

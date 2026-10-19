@@ -4,7 +4,8 @@ import { classifyLens, toCameraError } from '../src/camera';
 
 describe('recording format', () => {
   it('prefers WebM (incremental chunks, crash-safe), falls back to MP4', () => {
-    expect(pickRecordingMime(() => true)).toBe('video/webm;codecs=vp9');
+    expect(pickRecordingMime(() => true)).toBe('video/webm;codecs=h264');
+    expect(pickRecordingMime((m) => m.includes('vp9'))).toBe('video/webm;codecs=vp9');
     expect(pickRecordingMime((m) => m.includes('vp8'))).toBe('video/webm;codecs=vp8');
     expect(pickRecordingMime((m) => m.startsWith('video/mp4'))).toBe('video/mp4;codecs=avc1.640028');
     expect(pickRecordingMime((m) => m === 'video/mp4')).toBe('video/mp4');

@@ -35,6 +35,7 @@ catalog:
   '@types/nodemailer': ^8.0.2
   # Media and offline
   mediabunny: 1.61.5
+  '@mediabunny/aac-encoder': 1.61.5
   dexie: 4.4.6
   # Tooling
   typescript: 5.9.3
@@ -42,6 +43,9 @@ catalog:
   '@types/react-dom': 19.3.0
   '@types/node': 22.20.5
   vitest: 5.0.5
+  '@vitest/browser': 5.0.5
+  '@vitest/browser-playwright': 5.0.5
+  playwright: 1.64.1
   happy-dom: 21.0.3
   fake-indexeddb: 6.2.6
   '@playwright/test': 1.64.1
@@ -61,3 +65,6 @@ onlyBuiltDependencies:
   - sharp
   - unrs-resolver
   - '@parcel/watcher'
+patchedDependencies:
+  # Chrome writes VP9 vpcC level 0, which WebCodecs rejects; derive it from the picture size.
+  mediabunny@1.61.5: patches/mediabunny@1.61.5.patch

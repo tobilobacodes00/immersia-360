@@ -31,6 +31,24 @@ export interface LocalTake {
   error?: string;
 }
 
+export type OutputKind = 'mp4' | 'small_mp4' | 'gif' | 'strip' | 'short_video' | 'boomerang' | 'poster';
+
+/** A guest-facing file rendered on this device (M3), kept until uploaded and expired. */
+export interface LocalOutput {
+  id: string;
+  takeId: string;
+  eventId: string;
+  kind: OutputKind;
+  path: string;
+  mime: string;
+  bytes: number;
+  width: number;
+  height: number;
+  durationMs: number;
+  renderMs?: number;
+  createdAt: number;
+}
+
 export interface CachedEvent {
   id: string;
   /** The full event bundle as last fetched (settings, branding, assets index). */
@@ -53,6 +71,7 @@ export interface KeyValue {
 
 export class BoothDB extends Dexie {
   takes!: EntityTable<LocalTake, 'id'>;
+  outputs!: EntityTable<LocalOutput, 'id'>;
   events!: EntityTable<CachedEvent, 'id'>;
   chunks!: EntityTable<FallbackChunk, 'key'>;
   kv!: EntityTable<KeyValue, 'key'>;
@@ -64,6 +83,10 @@ export class BoothDB extends Dexie {
       events: 'id',
       chunks: 'key, path',
       kv: 'key',
+    });
+    // v2 (M3): rendered outputs.
+    this.version(2).stores({
+      outputs: 'id, takeId, eventId, kind, [eventId+createdAt]',
     });
   }
 }

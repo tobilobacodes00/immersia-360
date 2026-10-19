@@ -27,6 +27,8 @@ describe('analyzeFrames', () => {
     const s = analyzeFrames(scene(0), scene(0));
     expect(s.energy).toBe(0);
     expect(s.confidence).toBe(0);
+    expect(s.duplicate).toBe(true);
+    expect(analyzeFrames(scene(0), scene(0, 1)).duplicate).toBe(false); // sensor noise: a new frame
   });
 
   it('measures a horizontal pan and its direction', () => {
@@ -61,8 +63,27 @@ describe('MotionTrigger', () => {
   it('does not fire on a brief bump', () => {
     const trig = new MotionTrigger({ threshold: 0.1, sustain: 3 });
     expect(trig.update(analyzeFrames(scene(0), scene(2)))).toBe(false);
-    expect(trig.update(analyzeFrames(scene(2), scene(2)))).toBe(false);
+    // A still frame (a real one: sensor noise, so not a repeat) breaks the run.
+    expect(trig.update(analyzeFrames(scene(2), scene(2, 1)))).toBe(false);
+    expect(trig.update(analyzeFrames(scene(2, 1), scene(4, 1)))).toBe(false);
+  });
+
+  it('skips repeated frames (no new camera frame) without breaking a run', () => {
+    const trig = new MotionTrigger({ threshold: 0.1, sustain: 3 });
+    const dup = () => trig.update(analyzeFrames(scene(4), scene(4)));
+    expect(trig.update(analyzeFrames(scene(0), scene(2)))).toBe(false);
+    expect(dup()).toBe(false);
     expect(trig.update(analyzeFrames(scene(2), scene(4)))).toBe(false);
+    expect(dup()).toBe(false);
+    expect(trig.update(analyzeFrames(scene(4), scene(6)))).toBe(true);
+  });
+
+  it('a feed frozen for long ends the run', () => {
+    const trig = new MotionTrigger({ threshold: 0.1, sustain: 3 });
+    trig.update(analyzeFrames(scene(0), scene(2)));
+    trig.update(analyzeFrames(scene(2), scene(4)));
+    for (let i = 0; i < 6; i++) trig.update(analyzeFrames(scene(4), scene(4)));
+    expect(trig.update(analyzeFrames(scene(4), scene(6)))).toBe(false);
   });
 
   it('does not fire when the direction keeps flipping', () => {

@@ -14,7 +14,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "dexie": "catalog:"
+    "dexie": "catalog:",
+    "@immersia/shared": "workspace:*"
   },
   "devDependencies": {
     "fake-indexeddb": "catalog:",

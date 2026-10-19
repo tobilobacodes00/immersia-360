@@ -10,8 +10,12 @@
  * seconds apart, so a crash could lose several seconds. Raw takes never leave the device (the
  * renderer reads either container); the guest's file is always MP4/H.264. MP4 remains the fallback
  * for Safari versions without WebM recording.
+ *
+ * Within WebM, H.264 first: nearly every device encodes it in hardware, so recording a 1080p60 spin
+ * costs little CPU (VP9 is usually software-encoded) and the renderer decodes it in hardware too.
  */
 export const RECORDING_MIME_CANDIDATES = [
+  'video/webm;codecs=h264',
   'video/webm;codecs=vp9',
   'video/webm;codecs=vp8',
   'video/webm',

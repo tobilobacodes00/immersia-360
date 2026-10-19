@@ -250,7 +250,7 @@ export interface StandardTokenContext extends TokenContext {
 }
 
 /** Catalogue for the token picker (keys are i18n message ids under `tokens.*`). */
-export const TOKEN_CATALOGUE: { family: string; tokens: { token: string; hint: string }[] }[] = [
+export const TOKEN_CATALOGUE = [
   {
     family: 'event',
     tokens: [
@@ -289,4 +289,4 @@ export const TOKEN_CATALOGUE: { family: string; tokens: { token: string; hint: s
       { token: '{urlencode,{eventName}}', hint: 'urlencode' },
     ],
   },
-];
+] as const satisfies readonly { family: string; tokens: readonly { token: string; hint: string }[] }[];

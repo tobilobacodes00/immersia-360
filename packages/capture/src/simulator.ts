@@ -11,8 +11,9 @@ import { RESOLUTION_SIZE } from './camera';
  */
 export function openSimulatedCamera(opts: { resolution: Resolution; frameRate: number }): OpenedCamera {
   const { width, height } = RESOLUTION_SIZE[opts.resolution];
-  // Draw at most 1080p: higher only costs CPU and the simulator has no real detail to resolve.
-  const scale = Math.min(1, 1920 / width);
+  // Draw at most 720p: the simulator has no real detail to resolve, and a cheaper draw keeps its
+  // frame rate up on software-rendered machines (CI runners), which the motion trigger depends on.
+  const scale = Math.min(1, 1280 / width);
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(width * scale);
   canvas.height = Math.round(height * scale);

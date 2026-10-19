@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, type ReactNode } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, type Messages } from 'next-intl';
 import { AlertCircle, Check, Loader2 } from 'lucide-react';
 import {
   ASPECTS,
@@ -27,6 +27,9 @@ import {
 } from '@immersia/ui';
 import { updateBasicsAction, updateSectionAction } from '../../../actions';
 import { useAutosave, type SaveStatus } from './use-autosave';
+
+/** Codes the shared event schemas emit (see packages/shared/src/event.ts). */
+type IssueKey = keyof Messages['studio']['setup']['issues'];
 
 type Mode = 'video360' | 'photo';
 type Expiry = 7 | 30 | 90;
@@ -152,7 +155,11 @@ export function EventSetup({
     const r = outputSettingsSchema.safeParse(output);
     if (r.success) return [];
     // Shared schemas emit stable codes; anything unexpected falls back to a generic message.
-    return [...new Set(r.error.issues.map((i) => (ti.has(i.message) ? ti(i.message) : ti('generic'))))];
+    return [
+      ...new Set(
+        r.error.issues.map((i) => (ti.has(i.message as IssueKey) ? ti(i.message as IssueKey) : ti('generic'))),
+      ),
+    ];
   }, [output, ti]);
 
   const basicsStatus = useAutosave(basics, async (b) => (await updateBasicsAction(id, b)).ok, {

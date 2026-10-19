@@ -1,0 +1,28 @@
+diff --git a/dist/modules/src/isobmff/isobmff-demuxer.js b/dist/modules/src/isobmff/isobmff-demuxer.js
+index 4cc383f378c70335f51bbed1c4dbd7862d2c6c8c..72199bce8502b3cfa82e94d272b126f1fdb0790b 100644
+--- a/dist/modules/src/isobmff/isobmff-demuxer.js
++++ b/dist/modules/src/isobmff/isobmff-demuxer.js
+@@ -6,7 +6,7 @@
+  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+  */
+ import { parseAacAudioSpecificConfig } from '../../shared/aac-misc.js';
+-import { DTS_FOURCCS, extractAudioCodecString, extractColorSpace, extractVideoCodecString, OPUS_SAMPLE_RATE, parsePcmCodec, PCM_AUDIO_CODECS, PRORES_FOURCCS, } from '../codec.js';
++import { DTS_FOURCCS, extractAudioCodecString, extractColorSpace, extractVideoCodecString, OPUS_SAMPLE_RATE, parsePcmCodec, PCM_AUDIO_CODECS, PRORES_FOURCCS, VP9_LEVEL_TABLE, } from '../codec.js';
+ import { av1CodecInfoHasColorInfo, extractAv1CodecInfoFromPacket, extractProresCodecInfoFromPacket, extractVp9CodecInfoFromPacket, FlacBlockType, vp9CodecInfoHasColorInfo, parseEac3Config, getEac3SampleRate, getEac3ChannelCount, extractDtsFourCcFromPacket, parseDtsSpecificBox, DTS_SPECIFIC_BOX_SIZE, AC3_ACMOD_CHANNEL_COUNTS, extractAvcDecoderConfigurationRecord, extractHevcDecoderConfigurationRecord, deserializeAvcDecoderConfigurationRecord, deserializeHevcDecoderConfigurationRecord, HevcNalUnitType, parseAvcSps, parseHevcSps, } from '../codec-data.js';
+ import { Demuxer } from '../demuxer.js';
+ import { assert, binarySearchExact, binarySearchLessOrEqual, bytesToHexString, COLOR_PRIMARIES_MAP_INVERSE, findLastIndex, IDENTITY_MATRIX, isIso639Dash2LanguageCode, isThenable, last, MATRIX_COEFFICIENTS_MAP_INVERSE, multiplyMatrices, textDecoder, TRANSFER_CHARACTERISTICS_MAP_INVERSE, UNDETERMINED_LANGUAGE, toDataView, roundIfAlmostInteger, hexStringToBytes, HEX_STRING_REGEX, EMPTY_COLOR_SPACE, colorSpaceIsComplete, } from '../misc.js';
+@@ -1054,7 +1054,13 @@ export class IsobmffDemuxer extends Demuxer {
+                     assert(track.info?.type === 'video');
+                     slice.skip(4); // Version + flags
+                     const profile = readU8(slice);
+-                    const level = readU8(slice);
++                    // Chrome's MediaRecorder writes level 0 (undefined), which WebCodecs rejects in a codec
++                    // string: derive the level from the picture size instead, as the WebM path does.
++                    const rawLevel = readU8(slice);
++                    const pictureSize = track.info.width * track.info.height;
++                    const level = rawLevel !== 0
++                        ? rawLevel
++                        : (VP9_LEVEL_TABLE.find(entry => pictureSize <= entry.maxPictureSize) ?? last(VP9_LEVEL_TABLE)).level;
+                     const thirdByte = readU8(slice);
+                     const bitDepth = thirdByte >> 4;
+                     const chromaSubsampling = (thirdByte >> 1) & 0b111;

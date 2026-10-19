@@ -38,7 +38,8 @@
     "nodemailer": "catalog:",
     "@immersia/capture": "workspace:*",
     "@immersia/offline": "workspace:*",
-    "dexie": "catalog:"
+    "dexie": "catalog:",
+    "@immersia/render-engine": "workspace:*"
   },
   "devDependencies": {
     "@axe-core/playwright": "catalog:",

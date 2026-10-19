@@ -8,6 +8,22 @@ const baseURL = process.env.E2E_BASE_URL ?? `http://127.0.0.1:${PORT}`;
  * Playwright's own Chromium lacks proprietary codecs (H.264/AAC), which the booth depends on.
  * Fake media flags give every test a synthetic camera without a permission prompt.
  */
+const chromeUse = {
+  ...devices['Desktop Chrome'],
+  channel: 'chrome',
+  permissions: ['camera'],
+  launchOptions: {
+    args: [
+      '--use-fake-ui-for-media-stream',
+      '--use-fake-device-for-media-stream',
+      // CI runners have no GPU: WebGL2 (the renderer) runs on SwiftShader, which Chrome only
+      // enables as a fallback with this flag.
+      '--use-angle=swiftshader',
+      '--enable-unsafe-swiftshader',
+    ],
+  },
+};
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -23,14 +39,15 @@ export default defineConfig({
   projects: [
     {
       name: 'chrome',
-      use: {
-        ...devices['Desktop Chrome'],
-        channel: 'chrome',
-        permissions: ['camera'],
-        launchOptions: {
-          args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
-        },
-      },
+      testIgnore: /render\.spec\.ts/,
+      use: chromeUse,
+    },
+    {
+      // Specs that wait on a full render run last and alone (see e2e/render.spec.ts).
+      name: 'chrome-render',
+      testMatch: /render\.spec\.ts/,
+      dependencies: ['chrome', 'webkit'],
+      use: chromeUse,
     },
     {
       name: 'webkit',

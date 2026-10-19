@@ -33,6 +33,19 @@ export function useWakeLock(enabled: boolean) {
   }, [enabled]);
 }
 
+/** True while `active`, and for `releaseMs` after it last was: a hold that outlasts its cause. */
+export function useHeld(active: boolean, releaseMs: number): boolean {
+  const [held, setHeld] = useState(active);
+  // Adjusted during render, not in an effect, so the hold starts in the same commit as its cause.
+  if (active && !held) setHeld(true);
+  useEffect(() => {
+    if (active || !held) return;
+    const id = setTimeout(() => setHeld(false), releaseMs);
+    return () => clearTimeout(id);
+  }, [active, held, releaseMs]);
+  return active || held;
+}
+
 /** Subscribe a component to a Dexie query; re-renders when the underlying tables change. */
 export function useLiveQuery<T>(query: () => Promise<T>, deps: unknown[], initial: T): T {
   const [value, setValue] = useState<T>(initial);

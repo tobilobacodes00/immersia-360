@@ -476,6 +476,10 @@
       "rendered": "Rendered",
       "failed": "Failed"
     },
+    "takeOrigin": {
+      "recovered": "Recovered",
+      "imported": "Imported"
+    },
     "register": {
       "title": "Register this device",
       "body": "Booths run on registered devices so every take and upload belongs to your account. You can revoke it at any time.",
@@ -484,6 +488,29 @@
       "error": "Couldn't register this device. Please try again.",
       "forbidden": "Your role can't register devices. Ask the account owner.",
       "storage": "Registered, but this browser blocks storage, so it won't remember it."
+    },
+    "rendering": "Rendering {percent}%",
+    "renderErrors": {
+      "undecodable": "This device can't read the video format",
+      "unsupported_encoder": "This browser can't encode the video",
+      "encoder_stall": "The encoder stopped responding",
+      "gpu": "Graphics acceleration is unavailable",
+      "cancelled": "Cancelled",
+      "failed": "Render failed"
+    },
+    "renderQueue": {
+      "title": "Render queue",
+      "close": "Close",
+      "empty": "No takes yet",
+      "open": "Play",
+      "retry": "Try again",
+      "cancel": "Cancel render",
+      "delete": "Delete",
+      "keep": "Keep",
+      "progress": "Render progress",
+      "preview": "Rendered video",
+      "deleteTitle": "Delete this take?",
+      "deleteBody": "The recording and anything rendered from it are removed from this device. Files already uploaded are not affected."
     }
   }
 }

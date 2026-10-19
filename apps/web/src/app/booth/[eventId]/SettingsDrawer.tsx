@@ -6,9 +6,10 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Flashlight, X } from 'lucide-react';
 import { listCameras, type CameraInfo } from '@immersia/capture';
 import type { LocalTake } from '@immersia/offline';
-import { Field, IconButton, Pill, Select, Slider, Toggle, softSpring } from '@immersia/ui';
+import { Field, IconButton, Select, Slider, Toggle, softSpring } from '@immersia/ui';
 import { formatBytes, formatRelative } from '@/lib/format';
 import type { ActiveCamera } from './Booth360';
+import { TakeBadges } from './TakeBadges';
 
 export interface CameraChoice {
   source: 'camera' | 'simulator';
@@ -67,7 +68,6 @@ export function SettingsDrawer({
   importIcon: ReactNode;
 }) {
   const t = useTranslations('booth.settings');
-  const tk = useTranslations('booth.takeStatus');
   const locale = useLocale();
   const [cameras, setCameras] = useState<CameraInfo[]>([]);
   const [torch, setTorch] = useState(false);
@@ -220,11 +220,7 @@ export function SettingsDrawer({
                         <span className="tabular text-faint">
                           {(tk2.durationMs / 1000).toFixed(1)} s · {formatBytes(tk2.bytes, locale)}
                         </span>
-                        <Pill
-                          tone={tk2.status === 'failed' ? 'bad' : tk2.status === 'interrupted' ? 'warn' : 'neutral'}
-                        >
-                          {tk(tk2.status)}
-                        </Pill>
+                        <TakeBadges take={tk2} />
                       </li>
                     ))}
                   </ul>

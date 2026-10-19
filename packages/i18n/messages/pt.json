@@ -476,6 +476,10 @@
       "rendered": "Renderizada",
       "failed": "Falhou"
     },
+    "takeOrigin": {
+      "recovered": "Recuperada",
+      "imported": "Importada"
+    },
     "register": {
       "title": "Registrar este dispositivo",
       "body": "As cabines funcionam em dispositivos registrados para que cada gravação e envio pertença à sua conta. Você pode revogá-lo quando quiser.",
@@ -484,6 +488,29 @@
       "error": "Não foi possível registrar este dispositivo. Tente novamente.",
       "forbidden": "Seu papel não pode registrar dispositivos. Peça ao proprietário da conta.",
       "storage": "Registrado, mas este navegador bloqueia o armazenamento e não vai lembrar dele."
+    },
+    "rendering": "Renderizando {percent}%",
+    "renderErrors": {
+      "undecodable": "Este dispositivo não consegue ler o formato do vídeo",
+      "unsupported_encoder": "Este navegador não consegue codificar o vídeo",
+      "encoder_stall": "O codificador parou de responder",
+      "gpu": "A aceleração gráfica não está disponível",
+      "cancelled": "Cancelado",
+      "failed": "A renderização falhou"
+    },
+    "renderQueue": {
+      "title": "Fila de renderização",
+      "close": "Fechar",
+      "empty": "Nenhuma gravação ainda",
+      "open": "Reproduzir",
+      "retry": "Tentar de novo",
+      "cancel": "Cancelar renderização",
+      "delete": "Excluir",
+      "keep": "Manter",
+      "progress": "Progresso da renderização",
+      "preview": "Vídeo renderizado",
+      "deleteTitle": "Excluir esta gravação?",
+      "deleteBody": "A gravação e tudo o que foi renderizado a partir dela são removidos deste dispositivo. Arquivos já enviados não são afetados."
     }
   }
 }

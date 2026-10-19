@@ -15,6 +15,8 @@ export const GRID_W = 64;
 export const GRID_H = 36;
 const PIXEL_DELTA = 18;
 const MAX_SHIFT = 8;
+/** Repeated frames tolerated inside a run (~0.5 s at 10 samples a second). */
+const MAX_DUPLICATES = 5;
 
 export interface MotionSample {
   /** 0–1: share of pixels that changed. */
@@ -23,6 +25,11 @@ export interface MotionSample {
   shift: number;
   /** How decisively `shift` beats no shift (0 = no better than zero shift). */
   confidence: number;
+  /**
+   * Byte-identical to the previous frame: the camera hasn't delivered a new one yet (sampling
+   * faster than frames arrive, frames dropped under load). Real sensors are never this still.
+   */
+  duplicate: boolean;
 }
 
 /** Column brightness profile (mean of each column). */
@@ -38,7 +45,12 @@ function columnProfile(frame: Uint8Array, w: number, h: number): Float32Array {
 
 export function analyzeFrames(prev: Uint8Array, curr: Uint8Array, w = GRID_W, h = GRID_H): MotionSample {
   let changed = 0;
-  for (let i = 0; i < w * h; i++) if (Math.abs(curr[i]! - prev[i]!) > PIXEL_DELTA) changed++;
+  let anyDiff = false;
+  for (let i = 0; i < w * h; i++) {
+    const d = Math.abs(curr[i]! - prev[i]!);
+    if (d > PIXEL_DELTA) changed++;
+    if (d !== 0) anyDiff = true;
+  }
   const energy = changed / (w * h);
 
   const a = columnProfile(prev, w, h);
@@ -64,7 +76,7 @@ export function analyzeFrames(prev: Uint8Array, curr: Uint8Array, w = GRID_W, h 
     }
   }
   const confidence = zero > 0 ? Math.max(0, (zero - bestSad) / zero) : 0;
-  return { energy, shift: best, confidence };
+  return { energy, shift: best, confidence, duplicate: !anyDiff };
 }
 
 export interface MotionTriggerOptions {
@@ -81,12 +93,21 @@ export interface MotionTriggerOptions {
 /** Stateful decision on top of `analyzeFrames`. Feed one sample per frame; true = start now. */
 export class MotionTrigger {
   private run = 0;
+  private duplicates = 0;
   private direction = 0;
 
   constructor(private opts: MotionTriggerOptions) {}
 
   update(sample: MotionSample): boolean {
     const { threshold, sustain = 3, minShift = 1, minConfidence = 0.15 } = this.opts;
+    // No new frame is not "no motion": skip it, so a camera that drops frames (or a busy device)
+    // can still complete a run. A feed frozen for longer than MAX_DUPLICATES is no evidence of a
+    // spin, though, and ends the run.
+    if (sample.duplicate) {
+      if (++this.duplicates > MAX_DUPLICATES) this.reset();
+      return false;
+    }
+    this.duplicates = 0;
     const sideways = Math.abs(sample.shift) >= minShift && sample.confidence >= minConfidence;
     const dir = Math.sign(sample.shift);
     if (sample.energy >= threshold && sideways && (this.run === 0 || dir === this.direction)) {
@@ -106,6 +127,7 @@ export class MotionTrigger {
   reset() {
     this.run = 0;
     this.direction = 0;
+    this.duplicates = 0;
   }
 }
 
