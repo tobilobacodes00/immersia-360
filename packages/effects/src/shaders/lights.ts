@@ -124,26 +124,32 @@ vec3 effect(vec2 p, vec3 src) {
 );
 
 // -------------------------------------------------------------------------------------------------
-// Strobe: one soft white flash per beat. PHOTOSENSITIVITY: the flash is capped at STROBE_PEAK_LIFT of
-// the way to white (screen-style, so bright areas move less than dark ones) and lasts a fraction of a
-// beat. The shader cannot see the tempo, so the 3 flashes-per-second ceiling (WCAG 2.3.1) holds only
-// while the beat grid it is given stays at or below STROBE_MAX_BPM: the host must fold faster tempos
-// down (halve them) before they reach uBeat / uPulse.
+// Strobe: one soft white flash per beat. PHOTOSENSITIVITY: the shader cannot see the tempo, so it cannot
+// cap the flash RATE itself; it caps the flash AMPLITUDE instead, below the point where WCAG 2.3.1 calls a
+// change a flash at all. The lift is done in linear light (where relative luminance lives) and moves any
+// pixel's relative luminance by at most STROBE_PEAK_LIFT, under the 0.1 general-flash threshold, whatever
+// the picture and however fast the beat grid runs. It also flashes once per beat and for a fraction of
+// one, so with the grid at or below STROBE_MAX_BPM it stays within 3 flashes a second as well.
 
-/** Largest fraction of the way to white a strobe flash can lift any pixel, at intensity 1. */
-export const STROBE_PEAK_LIFT = 0.35;
-/** Beat rate at which one flash per beat reaches the 3 Hz ceiling; hosts must keep the grid at or below it. */
+/** Largest rise in any pixel's relative luminance one strobe flash can cause (intensity 1): under WCAG's 0.1. */
+export const STROBE_PEAK_LIFT = 0.09;
+/** Beat rate at which one flash per beat reaches 3 flashes a second; hosts should keep the grid at or below it. */
 export const STROBE_MAX_BPM = 180;
 
 export const STROBE = defineEffect(
-  { id: 'strobe', name: 'Strobe', defaultIntensity: 0.7 },
+  { id: 'strobe', name: 'Strobe', defaultIntensity: 1 },
   {
     blend: 'self',
     code: /* glsl */ `
+vec3 toLinear(vec3 c) { return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(vec3(0.04045), c)); }
+vec3 toSrgb(vec3 c) { return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(vec3(0.0031308), c)); }
+
 vec3 effect(vec2 p, vec3 src) {
   float flash = pow(clamp(uPulse, 0.0, 1.0), 2.5);
   float lift = ${STROBE_PEAK_LIFT.toFixed(2)} * uIntensity * flash;
-  return src + (vec3(0.985, 0.99, 1.0) - src) * lift;
+  if (lift <= 0.0) return src;
+  vec3 lin = toLinear(src);
+  return toSrgb(lin + (vec3(1.0) - lin) * lift);
 }
 `,
   },
@@ -226,7 +232,7 @@ vec3 effect(vec2 p, vec3 src) {
     leak += tint * g;
   }
   float n = vnoise(p * 1.8 + vec2(t * 0.07, -t * 0.05), uSeed);
-  leak *= (0.5 + 0.7 * n) * (0.55 + 0.28 * uPulse);
+  leak *= (0.5 + 0.7 * n) * (0.62 + 0.16 * uPulse);
   vec3 faded = src * 0.94 + 0.025;
   return screenBlend(faded, leak);
 }

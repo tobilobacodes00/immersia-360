@@ -1,4 +1,4 @@
-import { type ColorMode, type EffectDef, type EffectUniforms } from './contract';
+import type { ColorMode, EffectDef, EffectUniforms } from './contract';
 
 /**
  * Shared GLSL for the video effects, and the builder that turns an effect's body into a complete

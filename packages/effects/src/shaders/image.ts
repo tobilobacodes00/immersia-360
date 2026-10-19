@@ -25,7 +25,7 @@ vec3 effect(vec2 p, vec3 src) {
   float d = fbm(q * 1.35 + 1.6 * vec2(warp, 0.8 * warp) + vec2(-0.05 * t, 0.07 * t), uSeed + 3.0);
   float density = smoothstep(0.32, 0.88, d);
   float lowness = 1.0 - 0.55 * smoothstep(0.0, 1.0, vUv.y);
-  density *= lowness * (0.82 + 0.35 * uPulse);
+  density *= lowness * (0.90 + 0.20 * uPulse);
   vec3 haze = mix(vec3(0.62, 0.65, 0.74), vec3(0.96, 0.96, 1.0), smoothstep(0.35, 0.9, d));
   return mix(src, haze, clamp(density * 0.62, 0.0, 0.7));
 }

@@ -14,6 +14,7 @@ import {
   makeScene,
   maxChannel,
   maxDiff,
+  maxLuminanceRise,
   meanLuma,
   params,
   sameBytes,
@@ -204,29 +205,24 @@ describe('confetti colour modes (VID-7)', () => {
 describe('strobe: beat-locked and photosensitivity-safe', () => {
   const strobe = EFFECTS.find((e) => e.id === 'strobe')!;
 
-  it('never lifts a pixel more than the documented peak, whatever the beat state', () => {
-    const black = solidFrame(0);
-    let worst = 0;
-    for (let i = 0; i <= 40; i++) {
-      const beat = i / 40;
-      const pulse = i === 0 ? 1 : Math.max(0, 1 - beat / 0.8) ** 2;
-      const px = host.render(programs.get(strobe), black, params({ intensity: 1, beat, pulse, time: i * 0.37 }));
-      worst = Math.max(worst, maxChannel(px));
+  it('never raises any pixel’s relative luminance by the 0.1 WCAG 2.3.1 counts as a flash, at any beat state', () => {
+    let worst = -1;
+    // (a flash is monotonic in the pulse, so a few pulse values cover every beat state)
+    for (const frame of [solidFrame(0), solidFrame(40), solidFrame(128), scene.source]) {
+      for (const pulse of [1, 0.6, 0.2, 0]) {
+        const px = host.render(programs.get(strobe), frame, params({ intensity: 1, beat: 0.1, pulse }));
+        worst = Math.max(worst, maxLuminanceRise(frame.data, px));
+      }
     }
-    // out of 255: a flash may take black no further than STROBE_PEAK_LIFT of the way to white
-    expect(worst).toBeGreaterThan(0.5 * STROBE_PEAK_LIFT * 255);
-    expect(worst).toBeLessThanOrEqual(Math.ceil(STROBE_PEAK_LIFT * 255) + 1);
+    expect(worst).toBeLessThan(0.1);
+    expect(worst).toBeLessThanOrEqual(STROBE_PEAK_LIFT + 0.006); // the documented peak, plus 8-bit rounding
   });
 
-  it('lifts bright areas proportionally less than dark ones and never past the peak', () => {
-    const lit = host.render(programs.get(strobe), scene.source, params({ intensity: 1, ...ON_BEAT }));
-    let excess = -Infinity;
-    for (let i = 0; i < lit.length; i += 4)
-      for (let c = 0; c < 3; c++) {
-        const src = scene.source.data[i + c]!;
-        excess = Math.max(excess, lit[i + c]! - src - (255 - src) * STROBE_PEAK_LIFT);
-      }
-    expect(excess).toBeLessThanOrEqual(1.5);
+  it('is still a visible flash: on black the on-beat frame reaches the documented peak', () => {
+    const black = solidFrame(0);
+    const lit = host.render(programs.get(strobe), black, params({ intensity: 1, ...ON_BEAT }));
+    expect(maxLuminanceRise(black.data, lit)).toBeGreaterThan(0.8 * STROBE_PEAK_LIFT);
+    expect(maxChannel(lit)).toBeGreaterThan(60);
   });
 
   it('is exactly the source between flashes', () => {
@@ -234,38 +230,23 @@ describe('strobe: beat-locked and photosensitivity-safe', () => {
     expect(maxDiff(quiet, scene.source.data)).toBeLessThanOrEqual(1);
   });
 
-  it('flashes once per beat, so a grid at the tempo ceiling stays within 3 flashes a second', () => {
-    const fps = 30;
-    const flashesAt = (bpm: number, seconds: number) => {
-      const levels: number[] = [];
-      for (let frame = 0; frame < seconds * fps; frame++) {
-        const beat = ((frame * bpm) % (60 * fps)) / (60 * fps);
-        const pulse = Math.max(0, 1 - beat / 0.8) ** 2;
-        const px = host.render(
-          programs.get(strobe),
-          scene.source,
-          params({ intensity: 1, beat, pulse, time: frame / fps }),
-        );
-        levels.push(meanLuma(px));
-      }
-      const base = Math.min(...levels);
-      const threshold = base + 0.25 * (Math.max(...levels) - base);
-      const flashes: number[] = [];
-      levels.forEach((level, frame) => {
-        if (level > threshold && (frame === 0 || levels[frame - 1]! <= threshold)) flashes.push(frame);
-      });
-      return flashes;
-    };
-
-    const at150 = flashesAt(150, 4);
-    expect(at150).toHaveLength(10); // one per beat: 150 BPM for 4 s
-
-    const atCeiling = flashesAt(STROBE_MAX_BPM, 3);
-    expect(atCeiling).toHaveLength((STROBE_MAX_BPM * 3) / 60);
-    for (const start of atCeiling) {
-      const inWindow = atCeiling.filter((frame) => frame >= start && frame < start + fps).length;
-      expect(inWindow).toBeLessThanOrEqual(3);
-    }
+  it('flashes once per beat and is over by the middle of it, so the grid at STROBE_MAX_BPM gives at most 3 a second', () => {
+    // One beat sampled in 24 steps. One flash per beat means one flash per (60 / BPM) seconds.
+    const steps = 24;
+    const levels = Array.from({ length: steps }, (_, i) => {
+      const beat = i / steps;
+      const pulse = Math.max(0, 1 - beat / 0.8) ** 2;
+      return meanLuma(host.render(programs.get(strobe), scene.source, params({ intensity: 1, beat, pulse })));
+    });
+    const base = levels[steps - 1]!; // the pulse has gone before the next beat
+    const peak = Math.max(...levels);
+    expect(peak - base).toBeGreaterThan(5);
+    const bright = levels.map((level) => level > base + 0.25 * (peak - base));
+    expect(bright[0], 'flashes on the beat').toBe(true);
+    const flashes = bright.filter((on, i) => on && (i === 0 || !bright[i - 1])).length;
+    expect(flashes, 'flashes per beat').toBe(1);
+    expect(bright.lastIndexOf(true), 'over by the middle of the beat').toBeLessThan(steps / 2);
+    expect(STROBE_MAX_BPM / 60).toBeLessThanOrEqual(3);
   });
 });
 

@@ -109,7 +109,7 @@ describe('the effect pack (VID-7)', () => {
   it('keeps the strobe within the photosensitivity limits it documents', () => {
     expect(STROBE_MAX_BPM / 60).toBeLessThanOrEqual(3);
     expect(STROBE_PEAK_LIFT).toBeGreaterThan(0);
-    expect(STROBE_PEAK_LIFT).toBeLessThanOrEqual(0.4);
+    expect(STROBE_PEAK_LIFT).toBeLessThan(0.1); // WCAG 2.3.1: a rise of 0.1 in relative luminance is half a flash
     expect(findEffect('strobe')?.frag).toContain(STROBE_PEAK_LIFT.toFixed(2));
   });
 });

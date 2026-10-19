@@ -126,6 +126,28 @@ export function hueBins(out: Uint8Array, src: Uint8Array, threshold: number, min
   return bins.size;
 }
 
+const toLinear = (v: number) => {
+  const c = v / 255;
+  return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+};
+
+/** WCAG relative luminance (0..1) of an 8-bit sRGB colour. */
+export function relativeLuminance(r: number, g: number, b: number): number {
+  return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+}
+
+/** Largest rise in relative luminance of any pixel from one readback to the other (a rise of 0.1 is half a WCAG flash). */
+export function maxLuminanceRise(before: Uint8Array, after: Uint8Array): number {
+  let max = -1;
+  for (let i = 0; i < before.length; i += 4)
+    max = Math.max(
+      max,
+      relativeLuminance(after[i]!, after[i + 1]!, after[i + 2]!) -
+        relativeLuminance(before[i]!, before[i + 1]!, before[i + 2]!),
+    );
+  return max;
+}
+
 export function sameBytes(a: Uint8Array, b: Uint8Array): boolean {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
