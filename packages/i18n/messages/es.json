@@ -148,6 +148,7 @@
       "events": "Eventos",
       "assets": "Recursos",
       "devices": "Dispositivos",
+      "integrations": "Integraciones",
       "signOut": "Cerrar sesión",
       "openMenu": "Abrir menú",
       "closeMenu": "Cerrar menú"
@@ -262,7 +263,13 @@
       "extend": "Ampliar {days} días",
       "extendHelp": "Da más tiempo a todos los enlaces activos. Los archivos ya caducados no se pueden recuperar.",
       "extended": "{count, plural, =0 {No hay enlaces activos que ampliar} one {# enlace ampliado {days} días} other {# enlaces ampliados {days} días}}",
-      "extendFailed": "No se pudieron ampliar los enlaces. Inténtalo de nuevo."
+      "extendFailed": "No se pudieron ampliar los enlaces. Inténtalo de nuevo.",
+      "cloudTitle": "Las copias a {provider} necesitan tu atención",
+      "cloudNeedsReauth": "Se revocó o venció el acceso a {provider}, así que los archivos nuevos no se están copiando allí. Están a salvo en Immersia y se copiarán solos, sin duplicados, cuando vuelvas a conectar.",
+      "cloudWaiting": "{count, plural, one {Hay # archivo en espera.} other {Hay # archivos en espera.}}",
+      "cloudDisconnected": "Este evento se copia a {provider}, pero {provider} no está conectado. Conéctalo y los archivos de este evento se pondrán al día.",
+      "cloudFailed": "{count, plural, one {# archivo no llegó a {provider}.} other {# archivos no llegaron a {provider}.}}",
+      "cloudFix": "Abrir Integraciones"
     },
     "setup": {
       "title": "Configuración del evento",
@@ -389,7 +396,21 @@
         "consent": "Texto de consentimiento",
         "consentHelp": "Lo que aceptan los invitados, con tus palabras.",
         "contact": "Contacto para invitados",
-        "contactHelp": "Se muestra en las páginas de invitados cuando los archivos del evento han caducado, para que puedan contactarte. Un correo o un teléfono."
+        "contactHelp": "Se muestra en las páginas de invitados cuando los archivos del evento han caducado, para que puedan contactarte. Un correo o un teléfono.",
+        "cloud": "Copiar también a mi nube",
+        "cloudHelp": "Guarda cada archivo terminado también en tu propio Google Drive o Dropbox. Los invitados siguen recibiendo sus archivos desde Immersia.",
+        "cloudNone": "Solo Immersia",
+        "cloudState": {
+          "unavailable": "{provider} (sin configurar)",
+          "disconnected": "{provider} (sin conectar)",
+          "needs_reauth": "{provider} (vuelve a iniciar sesión)"
+        },
+        "cloudNote": {
+          "unavailable": "{provider} no está configurado en este servidor.",
+          "disconnected": "{provider} no está conectado, así que este evento no se copia allí.",
+          "needs_reauth": "{provider} necesita que vuelvas a iniciar sesión; los archivos nuevos quedan a salvo y se copian cuando lo hagas."
+        },
+        "cloudManage": "Administrar integraciones"
       },
       "kiosk": {
         "title": "Quiosco",
@@ -1000,6 +1021,102 @@
         "approve": "Mostrar en pantalla",
         "restore": "Mostrar de nuevo",
         "hide": "Ocultar de las pantallas"
+      }
+    },
+    "integrations": {
+      "title": "Integraciones",
+      "subtitle": "Copia cada archivo terminado en tu propio Google Drive o Dropbox, además del enlace de Immersia para el invitado. Los invitados siempre descargan desde Immersia; la copia es tuya.",
+      "providers": {
+        "drive": "Google Drive",
+        "dropbox": "Dropbox",
+        "generic": "tu almacenamiento en la nube"
+      },
+      "about": {
+        "drive": "Immersia solo ve las carpetas y los archivos que crea ella misma, nunca el resto de tu Drive.",
+        "dropbox": "Immersia solo trabaja dentro de la carpeta que crea en tu Dropbox."
+      },
+      "status": {
+        "connected": "Conectado",
+        "needsReauth": "Vuelve a iniciar sesión",
+        "notConnected": "Sin conectar",
+        "notConfigured": "Sin configurar"
+      },
+      "notConfigured": "Este servidor de Immersia aún no está configurado para {provider}. Si lo alojas tú mismo, agrega sus credenciales y INTEGRATION_TOKEN_KEY al entorno (consulta .env.example).",
+      "connect": "Conectar {provider}",
+      "reconnect": "Volver a conectar {provider}",
+      "connectedAs": "Conectado como {email}",
+      "ownerOnly": "Solo el propietario de la cuenta puede conectar o desconectar una nube.",
+      "folder": {
+        "label": "Carpeta",
+        "none": "Aún no se crea. Se crea con la primera copia.",
+        "open": "Abrir carpeta",
+        "help": "Cada evento tiene su propia subcarpeta con su fecha en el nombre. Los archivos ya copiados se quedan donde están.",
+        "name": "Nombre de la carpeta",
+        "placeholder": "Immersia 360",
+        "save": "Usar esta carpeta"
+      },
+      "disconnect": {
+        "button": "Desconectar",
+        "title": "¿Desconectar {provider}?",
+        "body": "Immersia dejará de copiar a {provider}, revocará su acceso y borrará la conexión guardada. Los archivos ya copiados se quedan en tu {provider}. Las copias que aún no se hicieron se descartan; vuelve a conectar más adelante para ponerte al día.",
+        "confirm": "Desconectar",
+        "cancel": "Cancelar"
+      },
+      "reauth": {
+        "title": "{provider} necesita que vuelvas a iniciar sesión",
+        "body": "Immersia ya no puede acceder a tu {provider}: el acceso se revocó o venció. No se pierde nada. Los archivos nuevos quedan a salvo en Immersia y cada copia en espera se completa, sin duplicados, en cuanto vuelvas a conectar.",
+        "waiting": "{count, plural, one {Hay # archivo en espera.} other {Hay # archivos en espera.}}"
+      },
+      "failed": {
+        "title": "{count, plural, one {No se pudo copiar # archivo a {provider}} other {No se pudieron copiar # archivos a {provider}}}",
+        "retry": "Reintentar",
+        "retrying": "Reintentando…"
+      },
+      "flash": {
+        "connected": "{provider} está conectado. Ya empezó a copiar."
+      },
+      "connectErrors": {
+        "denied": "Cancelaste la conexión, así que no cambió nada. Pulsa Conectar para intentarlo de nuevo.",
+        "state": "Ese enlace de inicio de sesión venció o no se generó desde esta cuenta. Pulsa Conectar para empezar de nuevo.",
+        "scope": "{provider} no concedió el permiso que necesita Immersia. Pulsa Conectar otra vez y deja marcada la casilla de acceso.",
+        "no_refresh": "{provider} no le dio a Immersia un acceso duradero. Quita Immersia de las aplicaciones conectadas de tu {provider} y vuelve a conectar.",
+        "exchange": "{provider} rechazó el inicio de sesión. Pulsa Conectar para intentarlo de nuevo.",
+        "unreachable": "No se pudo contactar con {provider}. Revisa la conexión e inténtalo de nuevo en un minuto.",
+        "unavailable": "Este servidor no está configurado para {provider}.",
+        "forbidden": "Solo el propietario de la cuenta puede conectar una nube.",
+        "failed": "Algo salió mal al conectar {provider}. Inténtalo de nuevo."
+      },
+      "actionErrors": {
+        "reauth_required": "{provider} necesita que vuelvas a iniciar sesión primero. Pulsa Volver a conectar.",
+        "quota_exceeded": "Tu {provider} está lleno. Libera espacio e inténtalo de nuevo.",
+        "unreachable": "No se pudo contactar con {provider}. Inténtalo de nuevo en un minuto.",
+        "forbidden": "Solo el propietario de la cuenta puede cambiar esto.",
+        "failed": "No funcionó. Inténtalo de nuevo."
+      },
+      "copyErrors": {
+        "reauth_required": "Se revocó o venció el acceso a {provider}. Vuelve a conectar {provider} y este archivo se copiará solo.",
+        "quota_exceeded": "Tu {provider} está lleno. Libera espacio y pulsa Reintentar.",
+        "transient": "No se pudo contactar con {provider} tras varios intentos. Pulsa Reintentar.",
+        "retrying": "{provider} no respondió. Se volverá a intentar {when}.",
+        "folder_missing": "La carpeta se eliminó de {provider}. Elige una carpeta arriba; las copias fallidas se reinician solas.",
+        "folder_inaccessible": "Immersia no puede escribir en esa carpeta. Crea una carpeta nueva arriba; las copias fallidas se reinician solas.",
+        "source_gone": "Este archivo venció en Immersia antes de poder copiarse, así que ya no se puede enviar.",
+        "other": "No se pudo copiar este archivo. Pulsa Reintentar; si sigue fallando, vuelve a conectar {provider}."
+      },
+      "copies": {
+        "title": "Copias recientes",
+        "subtitle": "Los últimos 20 archivos enviados a tu nube.",
+        "emptyTitle": "Aún no se copió nada",
+        "emptyBody": "Elige Google Drive o Dropbox en Compartir, dentro de la configuración de un evento, y los archivos terminados aparecerán aquí.",
+        "to": "a {provider}",
+        "open": "Abrir en {provider}",
+        "soon": "en un momento",
+        "status": {
+          "pending": "En espera",
+          "uploading": "Copiando",
+          "done": "Copiado",
+          "failed": "Falló"
+        }
       }
     },
     "galleryCard": {
