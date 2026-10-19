@@ -41,6 +41,9 @@ catalog:
   mediabunny: 1.61.5
   '@mediabunny/aac-encoder': 1.61.5
   dexie: 4.4.6
+  # Realtime hub (Cloudflare Worker, apps/realtime)
+  wrangler: 4.146.0
+  '@cloudflare/workers-types': 5.20261003.1
   # Tooling
   typescript: 5.9.3
   '@types/react': 19.3.0
@@ -69,6 +72,7 @@ onlyBuiltDependencies:
   - sharp
   - unrs-resolver
   - '@parcel/watcher'
+  - workerd
 patchedDependencies:
   # Chrome writes VP9 vpcC level 0, which WebCodecs rejects; derive it from the picture size.
   mediabunny@1.61.5: patches/mediabunny@1.61.5.patch
