@@ -14,7 +14,8 @@
     "./analytics": "./src/analytics.ts",
     "./event": "./src/event.ts",
     "./template": "./src/template.ts",
-    "./device": "./src/device.ts"
+    "./device": "./src/device.ts",
+    "./session": "./src/session.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

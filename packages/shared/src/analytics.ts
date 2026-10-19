@@ -1,4 +1,5 @@
 import type { DownloadRoute } from './routes';
+import type { OutputKind } from './session';
 
 /**
  * First-party analytics events (PRD "Tracked events"). The union is the contract between the
@@ -6,7 +7,6 @@ import type { DownloadRoute } from './routes';
  */
 export type CaptureTrigger = 'tap' | 'timer' | 'motion' | 'remote' | 'keyboard';
 export type RenderPath = 'local' | 'wasm' | 'server';
-export type OutputKind = 'mp4' | 'small_mp4' | 'gif' | 'strip' | 'short_video' | 'boomerang' | 'poster';
 export type UploadTarget = 'hosted' | 'drive' | 'dropbox';
 
 export type AnalyticsEvent =

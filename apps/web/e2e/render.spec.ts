@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { expectRecording, reportPageErrors, setupEvent, startBooth } from './booth-helpers';
+import { expectRecording, expectResult, reportPageErrors, setupEvent, startBooth } from './booth-helpers';
 
 /**
  * The booth's background render (M3), end to end: queue → render worker → MP4 saved on the device →
@@ -18,8 +18,9 @@ test.describe('render (M3) @media', () => {
     await startBooth(page, id, browserName);
     await page.getByRole('button', { name: 'Tap to start' }).click();
     await expectRecording(page);
-    await expect(page.getByText('Saved. Next guest!')).toBeVisible({ timeout: 10_000 });
+    await expectResult(page);
     // The booth is ready for the next guest while the render runs.
+    await page.getByRole('button', { name: 'Next guest' }).click();
     await expect(page.getByRole('button', { name: 'Tap to start' })).toBeVisible({ timeout: 5_000 });
 
     await page.getByRole('button', { name: /take(s)? waiting|Rendering|Nothing waiting/ }).click();

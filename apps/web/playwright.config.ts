@@ -39,14 +39,16 @@ export default defineConfig({
   projects: [
     {
       name: 'chrome',
-      testIgnore: /render\.spec\.ts/,
+      testIgnore: /(render|sharing)\.spec\.ts/,
       use: chromeUse,
     },
     {
       // Specs that wait on a full render run last and alone (see e2e/render.spec.ts).
       name: 'chrome-render',
-      testMatch: /render\.spec\.ts/,
+      testMatch: /(render|sharing)\.spec\.ts/,
       dependencies: ['chrome', 'webkit'],
+      // One at a time: two software renders side by side only slow each other down.
+      workers: 1,
       use: chromeUse,
     },
     {

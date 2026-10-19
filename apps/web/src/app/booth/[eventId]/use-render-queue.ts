@@ -4,8 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { liveQuery } from 'dexie';
 import { RenderClient, RenderFailure, type RenderHandle } from '@immersia/render-engine/client';
 import { mixSoundtrack } from '@immersia/render-engine/audio';
-import { outputSize, plannedDurationS, probeTake, videoBitrate } from '@immersia/render-engine';
-import { boothDb, putOutput, type LocalTake, type TakeStore } from '@immersia/offline';
+import { messagingSize, outputSize, plannedDurationS, probeTake, videoBitrate } from '@immersia/render-engine';
+import { boothDb, outputsForTake, putOutput, type LocalTake, type TakeStore } from '@immersia/offline';
 import type { Video360Settings } from '@immersia/shared';
 import { workerUrl } from '@/lib/workers';
 
@@ -34,6 +34,8 @@ export function useRenderQueue(opts: {
   eventId: string;
   video: Video360Settings;
   store: TakeStore | null;
+  /** DL-8: also make the lighter copy for messaging apps (event setting, on by default). */
+  smallerVersion?: boolean;
   /** While true, the current render parks between frames and no new one starts (e.g. mid-capture). */
   paused?: boolean;
   assets?: RenderAssets;
@@ -115,6 +117,25 @@ export function useRenderQueue(opts: {
           durationMs: Math.round(result.durationS * 1000),
           renderMs: result.renderMs,
         });
+        // The share page's poster (DL-8): tiny, so it is made now and uploads ahead of the video.
+        try {
+          const { poster } = await client.current.derive(`${take.id}:poster`, result.mp4, video.fps, {
+            poster: true,
+            small: false,
+          });
+          if (poster)
+            await putOutput(db, store, {
+              takeId: take.id,
+              eventId: take.eventId,
+              kind: 'poster',
+              blob: poster,
+              width: result.width,
+              height: result.height,
+              durationMs: 0,
+            });
+        } catch (err) {
+          console.warn('[render] poster', take.id, err); // the page falls back to the video's first frame
+        }
         await db.takes.update(take.id, { status: 'rendered', error: undefined, updatedAt: Date.now() });
         optsRef.current.onRendered?.({ ...take, status: 'rendered' }, outputId);
       } catch (err) {
@@ -130,6 +151,54 @@ export function useRenderQueue(opts: {
     [db],
   );
 
+  /** DL-8 messaging copy for a rendered take: after every waiting render, never ahead of one. */
+  const deriveSmall = useCallback(
+    async (take: LocalTake) => {
+      const { store, video } = optsRef.current;
+      if (!store || !client.current) return;
+      const main = (await outputsForTake(db, take.id)).find((o) => o.kind === 'mp4');
+      if (!main) return;
+      try {
+        const mp4 = await store.read(main.path, main.mime);
+        const { small } = await client.current.derive(`${take.id}:small`, mp4, video.fps, {
+          poster: false,
+          small: true,
+        });
+        if (!small) return;
+        const size = messagingSize(main.width, main.height);
+        await putOutput(db, store, {
+          takeId: take.id,
+          eventId: take.eventId,
+          kind: 'small_mp4',
+          blob: small,
+          ...size,
+          durationMs: main.durationMs,
+        });
+        optsRef.current.onRendered?.(take, main.id);
+      } catch (err) {
+        // Not worth retrying in a loop: the full video is there; note it and move on.
+        await db.takes.update(take.id, { derivedError: err instanceof Error ? err.message : String(err) });
+        console.warn('[render] messaging copy', take.id, err);
+      }
+    },
+    [db],
+  );
+
+  /** A rendered take of this event still missing its messaging copy. */
+  const nextSmall = useCallback(async (): Promise<LocalTake | undefined> => {
+    const { eventId } = optsRef.current;
+    const rendered = await db.takes
+      .where('[eventId+capturedAt]')
+      .between([eventId, 0], [eventId, Infinity])
+      .filter((t) => t.status === 'rendered' && !t.derivedError)
+      .toArray();
+    for (const t of rendered) {
+      const kinds = new Set((await outputsForTake(db, t.id)).map((o) => o.kind));
+      if (kinds.has('mp4') && !kinds.has('small_mp4')) return t;
+    }
+    return undefined;
+  }, [db]);
+
   const pump = useCallback(async () => {
     if (busy.current) return;
     busy.current = true;
@@ -144,13 +213,18 @@ export function useRenderQueue(opts: {
           .between([eventId, 0], [eventId, Infinity])
           .filter((t) => RENDERABLE.includes(t.status))
           .first();
-        if (!next) return;
-        await renderOne(next);
+        if (next) {
+          await renderOne(next);
+          continue;
+        }
+        const small = optsRef.current.smallerVersion !== false ? await nextSmall() : undefined;
+        if (!small) return;
+        await deriveSmall(small);
       }
     } finally {
       busy.current = false;
     }
-  }, [db, renderOne, whenRunning]);
+  }, [db, renderOne, whenRunning, nextSmall, deriveSmall]);
 
   // Wake whenever the set of renderable takes changes (new take, retry) or storage becomes ready.
   useEffect(() => {

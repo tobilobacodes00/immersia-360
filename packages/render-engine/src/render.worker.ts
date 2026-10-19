@@ -3,6 +3,7 @@
  * The render worker: decoding, WebGL compositing and encoding all happen here, off the main thread,
  * so the booth UI stays responsive and the operator can keep recording (VID-9).
  */
+import { messagingCopy, posterFrame } from './derive';
 import { RenderError, render, type RenderJob } from './render';
 
 export {};
@@ -10,6 +11,8 @@ declare const self: DedicatedWorkerGlobalScope;
 
 export type WorkerMessage =
   | { type: 'render'; id: string; job: RenderJob }
+  /** Poster and (optionally) the messaging copy of a finished render (DL-8). */
+  | { type: 'derive'; id: string; mp4: Blob; fps: number; poster: boolean; small: boolean }
   | { type: 'cancel'; id: string }
   | { type: 'pause' }
   | { type: 'resume' };
@@ -17,6 +20,7 @@ export type WorkerMessage =
 export type WorkerReply =
   | { type: 'progress'; id: string; progress: number }
   | { type: 'done'; id: string; result: Awaited<ReturnType<typeof render>> }
+  | { type: 'derived'; id: string; poster: Blob | null; small: Blob | null }
   | { type: 'error'; id: string; code: RenderError['code']; message: string };
 
 const running = new Map<string, AbortController>();
@@ -44,6 +48,17 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
   if (msg.type === 'cancel') {
     running.get(msg.id)?.abort();
     release();
+    return;
+  }
+  if (msg.type === 'derive') {
+    try {
+      const poster = msg.poster ? await posterFrame(msg.mp4) : null;
+      const small = msg.small ? await messagingCopy(msg.mp4, msg.fps) : null;
+      self.postMessage({ type: 'derived', id: msg.id, poster, small } satisfies WorkerReply);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      self.postMessage({ type: 'error', id: msg.id, code: 'failed', message } satisfies WorkerReply);
+    }
     return;
   }
   const controller = new AbortController();

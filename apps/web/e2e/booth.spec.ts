@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { open } from './helpers';
-import { expectRecording, reportPageErrors, setupEvent, startBooth } from './booth-helpers';
+import { expectRecording, expectResult, reportPageErrors, setupEvent, startBooth } from './booth-helpers';
 
 /**
  * 360 capture (M2). Chrome uses its fake camera; WebKit has none in CI, so those runs pick the
@@ -15,8 +15,10 @@ test.describe('360 capture (CAP-1, 3, 5, 7, 8) @media', () => {
     await startBooth(page, id, browserName);
     await page.getByRole('button', { name: 'Tap to start' }).click();
     await expectRecording(page);
-    await expect(page.getByText('Saved. Next guest!')).toBeVisible({ timeout: 10_000 });
+    // SHR-1: the guest's QR is on screen at once (its link was minted on the device).
+    await expectResult(page);
     // CAP-7: straight back to ready without restarting the camera.
+    await page.getByRole('button', { name: 'Next guest' }).click();
     await expect(page.getByRole('button', { name: 'Tap to start' })).toBeVisible({ timeout: 5_000 });
     // The take renders in the background once the ready screen settles (VID-9), so it is waiting,
     // rendering or already rendered — never failed.
@@ -34,7 +36,7 @@ test.describe('360 capture (CAP-1, 3, 5, 7, 8) @media', () => {
     await page.keyboard.press('PageDown');
     await expectRecording(page);
     await page.keyboard.press('End');
-    await expect(page.getByText('Saved. Next guest!')).toBeVisible({ timeout: 10_000 });
+    await expectResult(page);
   });
 
   test('a countdown runs before recording', async ({ page, browserName }) => {

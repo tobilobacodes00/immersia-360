@@ -36,6 +36,20 @@ const config: NextConfig = {
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },
+  // DL-2 short domain (optional): its root is the code form and `/{code}` looks the code up.
+  async rewrites() {
+    const short = process.env.NEXT_PUBLIC_SHORT_ORIGIN;
+    if (!short) return [];
+    const has = [{ type: 'host' as const, value: new URL(short).host }];
+    return {
+      beforeFiles: [
+        { source: '/', has, destination: '/c' },
+        { source: '/:code([2-9A-Za-z]{3}-?[2-9A-Za-z]{3})', has, destination: '/c/:code' },
+      ],
+      afterFiles: [],
+      fallback: [],
+    };
+  },
 };
 
 export default withSerwist(withNextIntl(config));

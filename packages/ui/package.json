@@ -9,7 +9,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./guest": "./src/guest.tsx",
-    "./styles.css": "./src/styles.css"
+    "./styles.css": "./src/styles.css",
+    "./guest-fonts": "./src/guest-fonts.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

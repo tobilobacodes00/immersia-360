@@ -2,8 +2,9 @@ import type { Metadata } from 'next';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Stat } from '@immersia/ui';
 import { formatBytes } from '@/lib/format';
-import { eventStats, getEvent } from '@/server/events';
+import { eventStats, getEvent, guestFilesSummary } from '@/server/events';
 import { requireOperator } from '@/server/session';
+import { ExtendGuestFiles } from './ExtendGuestFiles';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const op = await requireOperator();
@@ -15,10 +16,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function EventDashboardPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const op = await requireOperator({ event: ['read'] });
-  const [t, locale, s] = await Promise.all([
+  const [t, locale, s, files] = await Promise.all([
     getTranslations('studio.dashboard'),
     getLocale(),
     eventStats(op.organizationId, id),
+    guestFilesSummary(op.organizationId, id),
   ]);
   const n = (v: number) => v.toLocaleString(locale);
   return (
@@ -53,6 +55,20 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
           />
           <Stat label={t('devices')} value={n(s.activeDevices)} hint={t('devicesHint')} />
         </div>
+      </section>
+      <section aria-labelledby="files-heading">
+        <h2 id="files-heading" className="eyebrow mb-3">
+          {t('guestFiles')}
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Stat label={t('liveLinks')} value={n(files.live)} />
+          <Stat
+            label={t('nextExpiry')}
+            value={files.nextExpiry ? files.nextExpiry.toLocaleDateString(locale, { dateStyle: 'medium' }) : '—'}
+          />
+          <Stat label={t('removed')} value={n(files.removed)} hint={t('removedHint')} />
+        </div>
+        <ExtendGuestFiles eventId={id} live={files.live} />
       </section>
     </div>
   );

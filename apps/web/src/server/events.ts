@@ -300,3 +300,49 @@ export async function recentEvents(organizationId: string, limit = 6) {
     .orderBy(desc(event.updatedAt))
     .limit(limit);
 }
+
+export interface GuestFilesSummary {
+  /** Sessions whose links still work. */
+  live: number;
+  /** When the next of them expires (null when none are live). */
+  nextExpiry: Date | null;
+  /** Sessions already swept: their files are gone. */
+  removed: number;
+}
+
+/** DL-12 / SHR-8: how long the event's guest links last. */
+export async function guestFilesSummary(organizationId: string, eventId: string): Promise<GuestFilesSummary> {
+  const [row] = await db()
+    .select({
+      live: sql<number>`count(*) filter (where ${captureSession.expiredAt} is null)`.mapWith(Number),
+      removed: sql<number>`count(*) filter (where ${captureSession.expiredAt} is not null)`.mapWith(Number),
+      nextExpiry:
+        sql<Date | null>`min(${captureSession.expiresAt}) filter (where ${captureSession.expiredAt} is null)`.mapWith(
+          (v: string | Date | null) => (v ? new Date(v) : null),
+        ),
+    })
+    .from(captureSession)
+    .innerJoin(event, eq(event.id, captureSession.eventId))
+    .where(and(eq(captureSession.eventId, eventId), eq(event.organizationId, organizationId)));
+  return { live: row?.live ?? 0, removed: row?.removed ?? 0, nextExpiry: row?.nextExpiry ?? null };
+}
+
+/**
+ * DL-12: give every live guest link of the event more time (from now, or from its current expiry if
+ * later). Files already swept can't be brought back. Returns how many links were extended, or null
+ * when the event isn't the organization's.
+ */
+export async function extendGuestFiles(organizationId: string, eventId: string, days: number): Promise<number | null> {
+  const [owned] = await db()
+    .select({ id: event.id })
+    .from(event)
+    .where(and(eq(event.id, eventId), eq(event.organizationId, organizationId)))
+    .limit(1);
+  if (!owned) return null;
+  const rows = await db()
+    .update(captureSession)
+    .set({ expiresAt: sql`greatest(${captureSession.expiresAt}, now()) + make_interval(days => ${days})` })
+    .where(and(eq(captureSession.eventId, eventId), isNull(captureSession.expiredAt)))
+    .returning({ id: captureSession.id });
+  return rows.length;
+}

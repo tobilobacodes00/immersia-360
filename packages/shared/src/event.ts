@@ -135,6 +135,8 @@ export const shareSettingsSchema = z.object({
   /** SHR-7: where files go. Hosted share pages are always created; cloud copies are extra. */
   cloud: z.enum(['none', 'drive', 'dropbox']).default('none'),
   smallerVersion: z.boolean().default(true),
+  /** DL-12: how guests reach the operator, shown once the event's files have expired. */
+  contact: z.string().trim().max(200).default(''),
 });
 
 export const attractSchema = z.object({

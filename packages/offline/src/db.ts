@@ -29,6 +29,8 @@ export interface LocalTake {
   /** Set when a recording was cut short by a crash or reload and recovered. */
   recoveredAt?: number;
   error?: string;
+  /** Why a derived output (the messaging copy) couldn't be made; not retried automatically. */
+  derivedError?: string;
 }
 
 export type OutputKind = 'mp4' | 'small_mp4' | 'gif' | 'strip' | 'short_video' | 'boomerang' | 'poster';
@@ -47,6 +49,43 @@ export interface LocalOutput {
   durationMs: number;
   renderMs?: number;
   createdAt: number;
+  /** The server's id for this output once its session is registered (M4). */
+  serverId?: string;
+  /** Set when the upload is confirmed by the server (size checked). */
+  uploadedAt?: number;
+}
+
+/**
+ * A guest session (DL-1): one link and one short code for everything a guest made. Minted on the
+ * device when the take is saved, so the QR exists with no network; the upload queue registers it
+ * and uploads its outputs when it can.
+ */
+export interface LocalSession {
+  id: string;
+  eventId: string;
+  /** 128-bit link id: the share URL and its access secret. */
+  linkId: string;
+  /** From this device's reserved pool; null when it ran dry offline (the server assigns one). */
+  shortCode: string | null;
+  takeIds: string[];
+  capturedAt: number;
+  optedOutOfDisplay: boolean;
+  /** local → registered (server knows it) → done (every output uploaded); failed needs the operator. */
+  state: 'local' | 'registered' | 'done' | 'failed';
+  attempts: number;
+  nextAttemptAt: number;
+  lastError?: string;
+  /** SHR-2: addresses waiting to be sent the link (the device holds them only until sent). */
+  pendingEmails?: string[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+/** A short code reserved for this device while online, handed out offline (DL-2). */
+export interface ReservedCode {
+  code: string;
+  eventId: string;
+  reservedAt: number;
 }
 
 export interface CachedEvent {
@@ -75,6 +114,8 @@ export class BoothDB extends Dexie {
   events!: EntityTable<CachedEvent, 'id'>;
   chunks!: EntityTable<FallbackChunk, 'key'>;
   kv!: EntityTable<KeyValue, 'key'>;
+  sessions!: EntityTable<LocalSession, 'id'>;
+  codes!: EntityTable<ReservedCode, 'code'>;
 
   constructor(name = 'immersia-booth') {
     super(name);
@@ -87,6 +128,11 @@ export class BoothDB extends Dexie {
     // v2 (M3): rendered outputs.
     this.version(2).stores({
       outputs: 'id, takeId, eventId, kind, [eventId+createdAt]',
+    });
+    // v3 (M4): guest sessions and the short-code pool.
+    this.version(3).stores({
+      sessions: 'id, eventId, linkId, state, *takeIds, [eventId+capturedAt]',
+      codes: 'code, eventId, [eventId+reservedAt]',
     });
   }
 }

@@ -62,7 +62,7 @@ test.describe('design system', () => {
 });
 
 test.describe('accessibility (WCAG 2.2 AA)', () => {
-  for (const path of ['/', '/design']) {
+  for (const path of ['/', '/design', '/c', '/c?e=not_found&code=ZZZ-ZZZ']) {
     test(`${path} has no axe violations`, async ({ page }) => {
       await page.goto(path);
       const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();

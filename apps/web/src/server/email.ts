@@ -117,3 +117,25 @@ export async function sendInvitationEmail(
     }),
   });
 }
+
+/** SHR-2: the guest's session link, sent from the booth. The address is used for this send only. */
+export async function sendGuestLinkEmail(
+  to: string,
+  url: string,
+  locale: Locale,
+  vars: { event: string; expiresAt: Date },
+) {
+  const t = await getTranslations({ locale, namespace: 'email.guestLink' });
+  const date = new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(vars.expiresAt);
+  await sendEmail({
+    to,
+    subject: t('subject', { event: vars.event }),
+    ...layout({
+      heading: t('heading', { event: vars.event }),
+      body: t('body', { date }),
+      action: t('action'),
+      url,
+      footer: t('footer'),
+    }),
+  });
+}

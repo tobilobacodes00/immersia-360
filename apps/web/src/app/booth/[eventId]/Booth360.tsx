@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useTranslations, type Messages } from 'next-intl';
 import { AnimatePresence, motion } from 'motion/react';
-import { ArrowLeft, Check, CircleDot, HardDrive, Settings2, Square, Upload, WifiOff } from 'lucide-react';
+import { ArrowLeft, Check, CircleDot, CloudUpload, HardDrive, Settings2, Square, Upload, WifiOff } from 'lucide-react';
 import {
   MotionTrigger,
   TakeRecorder,
@@ -24,12 +24,15 @@ import {
   completeTake,
   failTake,
   importTake,
+  mintSession,
   noteChunk,
+  queueEmail,
   recoverInterrupted,
   requestPersistence,
   storageHealth,
   takeStore,
   takesForEvent,
+  type LocalSession,
   type LocalTake,
   type TakeStore,
 } from '@immersia/offline';
@@ -42,6 +45,8 @@ import { readDeviceIdentity, type DeviceIdentity } from '@/lib/device-identity';
 import { useCaptureKeys, useHeartbeat, useHeld, useLiveQuery, useOnline, useWakeLock } from './booth-hooks';
 import { RegisterDevice } from './RegisterDevice';
 import { RenderQueue } from './RenderQueue';
+import { ResultScreen } from './ResultScreen';
+import { useUploadQueue } from './use-upload-queue';
 import { RENDERABLE, useRenderQueue } from './use-render-queue';
 import { SettingsDrawer, readCameraChoice, type CameraChoice } from './SettingsDrawer';
 
@@ -60,6 +65,8 @@ export interface BoothEvent {
   triggers: { tap: boolean; keyboard: boolean; motion: { enabled: boolean; threshold: number; cooldownS: number } };
   theme: EventTheme;
   attract: { headline: string; cta: string };
+  /** SHR-1/2/3: what the result screen offers the guest. */
+  share: { qr: boolean; email: boolean; sms: boolean; whatsapp: boolean; smallerVersion: boolean };
 }
 
 type Phase =
@@ -70,10 +77,14 @@ type Phase =
   | { kind: 'recording'; takeId: string; startedAt: number }
   | { kind: 'saving' }
   | { kind: 'saved' }
+  /** Screen 13: the guest's QR and code, straight after the take is saved. */
+  | { kind: 'result'; session: LocalSession }
   | { kind: 'error'; code: string };
 
 const PENDING: LocalTake['status'][] = [...RENDERABLE, 'rendering'];
 const SAVED_HOLD_MS = 1400;
+/** Phases from which a trigger starts the next recording. */
+const ARMED: Phase['kind'][] = ['ready', 'result'];
 /** How long the ready screen settles before background rendering resumes. */
 const RENDER_RESUME_MS = 2000;
 
@@ -120,17 +131,20 @@ export function Booth360({ event }: { event: BoothEvent }) {
     phase.kind === 'saving' ||
     phase.kind === 'saved';
   const renderPaused = useHeld(capturing, RENDER_RESUME_MS);
+  const uploads = useUploadQueue({ eventId: event.id, token: identity?.token ?? null, store: storeReady });
   const renderQueue = useRenderQueue({
     eventId: event.id,
     video: event.video,
     store: storeReady,
     paused: renderPaused,
+    smallerVersion: event.share.smallerVersion,
+    onRendered: (take) => uploads.nudge(take.id),
   });
 
   useWakeLock(phase.kind !== 'idle');
   useHeartbeat(
     identity?.token ?? null,
-    () => ({ eventId: event.id, renderQueue: pending, uploadQueue: 0 }),
+    () => ({ eventId: event.id, renderQueue: pending, uploadQueue: uploads.status.waiting }),
     () => setIdentity(null),
   );
 
@@ -229,9 +243,16 @@ export function Booth360({ event }: { event: BoothEvent }) {
       if (take && take.chunks > 0) await completeTake(db, current.takeId, take.durationMs);
       else await failTake(db, current.takeId, String(err));
     }
+    const saved = await db.takes.get(current.takeId);
+    // A take with nothing recorded has no guest to share with.
+    const session =
+      saved && saved.status !== 'failed'
+        ? await mintSession(db, { eventId: event.id, takeIds: [saved.id], capturedAt: saved.capturedAt })
+        : null;
+    if (session && event.share.qr) return setPhase({ kind: 'result', session });
     setPhase({ kind: 'saved' });
     setTimeout(() => setPhase((p) => (p.kind === 'saved' ? { kind: 'ready' } : p)), SAVED_HOLD_MS);
-  }, [db, t]);
+  }, [db, t, event.id, event.share.qr]);
 
   const record = useCallback(
     async (source: 'tap' | 'keyboard' | 'motion') => {
@@ -276,7 +297,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
 
   const trigger = useCallback(
     (source: 'tap' | 'keyboard' | 'motion') => {
-      if (phaseRef.current.kind !== 'ready') return;
+      if (!ARMED.includes(phaseRef.current.kind)) return;
       // The platform is already turning on a motion start: no countdown.
       const seconds = source === 'motion' ? 0 : event.video.countdownSeconds;
       if (seconds === 0) return void record(source);
@@ -294,7 +315,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
     [event.video.countdownSeconds, record],
   );
 
-  useCaptureKeys(event.triggers.keyboard && phase.kind === 'ready', () => trigger('keyboard'));
+  useCaptureKeys(event.triggers.keyboard && ARMED.includes(phase.kind), () => trigger('keyboard'));
 
   // Stop early with End or Escape (operator).
   useEffect(() => {
@@ -316,7 +337,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
 
   // Motion trigger (CAP-4): ~10 samples a second while ready.
   useEffect(() => {
-    if (!motionOn || phase.kind !== 'ready') return;
+    if (!motionOn || !ARMED.includes(phase.kind)) return;
     const v = videoRef.current;
     if (!v) return;
     const sample = createFrameSampler();
@@ -363,10 +384,13 @@ export function Booth360({ event }: { event: BoothEvent }) {
           height: meta.height,
           fps: 0,
         });
+        await mintSession(db, { eventId: event.id, takeIds: [id], capturedAt: Date.now() });
       }
     },
     [db, event.id, identity?.id],
   );
+
+  const backToReady = useCallback(() => setPhase((p) => (p.kind === 'result' ? { kind: 'ready' } : p)), []);
 
   const themeVars = useMemo(() => guestThemeVars(event.theme), [event.theme]);
   const spin = event.video.spinSeconds;
@@ -427,6 +451,21 @@ export function Booth360({ event }: { event: BoothEvent }) {
           {motionOn && live && (
             <Pill tone="info" dot className="text-[0.8rem]">
               {t('motionArmed')}
+            </Pill>
+          )}
+          {(uploads.status.waiting > 0 || uploads.status.failed > 0 || uploads.status.revoked) && (
+            <Pill
+              tone={uploads.status.revoked || uploads.status.failed ? 'bad' : online ? 'neutral' : 'warn'}
+              className="text-[0.8rem]"
+            >
+              <CloudUpload className="size-3.5" aria-hidden />{' '}
+              {uploads.status.revoked
+                ? t('uploads.revoked')
+                : uploads.status.failed
+                  ? t('uploads.failed', { count: uploads.status.failed })
+                  : online
+                    ? t('uploads.waiting', { count: uploads.status.waiting })
+                    : t('uploads.offline', { count: uploads.status.waiting })}
             </Pill>
           )}
           <button
@@ -575,6 +614,16 @@ export function Booth360({ event }: { event: BoothEvent }) {
               </Headline>
             </div>
           </motion.div>
+        )}
+
+        {phase.kind === 'result' && (
+          <ResultScreen
+            key={phase.session.id}
+            session={phase.session}
+            event={{ name: event.name, font: event.theme.font, share: event.share }}
+            onEmail={(email) => queueEmail(db, phase.session.id, email)}
+            onDone={backToReady}
+          />
         )}
 
         {phase.kind === 'error' && (

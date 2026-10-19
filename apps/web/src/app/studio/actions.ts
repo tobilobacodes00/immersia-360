@@ -7,6 +7,7 @@ import { fail, ok, withOperator, type ActionResult } from '@/server/action-resul
 import {
   createEvent,
   duplicateEvent,
+  extendGuestFiles,
   setArchived,
   updateBasics,
   updateSection,
@@ -118,5 +119,19 @@ export async function revokeDeviceAction(deviceId: string): Promise<ActionResult
     if (!(await revokeDevice(op.organizationId, deviceId))) return fail('not_found');
     revalidatePath('/studio/devices');
     return ok(undefined);
+  });
+}
+
+/** DL-12: extend the event's live guest links by 7 or 30 days. */
+export async function extendGuestFilesAction(
+  eventId: string,
+  days: number,
+): Promise<ActionResult<{ extended: number }>> {
+  return withOperator({ event: ['update'] }, async (op) => {
+    if (!id.safeParse(eventId).success || (days !== 7 && days !== 30)) return fail('invalid');
+    const extended = await extendGuestFiles(op.organizationId, eventId, days);
+    if (extended === null) return fail('not_found');
+    revalidatePath(`/studio/events/${eventId}`);
+    return ok({ extended });
   });
 }

@@ -39,9 +39,15 @@ export default async function HomePage() {
           {t('title')}
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted">{t('lede')}</p>
-        <div className="mt-9">
+        <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3">
           <Link href="/sign-in" className={buttonClass({ variant: 'primary', size: 'lg' })}>
             {t('signIn')}
+          </Link>
+          <Link
+            href="/c"
+            className="focus-ring rounded text-[15px] font-medium text-accent underline-offset-4 hover:underline"
+          >
+            {t('enterCode')}
           </Link>
         </div>
         <ul className="mt-20 grid gap-4 sm:grid-cols-3">

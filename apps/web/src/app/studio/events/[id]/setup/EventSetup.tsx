@@ -505,6 +505,13 @@ export function EventSetup({
           checked={share.smallerVersion}
           onChange={(smallerVersion) => setShare((s) => ({ ...s, smallerVersion }))}
         />
+        <Field label={t('sharing.contact')} help={t('sharing.contactHelp')} stack>
+          <TextInput
+            value={share.contact}
+            onChange={(contact) => setShare((s) => ({ ...s, contact: contact.slice(0, 200) }))}
+            ariaLabel={t('sharing.contact')}
+          />
+        </Field>
         {basics.mode === 'photo' ? (
           <ToggleField
             label={t('sharing.stripQr')}

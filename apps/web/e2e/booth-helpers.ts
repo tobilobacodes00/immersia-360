@@ -57,3 +57,35 @@ export async function startBooth(page: Page, eventId: string, browserName: strin
   await page.getByRole('button', { name: 'Start booth' }).click();
   await expect(page.getByRole('button', { name: 'Tap to start' })).toBeVisible({ timeout: 15_000 });
 }
+
+/** The guest's result screen (screen 13) after a take is saved. */
+export async function expectResult(page: Page) {
+  await expect(page.getByRole('heading', { name: 'Scan for your video' })).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole('img', { name: 'QR code for your video page' })).toBeVisible();
+}
+
+/** The newest guest session the booth minted, read from its device database. */
+export async function latestSession(page: Page) {
+  return page.evaluate(
+    () =>
+      new Promise<{ id: string; linkId: string; shortCode: string | null; state: string }>((resolve, reject) => {
+        const req = indexedDB.open('immersia-booth');
+        req.onerror = () => reject(req.error);
+        req.onsuccess = () => {
+          const all = req.result.transaction('sessions').objectStore('sessions').getAll();
+          all.onsuccess = () => {
+            const rows = all.result as {
+              id: string;
+              linkId: string;
+              shortCode: string | null;
+              state: string;
+              createdAt: number;
+            }[];
+            rows.sort((a, b) => b.createdAt - a.createdAt);
+            if (!rows[0]) reject(new Error('no session'));
+            else resolve(rows[0]);
+          };
+        };
+      }),
+  );
+}

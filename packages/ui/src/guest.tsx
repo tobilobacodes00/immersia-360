@@ -8,12 +8,10 @@
 import type { ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { EASE_OUT_EXPO, cx, tapSpring } from './cx';
+import { displayFontClass, type DisplayFont } from './guest-fonts';
 import { QrCode } from './qr';
 
-export type DisplayFont = 'sans' | 'serif';
-
-export const displayFontClass = (font: DisplayFont) =>
-  font === 'serif' ? 'font-serif' : 'font-sans font-bold tracking-[-0.04em]';
+export { displayFontClass, type DisplayFont } from './guest-fonts';
 
 export const fade = {
   initial: { opacity: 0 },

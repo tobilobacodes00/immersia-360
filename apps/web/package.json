@@ -39,7 +39,9 @@
     "@immersia/capture": "workspace:*",
     "@immersia/offline": "workspace:*",
     "dexie": "catalog:",
-    "@immersia/render-engine": "workspace:*"
+    "@immersia/render-engine": "workspace:*",
+    "@aws-sdk/client-s3": "catalog:",
+    "@aws-sdk/s3-request-presigner": "catalog:"
   },
   "devDependencies": {
     "@axe-core/playwright": "catalog:",

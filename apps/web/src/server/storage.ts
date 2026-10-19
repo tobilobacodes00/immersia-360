@@ -1,0 +1,127 @@
+import 'server-only';
+import {
+  DeleteObjectsCommand,
+  GetObjectCommand,
+  HeadObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { env } from './env';
+
+/**
+ * Object storage for guest files (S3 API: Cloudflare R2 in production, MinIO in CI, any S3 for
+ * self-hosters). Uploads and downloads are presigned against the S3 endpoint — R2 can't presign
+ * on custom domains — and every URL is short-lived.
+ */
+interface StorageConfig {
+  endpoint: string;
+  region: string;
+  bucket: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  forcePathStyle: boolean;
+}
+
+function config(): StorageConfig | null {
+  const e = env();
+  if (!e.S3_ENDPOINT || !e.S3_BUCKET || !e.S3_ACCESS_KEY_ID || !e.S3_SECRET_ACCESS_KEY) return null;
+  return {
+    endpoint: e.S3_ENDPOINT,
+    region: e.S3_REGION,
+    bucket: e.S3_BUCKET,
+    accessKeyId: e.S3_ACCESS_KEY_ID,
+    secretAccessKey: e.S3_SECRET_ACCESS_KEY,
+    forcePathStyle: e.S3_FORCE_PATH_STYLE === '1',
+  };
+}
+
+export class StorageUnavailableError extends Error {
+  constructor() {
+    super('Object storage is not configured (S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY)');
+    this.name = 'StorageUnavailableError';
+  }
+}
+
+let client: { s3: S3Client; bucket: string } | null = null;
+
+function storage() {
+  if (client) return client;
+  const c = config();
+  if (!c) throw new StorageUnavailableError();
+  client = {
+    bucket: c.bucket,
+    s3: new S3Client({
+      endpoint: c.endpoint,
+      region: c.region,
+      forcePathStyle: c.forcePathStyle,
+      credentials: { accessKeyId: c.accessKeyId, secretAccessKey: c.secretAccessKey },
+      // R2 rejects the SDK's default flexible checksums on presigned PUTs.
+      requestChecksumCalculation: 'WHEN_REQUIRED',
+      responseChecksumValidation: 'WHEN_REQUIRED',
+    }),
+  };
+  return client;
+}
+
+export const storageConfigured = () => config() !== null;
+
+/** A presigned single-part PUT. The exact length and type are signed, so the booth can't upload more. */
+export async function presignUpload(key: string, contentType: string, bytes: number, expiresIn = 3600) {
+  const { s3, bucket } = storage();
+  const url = await getSignedUrl(
+    s3,
+    new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: contentType, ContentLength: bytes }),
+    { expiresIn, signableHeaders: new Set(['content-type', 'content-length']) },
+  );
+  return { url, method: 'PUT' as const, headers: { 'content-type': contentType } };
+}
+
+/** A short-lived download URL that saves under a friendly filename. */
+export async function presignDownload(key: string, filename: string, expiresIn = 300) {
+  const { s3, bucket } = storage();
+  const safe = filename.replace(/[^\w.\- ]+/g, '_');
+  return getSignedUrl(
+    s3,
+    new GetObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      ResponseContentDisposition: `attachment; filename="${safe}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
+    }),
+    { expiresIn },
+  );
+}
+
+/** Inline (playable) URL for previews on the share page. */
+export async function presignView(key: string, expiresIn = 3600) {
+  const { s3, bucket } = storage();
+  return getSignedUrl(s3, new GetObjectCommand({ Bucket: bucket, Key: key }), { expiresIn });
+}
+
+export async function objectSize(key: string): Promise<number | null> {
+  const { s3, bucket } = storage();
+  try {
+    const head = await s3.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
+    return head.ContentLength ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Delete in batches of 1000 (the S3 limit). Returns how many keys were removed. */
+export async function deleteObjects(keys: string[]): Promise<number> {
+  const { s3, bucket } = storage();
+  let removed = 0;
+  for (let i = 0; i < keys.length; i += 1000) {
+    const batch = keys.slice(i, i + 1000);
+    await s3.send(
+      new DeleteObjectsCommand({ Bucket: bucket, Delete: { Objects: batch.map((Key) => ({ Key })), Quiet: true } }),
+    );
+    removed += batch.length;
+  }
+  return removed;
+}
+
+/** Object key layout: one prefix per event, so an event's files are easy to export or purge. */
+export const objectKey = (organizationId: string, eventId: string, outputId: string, ext: string) =>
+  `o/${organizationId}/e/${eventId}/${outputId}.${ext}`;

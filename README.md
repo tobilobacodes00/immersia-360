@@ -33,6 +33,25 @@ pnpm --filter @immersia/web dev
 Verification runs in CI: lint, types, unit tests, Playwright on Chrome and WebKit, and axe accessibility
 checks. Every PR also gets a Vercel preview with its own Neon database branch.
 
+### Guest file storage
+
+Guest files live in any S3-compatible bucket (Cloudflare R2 in production, S3Mock in CI); see the
+`S3_*` variables in `.env.example`. Booths upload straight to the bucket with presigned URLs, and the
+share page's "Save to Photos" fetches from it, so the bucket needs a CORS rule for the app's origin:
+
+```json
+[
+  {
+    "AllowedOrigins": ["https://your-app-origin"],
+    "AllowedMethods": ["GET", "PUT", "HEAD"],
+    "AllowedHeaders": ["content-type"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+Expired sessions are swept hourly by Vercel Cron (`apps/web/vercel.json`, authorised by `CRON_SECRET`).
+
 ## Principles
 
 - **Nothing behind payment.** Costs are held down by design: on-device rendering, expiring guest files,

@@ -127,6 +127,13 @@
       "body": "{inviter} convidou você para ajudar nas cabines como {role}.",
       "action": "Aceitar convite",
       "footer": "O convite expira em 7 dias."
+    },
+    "guestLink": {
+      "subject": "Seu vídeo de {event}",
+      "heading": "Seu momento em {event}",
+      "body": "Assista, baixe e compartilhe na sua página. O link funciona até {date}.",
+      "action": "Abrir meus arquivos",
+      "footer": "Você recebeu isto porque pediu na cabine. Não guardamos seu endereço."
     }
   },
   "studio": {
@@ -242,7 +249,16 @@
       "uploadsPending": "Arquivos aguardando envio",
       "uploadsDone": "Tudo foi enviado",
       "devices": "Cabines on-line",
-      "devicesHint": "Dispositivos com este evento"
+      "devicesHint": "Dispositivos com este evento",
+      "guestFiles": "Arquivos dos convidados",
+      "liveLinks": "Links ativos",
+      "nextExpiry": "Próxima expiração",
+      "removed": "Expirados",
+      "removedHint": "Arquivos apagados após o período de retenção do evento",
+      "extend": "Estender por {days} dias",
+      "extendHelp": "Dá mais tempo a todos os links ativos. Arquivos já expirados não podem ser recuperados.",
+      "extended": "{count, plural, =0 {Nenhum link ativo para estender} one {# link estendido por {days} dias} other {# links estendidos por {days} dias}}",
+      "extendFailed": "Não foi possível estender os links. Tente de novo."
     },
     "setup": {
       "title": "Configuração do evento",
@@ -365,7 +381,9 @@
         "guestFormHelp": "Nome e e-mail com uma caixa de consentimento antes do download.",
         "requireName": "Exigir um nome",
         "consent": "Texto de consentimento",
-        "consentHelp": "Com o que os convidados concordam, nas suas palavras."
+        "consentHelp": "Com o que os convidados concordam, nas suas palavras.",
+        "contact": "Contato para convidados",
+        "contactHelp": "Aparece nas páginas dos convidados quando os arquivos do evento expiram, para que possam falar com você. Um e-mail ou telefone."
       }
     },
     "devices": {
@@ -511,6 +529,82 @@
       "preview": "Vídeo renderizado",
       "deleteTitle": "Excluir esta gravação?",
       "deleteBody": "A gravação e tudo o que foi renderizado a partir dela são removidos deste dispositivo. Arquivos já enviados não são afetados."
+    },
+    "result": {
+      "title": "Escaneie para ver seu vídeo",
+      "subtitle": "O link já funciona; seu vídeo chega lá em um ou dois minutos.",
+      "codeHint": "Sem câmera? Acesse {url} e digite",
+      "codePending": "Seu código aparece na página",
+      "tabs": {
+        "link": "Link",
+        "whatsapp": "WhatsApp",
+        "sms": "SMS"
+      },
+      "qrAlt": {
+        "link": "QR code da página do seu vídeo",
+        "whatsapp": "QR code que abre o WhatsApp com seu link",
+        "sms": "QR code que abre um SMS com seu link"
+      },
+      "message": "Meu vídeo de {event}: {url}",
+      "email": "Enviar o link por e-mail",
+      "emailLabel": "E-mail",
+      "emailPlaceholder": "voce@exemplo.com",
+      "emailSend": "Enviar",
+      "emailQueued": "A caminho de {email}",
+      "emailInvalid": "Isso não parece um e-mail.",
+      "next": "Próximo convidado"
+    },
+    "uploads": {
+      "waiting": "{count, plural, one {# envio pendente} other {# envios pendentes}}",
+      "offline": "{count, plural, one {Offline · # envio pendente} other {Offline · # envios pendentes}}",
+      "failed": "{count, plural, one {# envio precisa de atenção} other {# envios precisam de atenção}}",
+      "revoked": "Este dispositivo foi removido: registre-o de novo para enviar",
+      "synced": "Tudo enviado"
+    }
+  },
+  "share": {
+    "metaTitle": "{event}: seus arquivos",
+    "eyebrow": "Seu momento em",
+    "title": "Aqui está",
+    "download": "Baixar",
+    "kinds": {
+      "mp4": "Vídeo",
+      "small_mp4": "Vídeo mais leve",
+      "gif": "GIF",
+      "strip": "Tira de fotos",
+      "short_video": "Vídeo curto",
+      "boomerang": "Boomerang",
+      "poster": "Imagem"
+    },
+    "kindHelp": {
+      "small_mp4": "Mais rápido para enviar por mensagem"
+    },
+    "save": "Salvar em Fotos",
+    "share": "Compartilhar",
+    "copied": "Link copiado",
+    "player": "Seu vídeo",
+    "onTheWay": "Seus arquivos estão a caminho",
+    "onTheWayBody": "Estão sendo enviados pela cabine. Mantenha esta página aberta: ela se atualiza sozinha.",
+    "uploading": "Enviando…",
+    "code": "Seu código",
+    "expires": "Os arquivos são removidos em {date}. Baixe o que quiser guardar.",
+    "endedTitle": "Este evento terminou",
+    "endedBody": "As fotos e vídeos foram removidos. O que você baixou continua no seu aparelho.",
+    "madeWith": "Feito com Immersia 360",
+    "endedContact": "Dúvidas? Fale com {contact}"
+  },
+  "code": {
+    "metaTitle": "Encontre seus arquivos",
+    "title": "Encontre seus arquivos",
+    "body": "Digite o código de seis caracteres que aparece abaixo do QR code na cabine.",
+    "label": "Seu código",
+    "placeholder": "K7M-2QX",
+    "submit": "Encontrar meus arquivos",
+    "errors": {
+      "invalid": "Os códigos têm seis letras e números, como K7M-2QX.",
+      "not_found": "Não encontramos esse código. Confira e tente de novo.",
+      "expired": "Esse evento terminou e os arquivos foram removidos.",
+      "too_many": "Muitas tentativas. Aguarde alguns minutos e tente de novo."
     }
   }
 }

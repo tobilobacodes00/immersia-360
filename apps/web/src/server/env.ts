@@ -18,6 +18,16 @@ const schema = z.object({
   EMAIL_FROM: z.string().min(3).default('Immersia 360 <onboarding@resend.dev>'),
   UPSTASH_REDIS_REST_URL: z.url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
+  /** Object storage for guest files (S3 API: Cloudflare R2, MinIO in CI). All four or none. */
+  S3_ENDPOINT: z.url().optional(),
+  S3_REGION: z.string().min(1).default('auto'),
+  S3_BUCKET: z.string().min(1).optional(),
+  S3_ACCESS_KEY_ID: z.string().min(1).optional(),
+  S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+  /** '1' for MinIO and other path-style endpoints. */
+  S3_FORCE_PATH_STYLE: z.enum(['0', '1']).default('0'),
+  /** Vercel Cron sends it as a bearer token; the expiry sweep refuses requests without it. */
+  CRON_SECRET: z.string().min(16).optional(),
   /** Enables test-only endpoints (the e2e mailbox). Refused on any Vercel deployment. */
   E2E: z.enum(['0', '1']).default('0'),
 });

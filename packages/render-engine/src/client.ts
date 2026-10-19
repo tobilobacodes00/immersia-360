@@ -1,4 +1,9 @@
 import type { RenderJob, RenderResult } from './render';
+
+export interface Derived {
+  poster: Blob | null;
+  small: Blob | null;
+}
 import type { WorkerMessage, WorkerReply } from './render.worker';
 
 export interface RenderHandle {
@@ -25,7 +30,7 @@ export class RenderClient {
   private worker: Worker | null = null;
   private pending = new Map<
     string,
-    { resolve: (r: RenderResult) => void; reject: (e: Error) => void; onProgress?: (p: number) => void }
+    { resolve: (r: RenderResult | Derived) => void; reject: (e: Error) => void; onProgress?: (p: number) => void }
   >();
   private chain: Promise<unknown> = Promise.resolve();
   private paused = false;
@@ -55,6 +60,7 @@ export class RenderClient {
       else {
         this.pending.delete(m.id);
         if (m.type === 'done') p.resolve(m.result);
+        else if (m.type === 'derived') p.resolve({ poster: m.poster, small: m.small } satisfies Derived);
         else p.reject(new RenderFailure(m.code, m.message));
       }
     };
@@ -84,7 +90,7 @@ export class RenderClient {
               }
               this.pending.set(id, {
                 resolve: (r) => {
-                  resolve(r);
+                  resolve(r as RenderResult);
                   done();
                 },
                 reject: (e) => {
@@ -111,6 +117,33 @@ export class RenderClient {
         this.worker?.postMessage({ type: 'cancel', id } satisfies WorkerMessage);
       },
     };
+  }
+
+  /**
+   * Poster and messaging copy of a finished render (DL-8), queued behind any render in progress: a
+   * device has one GPU and one encoder worth sharing.
+   */
+  derive(id: string, mp4: Blob, fps: number, want: { poster: boolean; small: boolean }): Promise<Derived> {
+    return new Promise<Derived>((resolve, reject) => {
+      this.chain = this.chain
+        .catch(() => undefined)
+        .then(
+          () =>
+            new Promise<void>((done) => {
+              this.pending.set(id, {
+                resolve: (r) => {
+                  resolve(r as Derived);
+                  done();
+                },
+                reject: (e) => {
+                  reject(e);
+                  done();
+                },
+              });
+              this.ensure().postMessage({ type: 'derive', id, mp4, fps, ...want } satisfies WorkerMessage);
+            }),
+        );
+    });
   }
 
   dispose() {

@@ -127,6 +127,13 @@
       "body": "{inviter} invited you to help run booths as {role}.",
       "action": "Accept invitation",
       "footer": "The invitation expires in 7 days."
+    },
+    "guestLink": {
+      "subject": "Your video from {event}",
+      "heading": "Your moment from {event}",
+      "body": "Watch, download and share it from your page. The link works until {date}.",
+      "action": "Open my files",
+      "footer": "You got this because you asked for it at the booth. We don’t keep your address."
     }
   },
   "studio": {
@@ -242,7 +249,16 @@
       "uploadsPending": "Files waiting to upload",
       "uploadsDone": "Everything is uploaded",
       "devices": "Booths online",
-      "devicesHint": "Devices running this event"
+      "devicesHint": "Devices running this event",
+      "guestFiles": "Guest files",
+      "liveLinks": "Live guest links",
+      "nextExpiry": "Next expiry",
+      "removed": "Expired",
+      "removedHint": "Files deleted after the event’s retention",
+      "extend": "Extend by {days} days",
+      "extendHelp": "Gives every live guest link more time. Files that have already expired can’t be brought back.",
+      "extended": "{count, plural, =0 {No live links to extend} one {# link extended by {days} days} other {# links extended by {days} days}}",
+      "extendFailed": "Couldn’t extend the links. Try again."
     },
     "setup": {
       "title": "Event setup",
@@ -365,7 +381,9 @@
         "guestFormHelp": "Name and email with a consent checkbox before download.",
         "requireName": "Require a name",
         "consent": "Consent text",
-        "consentHelp": "What guests agree to, in your words."
+        "consentHelp": "What guests agree to, in your words.",
+        "contact": "Contact for guests",
+        "contactHelp": "Shown on guest pages once this event’s files have expired, so guests can reach you. An email address or phone number."
       }
     },
     "devices": {
@@ -511,6 +529,82 @@
       "preview": "Rendered video",
       "deleteTitle": "Delete this take?",
       "deleteBody": "The recording and anything rendered from it are removed from this device. Files already uploaded are not affected."
+    },
+    "result": {
+      "title": "Scan for your video",
+      "subtitle": "The link works right away; your video lands there in a minute or two.",
+      "codeHint": "No camera? Go to {url} and enter",
+      "codePending": "Your code appears on the page",
+      "tabs": {
+        "link": "Link",
+        "whatsapp": "WhatsApp",
+        "sms": "Text"
+      },
+      "qrAlt": {
+        "link": "QR code for your video page",
+        "whatsapp": "QR code that opens WhatsApp with your link",
+        "sms": "QR code that opens a text message with your link"
+      },
+      "message": "My video from {event}: {url}",
+      "email": "Email me the link",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "you@example.com",
+      "emailSend": "Send",
+      "emailQueued": "On its way to {email}",
+      "emailInvalid": "That doesn’t look like an email address.",
+      "next": "Next guest"
+    },
+    "uploads": {
+      "waiting": "{count, plural, one {# upload waiting} other {# uploads waiting}}",
+      "offline": "{count, plural, one {Offline · # upload waiting} other {Offline · # uploads waiting}}",
+      "failed": "{count, plural, one {# upload needs attention} other {# uploads need attention}}",
+      "revoked": "This device was removed: register it again to upload",
+      "synced": "All uploaded"
+    }
+  },
+  "share": {
+    "metaTitle": "{event}: your files",
+    "eyebrow": "Your moment from",
+    "title": "Here it is",
+    "download": "Download",
+    "kinds": {
+      "mp4": "Video",
+      "small_mp4": "Smaller video",
+      "gif": "GIF",
+      "strip": "Photo strip",
+      "short_video": "Short video",
+      "boomerang": "Boomerang",
+      "poster": "Still"
+    },
+    "kindHelp": {
+      "small_mp4": "Quicker to send in messaging apps"
+    },
+    "save": "Save to Photos",
+    "share": "Share",
+    "copied": "Link copied",
+    "player": "Your video",
+    "onTheWay": "Your files are on their way",
+    "onTheWayBody": "They are uploading from the booth. Keep this page open: it updates by itself.",
+    "uploading": "Uploading…",
+    "code": "Your code",
+    "expires": "Files are removed on {date}. Download anything you want to keep.",
+    "endedTitle": "This event has ended",
+    "endedBody": "Its photos and videos have been removed. Anything you downloaded is still on your device.",
+    "madeWith": "Made with Immersia 360",
+    "endedContact": "Questions? Contact {contact}"
+  },
+  "code": {
+    "metaTitle": "Find your files",
+    "title": "Find your files",
+    "body": "Type the six-character code shown under the QR code at the booth.",
+    "label": "Your code",
+    "placeholder": "K7M-2QX",
+    "submit": "Find my files",
+    "errors": {
+      "invalid": "Codes are six letters and numbers, like K7M-2QX.",
+      "not_found": "We couldn’t find that code. Check it and try again.",
+      "expired": "That event has ended and its files have been removed.",
+      "too_many": "Too many tries. Wait a few minutes, then try again."
     }
   }
 }

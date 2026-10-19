@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { brandingSchema, outputSettingsSchema } from '@immersia/shared';
+import { brandingSchema, outputSettingsSchema, shareSettingsSchema } from '@immersia/shared';
 import { getEvent } from '@/server/events';
 import { requireOperator } from '@/server/session';
 import { BoothClient } from './BoothClient';
@@ -16,6 +16,7 @@ export default async function BoothPage({ params }: { params: Promise<{ eventId:
   if (!event || event.status === 'archived' || event.mode !== 'video360') notFound();
   const output = outputSettingsSchema.parse(event.outputSettings);
   const branding = brandingSchema.parse(event.branding);
+  const share = shareSettingsSchema.parse(event.shareSettings);
   return (
     <BoothClient
       event={{
@@ -25,6 +26,13 @@ export default async function BoothPage({ params }: { params: Promise<{ eventId:
         triggers: output.triggers,
         theme: branding.theme,
         attract: { headline: branding.attract.headline, cta: branding.attract.cta },
+        share: {
+          qr: share.qr,
+          email: share.email,
+          sms: share.sms,
+          whatsapp: share.whatsapp,
+          smallerVersion: share.smallerVersion,
+        },
       }}
     />
   );
