@@ -70,6 +70,8 @@ export interface LocalSession {
   linkId: string;
   /** From this device's reserved pool; null when it ran dry offline (the server assigns one). */
   shortCode: string | null;
+  /** EVT-5: the filename prefix the server assigned at registration ("0007_", or "" when the event has none). */
+  filenamePrefix?: string;
   takeIds: string[];
   capturedAt: number;
   optedOutOfDisplay: boolean;

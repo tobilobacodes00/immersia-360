@@ -39,6 +39,8 @@ class FakeServer implements BoothApi {
   >();
   calls: string[] = [];
   failNext: BoothApiError | Error | null = null;
+  /** What the server assigns at registration (EVT-5). */
+  filenamePrefix = '';
 
   private maybeFail(call: string) {
     this.calls.push(call);
@@ -67,7 +69,7 @@ class FakeServer implements BoothApi {
         method: 'PUT',
         headers: {},
       }));
-    return { shortCode: input.shortCode ?? 'SRV234', filenamePrefix: '', uploads };
+    return { shortCode: input.shortCode ?? 'SRV234', filenamePrefix: this.filenamePrefix, uploads };
   }
 
   async put(ticket: UploadTicket, body: Blob): Promise<void> {
@@ -302,6 +304,18 @@ describe('upload queue', () => {
     await addOutput('t1', 'small_mp4', 400);
     await queue.nudge('t1');
     expect(await drain(queue)).toEqual(['registered', 'uploaded:small_mp4', 'done']);
+  });
+
+  it('keeps the filename prefix the server assigned, for the gallery to name files by', async () => {
+    const server = new FakeServer();
+    server.filenamePrefix = '0007_';
+    const queue = new UploadQueue(db, store, server, now);
+    await addTake('t1', 'rendered');
+    await addOutput('t1', 'mp4', 1000);
+    const session = await mintSession(db, { eventId: 'evt', takeIds: ['t1'], capturedAt: clock });
+    expect((await db.sessions.get(session.id))!.filenamePrefix).toBeUndefined();
+    await drain(queue);
+    expect((await db.sessions.get(session.id))!.filenamePrefix).toBe('0007_');
   });
 
   it('uploads a photo session: no takes, outputs made for the session itself', async () => {
