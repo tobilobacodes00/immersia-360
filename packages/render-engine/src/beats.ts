@@ -262,6 +262,24 @@ export function beatsOnOutput(
 export const FALLBACK_BEAT_S = 0.5;
 
 /**
+ * A beat grid no faster than `maxBpm`: a song whose typical beat is quicker plays in half time
+ * (every other beat). Effects that flash on the beat ask for this (strobe: at most three flashes a
+ * second, WCAG 2.3.1). Decided on the median interval, so one early or late beat doesn't fold a
+ * song, and the grid stays regular; the tracker never reports more than twice the cap, so one fold
+ * is enough.
+ */
+export function foldTempo(beats: number[], maxBpm: number): number[] {
+  if (beats.length < 3) return beats;
+  const gaps = beats
+    .slice(1)
+    .map((b, i) => b - beats[i]!)
+    .sort((a, b) => a - b);
+  const median = gaps[gaps.length >> 1]!;
+  // Compared as tempos with a hair of slack: a grid at exactly the cap must not fold on rounding.
+  return 60 / median > maxBpm + 1e-6 ? beats.filter((_, i) => i % 2 === 0) : beats;
+}
+
+/**
  * Effect inputs at output time `t` (contract: uBeat = phase within the beat, uPulse = 1 on the beat
  * decaying to ~0 by the next).
  */
