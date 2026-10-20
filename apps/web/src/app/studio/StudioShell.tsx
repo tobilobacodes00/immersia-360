@@ -14,6 +14,7 @@ import {
   LogOut,
   Menu,
   MonitorSmartphone,
+  Settings,
   X,
   type LucideIcon,
 } from 'lucide-react';
@@ -25,7 +26,7 @@ import { OperatorProvider } from './operator-context';
 
 interface NavItem {
   href: Route;
-  key: 'home' | 'events' | 'assets' | 'devices' | 'integrations';
+  key: 'home' | 'events' | 'assets' | 'devices' | 'integrations' | 'settings';
   icon: LucideIcon;
   match: (path: string) => boolean;
 }
@@ -57,6 +58,12 @@ const NAV: { group: 'overview' | 'prepare' | 'system'; items: NavItem[] }[] = [
         icon: Cloud,
         match: (p) => p.startsWith('/studio/integrations'),
       },
+      {
+        href: '/studio/settings',
+        key: 'settings',
+        icon: Settings,
+        match: (p) => p.startsWith('/studio/settings'),
+      },
     ],
   },
 ];
@@ -71,6 +78,7 @@ export interface ShellOperator {
 function Rail({ operator, onNavigate }: { operator: ShellOperator; onNavigate?: () => void }) {
   const t = useTranslations('studio.nav');
   const tr = useTranslations('roles');
+  const tc = useTranslations('common');
   const path = usePathname();
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
@@ -119,6 +127,14 @@ function Rail({ operator, onNavigate }: { operator: ShellOperator; onNavigate?: 
       </nav>
       <div className="mt-auto space-y-3 border-t border-line pt-4">
         <LanguagePicker />
+        <div className="flex gap-1 px-1 text-[13px]">
+          <Link href="/privacy" onClick={onNavigate} className="focus-ring rounded px-2 py-2 text-muted hover:text-fg">
+            {tc('privacy')}
+          </Link>
+          <Link href="/terms" onClick={onNavigate} className="focus-ring rounded px-2 py-2 text-muted hover:text-fg">
+            {tc('terms')}
+          </Link>
+        </div>
         <div className="flex items-center gap-2 px-1">
           <div className="min-w-0 flex-1">
             <div className="truncate text-[13px] font-medium">{operator.name || operator.email}</div>
