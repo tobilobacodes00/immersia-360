@@ -149,7 +149,11 @@ test.describe('team (ACC-3, screen 21)', () => {
         const ownerMember = (await owned.json()) as { id: string; organizationId: string };
         const post = (path: string, data: object) =>
           viewer.request.post(`/api/auth/organization/${path}`, { data, headers: { origin } });
-        const invited = await post('invite-member', { email: uniqueEmail('x'), role: 'viewer' });
+        const invited = await post('invite-member', {
+          email: uniqueEmail('x'),
+          role: 'viewer',
+          organizationId: ownerMember.organizationId,
+        });
         expect(invited.status()).toBe(403);
         const promoted = await post('update-member-role', {
           memberId: ownerMember.id,
