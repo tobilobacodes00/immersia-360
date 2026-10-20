@@ -2,210 +2,118 @@
   "version": "8",
   "dialect": "postgres",
   "id": "1744fcaf-a1f5-48e6-8206-c78943792509",
-  "prevIds": [
-    "8b7ca39d-c222-4087-9c8c-6914d2e65e51"
-  ],
+  "prevIds": ["8b7ca39d-c222-4087-9c8c-6914d2e65e51"],
   "ddl": [
     {
-      "values": [
-        "pending",
-        "ready"
-      ],
+      "values": ["pending", "ready"],
       "name": "asset_status",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "overlay",
-        "layout",
-        "intro",
-        "outro",
-        "audio",
-        "font",
-        "logo",
-        "background"
-      ],
+      "values": ["overlay", "layout", "intro", "outro", "audio", "font", "logo", "background"],
       "name": "asset_type",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "video360",
-        "photo"
-      ],
+      "values": ["video360", "photo"],
       "name": "booth_mode",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "tap",
-        "timer",
-        "motion",
-        "remote",
-        "keyboard",
-        "import"
-      ],
+      "values": ["tap", "timer", "motion", "remote", "keyboard", "import"],
       "name": "capture_trigger",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "spotlight",
-        "mosaic",
-        "ticker",
-        "counter"
-      ],
+      "values": ["spotlight", "mosaic", "ticker", "counter"],
       "name": "display_layout",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "pending",
-        "shown",
-        "hidden",
-        "opted_out"
-      ],
+      "values": ["pending", "shown", "hidden", "opted_out"],
       "name": "display_status",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "draft",
-        "live",
-        "archived"
-      ],
+      "values": ["draft", "live", "archived"],
       "name": "event_status",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "drive",
-        "dropbox"
-      ],
+      "values": ["drive", "dropbox"],
       "name": "integration_provider",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "connected",
-        "needs_reauth",
-        "revoked"
-      ],
+      "values": ["connected", "needs_reauth", "revoked"],
       "name": "integration_status",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "auto",
-        "approve"
-      ],
+      "values": ["auto", "approve"],
       "name": "moderation_mode",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "mp4",
-        "small_mp4",
-        "gif",
-        "strip",
-        "short_video",
-        "boomerang",
-        "poster"
-      ],
+      "values": ["mp4", "small_mp4", "gif", "strip", "short_video", "boomerang", "poster"],
       "name": "output_kind",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "queued",
-        "running",
-        "done",
-        "failed"
-      ],
+      "values": ["queued", "running", "done", "failed"],
       "name": "render_job_status",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "not_me",
-        "inappropriate",
-        "illegal",
-        "privacy",
-        "other"
-      ],
+      "values": ["not_me", "inappropriate", "illegal", "privacy", "other"],
       "name": "report_reason",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "open",
-        "actioned",
-        "dismissed"
-      ],
+      "values": ["open", "actioned", "dismissed"],
       "name": "report_status",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "pending",
-        "live",
-        "expired"
-      ],
+      "values": ["pending", "live", "expired"],
       "name": "session_status",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "local",
-        "uploading",
-        "uploaded",
-        "failed"
-      ],
+      "values": ["local", "uploading", "uploaded", "failed"],
       "name": "take_status",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "layout",
-        "overlay"
-      ],
+      "values": ["layout", "overlay"],
       "name": "template_kind",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "pending",
-        "uploading",
-        "done",
-        "failed"
-      ],
+      "values": ["pending", "uploading", "done", "failed"],
       "name": "upload_status",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "hosted",
-        "drive",
-        "dropbox"
-      ],
+      "values": ["hosted", "drive", "dropbox"],
       "name": "upload_target",
       "entityType": "enums",
       "schema": "public"
@@ -4652,14 +4560,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "account_user_id_user_id_fkey",
@@ -4669,14 +4573,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_id"
-      ],
+      "columns": ["organization_id"],
       "schemaTo": "public",
       "tableTo": "organization",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "invitation_organization_id_organization_id_fkey",
@@ -4686,14 +4586,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "inviter_id"
-      ],
+      "columns": ["inviter_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "invitation_inviter_id_user_id_fkey",
@@ -4703,14 +4599,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_id"
-      ],
+      "columns": ["organization_id"],
       "schemaTo": "public",
       "tableTo": "organization",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "member_organization_id_organization_id_fkey",
@@ -4720,14 +4612,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "member_user_id_user_id_fkey",
@@ -4737,14 +4625,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "session_user_id_user_id_fkey",
@@ -4754,14 +4638,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_id"
-      ],
+      "columns": ["organization_id"],
       "schemaTo": "public",
       "tableTo": "organization",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "asset_organization_id_organization_id_fkey",
@@ -4771,14 +4651,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_id"
-      ],
+      "columns": ["organization_id"],
       "schemaTo": "public",
       "tableTo": "organization",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "audit_log_organization_id_organization_id_fkey",
@@ -4788,14 +4664,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "actor_user_id"
-      ],
+      "columns": ["actor_user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "audit_log_actor_user_id_user_id_fkey",
@@ -4805,14 +4677,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "event_id"
-      ],
+      "columns": ["event_id"],
       "schemaTo": "public",
       "tableTo": "event",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "capture_session_event_id_event_id_fkey",
@@ -4822,14 +4690,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "device_id"
-      ],
+      "columns": ["device_id"],
       "schemaTo": "public",
       "tableTo": "device",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "capture_session_device_id_device_id_fkey",
@@ -4839,14 +4703,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_id"
-      ],
+      "columns": ["organization_id"],
       "schemaTo": "public",
       "tableTo": "organization",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "device_organization_id_organization_id_fkey",
@@ -4856,14 +4716,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "registered_by"
-      ],
+      "columns": ["registered_by"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "device_registered_by_user_id_fkey",
@@ -4873,14 +4729,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "event_id"
-      ],
+      "columns": ["event_id"],
       "schemaTo": "public",
       "tableTo": "event",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "display_event_id_event_id_fkey",
@@ -4890,14 +4742,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "event_id"
-      ],
+      "columns": ["event_id"],
       "schemaTo": "public",
       "tableTo": "event",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "display_pairing_event_id_event_id_fkey",
@@ -4907,14 +4755,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "created_by"
-      ],
+      "columns": ["created_by"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "display_pairing_created_by_user_id_fkey",
@@ -4924,14 +4768,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "display_id"
-      ],
+      "columns": ["display_id"],
       "schemaTo": "public",
       "tableTo": "display",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "display_pairing_display_id_display_id_fkey",
@@ -4941,14 +4781,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_id"
-      ],
+      "columns": ["organization_id"],
       "schemaTo": "public",
       "tableTo": "organization",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "event_organization_id_organization_id_fkey",
@@ -4958,14 +4794,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "created_by"
-      ],
+      "columns": ["created_by"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "event_created_by_user_id_fkey",
@@ -4975,14 +4807,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "event_id"
-      ],
+      "columns": ["event_id"],
       "schemaTo": "public",
       "tableTo": "event",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "guest_contact_event_id_event_id_fkey",
@@ -4992,14 +4820,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "session_id"
-      ],
+      "columns": ["session_id"],
       "schemaTo": "public",
       "tableTo": "capture_session",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "guest_contact_session_id_capture_session_id_fkey",
@@ -5009,14 +4833,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_id"
-      ],
+      "columns": ["organization_id"],
       "schemaTo": "public",
       "tableTo": "organization",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "integration_organization_id_organization_id_fkey",
@@ -5026,14 +4846,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "session_id"
-      ],
+      "columns": ["session_id"],
       "schemaTo": "public",
       "tableTo": "capture_session",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "output_session_id_capture_session_id_fkey",
@@ -5043,14 +4859,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "take_id"
-      ],
+      "columns": ["take_id"],
       "schemaTo": "public",
       "tableTo": "take",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "output_take_id_take_id_fkey",
@@ -5060,14 +4872,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "session_id"
-      ],
+      "columns": ["session_id"],
       "schemaTo": "public",
       "tableTo": "capture_session",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "report_session_id_capture_session_id_fkey",
@@ -5077,14 +4885,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "output_id"
-      ],
+      "columns": ["output_id"],
       "schemaTo": "public",
       "tableTo": "output",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "report_output_id_output_id_fkey",
@@ -5094,14 +4898,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "actioned_by"
-      ],
+      "columns": ["actioned_by"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "report_actioned_by_user_id_fkey",
@@ -5111,14 +4911,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "event_id"
-      ],
+      "columns": ["event_id"],
       "schemaTo": "public",
       "tableTo": "event",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "server_render_job_event_id_event_id_fkey",
@@ -5128,14 +4924,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "session_id"
-      ],
+      "columns": ["session_id"],
       "schemaTo": "public",
       "tableTo": "capture_session",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "server_render_job_session_id_capture_session_id_fkey",
@@ -5145,14 +4937,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "take_id"
-      ],
+      "columns": ["take_id"],
       "schemaTo": "public",
       "tableTo": "take",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "server_render_job_take_id_take_id_fkey",
@@ -5162,14 +4950,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "event_id"
-      ],
+      "columns": ["event_id"],
       "schemaTo": "public",
       "tableTo": "event",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "short_code_reservation_event_id_event_id_fkey",
@@ -5179,14 +4963,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "device_id"
-      ],
+      "columns": ["device_id"],
       "schemaTo": "public",
       "tableTo": "device",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "short_code_reservation_device_id_device_id_fkey",
@@ -5196,14 +4976,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "event_id"
-      ],
+      "columns": ["event_id"],
       "schemaTo": "public",
       "tableTo": "event",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "take_event_id_event_id_fkey",
@@ -5213,14 +4989,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "device_id"
-      ],
+      "columns": ["device_id"],
       "schemaTo": "public",
       "tableTo": "device",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "take_device_id_device_id_fkey",
@@ -5230,14 +5002,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_id"
-      ],
+      "columns": ["organization_id"],
       "schemaTo": "public",
       "tableTo": "organization",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "template_organization_id_organization_id_fkey",
@@ -5247,14 +5015,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "event_id"
-      ],
+      "columns": ["event_id"],
       "schemaTo": "public",
       "tableTo": "event",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "template_event_id_event_id_fkey",
@@ -5264,14 +5028,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "output_id"
-      ],
+      "columns": ["output_id"],
       "schemaTo": "public",
       "tableTo": "output",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "upload_object_output_id_output_id_fkey",
@@ -5280,9 +5040,7 @@
       "table": "upload_object"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "account_pkey",
       "schema": "public",
@@ -5290,9 +5048,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "invitation_pkey",
       "schema": "public",
@@ -5300,9 +5056,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "member_pkey",
       "schema": "public",
@@ -5310,9 +5064,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "organization_pkey",
       "schema": "public",
@@ -5320,9 +5072,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "session_pkey",
       "schema": "public",
@@ -5330,9 +5080,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "user_pkey",
       "schema": "public",
@@ -5340,9 +5088,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "verification_pkey",
       "schema": "public",
@@ -5350,9 +5096,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "asset_pkey",
       "schema": "public",
@@ -5360,9 +5104,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "audit_log_pkey",
       "schema": "public",
@@ -5370,9 +5112,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "capture_session_pkey",
       "schema": "public",
@@ -5380,9 +5120,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "device_pkey",
       "schema": "public",
@@ -5390,9 +5128,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "display_pkey",
       "schema": "public",
@@ -5400,9 +5136,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "code"
-      ],
+      "columns": ["code"],
       "nameExplicit": false,
       "name": "display_pairing_pkey",
       "schema": "public",
@@ -5410,9 +5144,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "event_pkey",
       "schema": "public",
@@ -5420,9 +5152,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "guest_contact_pkey",
       "schema": "public",
@@ -5430,9 +5160,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "integration_pkey",
       "schema": "public",
@@ -5440,9 +5168,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "organization_deletion_pkey",
       "schema": "public",
@@ -5450,9 +5176,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "output_pkey",
       "schema": "public",
@@ -5460,9 +5184,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "report_pkey",
       "schema": "public",
@@ -5470,9 +5192,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "server_render_job_pkey",
       "schema": "public",
@@ -5480,9 +5200,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "code"
-      ],
+      "columns": ["code"],
       "nameExplicit": false,
       "name": "short_code_reservation_pkey",
       "schema": "public",
@@ -5490,9 +5208,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "take_pkey",
       "schema": "public",
@@ -5500,9 +5216,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "template_pkey",
       "schema": "public",
@@ -5510,9 +5224,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "upload_object_pkey",
       "schema": "public",
@@ -5521,11 +5233,7 @@
     },
     {
       "nameExplicit": true,
-      "columns": [
-        "session_id",
-        "kind",
-        "take_id"
-      ],
+      "columns": ["session_id", "kind", "take_id"],
       "nullsNotDistinct": true,
       "name": "output_session_kind_take_uq",
       "entityType": "uniques",
@@ -5534,9 +5242,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "token"
-      ],
+      "columns": ["token"],
       "nullsNotDistinct": false,
       "name": "session_token_key",
       "schema": "public",
@@ -5545,9 +5251,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "email"
-      ],
+      "columns": ["email"],
       "nullsNotDistinct": false,
       "name": "user_email_key",
       "schema": "public",
