@@ -1,12 +1,12 @@
 import 'server-only';
 import { and, eq, isNull, lte, sql } from 'drizzle-orm';
 import { db, schema } from '@immersia/db';
-import { normalizeShortCode, type OutputKind } from '@immersia/shared';
+import { normalizeShortCode, shareSettingsSchema, type OutputKind } from '@immersia/shared';
 import { isExpired, type SessionState } from './share-state';
 import { EXT, slug } from './filenames';
 import { deleteObjects, presignDownload, presignView } from './storage';
 
-const { event, captureSession, output } = schema;
+const { event, captureSession, output, organization } = schema;
 
 export interface ShareFile {
   id: string;
@@ -31,6 +31,14 @@ export interface SharePage {
   expiresAt: Date;
   /** DL-12: the operator's contact, shown once the event has ended. */
   contact: string;
+  /**
+   * SHR-6: the optional guest form. `operator` is the business that runs the event and so the
+   * controller of whatever the form collects; `extra` is its own consent sentence.
+   */
+  operator: string;
+  guestForm: { enabled: boolean; requireName: boolean; extra: string; policyUrl: string };
+  /** The event gallery, for the guest-form cookie that also covers it. */
+  gallerySlug: string;
   files: ShareFile[];
 }
 
@@ -42,22 +50,39 @@ export async function sharePage(linkId: string): Promise<SharePage | null> {
       shortCode: captureSession.shortCode,
       expiresAt: captureSession.expiresAt,
       expiredAt: captureSession.expiredAt,
+      erasedAt: captureSession.erasedAt,
       eventId: event.id,
       eventName: event.name,
+      gallerySlug: event.gallerySlug,
       branding: event.branding,
       share: event.shareSettings,
+      operator: organization.name,
     })
     .from(captureSession)
     .innerJoin(event, eq(event.id, captureSession.eventId))
+    .innerJoin(organization, eq(organization.id, event.organizationId))
     .where(eq(captureSession.linkId, linkId))
     .limit(1);
   if (!row) return null;
+  // Older rows gain any settings added since they were written (the guest form's policy link).
+  const settings = shareSettingsSchema.safeParse(row.share);
+  const form = settings.success ? settings.data.guestForm : null;
   const base = {
     event: { id: row.eventId, name: row.eventName, theme: row.branding.theme },
     shortCode: row.shortCode,
     expiresAt: row.expiresAt,
     contact: typeof row.share?.contact === 'string' ? row.share.contact : '',
+    operator: row.operator,
+    guestForm: {
+      enabled: form?.enabled ?? false,
+      requireName: form?.requireName ?? false,
+      extra: form?.consentText ?? '',
+      policyUrl: form?.policyUrl ?? '',
+    },
+    gallerySlug: row.gallerySlug,
   };
+  // Erasure wins over expiry: the guest asked for it, and the page says so.
+  if (row.erasedAt) return { ...base, state: 'erased', files: [] };
   if (isExpired(row)) return { ...base, state: 'expired', files: [] };
 
   const rows = await db().select().from(output).where(eq(output.sessionId, row.sessionId));
@@ -82,7 +107,7 @@ const KIND_ORDER: OutputKind[] = ['mp4', 'strip', 'gif', 'boomerang', 'short_vid
 
 export type DownloadResult =
   | { url: string; kind: OutputKind; bytes: number | null; eventId: string }
-  | { error: 'not_found' | 'expired' | 'not_ready' };
+  | { error: 'not_found' | 'expired' | 'erased' | 'not_ready' };
 
 /**
  * A download (DL-8): only through the session's own link id (the access secret), only while the
@@ -100,6 +125,7 @@ export async function downloadUrl(linkId: string, outputId: string): Promise<Dow
       eventId: event.id,
       expiresAt: captureSession.expiresAt,
       expiredAt: captureSession.expiredAt,
+      erasedAt: captureSession.erasedAt,
       prefix: captureSession.filenamePrefix,
       eventName: event.name,
     })
@@ -109,6 +135,7 @@ export async function downloadUrl(linkId: string, outputId: string): Promise<Dow
     .where(and(eq(output.id, outputId), eq(captureSession.linkId, linkId)))
     .limit(1);
   if (!row) return { error: 'not_found' };
+  if (row.erasedAt) return { error: 'erased' };
   if (isExpired(row)) return { error: 'expired' };
   if (!row.uploadedAt || !row.key) return { error: 'not_ready' };
   await db()
@@ -151,15 +178,22 @@ export async function expireSessions(limit = 200): Promise<{ sessions: number; o
     .limit(limit);
   if (!due.length) return { sessions: 0, objects: 0 };
   let objects = 0;
+  let swept = 0;
   for (const s of due) {
-    const keys = (await db().select({ key: output.objectKey }).from(output).where(eq(output.sessionId, s.id))).flatMap(
-      (o) => (o.key ? [o.key] : []),
-    );
-    if (keys.length) objects += await deleteObjects(keys);
-    await db()
-      .update(captureSession)
-      .set({ expiredAt: new Date(), status: 'expired' })
-      .where(eq(captureSession.id, s.id));
+    // One stubborn session must not stop the others; it stays unmarked and is retried next hour.
+    try {
+      const keys = (
+        await db().select({ key: output.objectKey }).from(output).where(eq(output.sessionId, s.id))
+      ).flatMap((o) => (o.key ? [o.key] : []));
+      if (keys.length) objects += await deleteObjects(keys);
+      await db()
+        .update(captureSession)
+        .set({ expiredAt: new Date(), status: 'expired' })
+        .where(eq(captureSession.id, s.id));
+      swept++;
+    } catch (err) {
+      console.error('[expiry] could not sweep a session', s.id, err instanceof Error ? err.message : err);
+    }
   }
-  return { sessions: due.length, objects };
+  return { sessions: swept, objects };
 }

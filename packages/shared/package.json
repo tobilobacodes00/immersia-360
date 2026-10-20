@@ -13,6 +13,7 @@
     "./routes": "./src/routes.ts",
     "./analytics": "./src/analytics.ts",
     "./event": "./src/event.ts",
+    "./guest-form": "./src/guest-form.ts",
     "./template": "./src/template.ts",
     "./device": "./src/device.ts",
     "./session": "./src/session.ts",

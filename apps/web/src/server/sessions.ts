@@ -14,6 +14,7 @@ import type { DeviceRow } from './devices';
 import { enqueueCloudCopies, processCloudCopies } from './cloud/copy';
 import { sendGuestLinkEmail } from './email';
 import { appOrigin } from './env';
+import { uploadGate } from './erasure-core';
 import { refreshSessionItem } from './live';
 import { allow } from './rate-limit';
 import { objectKey, objectSize, presignUpload } from './storage';
@@ -86,7 +87,7 @@ const EXT: Record<string, string> = {
 export async function registerSession(
   device: DeviceRow,
   input: RegisterSessionInput,
-): Promise<RegisterSessionResult | { error: 'not_found' | 'conflict' }> {
+): Promise<RegisterSessionResult | { error: 'not_found' | 'conflict' | 'erased' }> {
   const result = await db().transaction(async (tx) => {
     const [ev] = await tx
       .select()
@@ -99,6 +100,8 @@ export async function registerSession(
     let session = existing;
     if (existing && (existing.linkId !== input.linkId || existing.eventId !== input.eventId))
       return { ok: false as const, error: 'conflict' as const };
+    // The guest deleted this session (privacy): a booth that still holds it must not bring it back.
+    if (existing && uploadGate(existing) === 'erased') return { ok: false as const, error: 'erased' as const };
     if (!existing) {
       let code = input.shortCode;
       if (code) {
@@ -224,16 +227,29 @@ export async function registerSession(
   return { shortCode: result.session.shortCode, filenamePrefix: result.session.filenamePrefix, uploads };
 }
 
-/** Mark an output uploaded once the object really exists at the expected size. */
-export async function completeUpload(device: DeviceRow, outputId: string): Promise<'ok' | 'not_found' | 'incomplete'> {
+/**
+ * Mark an output uploaded once the object really exists at the expected size. Refused for an erased
+ * session (the guest deleted it): the file just uploaded is removed again by the erasure sweep.
+ */
+export async function completeUpload(
+  device: DeviceRow,
+  outputId: string,
+): Promise<'ok' | 'not_found' | 'incomplete' | 'erased'> {
   const [row] = await db()
-    .select({ id: output.id, key: output.objectKey, bytes: output.bytes, sessionId: output.sessionId })
+    .select({
+      id: output.id,
+      key: output.objectKey,
+      bytes: output.bytes,
+      sessionId: output.sessionId,
+      erasedAt: captureSession.erasedAt,
+    })
     .from(output)
     .innerJoin(captureSession, eq(captureSession.id, output.sessionId))
     .innerJoin(event, eq(event.id, captureSession.eventId))
     .where(and(eq(output.id, outputId), eq(event.organizationId, device.organizationId)))
     .limit(1);
   if (!row?.key) return 'not_found';
+  if (uploadGate(row) === 'erased') return 'erased';
   const size = await objectSize(row.key);
   if (size === null || (row.bytes !== null && size !== row.bytes)) return 'incomplete';
   await db().transaction(async (tx) => {
@@ -265,14 +281,21 @@ export async function emailSessionLink(
   sessionId: string,
   to: string,
   locale: Locale,
-): Promise<'sent' | 'not_found' | 'too_many'> {
+): Promise<'sent' | 'not_found' | 'too_many' | 'erased'> {
   const [row] = await db()
-    .select({ linkId: captureSession.linkId, expiresAt: captureSession.expiresAt, eventName: event.name })
+    .select({
+      linkId: captureSession.linkId,
+      expiresAt: captureSession.expiresAt,
+      erasedAt: captureSession.erasedAt,
+      eventName: event.name,
+    })
     .from(captureSession)
     .innerJoin(event, eq(event.id, captureSession.eventId))
     .where(and(eq(captureSession.id, sessionId), eq(event.organizationId, device.organizationId)))
     .limit(1);
   if (!row) return 'not_found';
+  // No link to a page that says "deleted at your request".
+  if (uploadGate(row) === 'erased') return 'erased';
   if (!(await allow('emailPerSession', sessionId)) || !(await allow('emailPerDevice', device.id))) return 'too_many';
   await sendGuestLinkEmail(to, sessionUrl(appOrigin(), row.linkId, 'message'), locale, {
     event: row.eventName,

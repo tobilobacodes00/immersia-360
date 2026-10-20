@@ -5,7 +5,9 @@
     "language": "Language",
     "skipToContent": "Skip to content",
     "loading": "Loading…",
-    "offline": "You're offline. Everything you capture is saved on this device and uploads when the connection returns."
+    "offline": "You're offline. Everything you capture is saved on this device and uploads when the connection returns.",
+    "privacy": "Privacy",
+    "terms": "Terms"
   },
   "home": {
     "eyebrow": "Free forever · No watermark · Any device",
@@ -155,7 +157,8 @@
       "openMenu": "Open menu",
       "closeMenu": "Close menu",
       "organization": "Organization",
-      "switchFailed": "Couldn't switch organization. Please try again."
+      "switchFailed": "Couldn't switch organization. Please try again.",
+      "settings": "Settings"
     },
     "launcher": {
       "title": "What are we running?",
@@ -243,7 +246,8 @@
       "setup": "Setup",
       "branding": "Branding",
       "live": "Live Display",
-      "signage": "QR signage"
+      "signage": "QR signage",
+      "guests": "Guests"
     },
     "dashboard": {
       "capture": "Captured",
@@ -291,7 +295,8 @@
         "slow_motion_end_before_start": "The slow-motion segment must end after it starts.",
         "half_second_grid": "Use steps of half a second.",
         "trim_end_before_start": "The music must end after it starts.",
-        "generic": "Some settings are out of range."
+        "generic": "Some settings are out of range.",
+        "policy_url_invalid": "The privacy policy link must be a web address starting with https://."
       },
       "basics": {
         "title": "Basics",
@@ -396,10 +401,10 @@
         "endFrame": "QR code at the end of videos",
         "endFrameHelp": "A 2-second end card, so a forwarded video still leads back to the download.",
         "guestForm": "Ask guests for their details",
-        "guestFormHelp": "Name and email with a consent checkbox before download.",
+        "guestFormHelp": "Name and email with a consent box that starts unticked. Guests can always skip it and still get their files.",
         "requireName": "Require a name",
-        "consent": "Consent text",
-        "consentHelp": "What guests agree to, in your words.",
+        "consent": "Extra consent sentence",
+        "consentHelp": "Added after the standard wording. Say what else you will use their details for, for example a newsletter. Leave it empty if there is nothing more.",
         "contact": "Contact for guests",
         "contactHelp": "Shown on guest pages once this event’s files have expired, so guests can reach you. An email address or phone number.",
         "cloud": "Also copy to my cloud",
@@ -415,7 +420,14 @@
           "disconnected": "{provider} isn't connected, so this event isn't copied there.",
           "needs_reauth": "{provider} needs you to sign in again; new files stay safe and copy once you do."
         },
-        "cloudManage": "Manage integrations"
+        "cloudManage": "Manage integrations",
+        "policyUrl": "Your privacy policy link",
+        "policyUrlHelp": "Shown next to the checkbox. You are the controller of these details, so link your own notice (https).",
+        "policyUrlPlaceholder": "https://yourstudio.com/privacy",
+        "policyMissing": "Without a link, guests are pointed to Immersia 360’s general notice. Add yours so they know how you use their details.",
+        "consentPreview": "What guests will tick",
+        "consentPreviewHelp": "The box starts unticked, and “Skip” is always offered next to the button that sends.",
+        "viewGuests": "See the contacts collected"
       },
       "kiosk": {
         "title": "Kiosk",
@@ -1442,6 +1454,118 @@
         "not_found": "That person or invitation no longer exists. Reload the page and try again.",
         "failed": "Something went wrong. Please try again."
       }
+    },
+    "guests": {
+      "title": "Guests",
+      "subtitle": "People who left their details on this event’s guest pages. You are the controller of this data: use it only as they agreed, and delete it when they ask.",
+      "stats": {
+        "contacts": "Contacts",
+        "withName": "With a name",
+        "form": "Guest form",
+        "on": "On",
+        "off": "Off"
+      },
+      "formOff": "The guest form is off, so no new contacts are collected.",
+      "formOffLink": "Turn it on in Setup",
+      "viewerNotice": "Only owners and operators can see guests’ details. You can see how many there are.",
+      "searchLabel": "Search by name or email",
+      "searchPlaceholder": "Name or email",
+      "search": "Search",
+      "clear": "Clear search",
+      "columns": {
+        "name": "Name",
+        "email": "Email",
+        "consent": "Consent given",
+        "where": "Where"
+      },
+      "noName": "No name",
+      "gallery": "Event gallery",
+      "session": "Session {code}",
+      "openSession": "Open session {code}",
+      "consentWording": "Consent wording",
+      "consentLanguage": "Language",
+      "consentPolicy": "Privacy policy shown",
+      "consentGeneral": "Immersia 360’s general notice",
+      "delete": "Delete",
+      "deleteLabel": "Delete {email}",
+      "deleteTitle": "Delete this contact?",
+      "deleteBody": "{email} is removed for good. Their photos and videos are not affected.",
+      "deleteConfirm": "Delete contact",
+      "cancel": "Cancel",
+      "deleteAll": "Delete all contacts",
+      "deleteAllTitle": "{count, plural, one {Delete this contact?} other {Delete all # contacts?}}",
+      "deleteAllBody": "Every contact collected for this event is removed for good. Guests’ photos and videos are not affected. The deletion is recorded in the audit log.",
+      "deleteAllConfirm": "Delete all",
+      "export": "Export CSV",
+      "exportHelp": "Opens in Excel with accents intact. Cells that start with = + - or @ are made safe.",
+      "empty": "No contacts yet",
+      "emptyBody": "When a guest fills in the form, they appear here with the consent they gave.",
+      "noMatch": "No contacts match “{q}”.",
+      "showing": "{count, plural, one {# contact} other {# contacts}}",
+      "pageOf": "Page {page} of {pages}",
+      "previous": "Previous",
+      "next": "Next",
+      "requests": "Did someone ask you to delete their data?",
+      "requestsLink": "Find them across all your events",
+      "deleted": "Contact deleted.",
+      "allDeleted": "{count, plural, one {# contact deleted.} other {# contacts deleted.}}",
+      "errors": {
+        "delete": "Couldn’t delete. Try again.",
+        "forbidden": "You don’t have permission to do that."
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "subtitle": "Your organization, your data, and privacy requests from guests.",
+      "organization": {
+        "title": "Organization",
+        "name": "Name",
+        "role": "Your role"
+      },
+      "requests": {
+        "title": "Guest privacy requests",
+        "subtitle": "A guest asked you to delete their data? Find everything you hold under their email address, across all your events.",
+        "emailLabel": "Guest’s email address",
+        "emailPlaceholder": "guest@example.com",
+        "find": "Find",
+        "none": "Nothing found under {email}.",
+        "found": "{contacts, plural, one {# contact} other {# contacts}} found under {email}, and {sessions, plural, =0 {no sessions with files} one {# session with files} other {# sessions with files}}.",
+        "withSessions": "Also delete their photos and videos: the files go, they leave the gallery and Live Display, and their links say “deleted at your request”.",
+        "deleteButton": "Delete their data",
+        "confirmTitle": "Delete everything for {email}?",
+        "confirmBody": "Their contacts are removed from every event for good. The deletion is recorded in the audit log, without their address.",
+        "confirmBodySessions": "Their contacts are removed from every event, and their photos and videos are deleted too. Anyone else who left details on the same sessions loses those contacts as well. This can’t be undone.",
+        "confirm": "Delete",
+        "cancel": "Cancel",
+        "done": "{contacts, plural, one {# contact} other {# contacts}} and {sessions, plural, =0 {no sessions} one {# session} other {# sessions}} deleted.",
+        "forbidden": "Only owners and operators can handle privacy requests.",
+        "errors": {
+          "invalid": "Enter a valid email address.",
+          "tooMany": "Too many searches. Wait a few minutes and try again.",
+          "failed": "Something went wrong. Try again."
+        }
+      },
+      "export": {
+        "title": "Export my data",
+        "body": "A JSON file with your organization, members, events and all their settings, design templates, library file details, devices and cloud connections (never their secrets) and every guest contact with its consent. Photos and videos are not included.",
+        "button": "Download JSON",
+        "ownerOnly": "Only the owner can export the organization’s data."
+      },
+      "delete": {
+        "title": "Delete organization",
+        "body": "Permanently deletes {name}: all events, sessions, hosted photos and videos, guest contacts, devices and the connections to Google Drive and Dropbox, whose access is revoked. Every member loses access to it. This can’t be undone, so export your data first if you need it.",
+        "button": "Delete organization…",
+        "ownerOnly": "Only the owner can delete the organization.",
+        "dialogTitle": "Delete {name}?",
+        "dialogBody": "Everything described above is deleted for good. Files are removed from storage in the background, which can take a little while.",
+        "typeLabel": "Type {phrase} to confirm",
+        "confirm": "Delete everything",
+        "cancel": "Cancel",
+        "errors": {
+          "mismatch": "That doesn’t match.",
+          "failed": "Couldn’t delete the organization. Try again."
+        }
+      }
     }
   },
   "booth": {
@@ -1761,7 +1885,39 @@
     "endedTitle": "This event has ended",
     "endedBody": "Its photos and videos have been removed. Anything you downloaded is still on your device.",
     "madeWith": "Made with Immersia 360",
-    "endedContact": "Questions? Contact {contact}"
+    "endedContact": "Questions? Contact {contact}",
+    "erasedTitle": "Your files were deleted",
+    "erasedBody": "As you asked, this page and everything on it were deleted. Anything you downloaded earlier is still on your device.",
+    "form": {
+      "title": "Before you download",
+      "intro": "{operator} runs this event and would like to stay in touch. This is optional: skip it and you still get your files.",
+      "name": "Name",
+      "nameOptional": "Name (optional)",
+      "email": "Email",
+      "consent": "I agree that {operator} may keep my name and email address and contact me about {event}.",
+      "policy": "Read the privacy notice",
+      "generalNotice": "How Immersia 360 handles your data",
+      "submit": "Send my details",
+      "skip": "Skip: just my files",
+      "note": "Your files are yours either way. Skipping changes nothing.",
+      "sent": "Thanks. Your details were sent to {operator}.",
+      "errors": {
+        "name": "Enter your name.",
+        "email": "Enter a valid email address.",
+        "consent": "Tick the box to share your details, or skip.",
+        "stale": "The wording changed while you were filling this in. Read it again and tick the box if you agree.",
+        "tooMany": "Too many attempts. Wait a few minutes and try again, or skip.",
+        "failed": "Your details couldn’t be sent. Try again, or skip."
+      }
+    },
+    "erase": {
+      "open": "Delete my photos and videos",
+      "title": "Delete everything from this session?",
+      "body": "This permanently deletes your files from this page, the event gallery and any screen at the event, and removes any details you shared here. It can’t be undone. Copies you already downloaded stay on your device. Copies the organizer saved elsewhere are theirs to remove, so contact them for those.",
+      "confirm": "Yes, delete my files",
+      "tooMany": "Too many attempts. Wait a few minutes and try again.",
+      "failed": "Couldn’t delete your files. Try again in a moment."
+    }
   },
   "code": {
     "metaTitle": "Find your files",
@@ -1988,6 +2144,145 @@
     "errors": {
       "failed": "Something went wrong. Please try again.",
       "gone": "This invitation can no longer be accepted. Reload the page to see why."
+    }
+  },
+  "legal": {
+    "updated": "Last updated {date}",
+    "privacy": {
+      "metaTitle": "Privacy notice",
+      "title": "Privacy notice",
+      "lede": "What Immersia 360 stores when you use a photo or 360 video booth, why, for how long, who else handles it, and how to use your rights.",
+      "sections": {
+        "roles": {
+          "title": "Who is responsible for your data",
+          "p1": "Two parties are involved, and their roles differ.",
+          "operator": "The event operator (the studio, business or person running the booth) decides why and how the details a guest enters in the optional guest form are used. For that data the operator is the controller and Immersia 360 is their processor.",
+          "immersia": "Immersia 360 hosts and delivers the photos and videos the booth makes, on the operator’s behalf. It is the controller of operator accounts (sign-in email, name, organization, devices) and of the security records it keeps to run the service safely."
+        },
+        "collected": {
+          "title": "What we store",
+          "files": "Your files: the photos, videos, GIFs and strips made at the booth, plus preview images. They are kept privately and delivered through a link.",
+          "link": "A random link and a short code that open your files. Whoever has the link can see them, so share it with care.",
+          "form": "The guest form, only if the operator turned it on and you choose to fill it in: your name (optional unless the operator requires it), your email address, the exact consent wording you saw, its language, the time you agreed and the operator’s privacy policy link.",
+          "email": "An email address you type at the booth to receive your link is used to send that one message. Immersia 360 does not keep it.",
+          "technical": "Download counts per file, and your IP address for a few minutes in memory to limit abuse. Neither is linked to your name or stored with your files."
+        },
+        "why": {
+          "title": "Why we use it",
+          "deliver": "To give you the files you made. Delivering them is the point of the service, on the basis of legitimate interests shared by you, the operator and us.",
+          "form": "To pass your details to the operator: only with your consent, given by ticking a box that starts unticked. Skipping the form costs you nothing and never affects your files. You can withdraw consent at any time.",
+          "security": "To keep the service secure and prevent abuse: legitimate interests.",
+          "accounts": "To run operator accounts: to provide the service the operator asked for."
+        },
+        "noTrackers": {
+          "title": "No ads, no trackers",
+          "p1": "Guest pages show no advertising and load no third-party analytics, pixels, social widgets or fonts. We count visits and downloads with our own first-party analytics, which identify no one.",
+          "p2": "We set only the cookies the service needs to work: your language choice, a note of whether you skipped or filled in the guest form so it does not ask again, and a short-lived pass for a password-protected gallery. None of them tracks you."
+        },
+        "retention": {
+          "title": "How long we keep it",
+          "files": "Files are deleted automatically when the event’s retention ends: 7, 30 or 90 days after upload, as the operator chose (30 by default).",
+          "erase": "You can delete yours earlier at any time with “Delete my photos and videos” on your page. It removes the files, takes them out of the event gallery and any screen at the event, and deletes any details you gave on that page. Your link then says the files were deleted at your request.",
+          "form": "Guest form details stay with the operator until they delete them or you ask them to.",
+          "backups": "Database backups held by our provider may keep deleted records for a short time, until they are overwritten."
+        },
+        "processors": {
+          "title": "Who else handles data",
+          "p1": "These providers process data for us, only to provide their service:",
+          "vercel": "Vercel: hosting and delivery of the app.",
+          "neon": "Neon: the database.",
+          "cloudflare": "Cloudflare R2 and Workers: storage of guest files, and the relay that updates event screens (it carries identifiers, not files).",
+          "resend": "Resend: sending sign-in emails and guest link emails.",
+          "upstash": "Upstash: short-lived counters that limit abuse.",
+          "fly": "Fly.io: cloud rendering when a device cannot make a video itself.",
+          "cloud": "Google Drive and Dropbox: only if the operator connects their own account. A copy of the files then goes to that account, which is under the operator’s control, not ours.",
+          "p2": "Some providers are outside your country. Where the law requires it we rely on adequacy decisions or standard contractual clauses."
+        },
+        "rights": {
+          "title": "Your rights and how to use them",
+          "p1": "Under the GDPR and Nigeria’s Data Protection Act 2023 (NDPA) you can ask for access to your data, correction, deletion, restriction, to object, to receive it in a portable form, and to withdraw consent at any time. You can complain to your data protection authority; in Nigeria that is the Nigeria Data Protection Commission.",
+          "files": "Photos and videos: use “Delete my photos and videos” on your page. It is immediate and needs no account.",
+          "form": "Details you gave an operator: ask the operator, who decides what happens to them. Operators have a tool that finds and deletes everything held under an email address. If you cannot reach them, write to {email} and we will pass your request on or act on their behalf.",
+          "other": "Anything else: write to {email}. We answer without undue delay and within one month."
+        },
+        "operators": {
+          "title": "For operators",
+          "p1": "If you run events with Immersia 360 you are the controller of guest-form data. You need a lawful basis, your own privacy notice (the form links to the one you enter in Setup), and a way to answer guests’ requests.",
+          "p2": "We give you the tools: a Guests screen for each event, with viewing and CSV export for owners and operators only; deletion of one contact, all contacts or everything held under an email address; an export of all your data and the deletion of the whole organization in Settings. Deletions are recorded in an audit log that does not contain the personal data itself.",
+          "p3": "Check the rules for recording people at the events where you work, including signage, and for children: Immersia 360 is not directed at children, and getting a parent’s or guardian’s consent where the law requires it is your responsibility."
+        },
+        "security": {
+          "title": "Security",
+          "p1": "Traffic is encrypted. Guest links are random 128-bit values, guest pages are not indexed by search engines, files are private and served through short-lived signed addresses, and the tokens that connect a cloud account are encrypted at rest."
+        },
+        "changes": {
+          "title": "Changes",
+          "p1": "When our practices change we update this notice and its date."
+        },
+        "contact": {
+          "title": "Contact",
+          "p1": "Questions or requests about this notice: {email}."
+        }
+      }
+    },
+    "terms": {
+      "metaTitle": "Terms of use",
+      "title": "Terms of use",
+      "lede": "The rules for using Immersia 360, a free photo and 360 video booth that runs in the browser.",
+      "sections": {
+        "agreement": {
+          "title": "These terms",
+          "p1": "These terms apply when you use Immersia 360, whether you run events (an operator) or open a link from a booth (a guest). By using the service you agree to them. If you use it for a business, you confirm you can bind it."
+        },
+        "service": {
+          "title": "The service",
+          "p1": "Immersia 360 is free, provided as it is and as available. We may change, limit or stop features, and we will give reasonable notice where we can. It may be interrupted or contain errors, so keep your own copies of anything important."
+        },
+        "operators": {
+          "title": "If you run events",
+          "p1": "You are responsible for how you use the booth and for the people you record:",
+          "i1": "Tell guests they are being recorded, get any permission the law requires and respect the rights of children.",
+          "i2": "You are the controller of the details you collect with the guest form: have a lawful basis, give guests a privacy notice, honour their requests and delete what you no longer need.",
+          "i3": "Keep your account and devices secure. What happens under your sign-in or device tokens is on you.",
+          "i4": "Only record and share what you have the right to."
+        },
+        "acceptable": {
+          "title": "Acceptable use",
+          "p1": "Do not use Immersia 360 to:",
+          "i1": "store or share anything unlawful, abusive, hateful or harmful, above all anything sexual involving a minor, which we report to the authorities;",
+          "i2": "record or publish people against their wishes;",
+          "i3": "break, overload, scrape or get around the limits of the service, or to spread malware.",
+          "p2": "We may remove content or suspend access to protect people or the service."
+        },
+        "content": {
+          "title": "Your content",
+          "p1": "You keep ownership of your photos and videos. You allow Immersia 360 to store, process and deliver them, and to show them to the people who hold the link, only to run the service. Files are deleted automatically when the event’s retention ends, or sooner if you or the guest delete them. We do not sell your content or use it for advertising."
+        },
+        "guests": {
+          "title": "If you are a guest",
+          "p1": "Your link is private, but anyone who has it can open and download your files, so share it with care. You can delete your files at any time from your page, and they are removed when the event’s retention ends. If something on a page should not be there, write to {email}."
+        },
+        "privacy": {
+          "title": "Privacy",
+          "p1": "How we handle personal data is explained in the <link>privacy notice</link>."
+        },
+        "liability": {
+          "title": "Warranty and liability",
+          "p1": "To the extent the law allows, the service comes without warranties, and Immersia 360 is not liable for indirect or consequential loss, or for lost events, files or profits. Nothing here limits liability that cannot be limited by law, or your rights as a consumer or data subject."
+        },
+        "ending": {
+          "title": "Ending",
+          "p1": "You can stop using the service at any time and delete your organization in Settings, which removes your data. We may suspend or end access if these terms are broken or to protect people or the service."
+        },
+        "changes": {
+          "title": "Changes",
+          "p1": "We may update these terms; the date above shows the latest version. Using the service after a change means you accept it."
+        },
+        "contact": {
+          "title": "Contact",
+          "p1": "Questions about these terms: {email}."
+        }
+      }
     }
   }
 }

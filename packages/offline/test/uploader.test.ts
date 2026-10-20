@@ -14,7 +14,7 @@ import {
   topUpCodes,
 } from '../src/sessions';
 import { createIdbTakeStore, type TakeStore } from '../src/take-store';
-import { BoothApiError, UploadQueue, backoffMs, type BoothApi } from '../src/uploader';
+import { BoothApiError, SESSION_ERASED, UploadQueue, backoffMs, type BoothApi } from '../src/uploader';
 
 let db: BoothDB;
 let store: TakeStore;
@@ -223,6 +223,26 @@ describe('upload queue', () => {
     server.failNext = new BoothApiError(401, 'device_unauthorized', false);
     expect(await queue.runOnce()).toEqual({ kind: 'revoked' });
     expect((await db.sessions.get(b.id))!.state).toBe('local'); // untouched: re-registering the device resumes it
+  });
+
+  it('settles a session the guest deleted, instead of parking it as failed or retrying it', async () => {
+    const server = new FakeServer();
+    const queue = new UploadQueue(db, store, server, now);
+    await addTake('t1', 'rendered');
+    await addOutput('t1', 'mp4', 1000);
+    const session = await mintSession(db, { eventId: 'evt', takeIds: ['t1'], capturedAt: clock });
+    await queueEmail(db, session.id, 'guest@example.com');
+
+    // The server answers 410 session_erased (registration, an upload confirmation or an email).
+    server.failNext = new BoothApiError(410, SESSION_ERASED, false);
+    expect(await queue.runOnce()).toEqual({ kind: 'done', sessionId: session.id });
+    const settled = (await db.sessions.get(session.id))!;
+    expect(settled.state).toBe('done');
+    expect(settled.pendingEmails).toEqual([]);
+    expect(settled.lastError).toBeUndefined();
+    // Nothing more is attempted for it, and it does not count as one the operator must look at.
+    expect(await queue.runOnce()).toEqual({ kind: 'idle' });
+    expect(server.emails).toEqual([]);
   });
 
   it('survives a reload between registration and upload, and skips what the server already has', async () => {

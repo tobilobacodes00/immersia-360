@@ -43,8 +43,17 @@ const isMutating = (p: Permission) =>
 // ------------------------------------------------------------------------------------------------
 // Server actions
 
-/** Actions that touch no operator data: guests' code lookup, the language cookie. */
-const PUBLIC_ACTIONS = new Set(['app/c/actions.ts#findCode', 'i18n/actions.ts#setLocale']);
+/**
+ * Actions that touch no operator session: guests' code lookup, the language cookie, and the guest's own
+ * form and erasure on their session page (SHR-6), where holding the session link is the authority.
+ */
+const PUBLIC_ACTIONS = new Set([
+  'app/c/actions.ts#findCode',
+  'i18n/actions.ts#setLocale',
+  'app/guest-actions.ts#submitGuestFormAction',
+  'app/guest-actions.ts#skipGuestFormAction',
+  'app/guest-actions.ts#eraseSessionAction',
+]);
 /** Guarded by a read permission, and read-only. A mutating action must never be added here. */
 const READ_ONLY_ACTIONS = new Set([
   'listAssetsAction',
@@ -52,6 +61,7 @@ const READ_ONLY_ACTIONS = new Set([
   'listLibraryAction',
   'listDisplaysAction',
   'moderationListsAction',
+  'findPersonAction',
 ]);
 /** Open to every member (or every signed-in user) about their own membership or invitation only. */
 const SELF_SERVICE_ACTIONS = new Set([
@@ -175,6 +185,7 @@ const ROUTES: Record<string, RouteKind> = {
   'app/api/cron/expire/route.ts': 'cron',
   'app/api/devices/heartbeat/route.ts': 'device',
   'app/api/events/[id]/files/route.ts': { operator: { mutates: false } },
+  'app/api/events/[id]/guests/route.ts': { operator: { mutates: false } },
   'app/api/g/[slug]/files/route.ts': 'public',
   'app/api/g/[slug]/unlock/route.ts': 'public',
   'app/api/integrations/[provider]/callback/route.ts': { operator: { mutates: true } },
@@ -184,6 +195,7 @@ const ROUTES: Record<string, RouteKind> = {
   'app/api/live/media/[outputId]/route.ts': 'public',
   'app/api/live/pair/route.ts': 'public',
   'app/api/share/[linkId]/route.ts': 'public',
+  'app/api/studio/export/route.ts': { operator: { mutates: false } },
   'app/api/test/expire/route.ts': 'e2e',
   'app/api/test/mailbox/route.ts': 'e2e',
 };

@@ -39,6 +39,16 @@ export const LIMITS = {
   inviteSendPerIp: { limit: 60, windowS: 3600 },
   /** Re-sending one invitation: a nudge, not a loop. */
   inviteResendPerInvitation: { limit: 3, windowS: 3600 },
+  /** SHR-6: the guest form is a public write endpoint: bound it per visitor, per session and per event. */
+  guestFormPerIp: { limit: 20, windowS: 600 },
+  guestFormPerTarget: { limit: 10, windowS: 3600 },
+  guestFormPerEvent: { limit: 600, windowS: 3600 },
+  /** Erasing a session needs only its link: keep a leaked or guessed link from being hammered. */
+  eraseSessionPerIp: { limit: 10, windowS: 600 },
+  eraseSessionPerLink: { limit: 5, windowS: 600 },
+  /** Operators: exports and the by-email privacy search are heavy or sensitive, so they are bounded too. */
+  privacyExportPerOrg: { limit: 12, windowS: 3600 },
+  privacyLookupPerOrg: { limit: 60, windowS: 600 },
 } satisfies Record<string, Limit>;
 
 type Name = keyof typeof LIMITS;

@@ -38,6 +38,9 @@ export class BoothApiError extends Error {
   }
 }
 
+/** The server's answer (HTTP 410) when a guest deleted the session being uploaded. */
+export const SESSION_ERASED = 'session_erased';
+
 /** Presigned uploads last an hour; refresh well before. */
 const TICKET_TTL_MS = 45 * 60_000;
 
@@ -233,6 +236,19 @@ export class UploadQueue {
     this.tickets.delete(session.id);
     const apiErr = err instanceof BoothApiError ? err : null;
     if (apiErr?.deviceRevoked) return { kind: 'revoked' };
+    // The guest deleted this session on the server (privacy). There is nothing left to upload and
+    // nothing for the operator to fix: settle it quietly, and drop the address of any email still
+    // waiting (its link would lead to a "deleted" page).
+    if (apiErr?.code === SESSION_ERASED) {
+      await this.db.sessions.update(session.id, {
+        state: 'done',
+        lastError: undefined,
+        pendingEmails: [],
+        displayOptOutPending: false,
+        updatedAt: this.now(),
+      });
+      return { kind: 'done', sessionId: session.id };
+    }
     const message = apiErr ? apiErr.code : err instanceof Error ? err.message : String(err);
     const retryable = apiErr ? apiErr.retryable : true; // network errors and storage hiccups retry
     if (!retryable) {
