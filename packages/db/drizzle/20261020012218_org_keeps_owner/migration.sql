@@ -5,8 +5,16 @@ CREATE FUNCTION "is_owner_role"(roles text) RETURNS boolean AS $$
   SELECT 'owner' = ANY (string_to_array(replace(roles, ' ', ''), ','))
 $$ LANGUAGE sql IMMUTABLE;--> statement-breakpoint
 CREATE FUNCTION "org_keeps_owner"() RETURNS trigger AS $$
+DECLARE
+  giving_up_ownership boolean;
 BEGIN
-  IF "is_owner_role"(OLD."role") AND (TG_OP = 'DELETE' OR NOT "is_owner_role"(NEW."role")) THEN
+  -- (NEW does not exist in a DELETE trigger, so it is only read on the UPDATE branch.)
+  IF TG_OP = 'DELETE' THEN
+    giving_up_ownership := "is_owner_role"(OLD."role");
+  ELSE
+    giving_up_ownership := "is_owner_role"(OLD."role") AND NOT "is_owner_role"(NEW."role");
+  END IF;
+  IF giving_up_ownership THEN
     -- One owner change per organization at a time: the check below must see the other transaction's result.
     PERFORM pg_advisory_xact_lock(hashtextextended('org_keeps_owner:' || OLD."organization_id", 0));
     -- When the organization itself is being deleted, its members go with it.
