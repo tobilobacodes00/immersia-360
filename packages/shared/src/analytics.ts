@@ -12,6 +12,8 @@ export type UploadTarget = 'hosted' | 'drive' | 'dropbox';
 export type AnalyticsEvent =
   | { name: 'event_created'; mode: 'video360' | 'photo'; from_duplicate: boolean }
   | { name: 'setup_check_completed'; render_speed_ms: number; camera_fps: number; browser: string }
+  /** HLP-1: a phone opened the setup check's test QR. `nonce` ties it to the device waiting for it. */
+  | { name: 'setup_qr_scanned'; nonce: string }
   | {
       name: 'take_recorded';
       mode: 'video360' | 'photo';

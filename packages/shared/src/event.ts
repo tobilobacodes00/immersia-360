@@ -191,6 +191,13 @@ export const createEventSchema = z.object({
 });
 export type CreateEventInput = z.infer<typeof createEventSchema>;
 
+/** HLP-1: the steps of the setup check, in the order the operator walks through them. */
+export const SETUP_CHECK_STEPS = ['camera', 'storage', 'take', 'render', 'qr', 'printer', 'network'] as const;
+export type SetupCheckStep = (typeof SETUP_CHECK_STEPS)[number];
+/** `skipped`: the operator chose not to run it (or it does not apply to this event). */
+export const SETUP_CHECK_STATUSES = ['pass', 'warn', 'fail', 'skipped'] as const;
+export type SetupCheckStatus = (typeof SETUP_CHECK_STATUSES)[number];
+
 /** What a booth device reports about itself (drives the render path, PRD "Device"). */
 export const deviceCapabilitiesSchema = z.object({
   webcodecs: z.object({ h264Encode: z.boolean(), aacEncode: z.boolean(), hevcDecode: z.boolean() }),
@@ -202,6 +209,14 @@ export const deviceCapabilitiesSchema = z.object({
   renderPath: z.enum(['local', 'wasm', 'server']),
   renderSpeedMs: z.number().nullable(),
   checkedAt: z.iso.datetime().nullable(),
+  /** The last setup check (HLP-1): when, for which event, and how each step went. Absent until one runs. */
+  setupCheck: z
+    .object({
+      at: z.iso.datetime(),
+      eventId: z.uuid().nullable(),
+      results: z.array(z.object({ step: z.enum(SETUP_CHECK_STEPS), status: z.enum(SETUP_CHECK_STATUSES) })).max(10),
+    })
+    .optional(),
 });
 export type DeviceCapabilities = z.infer<typeof deviceCapabilitiesSchema>;
 

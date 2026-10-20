@@ -49,6 +49,15 @@ export const LIMITS = {
   /** Operators: exports and the by-email privacy search are heavy or sensitive, so they are bounded too. */
   privacyExportPerOrg: { limit: 12, windowS: 3600 },
   privacyLookupPerOrg: { limit: 60, windowS: 600 },
+  /** HLP-1: the setup check's test QR and upload test (a presigned URL and a small object each). */
+  setupCheckPerDevice: { limit: 30, windowS: 3600 },
+  /** HLP-1: the booth asks every ~2 s while the test QR is on screen (at most its 10 minutes). */
+  setupCheckPollPerDevice: { limit: 400, windowS: 600 },
+  /** HLP-1: a phone opening the test QR. */
+  setupCheckScanPerIp: { limit: 30, windowS: 600 },
+  /** HLP-2: the help centre's contact form is public, so it can't be turned into a mailer. */
+  supportPerIp: { limit: 5, windowS: 3600 },
+  supportPerEmail: { limit: 3, windowS: 3600 },
 } satisfies Record<string, Limit>;
 
 type Name = keyof typeof LIMITS;

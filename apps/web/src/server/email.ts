@@ -11,6 +11,8 @@ export interface OutgoingEmail {
   subject: string;
   html: string;
   text: string;
+  /** Where a reply goes, when it should not go to the sender (the help centre's contact form). */
+  replyTo?: string;
 }
 
 let resend: Resend | undefined;
