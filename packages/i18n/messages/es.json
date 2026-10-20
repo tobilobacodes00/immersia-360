@@ -929,6 +929,7 @@
           "gold": "Dorado"
         },
         "preview": "Vista previa del estilo y los efectos elegidos",
+        "previewUnavailable": "La vista previa necesita WebGL2, que este navegador o dispositivo no puede ofrecer aquí. Tus elecciones se guardan y se usan igualmente.",
         "beatSync": "Sincronizar con el ritmo",
         "beatSyncHelp": "Los efectos laten con el ritmo de la música, y la cámara lenta empieza y termina en un tiempo.",
         "beatSyncNeedsMusic": "Agrega música al evento para sincronizar los efectos con su ritmo.",

@@ -1,12 +1,23 @@
+/** An OffscreenCanvas, or a canvas element where there is none (Safari before 16.4). */
+function drawingSurface(width: number, height: number) {
+  if (typeof OffscreenCanvas !== 'undefined') {
+    const canvas = new OffscreenCanvas(width, height);
+    return { canvas, g: canvas.getContext('2d')! };
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  return { canvas, g: canvas.getContext('2d')! };
+}
+
 /**
  * A stand-in event photo for look and effect previews (screen 5): sky, warm and cool light, two
  * people with different skin tones, saturated props. Drawn, not shipped, so it costs no download
  * and carries no one's likeness; every look's character (warmth, contrast, toning, saturation)
  * shows on it.
  */
-export function sampleScene(width = 320, height = 400): OffscreenCanvas {
-  const c = new OffscreenCanvas(width, height);
-  const g = c.getContext('2d')!;
+export function sampleScene(width = 320, height = 400): OffscreenCanvas | HTMLCanvasElement {
+  const { canvas: c, g } = drawingSurface(width, height);
   const u = Math.min(width, height);
 
   const sky = g.createLinearGradient(0, 0, 0, height);

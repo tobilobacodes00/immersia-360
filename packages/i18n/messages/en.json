@@ -929,6 +929,7 @@
           "gold": "Gold"
         },
         "preview": "Preview of the chosen look and effects",
+        "previewUnavailable": "The preview needs WebGL2, which this browser or device can't provide here. Your choices are still saved and used.",
         "beatSync": "Beat sync",
         "beatSyncHelp": "Effects pulse on the music's beats, and slow motion starts and ends on a beat.",
         "beatSyncNeedsMusic": "Add music to the event to sync effects to its beat.",
