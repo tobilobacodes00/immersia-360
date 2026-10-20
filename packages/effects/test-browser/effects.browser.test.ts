@@ -189,6 +189,18 @@ describe.each(EFFECTS.map((e): [string, EffectDef] => [e.id, e]))('%s', (_id, ef
   }
 });
 
+describe('beat sync (VID-12)', () => {
+  // the effects whose job is to flash, switch or pulse: the picture is brighter on the beat than off it
+  for (const id of ['strobe', 'disco', 'light-rings']) {
+    it(`${id}: mean brightness at uPulse = 1 differs from uPulse = 0`, () => {
+      const effect = EFFECTS.find((e) => e.id === id)!;
+      const on = meanLuma(renderAt(effect, 2.5, ON_BEAT));
+      const off = meanLuma(renderAt(effect, 2.5, OFF_BEAT));
+      expect(on - off, `on ${on.toFixed(2)} off ${off.toFixed(2)}`).toBeGreaterThan(0.5);
+    });
+  }
+});
+
 describe('confetti colour modes (VID-7)', () => {
   const confetti = EFFECTS.find((e) => e.id === 'confetti')!;
   const hues = (mode: ColorMode) => hueBins(renderAt(confetti, 4.6, modeParams(mode)), scene.source.data, 100, 40);
@@ -223,6 +235,7 @@ describe('strobe: beat-locked and photosensitivity-safe', () => {
     const lit = host.render(programs.get(strobe), black, params({ intensity: 1, ...ON_BEAT }));
     expect(maxLuminanceRise(black.data, lit)).toBeGreaterThan(0.8 * STROBE_PEAK_LIFT);
     expect(maxChannel(lit)).toBeGreaterThan(60);
+    expect(maxChannel(lit)).toBeLessThan(90); // 0.09 of relative luminance is about 85 of 255 in sRGB
   });
 
   it('is exactly the source between flashes', () => {
