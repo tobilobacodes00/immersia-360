@@ -1228,17 +1228,47 @@
       "camera": "Camera",
       "defaultCamera": "Default camera",
       "simulator": "Simulated camera (no hardware)",
-      "lens": {
-        "wide": "wide",
-        "ultrawide": "ultra-wide",
-        "telephoto": "telephoto",
-        "front": "front"
+      "lenses": {
+        "groupBack": "Back cameras",
+        "groupFront": "Front cameras",
+        "groupExternal": "External cameras",
+        "groupOther": "Other cameras",
+        "front": "Front camera",
+        "back": "Back camera",
+        "backWide": "Back wide camera",
+        "backUltraWide": "Back ultra-wide camera",
+        "backTelephoto": "Back telephoto camera",
+        "backDual": "Back dual camera",
+        "backTriple": "Back triple camera",
+        "numbered": "Camera {n}",
+        "saved": "Camera chosen earlier",
+        "inUse": "In use",
+        "namesLater": "Camera names appear once the camera has started."
       },
+      "cameraBusy": "Camera changes pause while a guest is using the booth.",
       "delivering": "Delivering {width}×{height} at {fps} fps",
       "mirror": "Mirror the preview",
       "mirrorHelp": "Only on this screen. Recordings are never mirrored.",
+      "zoom": "Zoom",
       "torch": "Torch",
-      "noTorch": "This camera has no controllable light.",
+      "noTorch": "Not supported: this camera or browser can't switch its light on.",
+      "torchNeedsCamera": "Start the booth to check whether this camera has a light.",
+      "torchFailed": "Couldn't switch the torch. Try again.",
+      "fill": {
+        "title": "Fill light",
+        "help": "Lights guests' faces with a glowing frame around the edge of this screen. It doesn't appear in recordings.",
+        "level": {
+          "off": "Off",
+          "soft": "Soft",
+          "bright": "Bright"
+        },
+        "tint": "Light colour",
+        "tints": {
+          "neutral": "Neutral",
+          "warm": "Warm"
+        },
+        "brightness": "For the most light, set this device's screen brightness to maximum. A web page can't do that for you."
+      },
       "motion": "Start on motion",
       "motionHelp": "Recording starts when the platform starts turning.",
       "sensitivity": "Motion needed",
