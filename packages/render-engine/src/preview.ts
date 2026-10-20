@@ -94,8 +94,10 @@ export class GradePreview {
       this.freeResources();
       throw err;
     }
-    canvas.addEventListener('webglcontextlost', this.onContextLost);
-    canvas.addEventListener('webglcontextrestored', this.onContextRestored);
+    // (Typed as EventTarget: the two canvas types' overloaded addEventListener cannot be called as a union.)
+    const target: EventTarget = canvas;
+    target.addEventListener('webglcontextlost', this.onContextLost);
+    target.addEventListener('webglcontextrestored', this.onContextRestored);
   }
 
   /** Whether the GPU has taken the context away (nothing is drawn until it is given back). */
@@ -174,8 +176,9 @@ export class GradePreview {
   dispose() {
     if (this.disposed) return;
     this.disposed = true;
-    this.canvas.removeEventListener('webglcontextlost', this.onContextLost);
-    this.canvas.removeEventListener('webglcontextrestored', this.onContextRestored);
+    const target: EventTarget = this.canvas;
+    target.removeEventListener('webglcontextlost', this.onContextLost);
+    target.removeEventListener('webglcontextrestored', this.onContextRestored);
     this.freeResources();
   }
 
