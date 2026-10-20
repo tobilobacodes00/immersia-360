@@ -30,6 +30,9 @@ export default async function SignInPage({
           <BrandMark size={40} className="mb-8" />
           <h1 className="text-[30px] leading-[1.05] font-bold tracking-[-0.03em]">{t('title')}</h1>
           <p className="mt-3 text-[15px] leading-relaxed text-muted">{t('subtitle')}</p>
+          {destination.startsWith('/invite/') && (
+            <p className="mt-3 rounded-xl bg-sunken p-4 text-[13px] leading-relaxed text-muted">{t('inviteHint')}</p>
+          )}
           <SignInForm
             destination={destination}
             google={googleEnabled()}

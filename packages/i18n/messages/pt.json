@@ -101,6 +101,7 @@
     "or": "ou",
     "google": "Continuar com o Google",
     "guestNote": "Convidados nunca precisam de conta. Eles recebem fotos e vídeos escaneando um código QR.",
+    "inviteHint": "Entre com o endereço de e-mail para o qual o convite foi enviado.",
     "sent": {
       "title": "Confira sua caixa de entrada",
       "body": "Enviamos um link de acesso para {email}. Ele vale por 10 minutos.",
@@ -111,6 +112,52 @@
     "errors": {
       "generic": "Algo deu errado. Tente novamente.",
       "rateLimited": "Muitas tentativas. Aguarde um minuto e tente novamente."
+    }
+  },
+  "invite": {
+    "metaTitle": "Convite",
+    "eyebrow": "Convite",
+    "readyTitle": "Entre em {organization}",
+    "readyBody": "{inviter} convidou você para {organization} como {role}.",
+    "signedInAs": "Você entrou como {email}.",
+    "accept": "Aceitar convite",
+    "accepting": "Entrando…",
+    "decline": "Recusar",
+    "declining": "Recusando…",
+    "openStudio": "Ir para o meu estúdio",
+    "wrongAccount": {
+      "title": "Este convite é para outra conta",
+      "body": "Ele foi enviado para {invited}, mas você entrou como {current}. Saia e entre de novo com o endereço convidado para aceitá-lo.",
+      "signOut": "Sair",
+      "signingOut": "Saindo…"
+    },
+    "expired": {
+      "title": "Este convite expirou",
+      "body": "Os convites valem por 7 dias. Peça a quem convidou você que envie um novo."
+    },
+    "cancelled": {
+      "title": "Este convite foi cancelado",
+      "body": "Quem convidou você o retirou. Se ainda precisar de acesso, peça que envie um novo."
+    },
+    "declined": {
+      "title": "Você recusou este convite",
+      "body": "Se foi um engano, peça a quem convidou você que envie um novo."
+    },
+    "used": {
+      "title": "Este convite já foi usado",
+      "body": "Ele já foi aceito e não pode ser usado de novo. Se precisar de acesso, peça um novo convite."
+    },
+    "notFound": {
+      "title": "Não encontramos este convite",
+      "body": "O link pode estar incompleto. Confira o e-mail que você recebeu ou peça um novo convite."
+    },
+    "alreadyMember": {
+      "title": "Você já faz parte desta equipe",
+      "body": "Você é membro de {organization}, então não há nada a aceitar."
+    },
+    "errors": {
+      "failed": "Algo deu errado. Tente novamente.",
+      "gone": "Este convite não pode mais ser aceito. Recarregue a página para ver o motivo."
     }
   },
   "email": {
@@ -147,11 +194,13 @@
       "home": "Início",
       "events": "Eventos",
       "assets": "Recursos",
-      "devices": "Dispositivos",
+      "devices": "Dispositivos e equipe",
       "integrations": "Integrações",
       "signOut": "Sair",
       "openMenu": "Abrir menu",
-      "closeMenu": "Fechar menu"
+      "closeMenu": "Fechar menu",
+      "organization": "Organização",
+      "switchFailed": "Não foi possível trocar de organização. Tente novamente."
     },
     "launcher": {
       "title": "O que vamos montar?",
@@ -168,7 +217,8 @@
       "recent": "Eventos recentes",
       "allEvents": "Todos os eventos",
       "emptyTitle": "Nenhum evento ainda",
-      "emptyBody": "Escolha um modo de cabine acima para criar seu primeiro evento."
+      "emptyBody": "Escolha um modo de cabine acima para criar seu primeiro evento.",
+      "denied": "Sua função aqui é {role}, e essa página é para funções com mais acesso. Peça a um proprietário se precisar dela."
     },
     "events": {
       "title": "Eventos",
@@ -457,8 +507,13 @@
       "volume": "Volume"
     },
     "devices": {
-      "title": "Dispositivos",
-      "subtitle": "Cada notebook, tablet e celular que roda uma cabine nesta conta. Sem limite.",
+      "title": "Dispositivos e equipe",
+      "subtitle": "Cada notebook, tablet e celular que roda uma cabine nesta conta (sem limite) e as pessoas que trabalham com você.",
+      "tabs": {
+        "label": "Seções de dispositivos e equipe",
+        "devices": "Dispositivos",
+        "team": "Equipe"
+      },
       "thisBrowser": "Usar este navegador como cabine",
       "thisBrowserBody": "Registre-o para rodar cabines aqui. Ele continua enviando arquivos durante todo o evento, e você pode revogá-lo quando quiser.",
       "register": "Registrar dispositivo",
@@ -490,6 +545,78 @@
         "storage": "Registrado, mas este navegador bloqueia o armazenamento e não vai lembrar dele. Permita os dados do site e registre de novo.",
         "rename": "Não foi possível renomear o dispositivo.",
         "revoke": "Não foi possível revogar o dispositivo."
+      }
+    },
+    "team": {
+      "title": "Equipe",
+      "members": {
+        "title": "Membros",
+        "subtitle": "Todas as pessoas que podem entrar em {organization}.",
+        "subtitleReadOnly": "Todas as pessoas que podem entrar em {organization}. Só os proprietários podem alterar a equipe.",
+        "you": "Você",
+        "joined": "Entrou em {date}",
+        "roleFor": "Função de {name}",
+        "remove": "Remover",
+        "removeLabel": "Remover {name}",
+        "leave": "Sair da organização",
+        "soleOwner": "Você é o único proprietário. Torne outra pessoa proprietária antes de sair.",
+        "onlyOrganization": "Esta é a sua única organização, então você não pode sair dela.",
+        "roleChanged": "{name} agora é {role}.",
+        "removed": "Você removeu {name} da equipe."
+      },
+      "roleHelp": {
+        "owner": "Controle total: a equipe, os dispositivos, os eventos, as conexões com a nuvem e tudo o que um operador faz.",
+        "operator": "Roda as cabines e gerencia eventos, dispositivos e recursos. Não pode alterar a equipe nem conectar nuvens.",
+        "viewer": "Somente leitura: vê eventos, galerias e dispositivos e pode exportar galerias. Não pode alterar nada."
+      },
+      "invite": {
+        "title": "Convidar um membro",
+        "subtitle": "A pessoa recebe um e-mail com um link que vale por 7 dias.",
+        "email": "Endereço de e-mail",
+        "emailPlaceholder": "assistente@estudio.com",
+        "role": "Função",
+        "send": "Enviar convite",
+        "sending": "Enviando…",
+        "sent": "Convite enviado para {email}."
+      },
+      "pending": {
+        "title": "Convites pendentes",
+        "subtitle": "Pessoas que você convidou e que ainda não entraram.",
+        "empty": "Nenhum convite aguardando.",
+        "invitedBy": "Convidado por {name}",
+        "expires": "Expira {when}",
+        "expired": "Expirado",
+        "resend": "Reenviar",
+        "resendLabel": "Reenviar o convite para {email}",
+        "revoke": "Revogar",
+        "revokeLabel": "Revogar o convite para {email}",
+        "resent": "Convite reenviado para {email}.",
+        "revoked": "Convite para {email} revogado."
+      },
+      "confirm": {
+        "removeTitle": "Remover {name}?",
+        "removeBody": "A pessoa perde o acesso a {organization} na hora. Os eventos e arquivos que ela criou continuam.",
+        "remove": "Remover membro",
+        "leaveTitle": "Sair de {organization}?",
+        "leaveBody": "Você perde o acesso aos eventos, dispositivos e arquivos desta organização. Precisaria de um novo convite para voltar.",
+        "leave": "Sair da organização",
+        "demoteTitle": "Deixar de ser proprietário?",
+        "demoteBody": "Você passará a ser {role} e não poderá gerenciar a equipe nem as conexões com a nuvem. Outro proprietário teria que desfazer isso.",
+        "demote": "Alterar minha função",
+        "cancel": "Cancelar"
+      },
+      "errors": {
+        "forbidden": "Só os proprietários podem alterar a equipe.",
+        "invalid_email": "Informe um endereço de e-mail válido.",
+        "invalid_role": "Escolha uma das funções da lista.",
+        "last_owner": "Uma organização sempre precisa de pelo menos um proprietário. Torne outra pessoa proprietária primeiro.",
+        "only_organization": "Isso deixaria esta pessoa sem nenhuma organização.",
+        "already_member": "Essa pessoa já faz parte da equipe.",
+        "invitation_limit": "Há convites pendentes demais. Revogue alguns primeiro.",
+        "membership_limit": "Esta organização atingiu o limite de membros.",
+        "rate_limited": "Você enviou muitos convites. Aguarde um pouco antes de enviar mais.",
+        "not_found": "Essa pessoa ou convite não existe mais. Recarregue a página e tente novamente.",
+        "failed": "Algo deu errado. Tente novamente."
       }
     },
     "assets": {

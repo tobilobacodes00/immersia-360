@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { ArrowRight, Images, RotateCw } from 'lucide-react';
+import { ArrowRight, Images, Lock, RotateCw } from 'lucide-react';
 import { Card, EmptyState, PageHeader, Pill } from '@immersia/ui';
 import { formatEventDate } from '@/lib/format';
 import { roleCan } from '@/lib/permissions';
@@ -14,13 +14,15 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /** Screen 2: mode launcher — two large cards, then recent events. */
-export default async function LauncherPage() {
+export default async function LauncherPage({ searchParams }: { searchParams: Promise<{ denied?: string }> }) {
   const op = await requireOperator();
-  const [t, te, locale, recent] = await Promise.all([
+  const [t, te, tr, locale, recent, { denied }] = await Promise.all([
     getTranslations('studio.launcher'),
     getTranslations('studio.events'),
+    getTranslations('roles'),
     getLocale(),
     recentEvents(op.organizationId),
+    searchParams,
   ]);
   const canCreate = roleCan(op.role, { event: ['create'] });
   const modes = [
@@ -30,6 +32,15 @@ export default async function LauncherPage() {
   return (
     <>
       <PageHeader eyebrow={op.organizationName} title={t('title')} subtitle={t('subtitle')} />
+      {denied && (
+        <p
+          role="status"
+          className="mb-6 flex items-start gap-3 rounded-xl border border-warn/25 bg-warn/[0.07] p-4 text-sm"
+        >
+          <Lock className="mt-0.5 size-4 shrink-0 text-warn" aria-hidden />
+          {t('denied', { role: tr(op.role) })}
+        </p>
+      )}
       <div className="grid gap-4 sm:grid-cols-2">
         {modes.map(({ mode, icon: Icon, title, body }) => {
           const content = (

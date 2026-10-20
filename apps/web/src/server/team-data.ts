@@ -150,10 +150,10 @@ export async function loadInvitation(invitationId: string) {
 }
 
 /** An invitation as the signed-in user sees it: its facts (if any) and what the page should say. */
-export async function resolveInvite(invitationId: string, user: { id: string; email: string }) {
+export async function resolveInvite(invitationId: string, who: { id: string; email: string }) {
   const facts = isInvitationId(invitationId) ? await loadInvitation(invitationId) : null;
-  const isMember = facts ? await isMemberOf(user.id, facts.organizationId) : false;
-  const view = inviteView({ invitation: facts, userEmail: user.email, isMember, now: new Date() });
+  const isMember = facts ? await isMemberOf(who.id, facts.organizationId) : false;
+  const view = inviteView({ invitation: facts, userEmail: who.email, isMember, now: new Date() });
   return { facts, view };
 }
 
