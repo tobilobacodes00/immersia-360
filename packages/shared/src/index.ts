@@ -11,3 +11,7 @@ export * from './session';
 export * from './kiosk';
 export * from './asset';
 export * from './live';
+export * from './browser';
+export * from './crash';
+export * from './metrics';
+export * from './reports';
