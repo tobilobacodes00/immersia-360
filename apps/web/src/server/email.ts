@@ -53,6 +53,34 @@ export async function sendEmail(mail: OutgoingEmail): Promise<void> {
   }
 }
 
+/**
+ * Can mail go out? For the status page (HLP-4): an SMTP server is asked to say hello, Resend's API is
+ * asked something small. Sends nothing. Null when no sender is configured outside production.
+ */
+export async function emailTransportReachable(): Promise<boolean | null> {
+  const e = env();
+  switch (emailTransport()) {
+    case 'smtp': {
+      smtp ??= createTransport(e.SMTP_URL!);
+      return smtp.verify();
+    }
+    case 'resend': {
+      const res = await fetch('https://api.resend.com/domains', {
+        headers: { authorization: `Bearer ${e.RESEND_API_KEY}` },
+        signal: AbortSignal.timeout(3500),
+        cache: 'no-store',
+      });
+      if (res.ok || res.status === 429) return true;
+      // A key limited to sending is refused here by name, and that proves the key and the API work.
+      const body = (await res.json().catch(() => null)) as { name?: string } | null;
+      return (res.status === 401 || res.status === 403) && body?.name === 'restricted_api_key';
+    }
+    case 'dev':
+      // Mail goes to the log in development; a production deployment with no sender can't send at all.
+      return isProduction() ? false : null;
+  }
+}
+
 /** The recipient's language for a transactional email: their explicit choice, else the browser's. */
 export function localeFromRequest(headers: Headers | undefined): Locale {
   if (!headers) return 'en';

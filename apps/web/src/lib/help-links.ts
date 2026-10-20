@@ -45,6 +45,6 @@ export type HelpScope = 'studio' | 'public';
 
 export const HELP_BASE: Record<HelpScope, string> = { studio: '/studio/help', public: '/help' };
 
-export function helpHref(slug: HelpSlug, scope: HelpScope = 'studio', anchor?: string): Route {
+export function helpHref(slug: string, scope: HelpScope = 'studio', anchor?: string): Route {
   return `${HELP_BASE[scope]}/${slug}${anchor ? `#${anchor}` : ''}` as Route;
 }
