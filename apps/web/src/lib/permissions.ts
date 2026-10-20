@@ -48,7 +48,8 @@ export type RoleName = keyof typeof roles;
 export type Permission = { [K in keyof typeof statements]?: (typeof statements)[K][number][] };
 
 export function isRoleName(value: string): value is RoleName {
-  return value in roles;
+  // Own keys only: `'constructor' in roles` is true through the prototype chain.
+  return Object.hasOwn(roles, value);
 }
 
 /** Pure check used by both server guards and client UI. */

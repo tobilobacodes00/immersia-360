@@ -111,7 +111,8 @@
     "errors": {
       "generic": "Algo salió mal. Inténtalo de nuevo.",
       "rateLimited": "Demasiados intentos. Espera un minuto e inténtalo de nuevo."
-    }
+    },
+    "inviteHint": "Inicia sesión con la dirección de correo a la que se envió tu invitación."
   },
   "email": {
     "magicLink": {
@@ -148,11 +149,13 @@
       "events": "Eventos",
       "assets": "Recursos",
       "templates": "Plantillas",
-      "devices": "Dispositivos",
+      "devices": "Dispositivos y equipo",
       "integrations": "Integraciones",
       "signOut": "Cerrar sesión",
       "openMenu": "Abrir menú",
-      "closeMenu": "Cerrar menú"
+      "closeMenu": "Cerrar menú",
+      "organization": "Organización",
+      "switchFailed": "No se pudo cambiar de organización. Inténtalo de nuevo."
     },
     "launcher": {
       "title": "¿Qué vamos a montar?",
@@ -169,7 +172,8 @@
       "recent": "Eventos recientes",
       "allEvents": "Todos los eventos",
       "emptyTitle": "Aún no hay eventos",
-      "emptyBody": "Elige un modo de cabina arriba para crear tu primer evento."
+      "emptyBody": "Elige un modo de cabina arriba para crear tu primer evento.",
+      "denied": "Tu rol aquí es {role}, y esa página es para roles con más acceso. Pídele a un propietario si la necesitas."
     },
     "events": {
       "title": "Eventos",
@@ -458,8 +462,8 @@
       "volume": "Volumen"
     },
     "devices": {
-      "title": "Dispositivos",
-      "subtitle": "Cada portátil, tableta y teléfono que usa una cabina en esta cuenta. Sin límite.",
+      "title": "Dispositivos y equipo",
+      "subtitle": "Cada portátil, tableta y teléfono que usa una cabina en esta cuenta (sin límite) y las personas que trabajan contigo.",
       "thisBrowser": "Usar este navegador como cabina",
       "thisBrowserBody": "Regístralo para usar cabinas aquí. Sigue subiendo archivos durante todo el evento y puedes revocarlo cuando quieras.",
       "register": "Registrar dispositivo",
@@ -491,6 +495,11 @@
         "storage": "Registrado, pero este navegador bloquea el almacenamiento y no lo recordará. Permite los datos del sitio y regístralo de nuevo.",
         "rename": "No se pudo renombrar el dispositivo.",
         "revoke": "No se pudo revocar el dispositivo."
+      },
+      "tabs": {
+        "label": "Secciones de dispositivos y equipo",
+        "devices": "Dispositivos",
+        "team": "Equipo"
       }
     },
     "assets": {
@@ -1361,6 +1370,78 @@
         "png": "Descargar PNG",
         "failed": "No se pudo crear el archivo. Inténtalo de nuevo."
       }
+    },
+    "team": {
+      "title": "Equipo",
+      "members": {
+        "title": "Miembros",
+        "subtitle": "Todas las personas que pueden iniciar sesión en {organization}.",
+        "subtitleReadOnly": "Todas las personas que pueden iniciar sesión en {organization}. Solo los propietarios pueden cambiar el equipo.",
+        "you": "Tú",
+        "joined": "Se unió el {date}",
+        "roleFor": "Rol de {name}",
+        "remove": "Quitar",
+        "removeLabel": "Quitar a {name}",
+        "leave": "Salir de la organización",
+        "soleOwner": "Eres el único propietario. Haz propietario a otra persona antes de salir.",
+        "onlyOrganization": "Esta es tu única organización, así que no puedes salir de ella.",
+        "roleChanged": "{name} ahora es {role}.",
+        "removed": "Se quitó a {name} del equipo."
+      },
+      "roleHelp": {
+        "owner": "Control total: el equipo, los dispositivos, los eventos, las conexiones a la nube y todo lo que puede hacer un operador.",
+        "operator": "Usa las cabinas y administra eventos, dispositivos y recursos. No puede cambiar el equipo ni conectar nubes.",
+        "viewer": "Solo lectura: ve eventos, galerías y dispositivos, y puede exportar galerías. No puede cambiar nada."
+      },
+      "invite": {
+        "title": "Invitar a un miembro",
+        "subtitle": "Recibirá un correo con un enlace que funciona durante 7 días.",
+        "email": "Correo electrónico",
+        "emailPlaceholder": "asistente@estudio.com",
+        "role": "Rol",
+        "send": "Enviar invitación",
+        "sending": "Enviando…",
+        "sent": "Invitación enviada a {email}."
+      },
+      "pending": {
+        "title": "Invitaciones pendientes",
+        "subtitle": "Personas a las que invitaste y que aún no se han unido.",
+        "empty": "No hay invitaciones en espera.",
+        "invitedBy": "Invitó {name}",
+        "expires": "Vence {when}",
+        "expired": "Vencida",
+        "resend": "Reenviar",
+        "resendLabel": "Reenviar la invitación a {email}",
+        "revoke": "Revocar",
+        "revokeLabel": "Revocar la invitación a {email}",
+        "resent": "Invitación reenviada a {email}.",
+        "revoked": "Invitación a {email} revocada."
+      },
+      "confirm": {
+        "removeTitle": "¿Quitar a {name}?",
+        "removeBody": "Pierde el acceso a {organization} de inmediato. Los eventos y archivos que creó se conservan.",
+        "remove": "Quitar miembro",
+        "leaveTitle": "¿Salir de {organization}?",
+        "leaveBody": "Perderás el acceso a los eventos, dispositivos y archivos de esta organización. Necesitarías una invitación nueva para volver.",
+        "leave": "Salir de la organización",
+        "demoteTitle": "¿Dejar de ser propietario?",
+        "demoteBody": "Pasarás a ser {role} y no podrás administrar el equipo ni las conexiones a la nube. Otro propietario tendría que revertirlo.",
+        "demote": "Cambiar mi rol",
+        "cancel": "Cancelar"
+      },
+      "errors": {
+        "forbidden": "Solo los propietarios pueden cambiar el equipo.",
+        "invalid_email": "Ingresa un correo electrónico válido.",
+        "invalid_role": "Elige uno de los roles de la lista.",
+        "last_owner": "Una organización siempre necesita al menos un propietario. Haz propietario a otra persona primero.",
+        "only_organization": "Eso dejaría a esta persona sin ninguna organización.",
+        "already_member": "Esa persona ya forma parte del equipo.",
+        "invitation_limit": "Hay demasiadas invitaciones pendientes. Revoca algunas primero.",
+        "membership_limit": "Esta organización alcanzó su límite de miembros.",
+        "rate_limited": "Enviaste muchas invitaciones. Espera un rato antes de enviar más.",
+        "not_found": "Esa persona o invitación ya no existe. Recarga la página e inténtalo de nuevo.",
+        "failed": "Algo salió mal. Inténtalo de nuevo."
+      }
     }
   },
   "booth": {
@@ -1453,6 +1534,12 @@
       "backend": {
         "opfs": "Guardado en el almacenamiento del dispositivo",
         "idb": "Guardado en el almacenamiento del navegador"
+      },
+      "lens": {
+        "wide": "gran angular",
+        "ultrawide": "ultra gran angular",
+        "telephoto": "teleobjetivo",
+        "front": "frontal"
       }
     },
     "takeStatus": {
@@ -1855,6 +1942,52 @@
       "vhs": "Cinta VHS",
       "echo-trail": "Estela de eco",
       "clones": "Clones"
+    }
+  },
+  "invite": {
+    "metaTitle": "Invitación",
+    "eyebrow": "Invitación",
+    "readyTitle": "Únete a {organization}",
+    "readyBody": "{inviter} te invitó a {organization} como {role}.",
+    "signedInAs": "Sesión iniciada como {email}.",
+    "accept": "Aceptar invitación",
+    "accepting": "Uniéndote…",
+    "decline": "Rechazar",
+    "declining": "Rechazando…",
+    "openStudio": "Ir a mi estudio",
+    "wrongAccount": {
+      "title": "Esta invitación es para otra cuenta",
+      "body": "Se envió a {invited}, pero iniciaste sesión como {current}. Cierra sesión y vuelve a entrar con la dirección invitada para aceptarla.",
+      "signOut": "Cerrar sesión",
+      "signingOut": "Cerrando sesión…"
+    },
+    "expired": {
+      "title": "Esta invitación venció",
+      "body": "Las invitaciones valen durante 7 días. Pídele a quien te invitó que te envíe una nueva."
+    },
+    "cancelled": {
+      "title": "Esta invitación fue cancelada",
+      "body": "Quien te invitó la retiró. Si aún necesitas acceso, pídele que te envíe una nueva."
+    },
+    "declined": {
+      "title": "Rechazaste esta invitación",
+      "body": "Si fue un error, pídele a quien te invitó que te envíe una nueva."
+    },
+    "used": {
+      "title": "Esta invitación ya se usó",
+      "body": "Ya fue aceptada y no se puede usar de nuevo. Si necesitas acceso, pide una invitación nueva."
+    },
+    "notFound": {
+      "title": "No encontramos esta invitación",
+      "body": "Puede que el enlace esté incompleto. Revisa el correo que recibiste o pide una invitación nueva."
+    },
+    "alreadyMember": {
+      "title": "Ya formas parte de este equipo",
+      "body": "Eres miembro de {organization}, así que no hay nada que aceptar."
+    },
+    "errors": {
+      "failed": "Algo salió mal. Inténtalo de nuevo.",
+      "gone": "Ya no se puede aceptar esta invitación. Recarga la página para ver el motivo."
     }
   }
 }

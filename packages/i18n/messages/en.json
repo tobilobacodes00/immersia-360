@@ -111,7 +111,8 @@
     "errors": {
       "generic": "Something went wrong. Please try again.",
       "rateLimited": "Too many attempts. Please wait a minute and try again."
-    }
+    },
+    "inviteHint": "Sign in with the email address your invitation was sent to."
   },
   "email": {
     "magicLink": {
@@ -148,11 +149,13 @@
       "events": "Events",
       "assets": "Assets",
       "templates": "Templates",
-      "devices": "Devices",
+      "devices": "Devices and team",
       "integrations": "Integrations",
       "signOut": "Sign out",
       "openMenu": "Open menu",
-      "closeMenu": "Close menu"
+      "closeMenu": "Close menu",
+      "organization": "Organization",
+      "switchFailed": "Couldn't switch organization. Please try again."
     },
     "launcher": {
       "title": "What are we running?",
@@ -169,7 +172,8 @@
       "recent": "Recent events",
       "allEvents": "All events",
       "emptyTitle": "No events yet",
-      "emptyBody": "Pick a booth mode above to create your first event."
+      "emptyBody": "Pick a booth mode above to create your first event.",
+      "denied": "Your role here is {role}, and that page is for roles with more access. Ask an owner if you need it."
     },
     "events": {
       "title": "Events",
@@ -458,8 +462,8 @@
       "volume": "Volume"
     },
     "devices": {
-      "title": "Devices",
-      "subtitle": "Every laptop, tablet and phone that runs a booth for this account. There's no limit.",
+      "title": "Devices and team",
+      "subtitle": "Every laptop, tablet and phone that runs a booth for this account (there's no limit), and the people who work with you.",
       "thisBrowser": "Use this browser as a booth",
       "thisBrowserBody": "Register it to run booths here. It keeps uploading for the whole event, and you can revoke it at any time.",
       "register": "Register device",
@@ -491,6 +495,11 @@
         "storage": "Registered, but this browser blocks storage, so it won't remember it. Allow site data and register again.",
         "rename": "Couldn't rename the device.",
         "revoke": "Couldn't revoke the device."
+      },
+      "tabs": {
+        "label": "Devices and team sections",
+        "devices": "Devices",
+        "team": "Team"
       }
     },
     "assets": {
@@ -1361,6 +1370,78 @@
         "png": "Download PNG",
         "failed": "Couldn’t make the file. Try again."
       }
+    },
+    "team": {
+      "title": "Team",
+      "members": {
+        "title": "Members",
+        "subtitle": "Everyone who can sign in to {organization}.",
+        "subtitleReadOnly": "Everyone who can sign in to {organization}. Only owners can change the team.",
+        "you": "You",
+        "joined": "Joined {date}",
+        "roleFor": "Role for {name}",
+        "remove": "Remove",
+        "removeLabel": "Remove {name}",
+        "leave": "Leave organization",
+        "soleOwner": "You're the only owner. Make someone else an owner before you leave.",
+        "onlyOrganization": "This is your only organization, so you can't leave it.",
+        "roleChanged": "{name} is now {role}.",
+        "removed": "{name} was removed from the team."
+      },
+      "roleHelp": {
+        "owner": "Full control: the team, devices, events, cloud connections and everything an operator can do.",
+        "operator": "Runs booths and manages events, devices and assets. Can't change the team or connect clouds.",
+        "viewer": "Read-only: sees events, galleries and devices, and can export galleries. Can't change anything."
+      },
+      "invite": {
+        "title": "Invite a member",
+        "subtitle": "They get an email with a link that works for 7 days.",
+        "email": "Email address",
+        "emailPlaceholder": "assistant@studio.com",
+        "role": "Role",
+        "send": "Send invitation",
+        "sending": "Sending…",
+        "sent": "Invitation sent to {email}."
+      },
+      "pending": {
+        "title": "Pending invitations",
+        "subtitle": "People you've invited who haven't joined yet.",
+        "empty": "No invitations waiting.",
+        "invitedBy": "Invited by {name}",
+        "expires": "Expires {when}",
+        "expired": "Expired",
+        "resend": "Resend",
+        "resendLabel": "Resend the invitation to {email}",
+        "revoke": "Revoke",
+        "revokeLabel": "Revoke the invitation to {email}",
+        "resent": "Invitation sent again to {email}.",
+        "revoked": "Invitation to {email} revoked."
+      },
+      "confirm": {
+        "removeTitle": "Remove {name}?",
+        "removeBody": "They lose access to {organization} right away. The events and files they created stay.",
+        "remove": "Remove member",
+        "leaveTitle": "Leave {organization}?",
+        "leaveBody": "You lose access to this organization's events, devices and files. You'd need a new invitation to come back.",
+        "leave": "Leave organization",
+        "demoteTitle": "Step down as owner?",
+        "demoteBody": "You'll become {role} and won't be able to manage the team or cloud connections. Another owner would have to change that back.",
+        "demote": "Change my role",
+        "cancel": "Cancel"
+      },
+      "errors": {
+        "forbidden": "Only owners can change the team.",
+        "invalid_email": "Enter a valid email address.",
+        "invalid_role": "Pick one of the roles in the list.",
+        "last_owner": "An organization always needs at least one owner. Make someone else an owner first.",
+        "only_organization": "That would leave this person without any organization.",
+        "already_member": "That person is already on the team.",
+        "invitation_limit": "There are too many pending invitations. Revoke some first.",
+        "membership_limit": "This organization has reached its member limit.",
+        "rate_limited": "You've sent a lot of invitations. Please wait a while before sending more.",
+        "not_found": "That person or invitation no longer exists. Reload the page and try again.",
+        "failed": "Something went wrong. Please try again."
+      }
     }
   },
   "booth": {
@@ -1453,6 +1534,12 @@
       "backend": {
         "opfs": "Saved to device storage",
         "idb": "Saved to browser storage"
+      },
+      "lens": {
+        "wide": "wide",
+        "ultrawide": "ultra-wide",
+        "telephoto": "telephoto",
+        "front": "front"
       }
     },
     "takeStatus": {
@@ -1855,6 +1942,52 @@
       "vhs": "VHS tape",
       "echo-trail": "Echo trail",
       "clones": "Clones"
+    }
+  },
+  "invite": {
+    "metaTitle": "Invitation",
+    "eyebrow": "Invitation",
+    "readyTitle": "Join {organization}",
+    "readyBody": "{inviter} invited you to {organization} as {role}.",
+    "signedInAs": "Signed in as {email}.",
+    "accept": "Accept invitation",
+    "accepting": "Joining…",
+    "decline": "Decline",
+    "declining": "Declining…",
+    "openStudio": "Go to my studio",
+    "wrongAccount": {
+      "title": "This invitation is for a different account",
+      "body": "It was sent to {invited}, but you're signed in as {current}. Sign out, then sign in with the invited address to accept it.",
+      "signOut": "Sign out",
+      "signingOut": "Signing out…"
+    },
+    "expired": {
+      "title": "This invitation has expired",
+      "body": "Invitations are good for 7 days. Ask the person who invited you to send a new one."
+    },
+    "cancelled": {
+      "title": "This invitation was cancelled",
+      "body": "The person who invited you withdrew it. If you still need access, ask them to send a new one."
+    },
+    "declined": {
+      "title": "You declined this invitation",
+      "body": "If that was a mistake, ask the person who invited you to send a new one."
+    },
+    "used": {
+      "title": "This invitation was already used",
+      "body": "It has been accepted and can't be used again. If you need access, ask for a new invitation."
+    },
+    "notFound": {
+      "title": "We can't find this invitation",
+      "body": "The link may be incomplete. Check the email you received, or ask for a new invitation."
+    },
+    "alreadyMember": {
+      "title": "You're already on this team",
+      "body": "You're a member of {organization}, so there's nothing to accept."
+    },
+    "errors": {
+      "failed": "Something went wrong. Please try again.",
+      "gone": "This invitation can no longer be accepted. Reload the page to see why."
     }
   }
 }
