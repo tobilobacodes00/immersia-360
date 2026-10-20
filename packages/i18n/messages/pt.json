@@ -149,6 +149,7 @@
       "assets": "Recursos",
       "templates": "Modelos",
       "devices": "Dispositivos",
+      "integrations": "Integrações",
       "signOut": "Sair",
       "openMenu": "Abrir menu",
       "closeMenu": "Fechar menu"
@@ -263,7 +264,13 @@
       "extend": "Estender por {days} dias",
       "extendHelp": "Dá mais tempo a todos os links ativos. Arquivos já expirados não podem ser recuperados.",
       "extended": "{count, plural, =0 {Nenhum link ativo para estender} one {# link estendido por {days} dias} other {# links estendidos por {days} dias}}",
-      "extendFailed": "Não foi possível estender os links. Tente de novo."
+      "extendFailed": "Não foi possível estender os links. Tente de novo.",
+      "cloudTitle": "As cópias para o {provider} precisam da sua atenção",
+      "cloudNeedsReauth": "O acesso ao {provider} foi revogado ou expirou, então os arquivos novos não estão sendo copiados para lá. Eles estão seguros na Immersia e serão copiados sozinhos, sem duplicatas, quando você reconectar.",
+      "cloudWaiting": "{count, plural, one {# arquivo em espera.} other {# arquivos em espera.}}",
+      "cloudDisconnected": "Este evento é copiado para o {provider}, mas o {provider} não está conectado. Conecte e os arquivos deste evento serão atualizados.",
+      "cloudFailed": "{count, plural, one {# arquivo não chegou ao {provider}.} other {# arquivos não chegaram ao {provider}.}}",
+      "cloudFix": "Abrir Integrações"
     },
     "setup": {
       "title": "Configuração do evento",
@@ -390,7 +397,21 @@
         "consent": "Texto de consentimento",
         "consentHelp": "Com o que os convidados concordam, nas suas palavras.",
         "contact": "Contato para convidados",
-        "contactHelp": "Aparece nas páginas dos convidados quando os arquivos do evento expiram, para que possam falar com você. Um e-mail ou telefone."
+        "contactHelp": "Aparece nas páginas dos convidados quando os arquivos do evento expiram, para que possam falar com você. Um e-mail ou telefone.",
+        "cloud": "Copiar também para a minha nuvem",
+        "cloudHelp": "Salva cada arquivo finalizado também no seu próprio Google Drive ou Dropbox. Os convidados continuam recebendo os arquivos pela Immersia.",
+        "cloudNone": "Só a Immersia",
+        "cloudState": {
+          "unavailable": "{provider} (não configurado)",
+          "disconnected": "{provider} (não conectado)",
+          "needs_reauth": "{provider} (entre novamente)"
+        },
+        "cloudNote": {
+          "unavailable": "O {provider} não está configurado neste servidor.",
+          "disconnected": "O {provider} não está conectado, então este evento não é copiado para lá.",
+          "needs_reauth": "O {provider} precisa que você entre novamente; os arquivos novos ficam seguros e são copiados quando você entrar."
+        },
+        "cloudManage": "Gerenciar integrações"
       },
       "kiosk": {
         "title": "Quiosque",
@@ -1175,6 +1196,102 @@
         "hide": "Ocultar das telas"
       }
     },
+    "integrations": {
+      "title": "Integrações",
+      "subtitle": "Copie cada arquivo finalizado para o seu próprio Google Drive ou Dropbox, além do link da Immersia para o convidado. Os convidados sempre baixam pela Immersia; a cópia é sua.",
+      "providers": {
+        "drive": "Google Drive",
+        "dropbox": "Dropbox",
+        "generic": "seu armazenamento na nuvem"
+      },
+      "about": {
+        "drive": "A Immersia só enxerga as pastas e os arquivos que ela mesma cria, nunca o resto do seu Drive.",
+        "dropbox": "A Immersia só trabalha dentro da pasta que cria no seu Dropbox."
+      },
+      "status": {
+        "connected": "Conectado",
+        "needsReauth": "Entre novamente",
+        "notConnected": "Não conectado",
+        "notConfigured": "Não configurado"
+      },
+      "notConfigured": "Este servidor da Immersia ainda não está configurado para o {provider}. Se você hospeda por conta própria, adicione as credenciais dele e a INTEGRATION_TOKEN_KEY ao ambiente (veja o .env.example).",
+      "connect": "Conectar {provider}",
+      "reconnect": "Reconectar {provider}",
+      "connectedAs": "Conectado como {email}",
+      "ownerOnly": "Só o proprietário da conta pode conectar ou desconectar uma nuvem.",
+      "folder": {
+        "label": "Pasta",
+        "none": "Ainda não foi criada. Ela é criada com a primeira cópia.",
+        "open": "Abrir pasta",
+        "help": "Cada evento tem a própria subpasta, com a data no nome. Os arquivos já copiados continuam onde estão.",
+        "name": "Nome da pasta",
+        "placeholder": "Immersia 360",
+        "save": "Usar esta pasta"
+      },
+      "disconnect": {
+        "button": "Desconectar",
+        "title": "Desconectar o {provider}?",
+        "body": "A Immersia vai parar de copiar para o {provider}, revogar o acesso e apagar a conexão salva. Os arquivos já copiados continuam no seu {provider}. As cópias que ainda não aconteceram são descartadas; conecte de novo depois para se atualizar.",
+        "confirm": "Desconectar",
+        "cancel": "Cancelar"
+      },
+      "reauth": {
+        "title": "O {provider} precisa que você entre novamente",
+        "body": "A Immersia não consegue mais acessar o seu {provider}: o acesso foi revogado ou expirou. Nada se perde. Os arquivos novos ficam seguros na Immersia e cada cópia em espera é concluída, sem duplicatas, assim que você reconectar.",
+        "waiting": "{count, plural, one {# arquivo em espera.} other {# arquivos em espera.}}"
+      },
+      "failed": {
+        "title": "{count, plural, one {Não foi possível copiar # arquivo para o {provider}} other {Não foi possível copiar # arquivos para o {provider}}}",
+        "retry": "Tentar de novo",
+        "retrying": "Tentando de novo…"
+      },
+      "flash": {
+        "connected": "O {provider} está conectado. A cópia já começou."
+      },
+      "connectErrors": {
+        "denied": "Você cancelou a conexão, então nada mudou. Toque em Conectar para tentar de novo.",
+        "state": "Esse link de login expirou ou não foi gerado por esta conta. Toque em Conectar para recomeçar.",
+        "scope": "O {provider} não concedeu a permissão de que a Immersia precisa. Toque em Conectar de novo e deixe a caixa de acesso marcada.",
+        "no_refresh": "O {provider} não deu à Immersia um acesso duradouro. Remova a Immersia dos aplicativos conectados do seu {provider} e conecte de novo.",
+        "exchange": "O {provider} recusou o login. Toque em Conectar para tentar de novo.",
+        "unreachable": "Não foi possível falar com o {provider}. Verifique a conexão e tente de novo em um minuto.",
+        "unavailable": "Este servidor não está configurado para o {provider}.",
+        "forbidden": "Só o proprietário da conta pode conectar uma nuvem.",
+        "failed": "Algo deu errado ao conectar o {provider}. Tente de novo."
+      },
+      "actionErrors": {
+        "reauth_required": "O {provider} precisa que você entre novamente primeiro. Toque em Reconectar.",
+        "quota_exceeded": "Seu {provider} está cheio. Libere espaço e tente de novo.",
+        "unreachable": "Não foi possível falar com o {provider}. Tente de novo em um minuto.",
+        "forbidden": "Só o proprietário da conta pode alterar isso.",
+        "failed": "Não funcionou. Tente de novo."
+      },
+      "copyErrors": {
+        "reauth_required": "O acesso ao {provider} foi revogado ou expirou. Reconecte o {provider} e este arquivo será copiado sozinho.",
+        "quota_exceeded": "Seu {provider} está cheio. Libere espaço e toque em Tentar de novo.",
+        "transient": "Não foi possível falar com o {provider} após várias tentativas. Toque em Tentar de novo.",
+        "retrying": "O {provider} não respondeu. Vamos tentar de novo {when}.",
+        "folder_missing": "A pasta foi apagada do {provider}. Escolha uma pasta acima; as cópias com falha recomeçam sozinhas.",
+        "folder_inaccessible": "A Immersia não consegue gravar nessa pasta. Crie uma pasta nova acima; as cópias com falha recomeçam sozinhas.",
+        "source_gone": "Este arquivo expirou na Immersia antes de ser copiado, então não pode mais ser enviado.",
+        "other": "Não foi possível copiar este arquivo. Toque em Tentar de novo; se continuar falhando, reconecte o {provider}."
+      },
+      "copies": {
+        "title": "Cópias recentes",
+        "subtitle": "Os últimos 20 arquivos enviados para a sua nuvem.",
+        "emptyTitle": "Nada foi copiado ainda",
+        "emptyBody": "Escolha Google Drive ou Dropbox em Compartilhamento, na configuração de um evento, e os arquivos finalizados aparecem aqui.",
+        "to": "para o {provider}",
+        "open": "Abrir no {provider}",
+        "soon": "em instantes",
+        "status": {
+          "pending": "Em espera",
+          "uploading": "Copiando",
+          "done": "Copiado",
+          "failed": "Falhou"
+        }
+      }
+    },
     "galleryCard": {
       "title": "Galeria do evento",
       "subtitle": "{count, plural, =0 {Todas as capturas, para o seu cliente e para os convidados que escaneiam o QR do evento.} one {# captura até agora, para o seu cliente e para os convidados que escaneiam o QR do evento.} other {# capturas até agora, para o seu cliente e para os convidados que escaneiam o QR do evento.}}",
@@ -1284,17 +1401,47 @@
       "camera": "Câmera",
       "defaultCamera": "Câmera padrão",
       "simulator": "Câmera simulada (sem hardware)",
-      "lens": {
-        "wide": "grande-angular",
-        "ultrawide": "ultra-grande-angular",
-        "telephoto": "teleobjetiva",
-        "front": "frontal"
+      "lenses": {
+        "groupBack": "Câmeras traseiras",
+        "groupFront": "Câmeras frontais",
+        "groupExternal": "Câmeras externas",
+        "groupOther": "Outras câmeras",
+        "front": "Câmera frontal",
+        "back": "Câmera traseira",
+        "backWide": "Câmera traseira grande-angular",
+        "backUltraWide": "Câmera traseira ultra-grande-angular",
+        "backTelephoto": "Câmera traseira teleobjetiva",
+        "backDual": "Câmera traseira dupla",
+        "backTriple": "Câmera traseira tripla",
+        "numbered": "Câmera {n}",
+        "saved": "Câmera escolhida antes",
+        "inUse": "Em uso",
+        "namesLater": "Os nomes das câmeras aparecem depois que a câmera é iniciada."
       },
+      "cameraBusy": "As mudanças de câmera ficam em pausa enquanto um convidado usa a cabine.",
       "delivering": "Entregando {width}×{height} a {fps} fps",
       "mirror": "Espelhar a prévia",
       "mirrorHelp": "Só nesta tela. As gravações nunca são espelhadas.",
+      "zoom": "Zoom",
       "torch": "Lanterna",
-      "noTorch": "Esta câmera não tem luz controlável.",
+      "noTorch": "Não compatível: esta câmera ou este navegador não consegue acender a luz.",
+      "torchNeedsCamera": "Inicie a cabine para verificar se esta câmera tem luz.",
+      "torchFailed": "Não foi possível alternar a lanterna. Tente de novo.",
+      "fill": {
+        "title": "Luz de preenchimento",
+        "help": "Ilumina o rosto dos convidados com uma moldura luminosa na borda desta tela. Ela não aparece nas gravações.",
+        "level": {
+          "off": "Desligada",
+          "soft": "Suave",
+          "bright": "Forte"
+        },
+        "tint": "Cor da luz",
+        "tints": {
+          "neutral": "Neutra",
+          "warm": "Quente"
+        },
+        "brightness": "Para ter mais luz, deixe o brilho da tela deste dispositivo no máximo. Uma página da web não consegue fazer isso por você."
+      },
       "motion": "Iniciar com movimento",
       "motionHelp": "A gravação começa quando a plataforma começa a girar.",
       "sensitivity": "Movimento necessário",
@@ -1637,6 +1784,77 @@
         "polling": "Ao vivo, atualizando",
         "offline": "Sem conexão, repetindo os momentos salvos"
       }
+    }
+  },
+  "effects": {
+    "looks": {
+      "none": "Original",
+      "mono": "Monocromático",
+      "noir": "Noir",
+      "silver": "Prata",
+      "sepia": "Sépia",
+      "vivid": "Vívido",
+      "cinematic": "Cinematográfico",
+      "film": "Filme",
+      "golden-hour": "Hora dourada",
+      "soft-pastel": "Pastel suave",
+      "cool-breeze": "Brisa fresca",
+      "warm-portrait": "Retrato quente",
+      "matte": "Fosco",
+      "bleach-bypass": "Bleach bypass",
+      "cross-process": "Processo cruzado",
+      "retro-70s": "Retrô anos 70",
+      "night-neon": "Neon noturno",
+      "rose-gold": "Ouro rosé",
+      "emerald": "Esmeralda",
+      "high-key": "High key",
+      "blue-hour": "Hora azul",
+      "duotone-midnight": "Duotone meia-noite",
+      "duotone-sunset": "Duotone pôr do sol",
+      "duotone-ocean": "Duotone oceano",
+      "black-gold": "Preto e dourado"
+    },
+    "photo": {
+      "none": "Nenhum",
+      "mirror": "Espelho",
+      "bulge": "Esfera",
+      "pinch": "Comprimir",
+      "swirl": "Torcer",
+      "ripple": "Ondulação",
+      "glass": "Vidro",
+      "prism": "Prisma",
+      "kaleidoscope": "Caleidoscópio",
+      "op-art": "Op art",
+      "halftone": "Meio-tom",
+      "thermal": "Térmico",
+      "pop-art": "Pop art",
+      "pixelate": "Pixelado",
+      "sketch": "Esboço",
+      "posterize": "Posterizar",
+      "duotone-pop": "Duotone pop",
+      "comic": "Quadrinhos",
+      "neon-edges": "Bordas neon",
+      "glitch": "Glitch"
+    },
+    "video": {
+      "light-rings": "Anéis de luz",
+      "confetti": "Confete",
+      "sparkle": "Brilhos",
+      "hearts": "Corações",
+      "bubbles": "Bolhas",
+      "snow": "Neve",
+      "smoke": "Fumaça",
+      "aura": "Aura",
+      "disco": "Disco",
+      "prism-flare": "Reflexo prismático",
+      "light-leak": "Vazamento de luz",
+      "film-burn": "Filme queimado",
+      "strobe": "Estroboscópio",
+      "glitch": "Glitch",
+      "rgb-shift": "Deslocamento RGB",
+      "vhs": "Fita VHS",
+      "echo-trail": "Rastro de eco",
+      "clones": "Clones"
     }
   }
 }

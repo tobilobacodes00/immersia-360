@@ -401,7 +401,8 @@ export async function eventStats(organizationId: string, id: string): Promise<Ev
       .innerJoin(output, eq(output.id, uploadObject.outputId))
       .innerJoin(captureSession, eq(captureSession.id, output.sessionId))
       .innerJoin(event, eq(event.id, captureSession.eventId))
-      .where(and(scoped, ne(uploadObject.status, 'done'))),
+      // Booth uploads only: copies to the operator's cloud have their own status (HLP-3 warning).
+      .where(and(scoped, eq(uploadObject.target, 'hosted'), ne(uploadObject.status, 'done'))),
     db()
       .select({ status: device.status })
       .from(device)

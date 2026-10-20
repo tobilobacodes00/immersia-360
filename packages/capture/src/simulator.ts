@@ -67,8 +67,11 @@ export function openSimulatedCamera(opts: { resolution: Resolution; frameRate: n
     label: 'Simulated camera',
     stream,
     track,
-    settings: { width: W, height: H, frameRate: opts.frameRate, deviceId: null },
-    torch: { supported: false, set: async () => false },
+    settings: { width: W, height: H, frameRate: opts.frameRate, deviceId: null, facingMode: null },
+    lens: { facing: 'unknown', kind: 'unknown' },
+    torch: { supported: false, set: async () => ({ ok: false, reason: 'unsupported' }) },
+    zoom: { range: null, set: async () => null },
+    applied: { zoom: null, torch: false },
     stop: () => {
       running = false;
       cancelAnimationFrame(raf);

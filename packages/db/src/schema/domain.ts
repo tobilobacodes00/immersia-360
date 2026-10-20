@@ -396,11 +396,24 @@ export const uploadObject = pgTable(
     remoteUrl: text('remote_url'),
     status: uploadStatus('status').notNull().default('pending'),
     attempts: smallint('attempts').notNull().default(0),
+    /** A stable code (see apps/web/src/server/cloud/copy-core.ts), never provider text or tokens. */
     lastError: text('last_error'),
+    /**
+     * Cloud copies: while `pending`, the earliest time to try again (exponential backoff, or the
+     * provider's Retry-After); while `uploading`, when the claim's lease runs out, so a worker that
+     * died mid-upload does not park the row forever.
+     */
+    nextAttemptAt: ts('next_attempt_at'),
     createdAt: createdAt(),
     completedAt: ts('completed_at'),
   },
-  (t) => [uniqueIndex('upload_object_idem_idx').on(t.idempotencyKey)],
+  (t) => [
+    uniqueIndex('upload_object_idem_idx').on(t.idempotencyKey),
+    index('upload_object_output_idx').on(t.outputId),
+    index('upload_object_queue_idx')
+      .on(t.status, t.nextAttemptAt)
+      .where(sql`${t.status} in ('pending', 'uploading')`),
+  ],
 );
 
 // ---------------------------------------------------------------------------------------------
