@@ -153,6 +153,7 @@
       "templates": "Templates",
       "devices": "Devices and team",
       "integrations": "Integrations",
+      "help": "Help",
       "signOut": "Sign out",
       "openMenu": "Open menu",
       "closeMenu": "Close menu",
@@ -1571,6 +1572,13 @@
   "booth": {
     "startBooth": "Start booth",
     "startHint": "Check the camera, then hand over to your guests.",
+    "setupCheck": "Setup check",
+    "setupPrompt": {
+      "title": "First time on this device?",
+      "body": "Run the setup check: camera, storage, a test recording, render speed, a QR scan and the upload path. About three minutes.",
+      "run": "Run the setup check",
+      "skip": "Skip for now"
+    },
     "startingCamera": "Starting the camera…",
     "offline": "Offline",
     "lowStorage": "Storage low",
@@ -1659,6 +1667,9 @@
         "opfs": "Saved to device storage",
         "idb": "Saved to browser storage"
       },
+      "setupCheck": "Setup check",
+      "setupCheckHelp": "Test the camera, storage, render speed, QR scan and uploads on this device.",
+      "setupCheckRun": "Run",
       "lens": {
         "wide": "wide",
         "ultrawide": "ultra-wide",
@@ -1855,6 +1866,428 @@
     },
     "startOther": "Start {booth}",
     "endCard": "Scan to get your video"
+  },
+  "check": {
+    "metaTitle": "Setup check",
+    "title": "Setup check",
+    "subtitle": "A few minutes on this device before the event: the camera, storage, a test recording, render speed, a QR scan and the upload path. Nothing from the test is kept.",
+    "backToBooth": "Back to the booth",
+    "help": "How the setup check works",
+    "stepsLabel": "Setup check steps",
+    "stepOf": "step {n} of {total}",
+    "status": {
+      "pass": "Good",
+      "warn": "Check",
+      "fail": "Fix",
+      "skipped": "Skipped",
+      "current": "Now",
+      "waiting": "Waiting"
+    },
+    "findingLabel": {
+      "pass": "Passed",
+      "warn": "Needs a look",
+      "fail": "Problem"
+    },
+    "actions": {
+      "continue": "Continue",
+      "continueAnyway": "Continue anyway",
+      "retry": "Try again",
+      "skip": "Skip this step",
+      "runAgain": "Run the check again",
+      "finish": "Back to the booth"
+    },
+    "steps": {
+      "camera": "Camera and lens",
+      "storage": "Storage",
+      "take": "Test recording",
+      "render": "Render speed",
+      "qr": "Test QR scan",
+      "printer": "Printer test",
+      "network": "Upload and network"
+    },
+    "camera": {
+      "intro": "Choose the camera and lens the booth will use and look at the picture. The check then counts the frames per second the camera really delivers, which is often fewer than it advertises.",
+      "opening": "Opening the camera…",
+      "measuring": "Counting frames…",
+      "lensHelp": "Phones and tablets list each lens as its own camera. Pick the wide lens for a 360 booth so the whole platform is in frame.",
+      "help": "Camera troubleshooting",
+      "stats": {
+        "camera": "Camera",
+        "size": "Picture",
+        "reported": "Reported by the camera",
+        "measured": "Measured",
+        "wanted": "This event asks for",
+        "fps": "{fps} fps"
+      },
+      "findings": {
+        "ok": "The camera delivers what this event asks for.",
+        "simulator": "This is the simulated camera, so no real camera was checked. Choose your camera above, or run the check again with it before the event.",
+        "fpsBelowEvent": "The camera delivers about {fps} fps, less than the {target} fps this event asks for. It still works, but slow motion is smoother from a faster camera or camera mode. You can also set the event to 30 fps in Event setup.",
+        "fpsTooLow": "The camera delivers only about {fps} fps, which looks choppy. Close other apps that use the camera, try another camera or USB port, and add light: many cameras slow down in dim rooms.",
+        "resolutionBelowEvent": "The camera delivers {size}, below the event's {target}. Videos are still made at {target}, but from a smaller picture. Try another camera or lens, or choose a lower resolution in Event setup.",
+        "fpsUnmeasured": "This browser can't count frames, so the camera's real frame rate is unknown. The recording step will still show whether the picture is smooth."
+      }
+    },
+    "storage": {
+      "intro": "Recordings are saved on this device first and uploaded later, so the device has to keep them safe. This checks the free space and whether the browser promises not to delete it.",
+      "checking": "Checking storage…",
+      "help": "Storage and iOS",
+      "stats": {
+        "free": "Free space",
+        "unknown": "Not reported",
+        "persisted": "Browser keeps the data",
+        "yes": "Yes",
+        "no": "Not promised",
+        "backend": "Recordings are saved to",
+        "backends": {
+          "opfs": "Device storage (fast)",
+          "idb": "Browser database (slower)"
+        }
+      },
+      "findings": {
+        "ok": "Plenty of free space, and the browser has promised to keep this site's data.",
+        "noStorage": "This browser has no storage for recordings. Use a current Chrome, Edge or Safari, and not a private window.",
+        "spaceUnknown": "The browser doesn't say how much space is left. Make sure the device has at least 2 GB free.",
+        "lowSpace": "Only {gb} GB free, and the booth warns below 2 GB. Free up space before the event: delete old takes in the render queue, or files you don't need.",
+        "criticalSpace": "Only {gb} GB free. That is not enough to run an event safely. Free up space first.",
+        "notPersisted": "The browser hasn't promised to keep this site's data, so it could clear it if the device runs short of space. Keep plenty of storage free and don't clear browsing data. Installing Immersia 360 as an app makes Chrome more likely to protect it.",
+        "notPersistedApple": "Safari can delete a website's data after about a week without use, unless the site is added to the Home Screen. Add Immersia 360 to the Home Screen (Share, then Add to Home Screen) and open it from there.",
+        "idbBackend": "This browser can't write recordings to its fast device storage and falls back to a slower database. It works, but 4K or very long takes may struggle."
+      }
+    },
+    "take": {
+      "intro": "Record {seconds} seconds through the same path the booth uses: the camera, the recorder and this device's own storage. The test recording is deleted when the check ends.",
+      "record": "Record a test take",
+      "again": "Record again",
+      "recording": "Recording…",
+      "progress": "Test recording progress",
+      "stats": {
+        "length": "Length",
+        "seconds": "{seconds} s",
+        "size": "Size",
+        "format": "Format",
+        "chunks": "Saved in pieces"
+      },
+      "findings": {
+        "ok": "Recorded, saved on the device and read back whole.",
+        "short": "Only {seconds} s of the {asked} s were recorded. Check that the camera keeps running, and that the device isn't low on power or storage.",
+        "empty": "Nothing was recorded. Check that the camera shows a picture, then try again.",
+        "writeFailed": "The recording couldn't be saved on the device. Check free storage, and that the browser isn't in a private window.",
+        "noCamera": "There is no camera to record from. Go back to the camera step and run the check again."
+      }
+    },
+    "render": {
+      "intro": "The test recording is rendered with this event's output settings ({resolution}, {fps} fps) by the same render engine the booth uses. The speed is then scaled to a 15 s 1080p clip, which should take at most {laptop} s on a laptop and {tablet} s on a 2021 iPad.",
+      "rendering": "Rendering the test recording…",
+      "progress": "Render progress",
+      "help": "Render speed and the queue",
+      "estimateNote": "This is an estimate. The test clip is short and includes start-up time, so it leans towards slower than real clips.",
+      "stats": {
+        "rendered": "Test render",
+        "renderedValue": "{frames} frames at {size} in {seconds} s",
+        "reference": "A 15 s 1080p clip would take",
+        "event": "A 15 s clip of this event would take",
+        "seconds": "{seconds} s",
+        "path": "Render path for this device"
+      },
+      "paths": {
+        "local": "Renders on the device",
+        "wasm": "Renders on the device (slower)",
+        "server": "Can't render on the device"
+      },
+      "findings": {
+        "fast": "A 15 s 1080p clip would render in about {seconds} s here, inside the 45 s target for laptops.",
+        "slower": "A 15 s 1080p clip would take about {seconds} s here: slower than the 45 s laptop target, inside the 90 s target for a 2021 iPad. Guests still get their videos, but expect a queue when people come back to back. A lower frame rate or resolution in Event setup speeds it up.",
+        "slow": "A 15 s 1080p clip would take about {seconds} s here, over the 90 s limit, so guests would wait a long time. Use a faster device for this event, lower the resolution or frame rate in Event setup, or switch off effects.",
+        "undecodable": "This browser can't decode the test recording, so it can't render. Update to the latest Chrome, Edge or Safari.",
+        "unsupported_encoder": "This browser can't encode H.264 video, which the guest's MP4 needs. Update to the latest Chrome, Edge or Safari.",
+        "encoder_stall": "The video encoder stopped responding. Close other tabs and apps and try again; if it repeats, restart the browser.",
+        "gpu": "Graphics acceleration (WebGL 2) isn't available, so videos can't be composed. Turn on hardware acceleration in the browser settings, update the graphics driver, then try again.",
+        "cancelled": "The render was cancelled. Try again.",
+        "noTake": "There is no test recording to render. Run the check again and record the test take first.",
+        "failed": "The test render failed. Try again; if it fails again, update the browser and restart the device."
+      }
+    },
+    "qr": {
+      "intro": "This is what a guest does: scan a code with a phone. Point a phone camera at the code below. The page it opens confirms the scan, and this screen then shows \"Scanned\".",
+      "creating": "Making the code…",
+      "waiting": "Waiting for a phone to scan the code…",
+      "manual": "No camera app? Open this address on the phone:",
+      "scanned": "Scanned",
+      "qrLabel": "Test QR code. Scan it with a phone",
+      "newCode": "Make a new code",
+      "help": "Sharing with guests",
+      "findings": {
+        "ok": "A phone opened the test code, so guests can reach this server from where the booth is.",
+        "okLocalhost": "The code worked, but this booth is open at a local address ({host}) that guests' phones can't reach. Open the booth from your Immersia 360 web address for the event.",
+        "expired": "The test code expired before a phone opened it. Make a new one and try again, or skip this step.",
+        "offline": "This device is offline, so the code can't be checked. Connect it to the network and try again.",
+        "failed": "The test code couldn't be created. Try again; if it keeps failing, this device may have been removed from your account."
+      }
+    },
+    "printer": {
+      "notApplicable": "This layout size is for screens, not paper, so there is nothing to print.",
+      "intro": "Print a calibration sheet at this event's print size ({size}, {width}×{height} in) through the same code a guest's print uses, then check it with a ruler. The target is within 1 mm.",
+      "printingOff": "Printing is switched off for this event. You can still test the printer so it is ready when you switch it on.",
+      "twoUp": "This event prints two 2×6 strips side by side on one 4×6 sheet, so load 4×6 paper.",
+      "how": {
+        "print": "Press the button below. In the print dialog choose your printer and its paper size, set the scale to 100% (not \"Fit to page\") and the margins to none.",
+        "ruler": "Hold a ruler to the 50 mm ruler on the sheet. It should measure 50 mm, give or take 1 mm.",
+        "marks": "Measure between the corner marks. The distance is printed on the sheet.",
+        "circle": "The 20 mm circle should look round, not oval.",
+        "frames": "Count the thin frames near the edges. Frames 1, 2, 3 and 4 mm in should all show on every side. Each missing frame means about 1 mm is cropped."
+      },
+      "print": "Print the calibration sheet",
+      "printAgain": "Print it again",
+      "help": "Printing at the right size",
+      "helpKiosk": "Print without a dialog (Chrome kiosk printing)",
+      "unavailable": "This browser couldn't start printing. Try Chrome or Edge, or skip this step.",
+      "question": "What did the printed sheet show?",
+      "answers": {
+        "matches": "The ruler is 50 mm and every mark shows",
+        "off": "Off by more than 1 mm",
+        "cropped": "Corners or frames are cut off",
+        "nothing": "Nothing printed, or the wrong paper"
+      },
+      "answerAgain": "Answer again",
+      "findings": {
+        "ok": "The print is within 1 mm and nothing is cropped: guests' prints will come out at the size you chose.",
+        "off": "The print is more than 1 mm off. In the print dialog set the scale to 100% (turn off \"Fit to page\" or \"Scale to fit\") and the paper size to the exact paper in the printer. If it is still off, check the printer driver's own scaling and margin settings.",
+        "cropped": "The printer is cropping the edges. Set margins to none (or turn on borderless printing) and use the paper size that matches your paper. Keep important parts of a design 4 mm or more from the edge.",
+        "nothing": "Nothing came out, or it came out on the wrong paper. Check that the printer is on, loaded and set as the default printer, and see the printing article for the one-time Chrome setup."
+      }
+    },
+    "network": {
+      "intro": "This follows a guest's file: the device asks the server for a signed upload, sends 1 MB straight to storage, and the server confirms it arrived whole and deletes it.",
+      "running": "Testing the upload…",
+      "help": "Offline mode and uploads",
+      "stats": {
+        "speed": "Upload speed",
+        "mbps": "{mbps} Mbit/s"
+      },
+      "findings": {
+        "ok": "Uploaded 1 MB to storage at {mbps} Mbit/s and the server confirmed it. A typical 12 MB clip would take about {seconds} s.",
+        "slow": "Uploads run at only {mbps} Mbit/s, so a typical 12 MB clip would take about {seconds} s to reach the guest. Move closer to the router, use a cable or a hotspot, or expect guests to wait. Nothing is lost: the booth keeps files and uploads them in the background.",
+        "offline": "This device has no connection to the server. The booth still records and renders offline and uploads later, but guests' links stay empty until it is back online.",
+        "unauthorized": "The server no longer recognises this device. It was probably revoked: register it again, then reopen the booth.",
+        "storage_unavailable": "The server's file storage isn't set up, so guest files can't be uploaded. If you run Immersia yourself, set the S3_ settings (see .env.example).",
+        "rate_limited": "The check was run too many times in a row. Wait a few minutes and try again.",
+        "put_failed": "Uploading to storage failed. A firewall, a VPN or a Wi-Fi network with a sign-in page is the usual cause. Open a web page on this device to finish any sign-in, then try again.",
+        "incomplete": "The file reached storage but not whole. Try again; if it keeps failing, the network is dropping large uploads.",
+        "failed": "The upload test failed for an unknown reason. Try again in a minute."
+      }
+    },
+    "summary": {
+      "title": "Results",
+      "verdict": {
+        "pass": "This device is ready for the event.",
+        "warn": "This device will work, but a few things need a look. They are listed below.",
+        "fail": "Something needs fixing before the event. It is listed below."
+      },
+      "render": "A 15 s 1080p clip renders in about {seconds} s here. Render path recorded for this device: {path}.",
+      "paths": {
+        "local": "renders on the device",
+        "wasm": "renders on the device (slower)",
+        "server": "can't render on the device"
+      },
+      "sending": "Saving the result to your account…",
+      "sent": "The result is saved on this device's record under Devices.",
+      "failed": "Couldn't save the result to your account.",
+      "retrySend": "Try again",
+      "nothingKept": "The test recording was deleted from this device",
+      "help": "Reading the results"
+    },
+    "scan": {
+      "scanned": {
+        "title": "Scanned",
+        "body": "Your phone opened the test code. The booth can see it: you can close this page."
+      },
+      "expired": {
+        "title": "This test code has expired",
+        "body": "Go back to the booth and make a new one."
+      },
+      "invalid": {
+        "title": "This isn't a valid test code",
+        "body": "Scan the code shown by the setup check on the booth."
+      }
+    }
+  },
+  "help": {
+    "metaTitle": "Help centre",
+    "title": "Help centre",
+    "subtitle": "Guides, answers to common questions, and a way to reach us.",
+    "shell": {
+      "home": "Immersia 360 home",
+      "nav": "Site",
+      "help": "Help centre",
+      "status": "Status",
+      "signIn": "Sign in"
+    },
+    "search": {
+      "label": "Search the help centre",
+      "placeholder": "Try “kiosk printing” or “camera blocked”",
+      "clear": "Clear search",
+      "count": "{count, plural, =0 {No articles match “{query}”} one {# article matches “{query}”} other {# articles match “{query}”}}",
+      "none": "Try fewer or different words, or ask us in the contact form below.",
+      "resultsLabel": "Search results"
+    },
+    "browse": {
+      "title": "Browse by topic",
+      "articles": "{count, plural, one {# article} other {# articles}}"
+    },
+    "categories": {
+      "start": "Getting started",
+      "booth": "360 booth and venue",
+      "photo": "Photo booth and printing",
+      "sharing": "Sharing and guests",
+      "live": "Live Display",
+      "cloud": "Google Drive and Dropbox",
+      "design": "Templates and looks",
+      "troubleshooting": "Troubleshooting",
+      "account": "Account and support",
+      "faq": "Questions people ask"
+    },
+    "faq": {
+      "title": "Frequently asked questions",
+      "subtitle": "Short answers. Each one links to the full guide where there is one."
+    },
+    "videos": {
+      "title": "Video tutorials",
+      "empty": "Short how-to videos are on their way. Every one will have captions and a written guide beside it, so everything here works without sound too.",
+      "watch": "Watch: {title}",
+      "captions": "With captions"
+    },
+    "article": {
+      "back": "Help centre",
+      "breadcrumb": "Breadcrumb",
+      "onThisPage": "On this page",
+      "related": "Read next",
+      "updated": "Last reviewed {date}",
+      "video": "Video: {title}",
+      "videoFallback": "Your browser can't play this video. The steps below cover the same ground.",
+      "captionsLabel": "Captions",
+      "stillStuck": "Still stuck?",
+      "stillStuckBody": "Ask us. We reply within {days} business days.",
+      "contact": "Contact support"
+    },
+    "markdown": {
+      "note": "Note",
+      "tip": "Tip",
+      "warning": "Warning",
+      "code": "Command",
+      "table": "Table",
+      "newTab": "opens in a new tab"
+    },
+    "contact": {
+      "title": "Contact us",
+      "subtitle": "Tell us what happened and we will help. We reply within {days} business days, often sooner.",
+      "target": "Response target: {days} business days (Monday to Friday).",
+      "name": "Your name (optional)",
+      "email": "Your email",
+      "topic": "What is it about?",
+      "topics": {
+        "setup": "Setting up an event",
+        "booth": "Running the booth",
+        "printing": "Printing",
+        "sharing": "Sharing and downloads",
+        "account": "My account",
+        "other": "Something else"
+      },
+      "message": "Your message",
+      "messageHint": "What were you doing, what did you expect, and what happened instead? Mention the event and the device if you can.",
+      "submit": "Send message",
+      "sending": "Sending…",
+      "sent": {
+        "title": "Message sent",
+        "body": "Thank you. We will reply to {email} within {days} business days."
+      },
+      "another": "Send another message",
+      "errors": {
+        "invalid": "Some details need fixing. Check the marked fields and try again.",
+        "email": "Enter a valid email address.",
+        "message": "Write at least {min} characters, so we can understand the problem.",
+        "rate_limited": "Too many messages from here in a short time. Wait a while, or email us directly.",
+        "failed": "We couldn't send that. Email us directly instead."
+      },
+      "orEmail": "Prefer email? Write to {email}.",
+      "privacy": "We use your details only to answer you."
+    },
+    "statusLink": {
+      "title": "Service status",
+      "body": "Something not working for everyone? Check whether we already know.",
+      "open": "Open the status page"
+    },
+    "learnMore": "Read the help article",
+    "links": {
+      "cloudErrors": "What this means and what to do",
+      "boothErrors": "Help with this message",
+      "cameraPermissions": "Fix camera access",
+      "offline": "About offline mode and uploads",
+      "renderQueue": "About rendering",
+      "devices": "About devices",
+      "kioskPrinting": "Printing without a dialog",
+      "kiosk": "About the kiosk lock",
+      "pairing": "How to pair a display",
+      "sharingStation": "About the Sharing Station",
+      "expiry": "About expiry and extending",
+      "gallery": "About the gallery and ZIP export",
+      "guestPrivacy": "About guest privacy",
+      "templates": "About templates",
+      "looks": "About looks and effects",
+      "roles": "About roles"
+    }
+  },
+  "status": {
+    "metaTitle": "Status",
+    "title": "Service status",
+    "subtitle": "Live checks of what Immersia 360 runs on. They come straight from our servers, not from a third-party status service.",
+    "overall": {
+      "operational": "All systems operational",
+      "degraded": "Some systems are slower than usual",
+      "outage": "A system is down"
+    },
+    "checked": "Checked {time}. Results are kept for up to {seconds} seconds.",
+    "servicesTitle": "Services",
+    "services": {
+      "database": {
+        "name": "Database",
+        "description": "Accounts, events, devices and guest links."
+      },
+      "storage": {
+        "name": "File storage",
+        "description": "Guest photos and videos, and downloads."
+      },
+      "realtime": {
+        "name": "Live Display hub",
+        "description": "Pushes new captures to displays within a second."
+      },
+      "email": {
+        "name": "Email",
+        "description": "Sign-in links, guest emails and support replies."
+      }
+    },
+    "state": {
+      "operational": "Operational",
+      "degraded": "Degraded",
+      "down": "Down",
+      "not_configured": "Not configured"
+    },
+    "responded": "{ms} ms",
+    "notConfigured": "Not configured means this deployment does not use that service. Live Display screens then refresh by polling, and email is shown in the server log in development.",
+    "incidentsTitle": "Recent incidents",
+    "noIncidents": "No incidents in the last {days} days.",
+    "ongoing": "Ongoing",
+    "resolved": "Resolved {date}",
+    "started": "Started {date}",
+    "impact": {
+      "minor": "Minor",
+      "major": "Major",
+      "maintenance": "Maintenance"
+    },
+    "affected": "Affects: {services}",
+    "supportTitle": "Contact",
+    "supportBody": "Something that isn't listed here? Write to {email}. We reply within {days} business days.",
+    "helpLink": "Help centre"
   },
   "share": {
     "metaTitle": "{event}: your files",

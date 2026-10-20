@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { Images, Play, RotateCw } from 'lucide-react';
+import { ClipboardCheck, Images, Play, RotateCw } from 'lucide-react';
 import { eventBooths, outputSettingsSchema } from '@immersia/shared';
 import { Pill, buttonClass } from '@immersia/ui';
 import { formatEventDate } from '@/lib/format';
@@ -54,6 +54,9 @@ export default async function EventLayout({
                   {tb('startOther', { booth: t(`modes.${booths[1]!}`) })}
                 </Link>
               )}
+              <Link href={`/booth/${event.id}/check`} className={buttonClass({ size: 'lg' })}>
+                <ClipboardCheck className="size-4" aria-hidden /> {tb('setupCheck')}
+              </Link>
               <Link href={`/booth/${event.id}`} className={buttonClass({ variant: 'primary', size: 'lg' })}>
                 <Play className="size-4 fill-current" aria-hidden /> {tb('startBooth')}
               </Link>

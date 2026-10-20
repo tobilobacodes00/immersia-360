@@ -50,6 +50,8 @@ import { describeCamera, reconcileWithCamera, type ActiveCamera } from './active
 import { fillLightOf, needsReopen, type CameraChoice } from './camera-choice';
 import { FillLightFrame } from './FillLightFrame';
 import { useCameraChoice } from './use-camera-choice';
+import { SetupCheckPrompt } from './SetupCheckPrompt';
+import { useSetupCheckPrompt } from './use-setup-check-prompt';
 import { useUploadQueue } from './use-upload-queue';
 
 export interface PhotoBoothEvent {
@@ -67,6 +69,8 @@ export interface PhotoBoothEvent {
   layout: Template | null;
   /** LIV-8: guests are told their capture may appear on the Live Display, and can opt out. */
   liveDisplay: boolean;
+  /** HLP-1: the setup check for this booth. */
+  checkHref: string;
   /** Dynamic fields and every file the layout draws (screen 5). */
   media: { branding: { hashtag: string; custom1: string; custom2: string; custom3: string }; assets: AssetView[] };
 }
@@ -125,6 +129,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
   const p = event.photo;
   const wantsClips = p.outputs.boomerang || p.outputs.shortVideo;
   const kiosk = useKioskLock(event.kioskPinHash);
+  const setupCheck = useSetupCheckPrompt(identity?.id ?? null);
   // A session is under way, from the first countdown until the strip is kept: the gallery stays out of its way.
   const capturing =
     phase.kind === 'starting' ||
@@ -554,6 +559,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
               >
                 {t('startBooth')}
               </GuestButton>
+              {setupCheck.due && <SetupCheckPrompt href={event.checkHref} onSkip={setupCheck.skip} />}
             </div>
           </motion.div>
         )}
@@ -704,6 +710,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
         }}
         camera={phase.kind === 'error' ? null : activeCamera}
         cameraBusy={cameraBusy}
+        checkHref={event.checkHref}
       />
 
       <KioskLockLayer eventId={event.id} pinHash={event.kioskPinHash} kiosk={kiosk} />

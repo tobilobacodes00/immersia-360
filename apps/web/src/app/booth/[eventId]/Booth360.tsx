@@ -69,6 +69,8 @@ import { describeCamera, reconcileWithCamera, type ActiveCamera } from './active
 import { fillLightOf, needsReopen, type CameraChoice } from './camera-choice';
 import { FillLightFrame } from './FillLightFrame';
 import { useCameraChoice } from './use-camera-choice';
+import { SetupCheckPrompt } from './SetupCheckPrompt';
+import { useSetupCheckPrompt } from './use-setup-check-prompt';
 
 export interface BoothEvent {
   id: string;
@@ -85,6 +87,8 @@ export interface BoothEvent {
   media: Omit<EventMedia, 'endCard'>;
   /** LIV-8: guests are told their capture may appear on the Live Display, and can opt out. */
   liveDisplay: boolean;
+  /** HLP-1: the setup check for this booth. */
+  checkHref: string;
 }
 
 type Phase =
@@ -151,6 +155,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
     phase.kind === 'saved';
   const renderPaused = useHeld(capturing, RENDER_RESUME_MS);
   const kiosk = useKioskLock(event.kioskPinHash);
+  const setupCheck = useSetupCheckPrompt(identity?.id ?? null);
   const uploads = useUploadQueue({ eventId: event.id, token: identity?.token ?? null, store: storeReady });
   const mediaSpec = useMemo<EventMedia>(
     () => ({
@@ -575,6 +580,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
               >
                 {t('startBooth')}
               </GuestButton>
+              {setupCheck.due && <SetupCheckPrompt href={event.checkHref} onSkip={setupCheck.skip} />}
             </div>
           </motion.div>
         )}
@@ -735,6 +741,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
         }}
         camera={phase.kind === 'error' ? null : activeCamera}
         cameraBusy={cameraBusy}
+        checkHref={event.checkHref}
         capture360={{
           motion: { enabled: motionOn, threshold },
           onMotion: (m) => {
