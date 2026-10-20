@@ -12,6 +12,7 @@ import {
   probeTake,
   videoBitrate,
   type Card,
+  type RenderBackground,
   type StillCard,
 } from '@immersia/render-engine';
 import { boothDb, outputsForTake, putOutput, type LocalTake, type TakeStore } from '@immersia/offline';
@@ -40,6 +41,8 @@ export interface RenderAssets {
   music?: () => Promise<Blob | null>;
   intro?: () => Promise<Card | null>;
   outro?: () => Promise<Card | null>;
+  /** CAP-10: what replaces the background behind the guest. Null renders as filmed. */
+  background?: () => Promise<RenderBackground | null>;
   /** DL-4: the closing QR card for this take's guest session. */
   endCard?: (take: LocalTake) => Promise<StillCard | null>;
 }
@@ -124,12 +127,13 @@ export function useRenderQueue(opts: {
         // A missing or unreadable file renders the video without it rather than failing the take.
         const media = <T>(get?: () => Promise<T | null>) => (get ? get().catch(() => null) : Promise.resolve(null));
         const endCard = assets?.endCard;
-        const [overlay, music, intro, outro, end] = await Promise.all([
+        const [overlay, music, intro, outro, end, background] = await Promise.all([
           media(assets?.overlay),
           media(assets?.music),
           media(assets?.intro),
           media(assets?.outro),
           media(endCard ? () => endCard(take) : undefined),
+          media(assets?.background),
         ]);
         let base = { output, slowMotion: video.slowMotion, reverse: video.reverse, intro, outro, endCard: end };
         let audio = null;
@@ -174,6 +178,7 @@ export function useRenderQueue(opts: {
           effects: video.effects.map((e) => ({ id: e.id, intensity: e.intensity, colorMode: e.colorMode ?? null })),
           beats,
           seed: seedOf(take.id),
+          background,
         };
         handle.current = client.current.render(take.id, job, (progress) => setCurrent({ takeId: take.id, progress }));
         const result = await handle.current.result;

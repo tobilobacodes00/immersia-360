@@ -10,7 +10,8 @@
     "./audio": "./src/audio.ts",
     "./timeline": "./src/timeline.ts",
     "./beats": "./src/beats.ts",
-    "./preview": "./src/preview.ts"
+    "./preview": "./src/preview.ts",
+    "./background": "./src/background.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.worker.json",
@@ -18,6 +19,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@immersia/capture": "workspace:*",
     "@immersia/shared": "workspace:*",
     "@mediabunny/aac-encoder": "catalog:",
     "mediabunny": "catalog:",

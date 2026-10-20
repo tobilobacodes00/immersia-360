@@ -20,6 +20,7 @@ import { createOpfsWorker } from '@immersia/offline/opfs-worker';
 import { StillRunner, findLook, findPhotoEffect } from '@immersia/effects';
 import { encodeGif, presetTemplate, renderToBlob, type Template } from '@immersia/layout';
 import { browserPrint } from '@immersia/layout/print';
+import { StillBackground } from '@immersia/render-engine/background';
 import { RenderClient } from '@immersia/render-engine/client';
 import {
   PRINT_SIZE_INCHES,
@@ -33,7 +34,9 @@ import {
 import { Pill } from '@immersia/ui';
 import { CountdownDisc, GuestButton, GuestScreen, Headline, fade } from '@immersia/ui/guest';
 import { readDeviceIdentity, type DeviceIdentity } from '@/lib/device-identity';
+import { pageSegmenter } from '@/lib/segmenter';
 import { workerUrl } from '@/lib/workers';
+import { useLiveBackground, useWarmSegmenter } from './background-source';
 import { useCaptureKeys, useHeartbeat, useOnline, useWakeLock } from './booth-hooks';
 import type { AssetView } from '@/server/assets';
 import { fillAssets } from './event-assets';
@@ -313,8 +316,34 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
   /** PHO-2 extras, made after the guest already has their QR: GIF, boomerang, short video. */
   // PHO-10 and VID-11: the event's photo effect, then its look, on every still and clip frame.
   const runner = useRef<StillRunner | null>(null);
+  // CAP-10: the background goes behind the guest first, so the look and effect grade the whole picture.
+  const stills = useRef<StillBackground | null>(null);
+  const liveBackground = useLiveBackground(p.background, event.media.assets);
+  const [backgroundUnavailable, setBackgroundUnavailable] = useState(false);
+  useWarmSegmenter(p.background !== null, false);
+  useEffect(
+    () => () => {
+      stills.current?.dispose();
+      stills.current = null;
+    },
+    [],
+  );
   const grade = useCallback(
-    async (image: ImageBitmap): Promise<ImageBitmap> => {
+    /** `sequence`: another frame of the clip just graded, so the mask smoothing carries over. */
+    async (source: ImageBitmap, opts: { sequence?: boolean } = {}): Promise<ImageBitmap> => {
+      let image = source;
+      if (liveBackground) {
+        try {
+          stills.current ??= new StillBackground(pageSegmenter);
+          const replaced = await stills.current.replace(image, liveBackground, { reset: !opts.sequence });
+          image.close();
+          image = replaced;
+        } catch (err) {
+          // The guest still gets their photos, with the real background.
+          console.warn('[photo] background replacement unavailable', err);
+          setBackgroundUnavailable(true);
+        }
+      }
       const look = p.filterId ? findLook(p.filterId) : null;
       const effect = p.effectId ? findPhotoEffect(p.effectId) : null;
       if ((!look || look.id === 'none') && (!effect || effect.id === 'none')) return image;
@@ -336,7 +365,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
         return image;
       }
     },
-    [p.filterId, p.effectId],
+    [p.filterId, p.effectId, liveBackground],
   );
   useEffect(() => () => runner.current?.dispose(), []);
 
@@ -378,7 +407,13 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
         }
         const raw = await Promise.all(taken.map((x) => x.clip ?? Promise.resolve([] as ImageBitmap[])));
         // The motion clips get the same look and effect as the stills (PHO-10, VID-11).
-        const clips = await Promise.all(raw.map((frames) => Promise.all(frames.map(grade))));
+        // One frame after another: the background's mask smoothing runs along each clip.
+        const clips: ImageBitmap[][] = [];
+        for (const frames of raw) {
+          const graded: ImageBitmap[] = [];
+          for (const [i, frame] of frames.entries()) graded.push(await grade(frame, { sequence: i > 0 }));
+          clips.push(graded);
+        }
         const client = renderer.current;
         if (client && p.outputs.boomerang && clips.at(-1)?.length) {
           // The last shot's moment, forward and back. The worker takes ownership of the frames it
@@ -506,6 +541,8 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
       <LookPreview
         video={videoRef}
         lookId={p.filterId}
+        background={liveBackground}
+        onBackgroundUnavailable={() => setBackgroundUnavailable(true)}
         className={`absolute inset-0 size-full object-cover ${mirrored}`}
       />
       {/* CAP-6: a glow around the screen edge that lights the guest (a front camera has no flash). */}
@@ -528,6 +565,11 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
           {!online && (
             <Pill tone="warn" className="text-[0.8rem]">
               <WifiOff className="size-3.5" aria-hidden /> {t('offline')}
+            </Pill>
+          )}
+          {backgroundUnavailable && !kiosk.locked && (
+            <Pill tone="warn" className="text-[0.8rem]">
+              {t('backgroundUnavailable')}
             </Pill>
           )}
           {uploads.status.waiting > 0 && (
