@@ -110,6 +110,26 @@ export interface FallbackChunk {
   data: Blob;
 }
 
+/** Which credentials a buffered analytics event is sent with: the booth's device token or a display's token. */
+export type AnalyticsChannel = 'device' | 'display';
+
+/**
+ * An analytics event waiting to be sent (POST /api/t). The outbox is bounded and best effort: it is
+ * never allowed to get in the way of capture, rendering or uploads.
+ */
+export interface LocalAnalyticsEvent {
+  /** Auto-increment: oldest first. */
+  seq?: number;
+  channel: AnalyticsChannel;
+  /** What the server dedupes on, so a batch sent twice after a lost response counts once. */
+  clientId: string;
+  /** The event the booth was running (the server keeps it only if it is the organization's). */
+  eventId: string | null;
+  /** The device clock when it happened (the server corrects for clock drift). */
+  at: number;
+  event: Record<string, unknown>;
+}
+
 export interface KeyValue {
   key: string;
   value: unknown;
@@ -123,6 +143,7 @@ export class BoothDB extends Dexie {
   kv!: EntityTable<KeyValue, 'key'>;
   sessions!: EntityTable<LocalSession, 'id'>;
   codes!: EntityTable<ReservedCode, 'code'>;
+  analytics!: EntityTable<LocalAnalyticsEvent, 'seq'>;
 
   constructor(name = 'immersia-booth') {
     super(name);
@@ -144,6 +165,10 @@ export class BoothDB extends Dexie {
     // v4 (M5): session-level outputs (photo strips, GIFs) are found by their session.
     this.version(4).stores({
       outputs: 'id, takeId, sessionId, eventId, kind, [eventId+createdAt]',
+    });
+    // v5: the analytics outbox (events buffered offline, flushed with backoff).
+    this.version(5).stores({
+      analytics: '++seq, channel, at',
     });
   }
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion } from 'motion/react';
 import { Mail, MessageCircle, MessageSquareText, Link2, Check, MonitorOff } from 'lucide-react';
@@ -39,11 +39,14 @@ export function ResultScreen({
   actions,
   liveDisplay = false,
   onOptOut,
+  onShown,
 }: {
   session: LocalSession;
   /** LIV-8: the event's Live Display is on, so the guest is told and may keep theirs off it. */
   liveDisplay?: boolean;
   onOptOut?: () => Promise<void>;
+  /** Called once, when the QR is on screen (capture-to-QR analytics). */
+  onShown?: () => void;
   /** Wording: a video (360) or photos (photo booth). */
   kind?: 'video' | 'photo';
   /** The guest's strip, shown beside the QR (photo booth). */
@@ -62,6 +65,15 @@ export function ResultScreen({
   const [sentTo, setSentTo] = useState<string[]>([]);
   const [touched, setTouched] = useState(0);
   const [optedOut, setOptedOut] = useState(session.optedOutOfDisplay);
+
+  // Tell the booth the QR is up, once per result. The latest callback is the one called.
+  const shown = useRef(onShown);
+  useEffect(() => {
+    shown.current = onShown;
+  });
+  useEffect(() => {
+    shown.current?.();
+  }, []);
 
   // Back to ready after a quiet spell; any interaction restarts the clock.
   useEffect(() => {

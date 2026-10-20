@@ -61,7 +61,8 @@ export function backoffMs(attempts: number, random = Math.random): number {
 
 export type UploadStep =
   | { kind: 'idle' }
-  | { kind: 'uploaded'; sessionId: string; outputId: string; bytes: number }
+  /** `retries`: how many attempts failed in a row before this one got through. */
+  | { kind: 'uploaded'; sessionId: string; outputId: string; bytes: number; retries: number }
   | { kind: 'registered'; sessionId: string }
   | { kind: 'emailed'; sessionId: string }
   | { kind: 'opted_out'; sessionId: string }
@@ -190,7 +191,13 @@ export class UploadQueue {
       if (confirmed !== 'ok') throw new BoothApiError(409, `upload_${confirmed}`, true);
       await this.db.outputs.update(next.id, { uploadedAt: this.now() });
       await this.db.sessions.update(session.id, { attempts: 0, lastError: undefined, updatedAt: this.now() });
-      return { kind: 'uploaded', sessionId: session.id, outputId: next.id, bytes: next.bytes };
+      return {
+        kind: 'uploaded',
+        sessionId: session.id,
+        outputId: next.id,
+        bytes: next.bytes,
+        retries: session.attempts,
+      };
     }
 
     // Nothing to upload. Done once every take has finished rendering; until then, check back later
