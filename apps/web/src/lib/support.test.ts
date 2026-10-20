@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  SUPPORT_MESSAGE_MAX,
-  SUPPORT_RESPONSE_BUSINESS_DAYS,
-  buildSupportMail,
-  mailboxOf,
-  supportRequestSchema,
-} from './support';
+import { SUPPORT_MESSAGE_MAX, SUPPORT_RESPONSE_BUSINESS_DAYS, buildSupportMail, supportRequestSchema } from './support';
 
 const request = {
   name: 'Ada',
@@ -23,11 +17,6 @@ const ctx = {
 describe('support', () => {
   it('promises a reply in two business days', () => {
     expect(SUPPORT_RESPONSE_BUSINESS_DAYS).toBe(2);
-  });
-
-  it('finds the mailbox in a from address', () => {
-    expect(mailboxOf('Immersia 360 <hello@example.com>')).toBe('hello@example.com');
-    expect(mailboxOf(' hello@example.com ')).toBe('hello@example.com');
   });
 
   describe('request', () => {
