@@ -187,6 +187,15 @@ export async function exportOrganization(organizationId: string): Promise<Record
  * it; and the leftovers that can't be deleted in a transaction are queued (organization_deletion).
  * Cloud grants are revoked at Google/Dropbox first, best effort.
  *
+ * INTERACTION WITH THE LAST-OWNER GUARD (team & invites branch): the `member_keeps_owner` trigger
+ * (BEFORE DELETE OR UPDATE OF role ON member, SQLSTATE 23514 `organization_needs_owner`) forbids
+ * leaving an organization without an owner. Members are therefore never deleted one by one here (that
+ * would always strand the last owner), and Better Auth's organization-delete endpoint is not used. The
+ * only delete is the `organization` row itself, so members go by FK cascade; the trigger must let a
+ * delete through when the parent organization row is already gone (its cascaded delete runs after the
+ * parent row is deleted, so `not exists (select 1 from organization where id = old.organization_id)`
+ * is the check), or when pg_trigger_depth() > 1. Owner-only is enforced by the caller.
+ *
  * Files in storage are swept in batches by the hourly cron until the organization's prefix is empty
  * (runOrganizationDeletions), started at once in the background. Every step can be repeated.
  */
