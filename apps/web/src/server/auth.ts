@@ -6,8 +6,12 @@ import { magicLink, organization } from 'better-auth/plugins';
 import { asc, eq } from 'drizzle-orm';
 import { db, schema } from '@immersia/db';
 import { ac, roles } from '@/lib/permissions';
+import { checkNotOrphaned, checkOwnerKept, isSingleRole } from '@/lib/team-rules';
 import { appOrigin, env } from './env';
 import { localeFromRequest, sendInvitationEmail, sendMagicLinkEmail } from './email';
+import { assertInviteBudget, inviterLocale, spendInviteBudget } from './invitation-policy';
+import { ruleError } from './team-errors';
+import { loadRoster, organizationCountOf } from './team-data';
 
 const AUTH_TABLES = {
   user: schema.user,
@@ -92,19 +96,38 @@ function createAuth() {
         ac,
         roles,
         creatorRole: 'owner',
+        // ACC-3: an invitation is good for a week; a re-send starts the week again.
         invitationExpiresIn: 7 * 24 * 60 * 60,
+        // Inviting an address that already has a pending invitation replaces it (and its role).
         cancelPendingInvitationsOnReInvite: true,
+        // Every invitation email, new or re-sent, through the server action or a hand-made request:
+        // counted against the abuse limits, and written in the inviter's language.
         sendInvitationEmail: async (data, request) => {
-          await sendInvitationEmail(
-            data.email,
-            `${appOrigin()}/invite/${data.id}`,
-            localeFromRequest(request?.headers),
-            {
-              inviter: data.inviter.user.name || data.inviter.user.email,
-              organization: data.organization.name,
-              role: data.role,
-            },
-          );
+          await spendInviteBudget(data.inviter.user.id, data.email, request);
+          await sendInvitationEmail(data.email, `${appOrigin()}/invite/${data.id}`, await inviterLocale(request), {
+            inviter: data.inviter.user.name || data.inviter.user.email,
+            organization: data.organization.name,
+            role: data.role,
+          });
+        },
+        // The team rules (lib/team-rules.ts) hold on every path into the plugin, not just our
+        // server actions. The database trigger `org_keeps_owner` is the concurrency-proof backstop.
+        organizationHooks: {
+          beforeCreateInvitation: async ({ invitation, inviter }) => {
+            if (!isSingleRole(invitation.role)) throw ruleError('invalid_role');
+            await assertInviteBudget(inviter.id, invitation.email);
+          },
+          beforeUpdateMemberRole: async ({ member, newRole }) => {
+            if (!isSingleRole(newRole)) throw ruleError('invalid_role');
+            const kept = checkOwnerKept(await loadRoster(member.organizationId), member.id, newRole);
+            if (!kept.ok) throw ruleError(kept.error);
+          },
+          beforeRemoveMember: async ({ member }) => {
+            const kept = checkOwnerKept(await loadRoster(member.organizationId), member.id, null);
+            if (!kept.ok) throw ruleError(kept.error);
+            const orphaned = checkNotOrphaned(await organizationCountOf(member.userId));
+            if (!orphaned.ok) throw ruleError(orphaned.error);
+          },
         },
       }),
       nextCookies(),

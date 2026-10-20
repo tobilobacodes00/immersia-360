@@ -29,6 +29,16 @@ export const LIMITS = {
   displayPairPerIp: { limit: 20, windowS: 600 },
   /** SHR-5: gallery passwords are short; slow guessing right down. */
   galleryUnlockPerIp: { limit: 10, windowS: 600 },
+  /**
+   * ACC-3: an invitation is an email to someone who never asked for it, and every signed-in user
+   * owns an organization, so the invite form must not become a mailer. Each email sent (new or
+   * re-sent) counts against the inviter, the address it goes to, and the network it came from.
+   */
+  inviteSendPerUser: { limit: 30, windowS: 3600 },
+  inviteSendPerRecipient: { limit: 5, windowS: 86_400 },
+  inviteSendPerIp: { limit: 60, windowS: 3600 },
+  /** Re-sending one invitation: a nudge, not a loop. */
+  inviteResendPerInvitation: { limit: 3, windowS: 3600 },
 } satisfies Record<string, Limit>;
 
 type Name = keyof typeof LIMITS;
