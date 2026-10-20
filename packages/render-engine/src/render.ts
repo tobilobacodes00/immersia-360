@@ -8,7 +8,7 @@ import {
   VideoSampleSink,
   canEncodeAudio,
 } from 'mediabunny';
-import { LOOK_FRAG, STROBE_MAX_BPM, findEffect, findLook, lookUniforms, type ColorMode } from '@immersia/effects';
+import { LOOK_FRAG, STROBE_MAX_BPM, findEffect, findLook, lookUniforms, type ColorMode } from '@immersia/effects/shaders';
 import { beatState, foldTempo } from './beats';
 import { FrameSource } from './frame-source';
 import { Compositor } from './gl/compositor';

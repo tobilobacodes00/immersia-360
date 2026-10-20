@@ -1,4 +1,4 @@
-import { LOOK_FRAG, findEffect, findLook, lookUniforms, type ColorMode } from '@immersia/effects';
+import { LOOK_FRAG, findEffect, findLook, lookUniforms, type ColorMode } from '@immersia/effects/shaders';
 import { compile, fullscreenTriangle, texture, upload, type Program } from './gl/gl';
 import { GradeStage, type Clock } from './gl/grade';
 

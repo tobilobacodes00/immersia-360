@@ -16,6 +16,13 @@ const FORMATS = [
   'video/mp4',
 ];
 
+/**
+ * Worst case of one test: record() may wait 60 s for the take to hold enough frames on a loaded
+ * runner, then the take is probed and rendered on SwiftShader. The project's 120 s default timed
+ * the H.264 case out on a busy CI runner.
+ */
+const RECORDER_TEST_TIMEOUT_MS = 240_000;
+
 type GeneratedTrack = MediaStreamTrack & { readonly writable: WritableStream<VideoFrame> };
 const TrackGenerator = (globalThis as { MediaStreamTrackGenerator?: new (init: { kind: 'video' }) => GeneratedTrack })
   .MediaStreamTrackGenerator;
@@ -127,7 +134,7 @@ describe('MediaRecorder takes render (CAP-1 → VID-8)', () => {
       const result = await render(job(take));
       // Every output frame of the take's real duration is rendered (30 fps output).
       expect(result.frames).toBeGreaterThanOrEqual(Math.floor(probe.durationS * 30) - 1);
-    });
+    }, RECORDER_TEST_TIMEOUT_MS);
 
     // WebM is the crash-safe container: a take whose last chunks never reached storage must render.
     it.skipIf(!supported || !mime.startsWith('video/webm'))(
@@ -148,6 +155,7 @@ describe('MediaRecorder takes render (CAP-1 → VID-8)', () => {
         const result = await render(job(take));
         expect(result.frames).toBeGreaterThanOrEqual(Math.floor(probe.durationS * 30) - 1);
       },
+      RECORDER_TEST_TIMEOUT_MS,
     );
   }
 });

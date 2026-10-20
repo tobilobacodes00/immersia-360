@@ -1,4 +1,4 @@
-import { MODE_COLORS, type ColorMode, type EffectDef } from '@immersia/effects';
+import { MODE_COLORS, type ColorMode, type EffectDef } from '@immersia/effects/shaders';
 import { bindTexture, compile, deleteTarget, target, type Program, type Target } from './gl';
 
 /**
