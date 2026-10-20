@@ -51,7 +51,7 @@ import { createOpfsWorker } from '@immersia/offline/opfs-worker';
 import { workerUrl } from '@/lib/workers';
 import { guestThemeVars, uuidv7, type EventTheme, type Video360Settings } from '@immersia/shared';
 import { Pill, cx } from '@immersia/ui';
-import { CountdownDisc, GuestButton, Headline, fade } from '@immersia/ui/guest';
+import { CountdownDisc, GuestButton, GuestScreen, Headline, fade } from '@immersia/ui/guest';
 import { readDeviceIdentity, type DeviceIdentity } from '@/lib/device-identity';
 import { useCaptureKeys, useHeartbeat, useHeld, useLiveQuery, useOnline, useWakeLock } from './booth-hooks';
 import { importVideoFiles } from './import-originals';
@@ -68,6 +68,7 @@ import { SettingsDrawer } from './SettingsDrawer';
 import { describeCamera, reconcileWithCamera, type ActiveCamera } from './active-camera';
 import { fillLightOf, needsReopen, type CameraChoice } from './camera-choice';
 import { FillLightFrame } from './FillLightFrame';
+import { useOpenGuard } from './open-guard';
 import { useCameraChoice } from './use-camera-choice';
 
 export interface BoothEvent {
@@ -138,6 +139,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
   useEffect(() => {
     phaseRef.current = phase;
   });
+  const openGuard = useOpenGuard();
 
   const takes = useLiveQuery(() => takesForEvent(db, event.id), [event.id], [] as LocalTake[]);
   const pending = takes.filter((tk) => PENDING.includes(tk.status)).length;
@@ -210,13 +212,17 @@ export function Booth360({ event }: { event: BoothEvent }) {
     () => () => {
       clearInterval(countdownTimer.current);
       clearTimeout(stopTimer.current);
+      // An open still waiting on a permission prompt must not start a camera on a page that has gone.
+      openGuard.cancel();
       stopCamera();
     },
-    [stopCamera],
+    [stopCamera, openGuard],
   );
 
   const startCamera = useCallback(
     async (choice: CameraChoice) => {
+      // This open supersedes any other in flight (a double tap): only the newest may use its camera.
+      const token = openGuard.begin();
       setPhase({ kind: 'starting' });
       stopCamera();
       setActiveCamera(null);
@@ -235,24 +241,30 @@ export function Booth360({ event }: { event: BoothEvent }) {
                 // A restart switches the light off and resets the zoom: put the operator's choice back (CAP-2, CAP-6).
                 restore: { zoom: choice.zoom, torch: choice.torch },
               });
+        if (!openGuard.isCurrent(token)) return cam.stop();
         camera.current = cam;
         setActiveCamera(describeCamera(cam));
         // Show what the camera really did with the saved zoom and torch, not what was asked of it.
         const latest = readChoice();
         const settled = reconcileWithCamera(latest, cam);
         if (settled !== latest) commitChoice(settled);
-        cam.track.addEventListener('ended', () => setPhase({ kind: 'error', code: 'lost' }));
+        // Only the open camera's own end counts: a camera that was replaced ends without it being an error.
+        cam.track.addEventListener('ended', () => {
+          if (camera.current === cam) setPhase({ kind: 'error', code: 'lost' });
+        });
         const v = videoRef.current;
         if (v) {
           v.srcObject = cam.stream;
           await v.play().catch(() => undefined);
         }
+        // Replaced while the picture was starting: the newer open already stopped this camera.
+        if (!openGuard.isCurrent(token)) return;
         setPhase({ kind: 'ready' });
       } catch (err) {
-        setPhase({ kind: 'error', code: toCameraError(err).code });
+        if (openGuard.isCurrent(token)) setPhase({ kind: 'error', code: toCameraError(err).code });
       }
     },
-    [event.video, stopCamera, readChoice, commitChoice],
+    [event.video, stopCamera, readChoice, commitChoice, openGuard],
   );
 
   const finishRecording = useCallback(async () => {
@@ -559,7 +571,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
 
       <AnimatePresence mode="wait">
         {phase.kind === 'idle' && (
-          <motion.div key="idle" {...fade} className="absolute inset-0 grid place-items-center px-6 text-center">
+          <GuestScreen key="idle" className="absolute inset-0 grid place-items-center px-6 text-center">
             <div className="flex flex-col items-center">
               <Headline font={event.theme.font} className="text-[clamp(3rem,8vw,7rem)]">
                 {event.name}
@@ -576,7 +588,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
                 {t('startBooth')}
               </GuestButton>
             </div>
-          </motion.div>
+          </GuestScreen>
         )}
 
         {phase.kind === 'starting' && (
@@ -586,7 +598,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
         )}
 
         {phase.kind === 'ready' && (
-          <motion.div
+          <GuestScreen
             key="ready"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
@@ -603,7 +615,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
               </GuestButton>
             )}
             {motionOn && <p className="text-[1rem] opacity-70">{t('motionHint')}</p>}
-          </motion.div>
+          </GuestScreen>
         )}
 
         {phase.kind === 'countdown' && (
@@ -680,7 +692,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
         )}
 
         {phase.kind === 'error' && (
-          <motion.div key="error" {...fade} className="absolute inset-0 z-10 grid place-items-center px-6">
+          <GuestScreen key="error" className="absolute inset-0 z-10 grid place-items-center px-6">
             <div className="card max-w-md p-6 text-fg" role="alert">
               <h2 className="text-lg font-semibold">{t('errors.title')}</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted">{t(`errors.${errorKey(phase.code)}`)}</p>
@@ -692,16 +704,19 @@ export function Booth360({ event }: { event: BoothEvent }) {
                 >
                   {t('errors.retry')}
                 </button>
-                <button
-                  type="button"
-                  className="focus-ring rounded-[10px] border border-line-strong bg-elev px-4 py-2 text-sm font-medium"
-                  onClick={() => setDrawer(true)}
-                >
-                  {t('settings.title')}
-                </button>
+                {/* The operator's drawer stays behind the kiosk PIN, even on this screen. */}
+                {!kiosk.locked && (
+                  <button
+                    type="button"
+                    className="focus-ring rounded-[10px] border border-line-strong bg-elev px-4 py-2 text-sm font-medium"
+                    onClick={() => setDrawer(true)}
+                  >
+                    {t('settings.title')}
+                  </button>
+                )}
               </div>
             </div>
-          </motion.div>
+          </GuestScreen>
         )}
       </AnimatePresence>
 
@@ -725,7 +740,8 @@ export function Booth360({ event }: { event: BoothEvent }) {
       />
 
       <SettingsDrawer
-        open={drawer}
+        // Never while the kiosk is PIN-locked: the drawer changes the camera, its light and the fill light.
+        open={drawer && !kiosk.locked}
         onClose={() => setDrawer(false)}
         choice={cameraChoice}
         onChoice={(patch) => {
