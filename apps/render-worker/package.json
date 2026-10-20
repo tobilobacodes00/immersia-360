@@ -1,0 +1,27 @@
+{
+  "name": "@immersia/render-worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Server render fallback: headless Chrome runs the same render engine as the booth (Fly Machines, scale to zero).",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "start": "node dist/index.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.page.json",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@immersia/render-engine": "workspace:*",
+    "@immersia/shared": "workspace:*",
+    "playwright": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "esbuild": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

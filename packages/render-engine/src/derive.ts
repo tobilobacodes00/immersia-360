@@ -10,6 +10,7 @@ import {
   VideoSampleSink,
 } from 'mediabunny';
 import { messagingSize, videoBitrate } from './presets';
+import { withVideoEncoder, type EncoderKind } from './wasm/wasm-h264';
 
 /**
  * Outputs derived from a finished render, made after it at low priority so the guest's QR and main
@@ -20,7 +21,11 @@ import { messagingSize, videoBitrate } from './presets';
  * DL-8: the lighter copy for messaging apps: 720p-class at the Small preset, audio copied. A
  * transcode of the finished MP4 (decode, scale, encode), far cheaper than rendering twice.
  */
-export async function messagingCopy(mp4: Blob, fps: number): Promise<Blob> {
+export function messagingCopy(mp4: Blob, fps: number, opts: { encoder?: EncoderKind } = {}): Promise<Blob> {
+  return withVideoEncoder(opts.encoder ?? 'native', () => transcodeSmall(mp4, fps));
+}
+
+async function transcodeSmall(mp4: Blob, fps: number): Promise<Blob> {
   const input = new Input({ source: new BlobSource(mp4), formats: ALL_FORMATS });
   try {
     const video = await input.getPrimaryVideoTrack();
@@ -76,7 +81,15 @@ export async function posterFrame(mp4: Blob, at = 0.4, quality = 0.82): Promise<
  * played straight through (short video) or forward then back (boomerang). Frames are drawn at the
  * first frame's size (even dimensions for H.264) and closed as they are encoded.
  */
-export async function encodeClip(frames: ImageBitmap[], fps: number, opts: { pingPong?: boolean } = {}): Promise<Blob> {
+export function encodeClip(
+  frames: ImageBitmap[],
+  fps: number,
+  opts: { pingPong?: boolean; encoder?: EncoderKind } = {},
+): Promise<Blob> {
+  return withVideoEncoder(opts.encoder ?? 'native', () => encodeFrames(frames, fps, opts));
+}
+
+async function encodeFrames(frames: ImageBitmap[], fps: number, opts: { pingPong?: boolean }): Promise<Blob> {
   if (!frames.length) throw new Error('No frames to encode');
   const order = opts.pingPong && frames.length > 2 ? [...frames, ...frames.slice(1, -1).reverse()] : frames;
   const even = (n: number) => Math.max(2, Math.floor(n / 2) * 2);

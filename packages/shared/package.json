@@ -18,7 +18,8 @@
     "./session": "./src/session.ts",
     "./kiosk": "./src/kiosk.ts",
     "./asset": "./src/asset.ts",
-    "./live": "./src/live.ts"
+    "./live": "./src/live.ts",
+    "./render": "./src/render.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

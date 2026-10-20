@@ -7,6 +7,7 @@ import {
   Output,
   VideoSampleSink,
   canEncodeAudio,
+  canEncodeVideo,
 } from 'mediabunny';
 import { LOOK_FRAG, STROBE_MAX_BPM, findEffect, findLook, lookUniforms, type ColorMode } from '@immersia/effects';
 import { beatState, foldTempo } from './beats';
@@ -14,6 +15,7 @@ import { FrameSource } from './frame-source';
 import { Compositor } from './gl/compositor';
 import { probeTake, type TakeProbe } from './probe';
 import { buildSourceTimes, resolveFrames, type SlowMotion } from './timeline';
+import { isWasmEncoderError, withVideoEncoder, type EncoderKind } from './wasm/wasm-h264';
 
 /** A still card (intro/outro, QR end card), already rendered to a bitmap. */
 export interface StillCard {
@@ -66,9 +68,11 @@ export interface RenderResult {
   source: { fps: number; durationS: number; codec: string | null };
 }
 
+export type RenderErrorCode = 'undecodable' | 'unsupported_encoder' | 'encoder_stall' | 'gpu' | 'cancelled' | 'failed';
+
 export class RenderError extends Error {
   constructor(
-    readonly code: 'undecodable' | 'unsupported_encoder' | 'encoder_stall' | 'gpu' | 'cancelled' | 'failed',
+    readonly code: RenderErrorCode,
     message: string,
   ) {
     super(message);
@@ -108,18 +112,42 @@ export function plannedDurationS(
   return frames / job.output.fps + cardSeconds(job.intro) + cardSeconds(job.outro) + cardSeconds(job.endCard);
 }
 
+/**
+ * Errors that mean the VIDEO ENCODER gave out. Mediabunny says "This specific encoder configuration
+ * … is not supported in this environment" when no encoder takes the config; a WebCodecs encoder that
+ * dies reports an EncodingError ("Encoder initialization error", "Encoding error"), which the decoder
+ * also uses, hence the wording check.
+ */
+export function isEncoderFailure(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  if (/encoder configuration .* is not supported/i.test(err.message)) return true;
+  return err.name === 'EncodingError' && /encod/i.test(err.message) && !/decod/i.test(err.message);
+}
+
 /** H.264 needs even dimensions. */
 const even = (n: number) => Math.max(2, Math.round(n / 2) * 2);
 
-export async function render(
-  job: RenderJob,
-  opts: {
-    onProgress?: (p: number) => void;
-    signal?: AbortSignal;
-    /** Awaited before the render starts and after every frame: a pause hook (e.g. while the booth records). */
-    gate?: () => Promise<void>;
-  } = {},
-): Promise<RenderResult> {
+export interface RenderOptions {
+  onProgress?: (p: number) => void;
+  signal?: AbortSignal;
+  /** Awaited before the render starts and after every frame: a pause hook (e.g. while the booth records). */
+  gate?: () => Promise<void>;
+  /**
+   * Who encodes the H.264: the browser's WebCodecs encoder ('native', the default) or the WebAssembly
+   * encoder (the `wasm` rung of the path ladder). Everything else about the render is identical.
+   */
+  encoder?: EncoderKind;
+}
+
+export function render(job: RenderJob, opts: RenderOptions = {}): Promise<RenderResult> {
+  return withVideoEncoder(opts.encoder ?? 'native', () => renderWith(job, opts)).catch((err: unknown) => {
+    // The WASM encoder could not start or died: to the path ladder that is a browser with no encoder.
+    if (isWasmEncoderError(err)) throw new RenderError('unsupported_encoder', err.message);
+    throw err;
+  });
+}
+
+async function renderWith(job: RenderJob, opts: RenderOptions): Promise<RenderResult> {
   const { signal, onProgress, gate } = opts;
   const check = () => {
     if (signal?.aborted) throw new RenderError('cancelled', 'Render cancelled');
@@ -146,6 +174,16 @@ export async function render(
       'undecodable',
       `This browser can't decode ${probe.codec ?? 'this video'} (decoder config ${probe.decoderCodec ?? 'none'})`,
     );
+  }
+
+  // A browser with no H.264 encoder is told so now, not after the compositor and the first frames:
+  // the booth moves the take to the next rung of the path ladder. (The WASM encoder always can.)
+  if (
+    (opts.encoder ?? 'native') === 'native' &&
+    !(await canEncodeVideo('avc', { width, height, bitrate: job.output.bitrate, frameRate: fps }).catch(() => false))
+  ) {
+    probe.input.dispose();
+    throw new RenderError('unsupported_encoder', `This browser can't encode H.264 at ${width}×${height}`);
   }
 
   const times = buildSourceTimes({
@@ -283,7 +321,11 @@ export async function render(
     await output.cancel().catch(() => undefined);
     if (err instanceof RenderError) throw err;
     if (signal?.aborted) throw new RenderError('cancelled', 'Render cancelled');
-    throw new RenderError('failed', err instanceof Error ? err.message : String(err));
+    const message = err instanceof Error ? err.message : String(err);
+    // The encoder is what gave out (no encoder for this size, or it died): the next rung of the path
+    // ladder has another one. Anything else is a plain failure.
+    if (isWasmEncoderError(err) || isEncoderFailure(err)) throw new RenderError('unsupported_encoder', message);
+    throw new RenderError('failed', message);
   } finally {
     frames.dispose();
     compositor.dispose();
