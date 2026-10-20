@@ -1,5 +1,20 @@
 import 'server-only';
-import { and, asc, eq, gt, inArray, isNotNull, isNull, lte, ne, notExists, notInArray, or, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  eq,
+  gt,
+  inArray,
+  isNotNull,
+  isNull,
+  lte,
+  ne,
+  not,
+  notExists,
+  notInArray,
+  or,
+  sql,
+} from 'drizzle-orm';
 import { db, schema, type Transaction } from '@immersia/db';
 import { uuidv7 } from '@immersia/shared';
 import { recordNow } from '../analytics';
@@ -34,6 +49,9 @@ const { event, captureSession, output, uploadObject, integration } = schema;
  */
 const cloudOf = sql<CloudProviderId | 'none' | null>`(${event.shareSettings}->>'cloud')`;
 
+/** The platform took the session down (policy or legal): never copied on to the operator's cloud. */
+const platformRemoved = sql<boolean>`(${captureSession.removedAt} is not null and ${captureSession.removal} in ('policy', 'legal'))`;
+
 const isProvider = (v: unknown): v is CloudProviderId => (CLOUD_PROVIDERS as readonly unknown[]).includes(v);
 
 // ---------------------------------------------------------------------------------------------
@@ -51,13 +69,15 @@ export async function enqueueCloudCopies(outputId: string): Promise<number> {
       uploadedAt: output.uploadedAt,
       organizationId: event.organizationId,
       expiredAt: captureSession.expiredAt,
+      takenDown: platformRemoved,
     })
     .from(output)
     .innerJoin(captureSession, eq(captureSession.id, output.sessionId))
     .innerJoin(event, eq(event.id, captureSession.eventId))
     .where(eq(output.id, outputId))
     .limit(1);
-  if (!row?.uploadedAt || row.expiredAt || !isProvider(row.target)) return 0;
+  // A session the platform took down is not copied on: its files are deleted or quarantined.
+  if (!row?.uploadedAt || row.expiredAt || row.takenDown || !isProvider(row.target)) return 0;
   const target = row.target;
   const [linked] = await db()
     .select({ status: integration.status })
@@ -97,6 +117,7 @@ export async function enqueueMissingCopies(
         and(
           isNotNull(output.uploadedAt),
           isNull(captureSession.expiredAt),
+          not(platformRemoved),
           gt(captureSession.expiresAt, new Date()),
           ne(integration.status, 'revoked'),
           scope.organizationId ? eq(event.organizationId, scope.organizationId) : undefined,

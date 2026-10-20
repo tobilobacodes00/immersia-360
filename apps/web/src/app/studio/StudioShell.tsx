@@ -9,11 +9,13 @@ import { AnimatePresence, motion } from 'motion/react';
 import {
   CalendarDays,
   Cloud,
+  Flag,
   FolderOpen,
   LayoutDashboard,
   LogOut,
   Menu,
   MonitorSmartphone,
+  ShieldCheck,
   X,
   type LucideIcon,
 } from 'lucide-react';
@@ -25,7 +27,7 @@ import { OperatorProvider } from './operator-context';
 
 interface NavItem {
   href: Route;
-  key: 'home' | 'events' | 'assets' | 'devices' | 'integrations';
+  key: 'home' | 'events' | 'assets' | 'devices' | 'integrations' | 'reports';
   icon: LucideIcon;
   match: (path: string) => boolean;
 }
@@ -57,6 +59,7 @@ const NAV: { group: 'overview' | 'prepare' | 'system'; items: NavItem[] }[] = [
         icon: Cloud,
         match: (p) => p.startsWith('/studio/integrations'),
       },
+      { href: '/studio/reports', key: 'reports', icon: Flag, match: (p) => p.startsWith('/studio/reports') },
     ],
   },
 ];
@@ -68,7 +71,19 @@ export interface ShellOperator {
   role: RoleName;
 }
 
-function Rail({ operator, onNavigate }: { operator: ShellOperator; onNavigate?: () => void }) {
+function Rail({
+  operator,
+  openReports,
+  isAdmin,
+  onNavigate,
+}: {
+  operator: ShellOperator;
+  /** A platform admin (ADMIN_EMAILS): offered a way into /admin, which checks again on the server. */
+  isAdmin: boolean;
+  /** Reports waiting for a decision on this organization's events: a badge on Reports. */
+  openReports: number;
+  onNavigate?: () => void;
+}) {
   const t = useTranslations('studio.nav');
   const tr = useTranslations('roles');
   const path = usePathname();
@@ -110,6 +125,12 @@ function Rail({ operator, onNavigate }: { operator: ShellOperator; onNavigate?: 
                     )}
                     <n.icon className="size-4 shrink-0" strokeWidth={active ? 2.25 : 2} />
                     <span className="flex-1">{t(n.key)}</span>
+                    {n.key === 'reports' && openReports > 0 && (
+                      <span className="tabular grid min-w-5 place-items-center rounded-full bg-bad px-1.5 text-[11px] leading-5 font-semibold text-white">
+                        {openReports > 99 ? '99+' : openReports}
+                        <span className="sr-only"> {t('reportsOpen', { count: openReports })}</span>
+                      </span>
+                    )}
                   </Link>
                 );
               })}
@@ -118,6 +139,16 @@ function Rail({ operator, onNavigate }: { operator: ShellOperator; onNavigate?: 
         ))}
       </nav>
       <div className="mt-auto space-y-3 border-t border-line pt-4">
+        {isAdmin && (
+          <Link
+            href="/admin"
+            onClick={onNavigate}
+            className="focus-ring flex h-11 items-center gap-3 rounded-lg px-3 text-sm text-muted hover:bg-sunken/70 hover:text-fg lg:h-9"
+          >
+            <ShieldCheck className="size-4 shrink-0" />
+            {t('admin')}
+          </Link>
+        )}
         <LanguagePicker />
         <div className="flex items-center gap-2 px-1">
           <div className="min-w-0 flex-1">
@@ -142,7 +173,17 @@ function Rail({ operator, onNavigate }: { operator: ShellOperator; onNavigate?: 
   );
 }
 
-export function StudioShell({ operator, children }: { operator: ShellOperator; children: ReactNode }) {
+export function StudioShell({
+  operator,
+  openReports,
+  isAdmin,
+  children,
+}: {
+  operator: ShellOperator;
+  openReports: number;
+  isAdmin: boolean;
+  children: ReactNode;
+}) {
   const t = useTranslations('studio.nav');
   const tc = useTranslations('common');
   const [drawer, setDrawer] = useState(false);
@@ -163,7 +204,7 @@ export function StudioShell({ operator, children }: { operator: ShellOperator; c
       </a>
       <div className="flex min-h-dvh">
         <aside className="sticky top-0 hidden h-dvh w-[256px] shrink-0 border-r border-line bg-bg lg:flex">
-          <Rail operator={operator} />
+          <Rail operator={operator} openReports={openReports} isAdmin={isAdmin} />
         </aside>
         <AnimatePresence>
           {drawer && (
@@ -182,7 +223,12 @@ export function StudioShell({ operator, children }: { operator: ShellOperator; c
                 className="absolute inset-y-0 left-0 flex w-[280px] bg-bg shadow-pop"
                 aria-label={t('label')}
               >
-                <Rail operator={operator} onNavigate={() => setDrawer(false)} />
+                <Rail
+                  operator={operator}
+                  openReports={openReports}
+                  isAdmin={isAdmin}
+                  onNavigate={() => setDrawer(false)}
+                />
               </motion.aside>
             </motion.div>
           )}

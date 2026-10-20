@@ -15,8 +15,10 @@ import { enqueueCloudCopies, processCloudCopies } from './cloud/copy';
 import { sendGuestLinkEmail } from './email';
 import { appOrigin } from './env';
 import { refreshSessionItem } from './live';
+import { mediaScanner, type MediaScanInput } from './media-scanner';
 import { allow } from './rate-limit';
-import { objectKey, objectSize, presignUpload } from './storage';
+import { flagSession } from './reports';
+import { deleteObjects, objectKey, objectSize, presignUpload } from './storage';
 
 const { event, captureSession, output, shortCodeReservation, take } = schema;
 
@@ -98,6 +100,9 @@ export async function registerSession(
     const [existing] = await tx.select().from(captureSession).where(eq(captureSession.id, input.id)).limit(1);
     let session = existing;
     if (existing && (existing.linkId !== input.linkId || existing.eventId !== input.eventId))
+      return { ok: false as const, error: 'conflict' as const };
+    // The platform took this session down: the booth stops uploading it (it shows as refused).
+    if (existing?.removedAt && existing.removal !== 'operator')
       return { ok: false as const, error: 'conflict' as const };
     if (!existing) {
       let code = input.shortCode;
@@ -227,13 +232,27 @@ export async function registerSession(
 /** Mark an output uploaded once the object really exists at the expected size. */
 export async function completeUpload(device: DeviceRow, outputId: string): Promise<'ok' | 'not_found' | 'incomplete'> {
   const [row] = await db()
-    .select({ id: output.id, key: output.objectKey, bytes: output.bytes, sessionId: output.sessionId })
+    .select({
+      id: output.id,
+      key: output.objectKey,
+      bytes: output.bytes,
+      mime: output.mime,
+      sessionId: output.sessionId,
+      eventId: event.id,
+      removedAt: captureSession.removedAt,
+      removal: captureSession.removal,
+    })
     .from(output)
     .innerJoin(captureSession, eq(captureSession.id, output.sessionId))
     .innerJoin(event, eq(event.id, captureSession.eventId))
     .where(and(eq(output.id, outputId), eq(event.organizationId, device.organizationId)))
     .limit(1);
   if (!row?.key) return 'not_found';
+  // A file that arrives for a session the platform has taken down is not kept.
+  if (row.removedAt && row.removal !== 'operator') {
+    await deleteObjects([row.key]).catch(() => undefined);
+    return 'incomplete';
+  }
   const size = await objectSize(row.key);
   if (size === null || (row.bytes !== null && size !== row.bytes)) return 'incomplete';
   await db().transaction(async (tx) => {
@@ -243,6 +262,18 @@ export async function completeUpload(device: DeviceRow, outputId: string): Promi
       .set({ status: 'live' })
       .where(and(eq(captureSession.id, row.sessionId), eq(captureSession.status, 'pending')));
   });
+  // Abuse: hand the verified file to the media scanner (hash matching against known illegal content).
+  after(() =>
+    scanUpload({
+      outputId,
+      sessionId: row.sessionId,
+      eventId: row.eventId,
+      organizationId: device.organizationId,
+      objectKey: row.key!,
+      mime: row.mime,
+      bytes: size,
+    }),
+  );
   // LIV-2: the session may be ready for the Live Display now. After the response, so the booth's
   // upload queue moves on at once.
   after(() => refreshSessionItem(row.sessionId, appOrigin()));
@@ -254,6 +285,23 @@ export async function completeUpload(device: DeviceRow, outputId: string): Promi
       .catch((err: unknown) => console.error('[cloud-copy] could not start', err instanceof Error ? err.name : err)),
   );
   return 'ok';
+}
+
+/**
+ * Run the configured scanner over a finished upload. The default scanner checks nothing (see
+ * media-scanner.ts: video hash matching needs a vendor and a legal decision); a match takes the
+ * session down as illegal and puts it in the admin queue. A scanner outage never blocks a booth's
+ * upload: it is logged, and the file stays unscanned.
+ */
+async function scanUpload(input: MediaScanInput): Promise<void> {
+  const scanner = mediaScanner();
+  try {
+    const result = await scanner.scan(input);
+    if (result.verdict === 'flagged')
+      await flagSession({ sessionId: input.sessionId, scanner: scanner.name, detail: result.detail });
+  } catch (err) {
+    console.error('[scan] scanner failed', scanner.name, err instanceof Error ? err.name : err);
+  }
 }
 
 /**

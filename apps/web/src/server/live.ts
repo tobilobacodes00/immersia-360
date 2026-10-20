@@ -106,6 +106,7 @@ export async function resolveMedia(outputId: string, exp: number, sig: string): 
         isNotNull(output.uploadedAt),
         eq(captureSession.displayStatus, 'shown'),
         isNull(captureSession.expiredAt),
+        isNull(captureSession.removedAt),
         eq(event.liveDisplayEnabled, true),
       ),
     )
@@ -203,6 +204,7 @@ async function shownItems(ev: EventRow, origin: string): Promise<DisplayItem[]> 
         eq(captureSession.eventId, ev.id),
         eq(captureSession.displayStatus, 'shown'),
         isNull(captureSession.expiredAt),
+        isNull(captureSession.removedAt),
       ),
     )
     .orderBy(desc(captureSession.displayedAt))
@@ -224,6 +226,8 @@ export async function refreshSessionItem(sessionId: string, origin: string): Pro
     .limit(1);
   if (!row) return;
   const { session, ev } = row;
+  // A hidden or taken-down session (reports) never goes on screen.
+  if (session.removedAt) return;
   if (session.displayStatus === 'hidden' || session.displayStatus === 'opted_out') return;
   if (session.optedOutOfDisplay || !ev.liveDisplayEnabled) {
     await db().update(captureSession).set({ displayStatus: 'opted_out' }).where(eq(captureSession.id, sessionId));
@@ -283,7 +287,7 @@ async function eventConfig(ev: EventRow, origin: string, d: DisplayRow | null): 
   const [counted] = await db()
     .select({ moments: sql<number>`count(*)`.mapWith(Number) })
     .from(captureSession)
-    .where(eq(captureSession.eventId, ev.id));
+    .where(and(eq(captureSession.eventId, ev.id), isNull(captureSession.removedAt)));
   return {
     displayId: d?.id ?? null,
     name: d?.name ?? ev.name,
@@ -498,6 +502,7 @@ export async function moderationLists(
           eq(captureSession.displayStatus, status),
           eq(captureSession.optedOutOfDisplay, false),
           isNull(captureSession.expiredAt),
+          isNull(captureSession.removedAt),
         ),
       )
       .orderBy(desc(status === 'pending' ? captureSession.capturedAt : captureSession.displayedAt))
@@ -523,6 +528,8 @@ export async function moderate(
     .where(and(eq(captureSession.id, sessionId), eq(event.organizationId, organizationId)))
     .limit(1);
   if (!row || row.session.displayStatus === 'opted_out' || row.session.optedOutOfDisplay) return false;
+  // Reports have their own controls: a hidden or taken-down session can't be put back on screen from here.
+  if (row.session.removedAt) return false;
   if (action === 'hide') {
     await db().update(captureSession).set({ displayStatus: 'hidden' }).where(eq(captureSession.id, sessionId));
     await publish(row.ev.id, { type: 'remove', id: sessionId });
@@ -537,6 +544,16 @@ export async function moderate(
   }
   await publish(row.ev.id, { type: 'queue' });
   return true;
+}
+
+/**
+ * A session was hidden by its operator or taken down (reports): off every connected screen and out
+ * of the operator's queue at once. The database already excludes it, so a screen that misses the
+ * message drops it on its next feed read.
+ */
+export async function withdrawSession(eventId: string, sessionId: string): Promise<void> {
+  await publish(eventId, { type: 'remove', id: sessionId });
+  await publish(eventId, { type: 'queue' });
 }
 
 /** LIV-8 from the booth's result screen. Opting out is final for this session. */

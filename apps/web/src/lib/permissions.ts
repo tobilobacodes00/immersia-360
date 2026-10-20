@@ -12,6 +12,8 @@ export const statements = {
   asset: ['create', 'read', 'delete'],
   integration: ['connect', 'disconnect'],
   gallery: ['export'],
+  /** Abuse reports on the organization's events: see them, and hide a reported item at once. */
+  report: ['read', 'hide'],
 } as const;
 
 export const ac = createAccessControl(statements);
@@ -25,6 +27,7 @@ export const owner = ac.newRole({
   asset: ['create', 'read', 'delete'],
   integration: ['connect', 'disconnect'],
   gallery: ['export'],
+  report: ['read', 'hide'],
 });
 
 /** An assistant who runs booths: everything about events and devices, nothing about the team. */
@@ -33,6 +36,7 @@ export const operator = ac.newRole({
   device: ['register', 'read'],
   asset: ['create', 'read', 'delete'],
   gallery: ['export'],
+  report: ['read', 'hide'],
 });
 
 /** Read-only: sees events, galleries and devices; can export a gallery for a client. */
@@ -41,6 +45,7 @@ export const viewer = ac.newRole({
   device: ['read'],
   asset: ['read'],
   gallery: ['export'],
+  report: ['read'],
 });
 
 export const roles = { owner, operator, viewer };

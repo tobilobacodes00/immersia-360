@@ -3,6 +3,7 @@ import { createTransport, type Transporter } from 'nodemailer';
 import { Resend } from 'resend';
 import { getTranslations } from 'next-intl/server';
 import { LOCALE_COOKIE, isLocale, negotiateLocale, type Locale } from '@immersia/i18n';
+import type { ReportReason } from '@immersia/shared';
 import { env, isProduction } from './env';
 import { devMailbox } from './dev-mailbox';
 
@@ -136,6 +137,69 @@ export async function sendGuestLinkEmail(
       action: t('action'),
       url,
       footer: t('footer'),
+    }),
+  });
+}
+
+/**
+ * Abuse: tell an event's operator that a guest reported something of theirs. Says which event and
+ * why, never what the content is; the page it links to is where they act (hide it, see the reports).
+ */
+export async function sendReportOperatorEmail(
+  to: string,
+  url: string,
+  locale: Locale,
+  vars: { event: string; reason: ReportReason },
+) {
+  const t = await getTranslations({ locale, namespace: 'email.reportOperator' });
+  const tr = await getTranslations({ locale, namespace: 'studio.reports' });
+  await sendEmail({
+    to,
+    subject: t('subject', { event: vars.event }),
+    ...layout({
+      heading: t('heading', { event: vars.event }),
+      body: t('body', { reason: tr(`reasons.${vars.reason}`) }),
+      action: t('action'),
+      url,
+      footer: t('footer'),
+    }),
+  });
+}
+
+/** Abuse: platform admins are told of a new report (English: the admin console is internal). */
+export async function sendReportAdminEmail(
+  to: string,
+  url: string,
+  vars: { event: string; organization: string; reason: string; auto?: string },
+) {
+  await sendEmail({
+    to,
+    subject: `Report to review: ${vars.reason}`,
+    ...layout({
+      heading: 'A report needs a decision',
+      body: `${vars.auto ?? `A guest reported content from "${vars.event}" (${vars.organization})`} as: ${vars.reason}. Reports are answered within 24 hours.`,
+      action: 'Open the queue',
+      url,
+      footer: 'You get this because you are listed in ADMIN_EMAILS.',
+    }),
+  });
+}
+
+/** Abuse: an escalated report goes to whoever decides legal and trust questions (TRUST_EMAIL). */
+export async function sendReportEscalationEmail(
+  to: string,
+  url: string,
+  vars: { event: string; organization: string; reason: string; note: string },
+) {
+  await sendEmail({
+    to,
+    subject: `Escalated report: ${vars.reason}`,
+    ...layout({
+      heading: 'A report was escalated to you',
+      body: `Report on "${vars.event}" (${vars.organization}), reason: ${vars.reason}. Note from the admin: ${vars.note || 'none'}.`,
+      action: 'Open the report',
+      url,
+      footer: 'Escalations come from the admin queue and are recorded in the audit log.',
     }),
   });
 }

@@ -150,12 +150,14 @@ export interface GalleryItem {
 
 export const GALLERY_PAGE = 48;
 
-/** Sessions guests may browse: live, not expired, not hidden by the operator, not opted out. */
+/** Sessions guests may browse: live, not expired, not hidden or removed, not opted out. */
 const publicSessions = (eventId: string) =>
   and(
     eq(captureSession.eventId, eventId),
     eq(captureSession.status, 'live'),
     isNull(captureSession.expiredAt),
+    // Reports: hidden by the operator or taken down by the platform, gone from the public gallery.
+    isNull(captureSession.removedAt),
     eq(captureSession.optedOutOfDisplay, false),
     notInArray(captureSession.displayStatus, ['hidden', 'opted_out']),
   );
@@ -272,7 +274,13 @@ export async function zipFiles(
 ): Promise<{ files: ZipFile[]; next: string | null }> {
   const conditions = [
     opts.everything
-      ? and(eq(captureSession.eventId, eventId), isNull(captureSession.expiredAt))
+      ? // The operator's export has everything they own: also what they hid. What the platform took
+        // down is not theirs to export (and its files are gone or quarantined).
+        and(
+          eq(captureSession.eventId, eventId),
+          isNull(captureSession.expiredAt),
+          or(isNull(captureSession.removedAt), eq(captureSession.removal, 'operator')),
+        )
       : publicSessions(eventId),
     isNotNull(output.uploadedAt),
     inArray(output.kind, [...ZIP_KINDS]),
