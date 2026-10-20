@@ -101,7 +101,7 @@ export class GradeStage {
     this.clock = clock;
   }
 
-  /** History frames start over (a new take, or after an intro card). */
+  /** History frames start over (the compositor calls this at the start of each take's footage). */
   resetHistory() {
     this.written = 0;
   }

@@ -144,8 +144,17 @@ export class Compositor {
     gl.uniform1i(prog.uniform('uRotation'), geo.rotation);
   }
 
-  /** Real frame → output frame. */
-  drawReal(frame: TexImageSource, geo: SourceGeometry) {
+  /** Effect history starts over: a new take, so frames drawn before it (an intro) never show as ghosts. */
+  resetHistory() {
+    this.grade?.resetHistory();
+  }
+
+  /**
+   * Real frame → output frame. `graded` is false for a card that happens to be a video clip (an intro,
+   * outro or end card): the look and effects are for the guest's footage only, and a card frame must
+   * not enter the effect history either.
+   */
+  drawReal(frame: TexImageSource, geo: SourceGeometry, graded = true) {
     const gl = this.gl;
     upload(gl, this.srcA, frame);
     this.flowKey = null; // srcA now holds another frame
@@ -154,7 +163,7 @@ export class Compositor {
     gl.uniform1i(this.p.blit.uniform('uSrc'), 0);
     this.setCrop(this.p.blit, geo);
     this.draw();
-    this.finish();
+    this.finish(graded);
   }
 
   /**
@@ -203,9 +212,9 @@ export class Compositor {
   }
 
   /** Composite the frame and overlay into the canvas (what the encoder reads). */
-  private finish() {
+  private finish(grade = true) {
     const gl = this.gl;
-    const graded = this.grade && !this.grade.idle ? this.grade.apply(this.frame.texture) : null;
+    const graded = grade && this.grade && !this.grade.idle ? this.grade.apply(this.frame.texture) : null;
     this.use(this.p.final, null);
     bindTexture(gl, 0, graded ?? this.frame.texture);
     gl.uniform1i(this.p.final.uniform('uFrame'), 0);

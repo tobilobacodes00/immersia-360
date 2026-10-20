@@ -234,6 +234,8 @@ export async function render(
     await drawCard(job.intro, introFrames, compositor, fps, add, check);
     // The event overlay frames the guests' footage only, not the intro/outro.
     compositor.setOverlay(job.overlay ?? null);
+    // The guest's footage starts with no history, whatever was drawn before it.
+    compositor.resetHistory();
     for await (const pair of frames.pairs(refs, signal)) {
       check();
       const geo = { width: probe.width, height: probe.height, rotation: probe.rotation };
@@ -338,7 +340,8 @@ async function drawCard(
       }
       const f = sample.toVideoFrame();
       try {
-        compositor.drawReal(f, geo);
+        // Cards are never graded, and their frames must stay out of the effect history.
+        compositor.drawReal(f, geo, false);
       } finally {
         f.close();
         sample.close();
