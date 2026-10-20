@@ -16,7 +16,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'invalid', issues: parsed.error.issues.length }, { status: 400 });
   try {
     const res = await registerSession(device, parsed.data);
-    if ('error' in res) return NextResponse.json(res, { status: res.error === 'not_found' ? 404 : 409 });
+    // 410: the guest deleted this session. The booth treats it as final and stops uploading it.
+    if ('error' in res) {
+      if (res.error === 'erased') return NextResponse.json({ error: 'session_erased' }, { status: 410 });
+      return NextResponse.json(res, { status: res.error === 'not_found' ? 404 : 409 });
+    }
     return NextResponse.json(res);
   } catch (err) {
     if (err instanceof StorageUnavailableError)

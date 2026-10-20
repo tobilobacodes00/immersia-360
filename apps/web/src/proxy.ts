@@ -26,34 +26,64 @@ function studioGate(request: NextRequest) {
   return NextResponse.redirect(url);
 }
 
-const ENDED: Record<Locale, { title: string; body: string; contact: string }> = {
-  en: { title: en.share.endedTitle, body: en.share.endedBody, contact: en.share.endedContact },
-  es: { title: es.share.endedTitle, body: es.share.endedBody, contact: es.share.endedContact },
-  pt: { title: pt.share.endedTitle, body: pt.share.endedBody, contact: pt.share.endedContact },
+interface GonePage {
+  expired: { title: string; body: string };
+  erased: { title: string; body: string };
+  contact: string;
+  privacy: string;
+  terms: string;
+}
+
+/** What the self-contained 410 pages say, per language (small slices of the catalogues). */
+const COPY: Record<Locale, GonePage> = {
+  en: {
+    expired: { title: en.share.endedTitle, body: en.share.endedBody },
+    erased: { title: en.share.erasedTitle, body: en.share.erasedBody },
+    contact: en.share.endedContact,
+    privacy: en.common.privacy,
+    terms: en.common.terms,
+  },
+  es: {
+    expired: { title: es.share.endedTitle, body: es.share.endedBody },
+    erased: { title: es.share.erasedTitle, body: es.share.erasedBody },
+    contact: es.share.endedContact,
+    privacy: es.common.privacy,
+    terms: es.common.terms,
+  },
+  pt: {
+    expired: { title: pt.share.endedTitle, body: pt.share.endedBody },
+    erased: { title: pt.share.erasedTitle, body: pt.share.erasedBody },
+    contact: pt.share.endedContact,
+    privacy: pt.common.privacy,
+    terms: pt.common.terms,
+  },
 };
 
 const escape = (s: string) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 
 /**
- * DL-9: an expired session answers 410 Gone with an "event has ended" page. Done here because a
- * page can't set its own status once it streams. One indexed lookup; anything else (unknown or
- * pending link ids, a database hiccup) falls through to the page, which handles it.
+ * DL-9: an expired session answers 410 Gone with an "event has ended" page; a session its guest
+ * deleted answers 410 with "deleted at your request" instead. Done here because a page can't set
+ * its own status once it streams. One indexed lookup; anything else (unknown or pending link ids, a
+ * database hiccup) falls through to the page, which handles it.
  */
 async function shareGate(request: NextRequest) {
   const linkId = request.nextUrl.pathname.split('/')[2] ?? '';
   if (!isLinkId(linkId)) return NextResponse.next();
   const state = await sessionState(linkId).catch(() => null);
-  if (state?.state !== 'expired') return NextResponse.next();
+  if (state?.state !== 'expired' && state?.state !== 'erased') return NextResponse.next();
 
   const cookie = request.cookies.get(LOCALE_COOKIE)?.value;
   const locale = isLocale(cookie) ? cookie : negotiateLocale(request.headers.get('accept-language'));
-  const { title, body, contact } = ENDED[locale];
-  // DL-12: the operator's contact, linked when it is an email address or phone number.
+  const copy = COPY[locale];
+  const { title, body } = state.state === 'erased' ? copy.erased : copy.expired;
+  // DL-12: the operator's contact, linked when it is an email address or phone number. Shown for a
+  // deleted session too: copies the organizer saved elsewhere are theirs to remove.
   let contactLine = '';
   if (state.contact) {
     const href = contactHref(state.contact);
     const who = href ? `<a href="${escape(href)}">${escape(state.contact)}</a>` : escape(state.contact);
-    const [before, after = ''] = contact.split('{contact}');
+    const [before, after = ''] = copy.contact.split('{contact}');
     contactLine = `<p class="contact">${escape(before ?? '')}${who}${escape(after)}</p>`;
   }
   // Self-contained (no app chrome or scripts): Booth tokens inline, light only.
@@ -63,7 +93,8 @@ async function shareGate(request: NextRequest) {
 body{margin:0;min-height:100dvh;display:grid;place-items:center;background:#f7f6f2;color:#111110;
 font:15px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;padding:24px;box-sizing:border-box}
 main{max-width:28rem;text-align:center}h1{font-size:clamp(1.75rem,6vw,2.5rem);line-height:1.05;letter-spacing:-0.03em;margin:0 0 12px}
-p{color:#55534e;margin:0}.contact{margin-top:16px}a{color:#2b3fe6;font-weight:600}</style></head><body><main><h1>${escape(title)}</h1><p>${escape(body)}</p>${contactLine}</main></body></html>`;
+p{color:#55534e;margin:0}.contact{margin-top:16px}a{color:#2b3fe6;font-weight:600}
+footer{margin-top:24px;font-size:14px}footer a{display:inline-block;padding:8px;font-weight:500}</style></head><body><main><h1>${escape(title)}</h1><p>${escape(body)}</p>${contactLine}<footer><a href="/privacy">${escape(copy.privacy)}</a><a href="/terms">${escape(copy.terms)}</a></footer></main></body></html>`;
   return new NextResponse(html, {
     status: 410,
     headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-robots-tag': 'noindex' },

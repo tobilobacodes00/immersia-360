@@ -32,7 +32,7 @@ function slugify(input: string): string {
 }
 
 /** Every operator gets an organization (the PRD's "Account": one per booth business) on sign-up. */
-async function createPersonalOrganization(user: { id: string; name?: string | null; email: string }) {
+export async function createPersonalOrganization(user: { id: string; name?: string | null; email: string }) {
   const name = user.name?.trim() || user.email.split('@')[0] || 'My studio';
   const orgId = crypto.randomUUID();
   await db().transaction(async (tx) => {

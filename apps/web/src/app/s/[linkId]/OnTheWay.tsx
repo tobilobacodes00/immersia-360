@@ -24,7 +24,7 @@ export function OnTheWay({ linkId, ready, compact }: { linkId: string; ready: nu
           const res = await fetch(`/api/share/${linkId}`, { cache: 'no-store' });
           if (res.ok) {
             const s = (await res.json()) as { state: string; ready: number };
-            if (s.ready > ready || s.state === 'expired') return router.refresh();
+            if (s.ready > ready || s.state === 'expired' || s.state === 'erased') return router.refresh();
           }
         } catch {
           // Offline for a moment: try again on the next tick.

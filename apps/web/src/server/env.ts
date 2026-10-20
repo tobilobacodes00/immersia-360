@@ -1,5 +1,6 @@
 import 'server-only';
 import { z } from 'zod';
+import { resolveSupportEmail } from '@/lib/support-email';
 import { parseKey } from './crypto-box';
 
 /**
@@ -22,6 +23,8 @@ const schema = z.object({
   /** e.g. smtps://booth%40gmail.com:app-password@smtp.gmail.com:465 */
   SMTP_URL: z.url().optional(),
   EMAIL_FROM: z.string().min(3).default('Immersia 360 <onboarding@resend.dev>'),
+  /** Where privacy and support requests go (shown on /privacy and /terms); see lib/support-email.ts. */
+  SUPPORT_EMAIL: optional(z.email()),
   UPSTASH_REDIS_REST_URL: z.url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
   /** Object storage for guest files (S3 API: Cloudflare R2, MinIO in CI). All four or none. */
@@ -85,6 +88,12 @@ export function env(): ServerEnv {
 }
 
 export const isProduction = () => process.env.VERCEL_ENV === 'production';
+
+/** The contact for privacy and support requests: SUPPORT_EMAIL, with a fallback (see lib/support-email.ts). */
+export function supportEmail(): string {
+  const e = env();
+  return resolveSupportEmail({ supportEmail: e.SUPPORT_EMAIL, emailFrom: e.EMAIL_FROM, origin: appOrigin() });
+}
 
 /** Public origin of this deployment, for links in emails and QR codes. */
 export function appOrigin(): string {

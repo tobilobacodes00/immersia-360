@@ -224,6 +224,8 @@ export async function refreshSessionItem(sessionId: string, origin: string): Pro
     .limit(1);
   if (!row) return;
   const { session, ev } = row;
+  // An erased session (privacy) is gone for good: a late upload from a booth must not bring it back.
+  if (session.erasedAt) return;
   if (session.displayStatus === 'hidden' || session.displayStatus === 'opted_out') return;
   if (session.optedOutOfDisplay || !ev.liveDisplayEnabled) {
     await db().update(captureSession).set({ displayStatus: 'opted_out' }).where(eq(captureSession.id, sessionId));
@@ -522,7 +524,8 @@ export async function moderate(
     .innerJoin(event, eq(event.id, captureSession.eventId))
     .where(and(eq(captureSession.id, sessionId), eq(event.organizationId, organizationId)))
     .limit(1);
-  if (!row || row.session.displayStatus === 'opted_out' || row.session.optedOutOfDisplay) return false;
+  if (!row || row.session.erasedAt || row.session.displayStatus === 'opted_out' || row.session.optedOutOfDisplay)
+    return false;
   if (action === 'hide') {
     await db().update(captureSession).set({ displayStatus: 'hidden' }).where(eq(captureSession.id, sessionId));
     await publish(row.ev.id, { type: 'remove', id: sessionId });
@@ -555,6 +558,16 @@ export async function optOutOfDisplay(organizationId: string, sessionId: string)
   await publish(rows[0].eventId, { type: 'remove', id: sessionId });
   await publish(rows[0].eventId, { type: 'queue' });
   return true;
+}
+
+/**
+ * Privacy erasure: take a session off every screen and out of the operator's approval queue at
+ * once. The database already excludes it from the feed (the session is expired), so a screen that
+ * misses this message drops it on its next refetch; this makes it immediate.
+ */
+export async function removeSessionItem(eventId: string, sessionId: string): Promise<void> {
+  await publish(eventId, { type: 'remove', id: sessionId });
+  await publish(eventId, { type: 'queue' });
 }
 
 /** Live Display on/off and the moderation mode (screen 23); screens refetch their configuration. */

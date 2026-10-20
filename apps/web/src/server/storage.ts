@@ -3,6 +3,7 @@ import {
   DeleteObjectsCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
@@ -137,18 +138,40 @@ export const isMissingObject = (err: unknown): boolean =>
   ((err as { name?: unknown }).name === 'NoSuchKey' ||
     (err as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode === 404);
 
-/** Delete in batches of 1000 (the S3 limit). Returns how many keys were removed. */
+/**
+ * Delete in batches of 1000 (the S3 limit). Returns how many keys were removed. Deleting a key that
+ * is already gone succeeds, so the call is safe to repeat; a key the store refuses to delete makes
+ * it throw (after the rest went through), so callers that remove the database row only after the
+ * object never leave a file behind without a row to retry from.
+ */
 export async function deleteObjects(keys: string[]): Promise<number> {
   const { s3, bucket } = storage();
   let removed = 0;
+  let refused = 0;
   for (let i = 0; i < keys.length; i += 1000) {
     const batch = keys.slice(i, i + 1000);
-    await s3.send(
+    const res = await s3.send(
       new DeleteObjectsCommand({ Bucket: bucket, Delete: { Objects: batch.map((Key) => ({ Key })), Quiet: true } }),
     );
-    removed += batch.length;
+    const errors = res.Errors ?? [];
+    refused += errors.length;
+    removed += batch.length - errors.length;
   }
+  if (refused > 0) throw new Error(`${refused} object(s) could not be deleted`);
   return removed;
+}
+
+/**
+ * The first page (at most 1000) of keys under a prefix. Used to empty a deleted organization: list,
+ * delete, list again until nothing is left. That needs no continuation token and resumes from any
+ * point after a crash.
+ */
+export async function listKeys(prefix: string, max = 1000): Promise<string[]> {
+  const { s3, bucket } = storage();
+  const res = await s3.send(
+    new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix, MaxKeys: Math.min(1000, Math.max(1, max)) }),
+  );
+  return (res.Contents ?? []).flatMap((o) => (o.Key ? [o.Key] : []));
 }
 
 /** Object key layout: one prefix per event, so an event's files are easy to export or purge. */
@@ -157,3 +180,6 @@ export const objectKey = (organizationId: string, eventId: string, outputId: str
 
 /** Library assets belong to the organization, not an event, so events can share them. */
 export const assetObjectKey = (organizationId: string, assetId: string) => `o/${organizationId}/a/${assetId}`;
+
+/** Every object of an organization (events and library) lives under this prefix. */
+export const organizationPrefix = (organizationId: string) => `o/${organizationId}/`;
