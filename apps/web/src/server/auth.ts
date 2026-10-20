@@ -110,6 +110,11 @@ function createAuth() {
             role: data.role,
           });
         },
+        // Nothing in the console deletes an organization, and the plugin's delete removes the members
+        // one by one before the organization row, which the `org_keeps_owner` trigger (rightly) refuses
+        // for the last owner. Deleting an organization also erases its events and guest files for good:
+        // that deserves a real, confirmed flow if it is ever wanted, not a bare endpoint.
+        disableOrganizationDeletion: true,
         // The team rules (lib/team-rules.ts) hold on every path into the plugin, not just our
         // server actions. The database trigger `org_keeps_owner` is the concurrency-proof backstop.
         organizationHooks: {
