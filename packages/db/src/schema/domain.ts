@@ -260,6 +260,13 @@ export const captureSession = pgTable(
     receivedAt: ts('received_at').notNull().defaultNow(),
     expiresAt: ts('expires_at').notNull(),
     expiredAt: ts('expired_at'),
+    /**
+     * Set when the guest (or the operator, on the guest's request) erased the session (GDPR Art. 17).
+     * The row stays as a tombstone so the link answers "deleted at your request" rather than the
+     * generic expired page, and so a booth still holding the session cannot resurrect it. expired_at
+     * is set at the same moment, which is what takes it out of the gallery, Live Display and sweeps.
+     */
+    erasedAt: ts('erased_at'),
   },
   (t) => [
     uniqueIndex('capture_session_link_idx').on(t.linkId),
@@ -269,6 +276,9 @@ export const captureSession = pgTable(
     index('capture_session_expiry_idx')
       .on(t.expiresAt)
       .where(sql`${t.expiredAt} is null`),
+    index('capture_session_erased_idx')
+      .on(t.erasedAt)
+      .where(sql`${t.erasedAt} is not null`),
   ],
 );
 
@@ -426,13 +436,32 @@ export const guestContact = pgTable(
     eventId: uuid('event_id')
       .notNull()
       .references(() => event.id, { onDelete: 'cascade' }),
-    sessionId: uuid('session_id').references(() => captureSession.id, { onDelete: 'set null' }),
+    /** The session whose page the form was on; null for the event gallery. Goes with the session. */
+    sessionId: uuid('session_id').references(() => captureSession.id, { onDelete: 'cascade' }),
     name: text('name'),
+    /** Trimmed and lower-cased, so one person is one row and a lookup by address is exact. */
     email: text('email').notNull(),
     consentAt: ts('consent_at').notNull(),
+    /** Proof of consent (GDPR Art. 7(1)): the exact sentence the guest ticked, in the language shown. */
+    consentText: text('consent_text').notNull().default(''),
+    consentLocale: text('consent_locale').notNull().default('en'),
+    /** The operator's privacy-policy link shown next to the checkbox ('' = Immersia's general notice). */
+    policyUrl: text('policy_url').notNull().default(''),
     createdAt: createdAt(),
   },
-  (t) => [index('guest_contact_event_idx').on(t.eventId)],
+  (t) => [
+    index('guest_contact_event_idx').on(t.eventId),
+    index('guest_contact_session_idx').on(t.sessionId),
+    index('guest_contact_email_idx').on(t.email),
+    // One row per person per session, and per person for the gallery (no session): resubmitting
+    // updates the row instead of piling up duplicates.
+    uniqueIndex('guest_contact_session_email_idx')
+      .on(t.sessionId, t.email)
+      .where(sql`${t.sessionId} is not null`),
+    uniqueIndex('guest_contact_event_email_idx')
+      .on(t.eventId, t.email)
+      .where(sql`${t.sessionId} is null`),
+  ],
 );
 
 export const report = pgTable(
@@ -510,4 +539,32 @@ export const auditLog = pgTable(
     createdAt: createdAt(),
   },
   (t) => [index('audit_log_org_time_idx').on(t.organizationId, t.createdAt)],
+);
+
+/**
+ * A deleted organization's leftovers (privacy: "Delete organization"). The organization row and
+ * everything that cascades from it are removed in one transaction; what cannot be removed in a
+ * transaction (every file under the organization's storage prefix, its analytics rows) is queued
+ * here and swept by the hourly cron until nothing is left. There is deliberately no foreign key:
+ * the organization row is already gone.
+ */
+export const organizationDeletion = pgTable(
+  'organization_deletion',
+  {
+    id: uuid('id').primaryKey(),
+    organizationId: text('organization_id').notNull(),
+    /** Every object of the organization lives under this prefix (see objectKey in server/storage.ts). */
+    storagePrefix: text('storage_prefix').notNull(),
+    requestedAt: ts('requested_at').notNull().defaultNow(),
+    objectsDeleted: integer('objects_deleted').notNull().default(0),
+    analyticsPurgedAt: ts('analytics_purged_at'),
+    attempts: smallint('attempts').notNull().default(0),
+    lastError: text('last_error'),
+    completedAt: ts('completed_at'),
+  },
+  (t) => [
+    index('organization_deletion_open_idx')
+      .on(t.requestedAt)
+      .where(sql`${t.completedAt} is null`),
+  ],
 );
