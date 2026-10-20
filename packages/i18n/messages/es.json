@@ -1268,17 +1268,47 @@
       "camera": "Cámara",
       "defaultCamera": "Cámara predeterminada",
       "simulator": "Cámara simulada (sin hardware)",
-      "lens": {
-        "wide": "gran angular",
-        "ultrawide": "ultra gran angular",
-        "telephoto": "teleobjetivo",
-        "front": "frontal"
+      "lenses": {
+        "groupBack": "Cámaras traseras",
+        "groupFront": "Cámaras frontales",
+        "groupExternal": "Cámaras externas",
+        "groupOther": "Otras cámaras",
+        "front": "Cámara frontal",
+        "back": "Cámara trasera",
+        "backWide": "Cámara trasera gran angular",
+        "backUltraWide": "Cámara trasera ultra gran angular",
+        "backTelephoto": "Cámara trasera con teleobjetivo",
+        "backDual": "Cámara trasera doble",
+        "backTriple": "Cámara trasera triple",
+        "numbered": "Cámara {n}",
+        "saved": "Cámara elegida antes",
+        "inUse": "En uso",
+        "namesLater": "Los nombres de las cámaras aparecen cuando la cámara ya está en marcha."
       },
+      "cameraBusy": "Los cambios de cámara se pausan mientras un invitado usa la cabina.",
       "delivering": "Entrega {width}×{height} a {fps} fps",
       "mirror": "Reflejar la vista previa",
       "mirrorHelp": "Solo en esta pantalla. Las grabaciones nunca se reflejan.",
+      "zoom": "Zoom",
       "torch": "Linterna",
-      "noTorch": "Esta cámara no tiene una luz controlable.",
+      "noTorch": "No compatible: esta cámara o este navegador no puede encender su luz.",
+      "torchNeedsCamera": "Inicia la cabina para comprobar si esta cámara tiene luz.",
+      "torchFailed": "No se pudo cambiar la linterna. Inténtalo de nuevo.",
+      "fill": {
+        "title": "Luz de relleno",
+        "help": "Ilumina el rostro de los invitados con un marco luminoso en el borde de esta pantalla. No aparece en las grabaciones.",
+        "level": {
+          "off": "Apagada",
+          "soft": "Suave",
+          "bright": "Intensa"
+        },
+        "tint": "Color de la luz",
+        "tints": {
+          "neutral": "Neutra",
+          "warm": "Cálida"
+        },
+        "brightness": "Para tener más luz, sube el brillo de la pantalla de este dispositivo al máximo. Una página web no puede hacerlo por ti."
+      },
       "motion": "Iniciar con movimiento",
       "motionHelp": "La grabación empieza cuando la plataforma empieza a girar.",
       "sensitivity": "Movimiento necesario",
@@ -1672,6 +1702,26 @@
       "comic": "Cómic",
       "neon-edges": "Bordes neón",
       "glitch": "Glitch"
+    },
+    "video": {
+      "light-rings": "Anillos de luz",
+      "confetti": "Confeti",
+      "sparkle": "Destellos",
+      "hearts": "Corazones",
+      "bubbles": "Burbujas",
+      "snow": "Nieve",
+      "smoke": "Humo",
+      "aura": "Aura",
+      "disco": "Disco",
+      "prism-flare": "Destello prismático",
+      "light-leak": "Fuga de luz",
+      "film-burn": "Película quemada",
+      "strobe": "Estroboscopio",
+      "glitch": "Glitch",
+      "rgb-shift": "Desfase RGB",
+      "vhs": "Cinta VHS",
+      "echo-trail": "Estela de eco",
+      "clones": "Clones"
     }
   }
 }

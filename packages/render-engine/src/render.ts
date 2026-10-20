@@ -8,8 +8,8 @@ import {
   VideoSampleSink,
   canEncodeAudio,
 } from 'mediabunny';
-import { LOOK_FRAG, findEffect, findLook, lookUniforms, type ColorMode } from '@immersia/effects';
-import { beatState } from './beats';
+import { LOOK_FRAG, STROBE_MAX_BPM, findEffect, findLook, lookUniforms, type ColorMode } from '@immersia/effects';
+import { beatState, foldTempo } from './beats';
 import { FrameSource } from './frame-source';
 import { Compositor } from './gl/compositor';
 import { probeTake, type TakeProbe } from './probe';
@@ -224,6 +224,11 @@ export async function render(
     await pause();
   };
 
+  // The strobe flashes on every beat: a fast song drives it in half time (host requirement, see
+  // @immersia/effects' EFFECTS).
+  const beats = (job.effects ?? []).some((e) => e.id === 'strobe')
+    ? foldTempo(job.beats ?? [], STROBE_MAX_BPM)
+    : (job.beats ?? []);
   const frames = new FrameSource(probe);
   try {
     await drawCard(job.intro, introFrames, compositor, fps, add, check);
@@ -233,7 +238,7 @@ export async function render(
       check();
       const geo = { width: probe.width, height: probe.height, rotation: probe.rotation };
       const takeT = pair.index / fps;
-      const { phase, pulse } = beatState(introFrames / fps + takeT, job.beats ?? []);
+      const { phase, pulse } = beatState(introFrames / fps + takeT, beats);
       compositor.setClock({ time: takeT, duration: refs.length / fps, beat: phase, pulse });
       const a = pair.a.toVideoFrame();
       try {

@@ -45,8 +45,11 @@ import { LookPreview } from './LookPreview';
 import { MotionBuffer } from './motion-buffer';
 import { RegisterDevice } from './RegisterDevice';
 import { ResultScreen } from './ResultScreen';
-import { SettingsDrawer, readCameraChoice, type CameraChoice } from './SettingsDrawer';
-import type { ActiveCamera } from './Booth360';
+import { SettingsDrawer } from './SettingsDrawer';
+import { describeCamera, reconcileWithCamera, type ActiveCamera } from './active-camera';
+import { fillLightOf, needsReopen, type CameraChoice } from './camera-choice';
+import { FillLightFrame } from './FillLightFrame';
+import { useCameraChoice } from './use-camera-choice';
 import { useUploadQueue } from './use-upload-queue';
 
 export interface PhotoBoothEvent {
@@ -100,7 +103,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
   const db = boothDb();
   const [identity, setIdentity] = useState<DeviceIdentity | null>(readDeviceIdentity);
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' });
-  const [cameraChoice, setCameraChoice] = useState<CameraChoice>(readCameraChoice);
+  const { choice: cameraChoice, change: changeCamera, commit: commitChoice, read: readChoice } = useCameraChoice();
   const [activeCamera, setActiveCamera] = useState<ActiveCamera | null>(null);
   const [store, setStore] = useState<TakeStore | null>(null);
   const [drawer, setDrawer] = useState(false);
@@ -176,21 +179,27 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
     async (choice: CameraChoice) => {
       setPhase({ kind: 'starting' });
       stopCamera();
+      setActiveCamera(null);
       try {
         const s = await takeStore(() => createOpfsWorker(workerUrl('opfs')));
         setStore(s);
         const cam =
           choice.source === 'simulator'
             ? openSimulatedCamera({ resolution: '1080p', frameRate: 30 })
-            : await openCamera({ deviceId: choice.deviceId, resolution: '1080p', frameRate: 30, audio: false });
+            : await openCamera({
+                deviceId: choice.deviceId,
+                resolution: '1080p',
+                frameRate: 30,
+                audio: false,
+                // A restart switches the light off and resets the zoom: put the operator's choice back (CAP-2, CAP-6).
+                restore: { zoom: choice.zoom, torch: choice.torch },
+              });
         camera.current = cam;
-        setActiveCamera({
-          label: cam.label,
-          width: cam.settings.width,
-          height: cam.settings.height,
-          frameRate: cam.settings.frameRate,
-          torch: cam.torch,
-        });
+        setActiveCamera(describeCamera(cam));
+        // Show what the camera really did with the saved zoom and torch, not what was asked of it.
+        const latest = readChoice();
+        const settled = reconcileWithCamera(latest, cam);
+        if (settled !== latest) commitChoice(settled);
         cam.track.addEventListener('ended', () => setPhase({ kind: 'error', code: 'lost' }));
         const v = videoRef.current;
         if (v) {
@@ -206,7 +215,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
         setPhase({ kind: 'error', code: toCameraError(err).code });
       }
     },
-    [stopCamera, wantsClips],
+    [stopCamera, wantsClips, readChoice, commitChoice],
   );
 
   // The event's own layout (fitted to the print size it has now), or the preset; no QR if the
@@ -458,6 +467,9 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
   }
 
   const mirrored = cameraChoice.mirror ? '-scale-x-100' : '';
+  const live = phase.kind === 'ready' || phase.kind === 'countdown' || phase.kind === 'flash';
+  // The camera is left exactly as it is from the first tap until the guest is done with the result.
+  const cameraBusy = phase.kind !== 'idle' && phase.kind !== 'ready' && phase.kind !== 'error';
 
   return (
     <div style={themeVars} className="fixed inset-0 overflow-hidden bg-[#111110] text-g-ink select-none">
@@ -468,6 +480,8 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
         lookId={p.filterId}
         className={`absolute inset-0 size-full object-cover ${mirrored}`}
       />
+      {/* CAP-6: a glow around the screen edge that lights the guest (a front camera has no flash). */}
+      <FillLightFrame fill={fillLightOf(cameraChoice)} active={live && activeCamera?.lens.facing !== 'back'} />
 
       {/* Top bar: operator controls hide in kiosk mode. */}
       <div className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 p-[1.25rem]">
@@ -683,11 +697,13 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
         open={drawer}
         onClose={() => setDrawer(false)}
         choice={cameraChoice}
-        onChoice={(c) => {
-          setCameraChoice(c);
-          if (phase.kind !== 'idle') void startCamera(c);
+        onChoice={(patch) => {
+          const { prev, next } = changeCamera(patch);
+          // Only a different camera needs a restart, and never while a guest is mid-session.
+          if (needsReopen(prev, next) && phase.kind !== 'idle' && !cameraBusy) void startCamera(next);
         }}
-        camera={activeCamera}
+        camera={phase.kind === 'error' ? null : activeCamera}
+        cameraBusy={cameraBusy}
       />
 
       <KioskLockLayer eventId={event.id} pinHash={event.kioskPinHash} kiosk={kiosk} />
