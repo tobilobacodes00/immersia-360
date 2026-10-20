@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LOOKS, PHOTO_EFFECTS } from '@immersia/effects';
+import { EFFECTS, LOOKS, PHOTO_EFFECTS } from '@immersia/effects';
 import en from '@immersia/i18n/messages/en';
 import es from '@immersia/i18n/messages/es';
 import pt from '@immersia/i18n/messages/pt';
@@ -12,8 +12,9 @@ const ids = (defs: readonly { id: string }[]) => defs.map((d) => d.id).sort();
 
 describe('look and effect names', () => {
   for (const [locale, messages] of Object.entries({ en, es, pt }))
-    it(`${locale} names every look and photo effect, and nothing else`, () => {
+    it(`${locale} names every look and effect, and nothing else`, () => {
       expect(Object.keys(messages.effects.looks).sort()).toEqual(ids(LOOKS));
       expect(Object.keys(messages.effects.photo).sort()).toEqual(ids(PHOTO_EFFECTS));
+      expect(Object.keys(messages.effects.video).sort()).toEqual(ids(EFFECTS));
     });
 });

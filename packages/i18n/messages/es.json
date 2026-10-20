@@ -1632,6 +1632,26 @@
       "comic": "Cómic",
       "neon-edges": "Bordes neón",
       "glitch": "Glitch"
+    },
+    "video": {
+      "light-rings": "Anillos de luz",
+      "confetti": "Confeti",
+      "sparkle": "Destellos",
+      "hearts": "Corazones",
+      "bubbles": "Burbujas",
+      "snow": "Nieve",
+      "smoke": "Humo",
+      "aura": "Aura",
+      "disco": "Disco",
+      "prism-flare": "Destello prismático",
+      "light-leak": "Fuga de luz",
+      "film-burn": "Película quemada",
+      "strobe": "Estroboscopio",
+      "glitch": "Glitch",
+      "rgb-shift": "Desfase RGB",
+      "vhs": "Cinta VHS",
+      "echo-trail": "Estela de eco",
+      "clones": "Clones"
     }
   }
 }

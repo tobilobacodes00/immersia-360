@@ -1632,6 +1632,26 @@
       "comic": "Comic",
       "neon-edges": "Neon edges",
       "glitch": "Glitch"
+    },
+    "video": {
+      "light-rings": "Light rings",
+      "confetti": "Confetti",
+      "sparkle": "Sparkle",
+      "hearts": "Hearts",
+      "bubbles": "Bubbles",
+      "snow": "Snowfall",
+      "smoke": "Smoke",
+      "aura": "Aura",
+      "disco": "Disco",
+      "prism-flare": "Prism flare",
+      "light-leak": "Light leak",
+      "film-burn": "Film burn",
+      "strobe": "Strobe",
+      "glitch": "Glitch",
+      "rgb-shift": "RGB shift",
+      "vhs": "VHS tape",
+      "echo-trail": "Echo trail",
+      "clones": "Clones"
     }
   }
 }
