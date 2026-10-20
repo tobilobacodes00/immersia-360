@@ -1,20 +1,26 @@
 'use client';
 
 import { useMemo, useState, type Dispatch, type ReactNode } from 'react';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { BookmarkPlus, Trash2 } from 'lucide-react';
 import {
   OVERLAY_STYLES,
+  TEMPLATE_CATEGORIES,
   fitDocument,
   overlayPreset,
   presetTemplate,
   type RenderInputs,
   type Shots,
   type Template,
+  type TemplateCategory,
 } from '@immersia/layout';
 import type { ASPECTS, PRINT_SIZES } from '@immersia/shared';
-import { Button, IconButton, Modal, TextInput } from '@immersia/ui';
+import { Button, IconButton, Modal, Select, TextInput, buttonClass } from '@immersia/ui';
 import { deleteLibraryTemplateAction, saveToLibraryAction } from '@/app/studio/design-actions';
+import { TemplateThumb, VIDEO_BACKDROP } from '@/components/templates/TemplateThumb';
+import { useTemplateNames } from '@/components/templates/use-template-names';
+import { builtinSummaries, sizeFirst, sizeKeyOf } from '@/lib/builtin-templates';
 import type { TemplateSummary } from '@/server/templates';
 import type { EditorAction, EditorDoc } from './state';
 import { TemplateCanvas } from './TemplateCanvas';
@@ -26,8 +32,10 @@ export interface Theme {
   font: 'sans' | 'serif';
 }
 
-/** Overlays are previewed over a dark stand-in for the video. */
-export const VIDEO_BACKDROP = '#2a2925';
+export { VIDEO_BACKDROP };
+
+/** Library templates shown at first, and added by each "Show more". */
+const LIBRARY_PAGE = 12;
 
 /** Templates panel (screen 6): start from a preset or a saved template; save the current design. */
 export function TemplatesPanel({
@@ -57,11 +65,35 @@ export function TemplatesPanel({
   redrawKey: number;
 }) {
   const t = useTranslations('studio.editor.templates');
+  const names = useTemplateNames();
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
   const [confirm, setConfirm] = useState<{ title: string; doc: EditorDoc } | null>(null);
+  const [occasion, setOccasion] = useState<TemplateCategory | 'all'>('all');
+  const [shown, setShown] = useState(LIBRARY_PAGE);
+
+  // The built-in library, the designs of this page's size first (the others are fitted when used).
+  const pageSize = kind === 'layout' ? printSize : aspect;
+  const ordered = useMemo(
+    () =>
+      sizeFirst(
+        builtinSummaries(kind).filter((b) => occasion === 'all' || b.category === occasion),
+        pageSize,
+      ),
+    [kind, occasion, pageSize],
+  );
+  const visible = ordered.slice(0, shown);
+  const sameSize = visible.filter((b) => sizeKeyOf(b) === pageSize);
+  const otherSizes = visible.filter((b) => sizeKeyOf(b) !== pageSize);
+  const occasions = useMemo(
+    () => [
+      { value: 'all' as const, label: t('allCategories') },
+      ...TEMPLATE_CATEGORIES.map((c) => ({ value: c, label: names.category(c) })),
+    ],
+    [t, names],
+  );
 
   const presets = useMemo(() => {
     if (kind === 'layout')
@@ -77,10 +109,40 @@ export function TemplatesPanel({
     }));
   }, [kind, printSize, aspect, theme, t]);
 
-  const fitted = (doc: Template): EditorDoc =>
-    doc.canvas.width === canvas.width && doc.canvas.height === canvas.height
-      ? doc
-      : fitDocument(doc, canvas.width, canvas.height);
+  const fitted = (doc: Template): EditorDoc => {
+    const same = doc.canvas.width === canvas.width && doc.canvas.height === canvas.height;
+    const out = same ? doc : fitDocument(doc, canvas.width, canvas.height);
+    // A layout fitted to this page is a layout for this page's print size.
+    return kind === 'layout' && out.canvas.printSize !== printSize
+      ? { ...out, canvas: { ...out.canvas, printSize } }
+      : out;
+  };
+
+  /** A library template: drawn lazily with its own fonts, named from translated parts. */
+  const libraryCard = (item: TemplateSummary) => {
+    const title = names.name(item);
+    return (
+      <li key={item.id}>
+        <button
+          type="button"
+          aria-label={title}
+          onClick={() => setConfirm({ title, doc: fitted(item.doc) })}
+          className="focus-ring flex w-full flex-col items-center gap-2 rounded-xl border border-line bg-elev p-2.5 transition-colors hover:border-line-strong"
+        >
+          <TemplateThumb
+            doc={item.doc}
+            tokens={inputs.tokens}
+            qr={inputs.qr ?? undefined}
+            maxWidth={132}
+            maxHeight={132}
+            label={title}
+            backdrop={kind === 'overlay' ? VIDEO_BACKDROP : undefined}
+          />
+          <span className="w-full truncate text-center text-[12px] text-muted">{names.occasion(item) ?? title}</span>
+        </button>
+      </li>
+    );
+  };
 
   const save = async () => {
     setBusy(true);
@@ -155,6 +217,40 @@ export function TemplatesPanel({
             )}
           </ul>
         )}
+      </section>
+      <section>
+        <h3 className="eyebrow mb-2 px-1">{t('library')}</h3>
+        <Select<TemplateCategory | 'all'>
+          label={t('filterLabel')}
+          value={occasion}
+          onChange={(v) => {
+            setOccasion(v);
+            setShown(LIBRARY_PAGE);
+          }}
+          options={occasions}
+        />
+        {sameSize.length > 0 && (
+          <div className="mt-3">
+            {otherSizes.length > 0 && <h4 className="mb-1.5 px-1 text-[12px] font-semibold">{t('fitsPage')}</h4>}
+            <ul className="grid grid-cols-2 gap-2">{sameSize.map(libraryCard)}</ul>
+          </div>
+        )}
+        {otherSizes.length > 0 && (
+          <div className="mt-3">
+            <h4 className="mb-1.5 px-1 text-[12px] font-semibold">{t('otherSizes')}</h4>
+            <ul className="grid grid-cols-2 gap-2">{otherSizes.map(libraryCard)}</ul>
+          </div>
+        )}
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {visible.length < ordered.length && (
+            <Button size="sm" onClick={() => setShown((n) => n + LIBRARY_PAGE)}>
+              {t('showMore')}
+            </Button>
+          )}
+          <Link href="/studio/templates" className={buttonClass({ variant: 'ghost', size: 'sm' })}>
+            {t('browse')}
+          </Link>
+        </div>
       </section>
 
       <Modal open={saving} onClose={() => setSaving(false)} title={t('saveTitle')}>

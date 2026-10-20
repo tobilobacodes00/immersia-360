@@ -689,6 +689,7 @@
         "createEvent": "Create an event",
         "fits": "{size} · matches this template",
         "fitted": "{size} · the design is fitted to this size",
+        "sibling": "{size} · the same style made for this size is used",
         "shotsNote": "Heads up: this layout has {layout, plural, one {# photo slot} other {# photo slots}}, but the event takes {event, plural, one {# photo} other {# photos}}.",
         "apply": "Use this design",
         "failed": "Couldn’t use that design. Try again.",
@@ -702,7 +703,8 @@
         "saved": "Saved as “{name}”.",
         "failed": "Couldn’t save the template. Try again."
       },
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "close": "Close"
     },
     "editor": {
       "titleLayout": "Layout editor",

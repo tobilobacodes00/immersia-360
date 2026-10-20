@@ -10,6 +10,7 @@ import {
   CalendarDays,
   FolderOpen,
   LayoutDashboard,
+  LayoutTemplate,
   LogOut,
   Menu,
   MonitorSmartphone,
@@ -24,7 +25,7 @@ import { OperatorProvider } from './operator-context';
 
 interface NavItem {
   href: Route;
-  key: 'home' | 'events' | 'assets' | 'devices';
+  key: 'home' | 'events' | 'assets' | 'templates' | 'devices';
   icon: LucideIcon;
   match: (path: string) => boolean;
 }
@@ -39,6 +40,12 @@ const NAV: { group: 'overview' | 'prepare' | 'system'; items: NavItem[] }[] = [
     items: [
       { href: '/studio/events', key: 'events', icon: CalendarDays, match: (p) => p.startsWith('/studio/events') },
       { href: '/studio/assets', key: 'assets', icon: FolderOpen, match: (p) => p.startsWith('/studio/assets') },
+      {
+        href: '/studio/templates',
+        key: 'templates',
+        icon: LayoutTemplate,
+        match: (p) => p.startsWith('/studio/templates'),
+      },
     ],
   },
   {

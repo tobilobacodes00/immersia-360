@@ -689,6 +689,7 @@
         "createEvent": "Criar um evento",
         "fits": "{size} · combina com este modelo",
         "fitted": "{size} · o design é ajustado a este tamanho",
+        "sibling": "{size} · é usada a versão do mesmo estilo para este tamanho",
         "shotsNote": "Atenção: este layout tem {layout, plural, one {# espaço para foto} other {# espaços para fotos}}, mas o evento tira {event, plural, one {# foto} other {# fotos}}.",
         "apply": "Usar este design",
         "failed": "Não foi possível usar esse design. Tente de novo.",
@@ -702,7 +703,8 @@
         "saved": "Salvo como “{name}”.",
         "failed": "Não foi possível salvar o modelo. Tente de novo."
       },
-      "cancel": "Cancelar"
+      "cancel": "Cancelar",
+      "close": "Fechar"
     },
     "editor": {
       "titleLayout": "Editor de layout",

@@ -689,6 +689,7 @@
         "createEvent": "Crear un evento",
         "fits": "{size} · coincide con esta plantilla",
         "fitted": "{size} · el diseño se ajusta a este tamaño",
+        "sibling": "{size} · se usa la versión del mismo estilo para este tamaño",
         "shotsNote": "Ojo: este diseño tiene {layout, plural, one {# espacio para foto} other {# espacios para fotos}}, pero el evento toma {event, plural, one {# foto} other {# fotos}}.",
         "apply": "Usar este diseño",
         "failed": "No se pudo usar ese diseño. Inténtalo de nuevo.",
@@ -702,7 +703,8 @@
         "saved": "Guardada como «{name}».",
         "failed": "No se pudo guardar la plantilla. Inténtalo de nuevo."
       },
-      "cancel": "Cancelar"
+      "cancel": "Cancelar",
+      "close": "Cerrar"
     },
     "editor": {
       "titleLayout": "Editor de diseño",
