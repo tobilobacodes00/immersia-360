@@ -32,6 +32,11 @@ export type AnalyticsEvent =
   | { name: 'device_registered'; platform: string; browser: string }
   | { name: 'display_paired'; layout: string; screen_size: string }
   | { name: 'item_displayed'; seconds_on_screen: number }
-  | { name: 'display_qr_scanned'; layout: string };
+  | { name: 'display_qr_scanned'; layout: string }
+  /** SHR-6: counts only, never the guest's details. */
+  | { name: 'guest_form_submitted'; scope: 'session' | 'gallery' }
+  | { name: 'guest_form_skipped'; scope: 'session' | 'gallery' }
+  /** Privacy: a session was erased, by the guest holding its link or by an operator on their request. */
+  | { name: 'guest_data_erased'; by: 'guest' | 'operator' };
 
 export type AnalyticsEventName = AnalyticsEvent['name'];

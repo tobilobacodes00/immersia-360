@@ -12,6 +12,10 @@ export const statements = {
   asset: ['create', 'read', 'delete'],
   integration: ['connect', 'disconnect'],
   gallery: ['export'],
+  /** Guest form contacts (SHR-6): personal data, so only owners and operators handle them. */
+  guest: ['read', 'export', 'delete'],
+  /** The organization's own data export (privacy): the account holder only. */
+  account: ['export'],
 } as const;
 
 export const ac = createAccessControl(statements);
@@ -25,6 +29,8 @@ export const owner = ac.newRole({
   asset: ['create', 'read', 'delete'],
   integration: ['connect', 'disconnect'],
   gallery: ['export'],
+  guest: ['read', 'export', 'delete'],
+  account: ['export'],
 });
 
 /** An assistant who runs booths: everything about events and devices, nothing about the team. */
@@ -33,6 +39,7 @@ export const operator = ac.newRole({
   device: ['register', 'read'],
   asset: ['create', 'read', 'delete'],
   gallery: ['export'],
+  guest: ['read', 'export', 'delete'],
 });
 
 /** Read-only: sees events, galleries and devices; can export a gallery for a client. */

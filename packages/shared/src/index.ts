@@ -5,6 +5,7 @@ export * from './theme';
 export * from './routes';
 export * from './analytics';
 export * from './event';
+export * from './guest-form';
 export * from './template';
 export * from './device';
 export * from './session';
