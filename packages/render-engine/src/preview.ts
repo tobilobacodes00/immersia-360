@@ -1,10 +1,15 @@
 import { LOOK_FRAG, findEffect, findLook, lookUniforms, type ColorMode } from '@immersia/effects';
+import type { PersonMask } from './background-math';
+import { configureBackdrop, refreshBackdrop, type LiveBackground } from './background';
+import { BackgroundStage } from './gl/background';
 import { compile, fullscreenTriangle, texture, upload, type Program } from './gl/gl';
 import { GradeStage, type Clock } from './gl/grade';
 
 /**
  * Looks and effects on a visible canvas, through the SAME stage the render worker uses (gl/grade.ts):
- * studio previews (screen 5) and the booth's live camera preview (CAP-9) show exactly what renders.
+ * studio previews (screen 5) and the booth's live camera preview (CAP-9) show exactly what renders. A
+ * background (CAP-10) goes behind the person first, through the same gl/background.ts stage, given the
+ * person mask by whoever runs the segmenter (`setMask`).
  */
 
 const VERTEX_UP = /* glsl */ `#version 300 es
@@ -39,6 +44,8 @@ export interface PreviewSettings {
   seed?: number;
   /** Selfie mirror for the live camera preview (CAP-9). */
   mirror?: boolean;
+  /** CAP-10: replaces everything but the person; needs masks (`setMask`) to take effect. */
+  background?: LiveBackground | null;
 }
 
 export class GradePreview {
@@ -48,6 +55,8 @@ export class GradePreview {
   private readonly present: Program;
   private readonly presentRaw: Program;
   private stage: GradeStage | null = null;
+  private backgroundStage: BackgroundStage | null = null;
+  private background: LiveBackground | null = null;
   private mirror = false;
   private active = false;
 
@@ -72,6 +81,7 @@ export class GradePreview {
   }
 
   configure(s: PreviewSettings) {
+    this.setBackground(s.background ?? null);
     const look = s.look ? findLook(s.look.id) : null;
     const effects = s.effects.flatMap((e) => {
       const def = findEffect(e.id);
@@ -88,11 +98,37 @@ export class GradePreview {
     );
   }
 
+  /** CAP-10: what replaces the background, or null for none (which also frees the stage). */
+  setBackground(background: LiveBackground | null) {
+    this.background = background;
+    if (!background) {
+      this.backgroundStage?.dispose();
+      this.backgroundStage = null;
+      return;
+    }
+    this.backgroundStage ??= new BackgroundStage(this.gl, this.vao, this.width, this.height);
+    configureBackdrop(this.backgroundStage, background);
+  }
+
+  /** True when a background is set, so frames should be segmented and handed to `setMask`. */
+  get needsMask() {
+    return this.background !== null;
+  }
+
+  /** The person mask of a recent frame (it is smoothed against the last one and reused until the next). */
+  setMask(mask: PersonMask | null, opts?: { reset?: boolean }) {
+    this.backgroundStage?.setMask(mask, opts);
+  }
+
   /** Draw one frame of `image` (a still, or the camera's current video frame). */
   draw(image: TexImageSource, clock: Clock = { time: 0, duration: 1, beat: 0, pulse: 0 }) {
     const gl = this.gl;
     upload(gl, this.source, image);
     let tex = this.source;
+    if (this.backgroundStage && this.background) {
+      refreshBackdrop(this.backgroundStage, this.background);
+      tex = this.backgroundStage.apply(tex) ?? tex;
+    }
     let prog = this.presentRaw;
     if (this.active && this.stage) {
       this.stage.setClock(clock);
@@ -112,6 +148,7 @@ export class GradePreview {
 
   dispose() {
     this.stage?.dispose();
+    this.backgroundStage?.dispose();
     this.gl.deleteTexture(this.source);
     this.gl.getExtension('WEBGL_lose_context')?.loseContext();
   }

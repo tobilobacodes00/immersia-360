@@ -3,11 +3,41 @@
  * The render worker: decoding, WebGL compositing and encoding all happen here, off the main thread,
  * so the booth UI stays responsive and the operator can keep recording (VID-9).
  */
+import { SEGMENTER_ASSETS, createSegmenter, type Segmenter } from '@immersia/capture/segment';
+import type { MaskSource } from './background-math';
 import { encodeClip, messagingCopy, posterFrame } from './derive';
 import { RenderError, render, type RenderJob } from './render';
 
 export {};
 declare const self: DedicatedWorkerGlobalScope;
+
+// CAP-10: one person segmenter for the worker, shared by its renders (loading the model and runtime costs
+// seconds) and closed after a quiet minute, so a booth that stopped using backgrounds gives the memory back.
+const SEGMENTER_IDLE_MS = 60_000;
+let sharedSegmenter: Promise<Segmenter> | null = null;
+let segmenterIdle: ReturnType<typeof setTimeout> | undefined;
+
+function openSegmenter(): Promise<MaskSource> {
+  clearTimeout(segmenterIdle);
+  const opening = (sharedSegmenter ??= createSegmenter({ ...SEGMENTER_ASSETS, delegate: 'GPU' }).catch(
+    (err: unknown) => {
+      sharedSegmenter = null; // the next job tries again
+      throw err;
+    },
+  ));
+  // The render closes what it is given; the shared one lives on.
+  return opening.then((s) => ({ mask: (frame, ts) => s.mask(frame, ts), close: () => undefined }));
+}
+
+function closeSegmenterWhenIdle() {
+  if (!sharedSegmenter) return;
+  clearTimeout(segmenterIdle);
+  segmenterIdle = setTimeout(() => {
+    const closing = sharedSegmenter;
+    sharedSegmenter = null;
+    void closing?.then((s) => s.close()).catch(() => undefined);
+  }, SEGMENTER_IDLE_MS);
+}
 
 export type WorkerMessage =
   | { type: 'render'; id: string; job: RenderJob }
@@ -80,6 +110,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
     const result = await render(msg.job, {
       gate,
       signal: controller.signal,
+      segmenter: openSegmenter,
       onProgress: (progress) => self.postMessage({ type: 'progress', id: msg.id, progress } satisfies WorkerReply),
     });
     self.postMessage({ type: 'done', id: msg.id, result } satisfies WorkerReply);
@@ -89,7 +120,9 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
     self.postMessage({ type: 'error', id: msg.id, code: e2.code, message: e2.message } satisfies WorkerReply);
   } finally {
     running.delete(msg.id);
+    closeSegmenterWhenIdle();
     msg.job.overlay?.close();
+    if (msg.job.background?.kind === 'image') msg.job.background.image.close();
     if (msg.job.intro?.kind === 'still') msg.job.intro.image.close();
     if (msg.job.outro?.kind === 'still') msg.job.outro.image.close();
     msg.job.endCard?.image.close();
