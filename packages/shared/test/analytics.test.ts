@@ -6,6 +6,7 @@ import {
   analyticsEventSchema,
   canEmit,
   ingestBatchSchema,
+  parseDisplayLayout,
   parseScreenSize,
   resolveOccurredAt,
   type AnalyticsEvent,
@@ -197,5 +198,14 @@ describe('parseScreenSize', () => {
     expect(parseScreenSize('1920 x 1080')).toBeNull();
     expect(parseScreenSize('<script>')).toBeNull();
     expect(parseScreenSize(1920)).toBeNull();
+  });
+});
+
+describe('parseDisplayLayout', () => {
+  it('knows the four layouts and calls anything else unknown', () => {
+    expect(parseDisplayLayout('spotlight')).toBe('spotlight');
+    expect(parseDisplayLayout('counter')).toBe('counter');
+    expect(parseDisplayLayout('carousel')).toBe('unknown');
+    expect(parseDisplayLayout(undefined)).toBe('unknown');
   });
 });

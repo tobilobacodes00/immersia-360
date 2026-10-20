@@ -2,6 +2,7 @@ import 'server-only';
 import { and, asc, eq, gt, inArray, isNotNull, isNull, lte, ne, notExists, notInArray, or, sql } from 'drizzle-orm';
 import { db, schema, type Transaction } from '@immersia/db';
 import { uuidv7 } from '@immersia/shared';
+import { recordNow } from '../analytics';
 import { DEFAULT_CLOUD_FOLDER, cloudFilename, eventFolderName } from '../filenames';
 import { isMissingObject, objectStream } from '../storage';
 import { cloudProvider } from './config';
@@ -136,6 +137,7 @@ interface ClaimedCopy {
   attempts: number;
   outputId: string;
   objectKey: string | null;
+  bytes: number | null;
   mime: string;
   kind: string;
   uploadedAt: Date | null;
@@ -168,6 +170,7 @@ async function claimNext(skip: string[]): Promise<ClaimedCopy | null> {
         attempts: uploadObject.attempts,
         outputId: output.id,
         objectKey: output.objectKey,
+        bytes: output.bytes,
         mime: output.mime,
         kind: output.kind,
         uploadedAt: output.uploadedAt,
@@ -319,6 +322,12 @@ async function processOne(job: ClaimedCopy, run: Run): Promise<void> {
       .where(and(eq(uploadObject.id, job.id), eq(uploadObject.status, 'uploading')));
     run.stats.done++;
     if (reused) run.stats.reused++;
+    // Reliability (success metric): a copy to the operator's own cloud, and how many tries it took.
+    else
+      await recordNow(
+        { name: 'upload_completed', target: job.target, bytes: job.bytes ?? 0, retries: Math.max(0, job.attempts - 1) },
+        { organizationId: job.organizationId, eventId: job.eventId },
+      );
   } catch (err) {
     const decision = decideFailure(err, job.attempts, new Date());
     // Only our own error messages are logged (they carry no tokens or provider payloads); anything

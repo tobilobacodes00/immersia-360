@@ -1,7 +1,7 @@
 import 'server-only';
 import { and, eq, isNull, lte, sql } from 'drizzle-orm';
 import { db, schema } from '@immersia/db';
-import { normalizeShortCode, type OutputKind } from '@immersia/shared';
+import { normalizeShortCode, type OutputKind, type RemovalBasis } from '@immersia/shared';
 import { isExpired, type SessionState } from './share-state';
 import { EXT, slug } from './filenames';
 import { deleteObjects, presignDownload, presignView } from './storage';
@@ -22,8 +22,13 @@ export interface ShareFile {
 
 export interface SharePage {
   state: SessionState;
+  /** The guest session this page is for (analytics matches views to downloads by it). */
+  sessionId: string;
+  /** Why the session is not served, when its state is `removed`. */
+  removal: RemovalBasis | null;
   event: {
     id: string;
+    organizationId: string;
     name: string;
     theme: { accent: string; background: string; ink: string; font: 'sans' | 'serif' };
   };
@@ -42,7 +47,10 @@ export async function sharePage(linkId: string): Promise<SharePage | null> {
       shortCode: captureSession.shortCode,
       expiresAt: captureSession.expiresAt,
       expiredAt: captureSession.expiredAt,
+      removedAt: captureSession.removedAt,
+      removal: captureSession.removal,
       eventId: event.id,
+      organizationId: event.organizationId,
       eventName: event.name,
       branding: event.branding,
       share: event.shareSettings,
@@ -53,11 +61,15 @@ export async function sharePage(linkId: string): Promise<SharePage | null> {
     .limit(1);
   if (!row) return null;
   const base = {
-    event: { id: row.eventId, name: row.eventName, theme: row.branding.theme },
+    sessionId: row.sessionId,
+    removal: null,
+    event: { id: row.eventId, organizationId: row.organizationId, name: row.eventName, theme: row.branding.theme },
     shortCode: row.shortCode,
     expiresAt: row.expiresAt,
     contact: typeof row.share?.contact === 'string' ? row.share.contact : '',
   };
+  // Taken down or hidden: nothing of it is served, whatever its expiry says.
+  if (row.removedAt) return { ...base, state: 'removed', removal: row.removal ?? 'policy', files: [] };
   if (isExpired(row)) return { ...base, state: 'expired', files: [] };
 
   const rows = await db().select().from(output).where(eq(output.sessionId, row.sessionId));
@@ -81,7 +93,8 @@ export async function sharePage(linkId: string): Promise<SharePage | null> {
 const KIND_ORDER: OutputKind[] = ['mp4', 'strip', 'gif', 'boomerang', 'short_video', 'small_mp4', 'poster'];
 
 export type DownloadResult =
-  | { url: string; kind: OutputKind; bytes: number | null; eventId: string }
+  | { url: string; kind: OutputKind; bytes: number | null; eventId: string; sessionId: string }
+  | { error: 'removed'; removal: RemovalBasis }
   | { error: 'not_found' | 'expired' | 'not_ready' };
 
 /**
@@ -98,8 +111,11 @@ export async function downloadUrl(linkId: string, outputId: string): Promise<Dow
       bytes: output.bytes,
       uploadedAt: output.uploadedAt,
       eventId: event.id,
+      sessionId: captureSession.id,
       expiresAt: captureSession.expiresAt,
       expiredAt: captureSession.expiredAt,
+      removedAt: captureSession.removedAt,
+      removal: captureSession.removal,
       prefix: captureSession.filenamePrefix,
       eventName: event.name,
     })
@@ -109,6 +125,7 @@ export async function downloadUrl(linkId: string, outputId: string): Promise<Dow
     .where(and(eq(output.id, outputId), eq(captureSession.linkId, linkId)))
     .limit(1);
   if (!row) return { error: 'not_found' };
+  if (row.removedAt) return { error: 'removed', removal: row.removal ?? 'policy' };
   if (isExpired(row)) return { error: 'expired' };
   if (!row.uploadedAt || !row.key) return { error: 'not_ready' };
   await db()
@@ -116,7 +133,13 @@ export async function downloadUrl(linkId: string, outputId: string): Promise<Dow
     .set({ downloads: sql`${output.downloads} + 1` })
     .where(eq(output.id, outputId));
   const filename = `${row.prefix}${slug(row.eventName)}-${row.kind.replace('_', '-')}.${EXT[row.mime] ?? 'bin'}`;
-  return { url: await presignDownload(row.key, filename), kind: row.kind, bytes: row.bytes, eventId: row.eventId };
+  return {
+    url: await presignDownload(row.key, filename),
+    kind: row.kind,
+    bytes: row.bytes,
+    eventId: row.eventId,
+    sessionId: row.sessionId,
+  };
 }
 
 /** DL-2: a typed short code → the session's link id. */

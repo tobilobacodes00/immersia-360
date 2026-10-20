@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { ensureAnalyticsPartitions } from '@/server/analytics-maintenance';
 import { purgeAssets } from '@/server/assets';
 import { enqueueMissingCopies, processCloudCopies } from '@/server/cloud/copy';
 import { verifyConnections } from '@/server/cloud/integrations';
@@ -27,7 +28,9 @@ export async function GET(request: Request) {
   const connections = await verifyConnections().catch(failure('verify'));
   const result = await expireSessions();
   const assets = await purgeAssets();
-  return NextResponse.json({ ...result, assets, cloud: { queued, copies, connections } });
+  // Analytics partitions for the months ahead (inserts work without this; it keeps the default partition empty).
+  const partitions = await ensureAnalyticsPartitions().catch(failure('analytics partitions'));
+  return NextResponse.json({ ...result, assets, cloud: { queued, copies, connections }, partitions });
 }
 
 /** A broken cloud queue must not stop the expiry sweep: report it and carry on. */

@@ -19,6 +19,7 @@ import {
   type OutputSettings,
   type ShareSettings,
 } from '@immersia/shared';
+import { track } from './analytics';
 import type { Operator } from './session';
 
 const { event, captureSession, output, uploadObject, template, device } = schema;
@@ -119,6 +120,10 @@ export async function createEvent(op: Operator, input: CreateEventInput): Promis
     gallerySlug: newGallerySlug(),
     createdBy: op.userId,
   });
+  track(
+    { name: 'event_created', mode: input.mode, from_duplicate: false },
+    { organizationId: op.organizationId, eventId: id },
+  );
   return id;
 }
 
@@ -128,7 +133,7 @@ export async function createEvent(op: Operator, input: CreateEventInput): Promis
  * copy, so editing the duplicate's overlay never changes the original's.
  */
 export async function duplicateEvent(op: Operator, sourceId: string, name: string): Promise<string | null> {
-  return db().transaction(async (tx) => {
+  const copy = await db().transaction(async (tx) => {
     const [src] = await tx
       .select()
       .from(event)
@@ -168,8 +173,14 @@ export async function duplicateEvent(op: Operator, sourceId: string, name: strin
         })),
       );
     }
-    return id;
+    return { id, mode: src.mode };
   });
+  if (!copy) return null;
+  track(
+    { name: 'event_created', mode: copy.mode, from_duplicate: true },
+    { organizationId: op.organizationId, eventId: copy.id },
+  );
+  return copy.id;
 }
 
 export async function setArchived(organizationId: string, id: string, archived: boolean): Promise<boolean> {

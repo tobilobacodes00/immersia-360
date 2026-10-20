@@ -373,7 +373,7 @@ export async function createPairing(op: Operator, eventId: string): Promise<{ co
 /** The TV types the code (or opens the pairing QR): it becomes a display, no login needed. */
 export async function claimPairing(
   code: string,
-): Promise<{ token: string; displayId: string } | 'invalid' | 'expired'> {
+): Promise<{ token: string; displayId: string; eventId: string } | 'invalid' | 'expired'> {
   const normalized = code.trim().toUpperCase();
   return db().transaction(async (tx) => {
     const [pairing] = await tx
@@ -401,7 +401,7 @@ export async function claimPairing(
       .update(displayPairing)
       .set({ claimedAt: new Date(), displayId: id })
       .where(eq(displayPairing.code, normalized));
-    return { token, displayId: id };
+    return { token, displayId: id, eventId: pairing.eventId };
   });
 }
 

@@ -29,6 +29,14 @@ export const LIMITS = {
   displayPairPerIp: { limit: 20, windowS: 600 },
   /** SHR-5: gallery passwords are short; slow guessing right down. */
   galleryUnlockPerIp: { limit: 10, windowS: 600 },
+  /** POST /api/t: batches per booth, display or operator (a booth flushes every ~10 s while busy)… */
+  analyticsIngest: { limit: 120, windowS: 60 },
+  /** …and per address, so one network full of booths is not throttled by a single bad actor's key. */
+  analyticsIngestIp: { limit: 900, windowS: 60 },
+  /** Abuse: a report per reporter (a salted daily hash, never the address), per session, and per event. */
+  reportPerReporter: { limit: 5, windowS: 86_400 },
+  reportPerSession: { limit: 10, windowS: 3600 },
+  reportPerEvent: { limit: 60, windowS: 3600 },
 } satisfies Record<string, Limit>;
 
 type Name = keyof typeof LIMITS;

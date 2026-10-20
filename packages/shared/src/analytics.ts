@@ -113,7 +113,7 @@ export const analyticsEventSchema = z.discriminatedUnion('name', [
   // devices per operator
   z.object({ name: z.literal('device_registered'), platform: label(), browser: label() }),
   // Live Display
-  z.object({ name: z.literal('display_paired'), layout, screen_size: z.string().regex(/^\d{3,5}x\d{3,5}$/) }),
+  z.object({ name: z.literal('display_paired'), layout, screen_size: z.string().regex(/^(\d{3,5}x\d{3,5}|unknown)$/) }),
   z.object({ name: z.literal('item_displayed'), seconds_on_screen: seconds, layout: layout.optional() }),
   z.object({ name: z.literal('display_qr_scanned'), layout: z.enum([...DISPLAY_LAYOUTS, 'unknown']) }),
   // crash reports and booth session markers (events completed without a crash). A crash report
@@ -230,6 +230,13 @@ export function resolveOccurredAt(input: { at: number; sentAt?: number | undefin
   const corrected = Number.isFinite(at) ? at + skew : now;
   const ms = Math.min(now, Math.max(now - MAX_EVENT_AGE_MS, corrected));
   return { ms: Math.round(ms), clamped: ms !== Math.round(corrected) };
+}
+
+/** The layout a Live Display QR was shown in (`?dl=`), or `unknown` when a link carries none. */
+export function parseDisplayLayout(value: string | null | undefined): (typeof DISPLAY_LAYOUTS)[number] | 'unknown' {
+  return (DISPLAY_LAYOUTS as readonly string[]).includes(value ?? '')
+    ? (value as (typeof DISPLAY_LAYOUTS)[number])
+    : 'unknown';
 }
 
 /** A screen size such as "1920x1080" from `screen.width`/`screen.height`, or null when it is not one. */
