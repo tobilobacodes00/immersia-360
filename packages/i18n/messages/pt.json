@@ -147,6 +147,7 @@
       "home": "Início",
       "events": "Eventos",
       "assets": "Recursos",
+      "templates": "Modelos",
       "devices": "Dispositivos",
       "signOut": "Sair",
       "openMenu": "Abrir menu",
@@ -579,6 +580,130 @@
         "delete": "Não foi possível excluir o recurso."
       }
     },
+    "templates": {
+      "title": "Biblioteca de modelos",
+      "subtitle": "Layouts de fotos e sobreposições 360 prontos para cada ocasião. Veja a prévia, use em um evento e deixe com a sua cara no editor.",
+      "grid": "Modelos",
+      "filters": {
+        "label": "Filtrar modelos",
+        "occasion": "Ocasião",
+        "size": "Tamanho",
+        "search": "Buscar modelos",
+        "searchPlaceholder": "Buscar por nome",
+        "all": "Todos",
+        "allSizes": "Todos os tamanhos",
+        "clear": "Limpar filtros"
+      },
+      "count": "{count, plural, one {# modelo} other {# modelos}}",
+      "mine": "Meu",
+      "empty": {
+        "title": "Nenhum modelo encontrado",
+        "body": "Tente outra ocasião ou outro tamanho, ou limpe os filtros."
+      },
+      "categories": {
+        "wedding": "Casamento",
+        "birthday": "Aniversário",
+        "graduation": "Formatura",
+        "baby-shower": "Chá de bebê",
+        "christmas": "Natal",
+        "halloween": "Halloween",
+        "quinceanera": "Debutante",
+        "corporate": "Corporativo"
+      },
+      "styles": {
+        "blush": "Romance rosé",
+        "ivory-gold": "Marfim e dourado",
+        "garden-script": "Jardim caligráfico",
+        "midnight": "Meia-noite",
+        "confetti-pop": "Confete pop",
+        "party-bold": "Festa ousada",
+        "sweet-pastel": "Pastel doce",
+        "neon-night": "Noite neon",
+        "classic-cap": "Capelo clássico",
+        "modern-class": "Turma moderna",
+        "honors": "Mérito",
+        "varsity": "Estilo universitário",
+        "little-blue": "Azul bebê",
+        "little-pink": "Rosa bebê",
+        "sunny-side": "Dia ensolarado",
+        "woodland": "Floresta",
+        "classic-xmas": "Natal clássico",
+        "snowy-night": "Noite de neve",
+        "gold-evergreen": "Dourado e pinheiro",
+        "cozy-cabin": "Cabana aconchegante",
+        "spooky-night": "Noite assombrada",
+        "pumpkin-patch": "Abóboras",
+        "friendly-ghost": "Fantasminha",
+        "gothic": "Gótico",
+        "rose-gold": "Ouro rosé",
+        "royal-purple": "Roxo real",
+        "fiesta": "Festa",
+        "teal-tiara": "Tiara turquesa",
+        "clean-slate": "Página em branco",
+        "executive-navy": "Azul executivo",
+        "warm-neutral": "Neutro quente",
+        "launch-day": "Dia de lançamento"
+      },
+      "sizes": {
+        "2x6": "Tira 2×6 in",
+        "4x4": "4×4 in",
+        "4x6": "4×6 in",
+        "6x4": "6×4 in",
+        "5x7": "5×7 in",
+        "story": "Story 9:16"
+      },
+      "aspects": {
+        "9:16": "Sobreposição 9:16",
+        "1:1": "Sobreposição 1:1",
+        "16:9": "Sobreposição 16:9"
+      },
+      "layoutDescription": "{size} · {count, plural, one {# foto} other {# fotos}}",
+      "templateName": "{category} · {style} · {layout}",
+      "samples": {
+        "wedding": "Ana e Leo",
+        "birthday": "Aniversário da Mia",
+        "graduation": "Sofia Rivera",
+        "baby-shower": "Bebê Lucas",
+        "christmas": "Festa de Natal",
+        "halloween": "Noite de Halloween",
+        "quinceanera": "15 anos da Sofia",
+        "corporate": "Festa de lançamento"
+      },
+      "preview": {
+        "label": "Prévia de {name}",
+        "builtIn": "Da biblioteca",
+        "mine": "Salvo pela sua equipe",
+        "photos": "{count, plural, one {# espaço para foto} other {# espaços para fotos}}",
+        "overlayNote": "Desenhada sobre o vídeo; o resto do quadro fica livre.",
+        "qrNote": "As impressões levam o QR code do convidado com 18 mm ou mais.",
+        "storyNote": "Feito para telas, por isso não leva QR code.",
+        "use": "Usar em um evento…",
+        "save": "Salvar nos meus modelos"
+      },
+      "use": {
+        "title": "Usar “{name}” em um evento",
+        "body": "Ele substitui o design atual do evento. Depois você pode editá-lo.",
+        "pick": "Evento",
+        "noneLayout": "Nenhum dos seus eventos usa a cabine de fotos ainda. Crie um para usar um layout de impressão.",
+        "noneOverlay": "Nenhum dos seus eventos usa a cabine 360 ainda. Crie um para usar uma sobreposição.",
+        "createEvent": "Criar um evento",
+        "fits": "{size} · combina com este modelo",
+        "fitted": "{size} · o design é ajustado a este tamanho",
+        "shotsNote": "Atenção: este layout tem {layout, plural, one {# espaço para foto} other {# espaços para fotos}}, mas o evento tira {event, plural, one {# foto} other {# fotos}}.",
+        "apply": "Usar este design",
+        "failed": "Não foi possível usar esse design. Tente de novo.",
+        "done": "“{event}” agora usa este design.",
+        "openBranding": "Abrir Marca"
+      },
+      "save": {
+        "title": "Salvar nos meus modelos",
+        "name": "Nome do modelo",
+        "save": "Salvar modelo",
+        "saved": "Salvo como “{name}”.",
+        "failed": "Não foi possível salvar o modelo. Tente de novo."
+      },
+      "cancel": "Cancelar"
+    },
     "editor": {
       "titleLayout": "Editor de layout",
       "titleOverlay": "Editor de sobreposição",
@@ -789,7 +914,14 @@
         "delete": "Excluir {name}",
         "applyTitle": "Usar “{name}”?",
         "applyBody": "Ele substitui o design atual. Você pode desfazer.",
-        "apply": "Usar este design"
+        "apply": "Usar este design",
+        "library": "Biblioteca",
+        "filterLabel": "Ocasião",
+        "allCategories": "Todos",
+        "fitsPage": "Do mesmo tamanho desta página",
+        "otherSizes": "Outros tamanhos (ajustados ao usar)",
+        "showMore": "Mostrar mais",
+        "browse": "Explorar toda a biblioteca"
       },
       "ornaments": {
         "title": "Decorações",
@@ -891,6 +1023,7 @@
         "removeOverlay": "Remover a sobreposição",
         "chooserTitle": "Escolher um design",
         "chooserNote": "O design escolhido substitui o atual do evento e pode ser editado como qualquer outro.",
+        "browseLibrary": "Explorar a biblioteca de modelos",
         "applyFailed": "Não foi possível usar esse design. Tente de novo.",
         "viewerTitle": "Pré-visualização",
         "noSaved": "Ainda não há modelos salvos. Salve um pelo editor.",

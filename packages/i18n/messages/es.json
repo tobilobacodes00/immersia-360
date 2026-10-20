@@ -147,6 +147,7 @@
       "home": "Inicio",
       "events": "Eventos",
       "assets": "Recursos",
+      "templates": "Plantillas",
       "devices": "Dispositivos",
       "signOut": "Cerrar sesión",
       "openMenu": "Abrir menú",
@@ -579,6 +580,130 @@
         "delete": "No se pudo eliminar el recurso."
       }
     },
+    "templates": {
+      "title": "Biblioteca de plantillas",
+      "subtitle": "Diseños de fotos y superposiciones 360 listos para cada ocasión. Míralos, úsalos en un evento y personalízalos en el editor.",
+      "grid": "Plantillas",
+      "filters": {
+        "label": "Filtrar plantillas",
+        "occasion": "Ocasión",
+        "size": "Tamaño",
+        "search": "Buscar plantillas",
+        "searchPlaceholder": "Buscar por nombre",
+        "all": "Todas",
+        "allSizes": "Todos los tamaños",
+        "clear": "Quitar filtros"
+      },
+      "count": "{count, plural, one {# plantilla} other {# plantillas}}",
+      "mine": "Propia",
+      "empty": {
+        "title": "Ninguna plantilla coincide",
+        "body": "Prueba con otra ocasión u otro tamaño, o quita los filtros."
+      },
+      "categories": {
+        "wedding": "Boda",
+        "birthday": "Cumpleaños",
+        "graduation": "Graduación",
+        "baby-shower": "Baby shower",
+        "christmas": "Navidad",
+        "halloween": "Halloween",
+        "quinceanera": "Quinceañera",
+        "corporate": "Corporativo"
+      },
+      "styles": {
+        "blush": "Romance rosado",
+        "ivory-gold": "Marfil y oro",
+        "garden-script": "Caligrafía de jardín",
+        "midnight": "Medianoche",
+        "confetti-pop": "Confeti pop",
+        "party-bold": "Fiesta atrevida",
+        "sweet-pastel": "Pastel dulce",
+        "neon-night": "Noche neón",
+        "classic-cap": "Birrete clásico",
+        "modern-class": "Clase moderna",
+        "honors": "Mérito",
+        "varsity": "Estilo universitario",
+        "little-blue": "Azul bebé",
+        "little-pink": "Rosa bebé",
+        "sunny-side": "Día soleado",
+        "woodland": "Bosque",
+        "classic-xmas": "Navidad clásica",
+        "snowy-night": "Noche nevada",
+        "gold-evergreen": "Oro y pino",
+        "cozy-cabin": "Cabaña acogedora",
+        "spooky-night": "Noche de terror",
+        "pumpkin-patch": "Calabazal",
+        "friendly-ghost": "Fantasma amigable",
+        "gothic": "Gótico",
+        "rose-gold": "Oro rosa",
+        "royal-purple": "Púrpura real",
+        "fiesta": "Fiesta",
+        "teal-tiara": "Tiara turquesa",
+        "clean-slate": "Lienzo en blanco",
+        "executive-navy": "Azul ejecutivo",
+        "warm-neutral": "Neutro cálido",
+        "launch-day": "Día de lanzamiento"
+      },
+      "sizes": {
+        "2x6": "Tira 2×6 in",
+        "4x4": "4×4 in",
+        "4x6": "4×6 in",
+        "6x4": "6×4 in",
+        "5x7": "5×7 in",
+        "story": "Story 9:16"
+      },
+      "aspects": {
+        "9:16": "Superposición 9:16",
+        "1:1": "Superposición 1:1",
+        "16:9": "Superposición 16:9"
+      },
+      "layoutDescription": "{size} · {count, plural, one {# foto} other {# fotos}}",
+      "templateName": "{category} · {style} · {layout}",
+      "samples": {
+        "wedding": "Ana y Leo",
+        "birthday": "Cumple de Mía",
+        "graduation": "Sofía Rivera",
+        "baby-shower": "Bebé Lucas",
+        "christmas": "Fiesta de Navidad",
+        "halloween": "Noche de Halloween",
+        "quinceanera": "Quinceañera de Sofía",
+        "corporate": "Fiesta de lanzamiento"
+      },
+      "preview": {
+        "label": "Vista previa de {name}",
+        "builtIn": "De la biblioteca",
+        "mine": "Guardada por tu equipo",
+        "photos": "{count, plural, one {# espacio para foto} other {# espacios para fotos}}",
+        "overlayNote": "Se dibuja sobre el video; el resto del cuadro queda libre.",
+        "qrNote": "Las impresiones llevan el código QR del invitado a 18 mm o más.",
+        "storyNote": "Pensada para pantallas, así que no lleva código QR.",
+        "use": "Usar en un evento…",
+        "save": "Guardar en mis plantillas"
+      },
+      "use": {
+        "title": "Usar «{name}» en un evento",
+        "body": "Reemplaza el diseño actual del evento. Después puedes editarlo.",
+        "pick": "Evento",
+        "noneLayout": "Ninguno de tus eventos usa todavía la cabina de fotos. Crea uno para usar un diseño de impresión.",
+        "noneOverlay": "Ninguno de tus eventos usa todavía la cabina 360. Crea uno para usar una superposición.",
+        "createEvent": "Crear un evento",
+        "fits": "{size} · coincide con esta plantilla",
+        "fitted": "{size} · el diseño se ajusta a este tamaño",
+        "shotsNote": "Ojo: este diseño tiene {layout, plural, one {# espacio para foto} other {# espacios para fotos}}, pero el evento toma {event, plural, one {# foto} other {# fotos}}.",
+        "apply": "Usar este diseño",
+        "failed": "No se pudo usar ese diseño. Inténtalo de nuevo.",
+        "done": "«{event}» ahora usa este diseño.",
+        "openBranding": "Abrir Marca"
+      },
+      "save": {
+        "title": "Guardar en mis plantillas",
+        "name": "Nombre de la plantilla",
+        "save": "Guardar plantilla",
+        "saved": "Guardada como «{name}».",
+        "failed": "No se pudo guardar la plantilla. Inténtalo de nuevo."
+      },
+      "cancel": "Cancelar"
+    },
     "editor": {
       "titleLayout": "Editor de diseño",
       "titleOverlay": "Editor de superposición",
@@ -789,7 +914,14 @@
         "delete": "Eliminar {name}",
         "applyTitle": "¿Usar «{name}»?",
         "applyBody": "Reemplaza el diseño actual. Puedes deshacerlo.",
-        "apply": "Usar este diseño"
+        "apply": "Usar este diseño",
+        "library": "Biblioteca",
+        "filterLabel": "Ocasión",
+        "allCategories": "Todas",
+        "fitsPage": "Del mismo tamaño que esta página",
+        "otherSizes": "Otros tamaños (se ajustan al usarlas)",
+        "showMore": "Mostrar más",
+        "browse": "Explorar toda la biblioteca"
       },
       "ornaments": {
         "title": "Decoraciones",
@@ -891,6 +1023,7 @@
         "removeOverlay": "Quitar la superposición",
         "chooserTitle": "Elegir un diseño",
         "chooserNote": "El diseño elegido reemplaza el actual del evento y se puede editar como cualquier otro.",
+        "browseLibrary": "Explorar la biblioteca de plantillas",
         "applyFailed": "No se pudo usar ese diseño. Inténtalo de nuevo.",
         "viewerTitle": "Vista previa",
         "noSaved": "Todavía no hay plantillas guardadas. Guarda una desde el editor.",

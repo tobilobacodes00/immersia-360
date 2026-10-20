@@ -147,6 +147,7 @@
       "home": "Home",
       "events": "Events",
       "assets": "Assets",
+      "templates": "Templates",
       "devices": "Devices",
       "signOut": "Sign out",
       "openMenu": "Open menu",
@@ -579,6 +580,130 @@
         "delete": "Couldn’t delete the asset."
       }
     },
+    "templates": {
+      "title": "Template library",
+      "subtitle": "Ready-made photo layouts and 360 overlays for every occasion. Preview one, use it for an event, then make it yours in the editor.",
+      "grid": "Templates",
+      "filters": {
+        "label": "Filter templates",
+        "occasion": "Occasion",
+        "size": "Size",
+        "search": "Search templates",
+        "searchPlaceholder": "Search by name",
+        "all": "All",
+        "allSizes": "All sizes",
+        "clear": "Clear filters"
+      },
+      "count": "{count, plural, one {# template} other {# templates}}",
+      "mine": "Mine",
+      "empty": {
+        "title": "No templates match",
+        "body": "Try another occasion or size, or clear the filters."
+      },
+      "categories": {
+        "wedding": "Wedding",
+        "birthday": "Birthday",
+        "graduation": "Graduation",
+        "baby-shower": "Baby shower",
+        "christmas": "Christmas",
+        "halloween": "Halloween",
+        "quinceanera": "Quinceañera",
+        "corporate": "Corporate"
+      },
+      "styles": {
+        "blush": "Blush romance",
+        "ivory-gold": "Ivory & gold",
+        "garden-script": "Garden script",
+        "midnight": "Midnight",
+        "confetti-pop": "Confetti pop",
+        "party-bold": "Bold party",
+        "sweet-pastel": "Sweet pastel",
+        "neon-night": "Neon night",
+        "classic-cap": "Classic cap",
+        "modern-class": "Modern class",
+        "honors": "Honors",
+        "varsity": "Varsity",
+        "little-blue": "Little blue",
+        "little-pink": "Little pink",
+        "sunny-side": "Sunny side",
+        "woodland": "Woodland",
+        "classic-xmas": "Classic Christmas",
+        "snowy-night": "Snowy night",
+        "gold-evergreen": "Gold & evergreen",
+        "cozy-cabin": "Cozy cabin",
+        "spooky-night": "Spooky night",
+        "pumpkin-patch": "Pumpkin patch",
+        "friendly-ghost": "Friendly ghost",
+        "gothic": "Gothic",
+        "rose-gold": "Rose gold",
+        "royal-purple": "Royal purple",
+        "fiesta": "Fiesta",
+        "teal-tiara": "Teal tiara",
+        "clean-slate": "Clean slate",
+        "executive-navy": "Executive navy",
+        "warm-neutral": "Warm neutral",
+        "launch-day": "Launch day"
+      },
+      "sizes": {
+        "2x6": "2×6 in strip",
+        "4x4": "4×4 in",
+        "4x6": "4×6 in",
+        "6x4": "6×4 in",
+        "5x7": "5×7 in",
+        "story": "Story 9:16"
+      },
+      "aspects": {
+        "9:16": "Overlay 9:16",
+        "1:1": "Overlay 1:1",
+        "16:9": "Overlay 16:9"
+      },
+      "layoutDescription": "{size} · {count, plural, one {# photo} other {# photos}}",
+      "templateName": "{category} · {style} · {layout}",
+      "samples": {
+        "wedding": "Ana & Leo",
+        "birthday": "Mia turns 5",
+        "graduation": "Sam Rivera",
+        "baby-shower": "Baby Lucas",
+        "christmas": "Holiday party",
+        "halloween": "Spooky night",
+        "quinceanera": "Sofía’s quinceañera",
+        "corporate": "Launch party"
+      },
+      "preview": {
+        "label": "Preview of {name}",
+        "builtIn": "From the library",
+        "mine": "Saved by your team",
+        "photos": "{count, plural, one {# photo slot} other {# photo slots}}",
+        "overlayNote": "Drawn over the video; the rest of the frame stays clear.",
+        "qrNote": "Prints carry the guest QR code at 18 mm or larger.",
+        "storyNote": "Made for screens, so there is no QR code.",
+        "use": "Use for an event…",
+        "save": "Save to my templates"
+      },
+      "use": {
+        "title": "Use “{name}” for an event",
+        "body": "It replaces the event’s current design. You can still edit it afterwards.",
+        "pick": "Event",
+        "noneLayout": "None of your events runs a photo booth yet. Create one to use a print layout.",
+        "noneOverlay": "None of your events runs a 360 booth yet. Create one to use an overlay.",
+        "createEvent": "Create an event",
+        "fits": "{size} · matches this template",
+        "fitted": "{size} · the design is fitted to this size",
+        "shotsNote": "Heads up: this layout has {layout, plural, one {# photo slot} other {# photo slots}}, but the event takes {event, plural, one {# photo} other {# photos}}.",
+        "apply": "Use this design",
+        "failed": "Couldn’t use that design. Try again.",
+        "done": "“{event}” now uses this design.",
+        "openBranding": "Open Branding"
+      },
+      "save": {
+        "title": "Save to my templates",
+        "name": "Template name",
+        "save": "Save template",
+        "saved": "Saved as “{name}”.",
+        "failed": "Couldn’t save the template. Try again."
+      },
+      "cancel": "Cancel"
+    },
     "editor": {
       "titleLayout": "Layout editor",
       "titleOverlay": "Overlay editor",
@@ -789,7 +914,14 @@
         "delete": "Delete {name}",
         "applyTitle": "Use “{name}”?",
         "applyBody": "It replaces the current design. You can undo this.",
-        "apply": "Use this design"
+        "apply": "Use this design",
+        "library": "Library",
+        "filterLabel": "Occasion",
+        "allCategories": "All",
+        "fitsPage": "Same size as this page",
+        "otherSizes": "Other sizes (fitted when used)",
+        "showMore": "Show more",
+        "browse": "Browse the full library"
       },
       "ornaments": {
         "title": "Decorations",
@@ -891,6 +1023,7 @@
         "removeOverlay": "Remove overlay",
         "chooserTitle": "Choose a design",
         "chooserNote": "The chosen design replaces the event's current one and opens for editing like any other.",
+        "browseLibrary": "Browse the template library",
         "applyFailed": "Couldn't use that design. Try again.",
         "viewerTitle": "Preview",
         "noSaved": "No saved templates yet. Save one from the editor.",
