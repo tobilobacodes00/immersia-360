@@ -681,7 +681,6 @@
         "save": "Guardar en mis plantillas"
       },
       "use": {
-        "title": "Usar «{name}» en un evento",
         "body": "Reemplaza el diseño actual del evento. Después puedes editarlo.",
         "pick": "Evento",
         "noneLayout": "Ninguno de tus eventos usa todavía la cabina de fotos. Crea uno para usar un diseño de impresión.",
@@ -697,7 +696,6 @@
         "openBranding": "Abrir Marca"
       },
       "save": {
-        "title": "Guardar en mis plantillas",
         "name": "Nombre de la plantilla",
         "save": "Guardar plantilla",
         "saved": "Guardada como «{name}».",

@@ -681,7 +681,6 @@
         "save": "Salvar nos meus modelos"
       },
       "use": {
-        "title": "Usar “{name}” em um evento",
         "body": "Ele substitui o design atual do evento. Depois você pode editá-lo.",
         "pick": "Evento",
         "noneLayout": "Nenhum dos seus eventos usa a cabine de fotos ainda. Crie um para usar um layout de impressão.",
@@ -697,7 +696,6 @@
         "openBranding": "Abrir Marca"
       },
       "save": {
-        "title": "Salvar nos meus modelos",
         "name": "Nome do modelo",
         "save": "Salvar modelo",
         "saved": "Salvo como “{name}”.",

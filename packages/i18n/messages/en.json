@@ -681,7 +681,6 @@
         "save": "Save to my templates"
       },
       "use": {
-        "title": "Use “{name}” for an event",
         "body": "It replaces the event’s current design. You can still edit it afterwards.",
         "pick": "Event",
         "noneLayout": "None of your events runs a photo booth yet. Create one to use a print layout.",
@@ -697,7 +696,6 @@
         "openBranding": "Open Branding"
       },
       "save": {
-        "title": "Save to my templates",
         "name": "Template name",
         "save": "Save template",
         "saved": "Saved as “{name}”.",

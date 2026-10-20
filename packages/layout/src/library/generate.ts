@@ -6,9 +6,8 @@ import {
   type TemplateDocument,
   type TemplateElement,
 } from '@immersia/shared';
-import type { Aspect } from '../overlays';
+import { TRANSPARENT, type Aspect } from '../overlays';
 import type { PrintSize } from '../presets';
-import { TRANSPARENT } from '../overlays';
 import type { Box, Deco, LibraryLayout, OrnamentZone, PhotoSlot, TextZone } from './geometry';
 import { layoutsForSize } from './layouts';
 import {
