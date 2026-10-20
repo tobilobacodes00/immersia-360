@@ -24,6 +24,7 @@ import type { AssetView } from '@/server/assets';
 import type { TemplateSummary } from '@/server/templates';
 import { SaveIndicator } from '../setup/EventSetup';
 import { useAutosave } from '../setup/use-autosave';
+import { BackgroundCard } from './BackgroundCard';
 import { DesignCard } from './DesignCard';
 import { LooksCard } from './LooksCard';
 import { MediaSlot } from './MediaSlot';
@@ -320,6 +321,15 @@ export function BrandingEditor(p: BrandingEditorProps) {
           photoFilterId: p.photo.filterId,
           photoEffectId: p.photo.effectId,
         }}
+      />
+
+      <BackgroundCard
+        eventId={p.eventId}
+        booths={p.booths}
+        readOnly={p.readOnly}
+        initial={{ background: p.video.background, photoBackground: p.photo.background }}
+        view={view}
+        remember={remember}
       />
 
       {p.booths.includes('video360') && (

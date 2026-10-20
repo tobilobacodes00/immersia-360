@@ -913,6 +913,23 @@
         "beatSyncNeedsMusic": "Adicione uma música ao evento para sincronizar os efeitos com a batida.",
         "photoEffect": "Efeito de foto",
         "photoEffectHelp": "Aplicado a cada foto antes de montar a tira."
+      },
+      "background": {
+        "title": "Fundo",
+        "subtitle": "Troque o que fica atrás dos seus convidados. Ele é detectado no dispositivo: nenhuma imagem sai dele.",
+        "video": "Fundo do vídeo 360",
+        "photo": "Fundo das fotos",
+        "off": "Sem fundo",
+        "blur": "Desfoque",
+        "colour": "Cor",
+        "image": "Imagem",
+        "imageOrVideo": "Imagem ou vídeo",
+        "colourLabel": "Cor do fundo",
+        "imageHelp": "Uma imagem, ou um vídeo que toca atrás do convidado e recomeça se for mais curto que o giro.",
+        "photoImageHelp": "Uma imagem para todas as fotos. Vídeos não são usados nas fotos.",
+        "preview": "Pré-visualização do fundo",
+        "previewNote": "A pré-visualização usa uma silhueta desenhada. Na cabine, o recorte acompanha cada convidado.",
+        "needsImage": "Escolha uma imagem para ver a pré-visualização."
       }
     },
     "live": {
@@ -1077,6 +1094,7 @@
     "startBooth": "Iniciar cabine",
     "startHint": "Confira a câmera e depois passe a vez para os convidados.",
     "startingCamera": "Iniciando a câmera…",
+    "backgroundUnavailable": "A troca de fundo não está disponível neste dispositivo; os convidados verão o fundo real.",
     "offline": "Offline",
     "lowStorage": "Pouco armazenamento",
     "motionArmed": "Início por movimento ativo",

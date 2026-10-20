@@ -58,6 +58,7 @@ import { importVideoFiles } from './import-originals';
 import { Gallery } from './Gallery';
 import { RegisterDevice } from './RegisterDevice';
 import { KioskLockLayer, useKioskLock } from './KioskLock';
+import { useLiveBackground, useWarmSegmenter } from './background-source';
 import { LookPreview } from './LookPreview';
 import { RenderQueue } from './RenderQueue';
 import { ResultScreen } from './ResultScreen';
@@ -164,6 +165,10 @@ export function Booth360({ event }: { event: BoothEvent }) {
     [event.media, event.share.endFrameQr, event.theme, t],
   );
   const renderMedia = useEventMedia(mediaSpec, event.video);
+  // CAP-10: the background behind the guest on the preview (the render has its own copy in its worker).
+  const liveBackground = useLiveBackground(event.video.background, event.media.assets);
+  const [backgroundUnavailable, setBackgroundUnavailable] = useState(false);
+  useWarmSegmenter(event.video.background !== null, true);
   const renderQueue = useRenderQueue({
     eventId: event.id,
     video: event.video,
@@ -448,6 +453,8 @@ export function Booth360({ event }: { event: BoothEvent }) {
       <LookPreview
         video={videoRef}
         lookId={event.video.filterId}
+        background={liveBackground}
+        onBackgroundUnavailable={() => setBackgroundUnavailable(true)}
         className={cx(
           'absolute inset-0 size-full object-cover transition-opacity duration-300',
           live ? 'opacity-100' : 'opacity-0',
@@ -477,6 +484,11 @@ export function Booth360({ event }: { event: BoothEvent }) {
           {lowStorage && (
             <Pill tone="bad" className="text-[0.8rem]">
               <HardDrive className="size-3.5" aria-hidden /> {t('lowStorage')}
+            </Pill>
+          )}
+          {backgroundUnavailable && !kiosk.locked && (
+            <Pill tone="warn" className="text-[0.8rem]">
+              {t('backgroundUnavailable')}
             </Pill>
           )}
           {motionOn && live && (
