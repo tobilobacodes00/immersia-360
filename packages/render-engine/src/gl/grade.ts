@@ -1,4 +1,4 @@
-import { MODE_COLORS, type ColorMode, type EffectDef } from '@immersia/effects';
+import { MODE_COLORS, type ColorMode, type EffectDef } from '@immersia/effects/shaders';
 import { bindTexture, compile, deleteTarget, target, type Program, type Target } from './gl';
 
 /**
@@ -101,7 +101,7 @@ export class GradeStage {
     this.clock = clock;
   }
 
-  /** History frames start over (a new take, or after an intro card). */
+  /** History frames start over (the compositor calls this at the start of each take's footage). */
   resetHistory() {
     this.written = 0;
   }

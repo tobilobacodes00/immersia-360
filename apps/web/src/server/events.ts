@@ -3,8 +3,10 @@ import { and, count, desc, eq, gte, ilike, inArray, isNotNull, isNull, lte, ne, 
 import { db, schema } from '@immersia/db';
 import { z } from 'zod';
 import {
+  backgroundSchema,
   brandingSchema,
   effectSchema,
+  mediaAssetRefs,
   musicSchema,
   defaultBranding,
   defaultOutputSettings,
@@ -13,6 +15,7 @@ import {
   newLinkId,
   outputSettingsSchema,
   shareSettingsSchema,
+  unmetAssetRefs,
   uuidv7,
   type BrandingSettings,
   type CreateEventInput,
@@ -244,9 +247,9 @@ export async function updateSection<S extends JsonSection>(
   });
 }
 
-/** `next` with the media references (overlay, intro, outro, music, layout) taken from `from`. */
-function withMedia(next: OutputSettings, from: OutputSettings): OutputSettings {
-  const { overlayTemplateId, introAssetId, outroAssetId, cardSeconds, music, filterId, effects, beatSync } =
+/** `next` with the media references (overlay, intro, outro, music, layout, look, effects, background) taken from `from`. */
+export function withMedia(next: OutputSettings, from: OutputSettings): OutputSettings {
+  const { overlayTemplateId, introAssetId, outroAssetId, cardSeconds, music, filterId, effects, beatSync, background } =
     from.video360;
   return {
     ...next,
@@ -260,12 +263,14 @@ function withMedia(next: OutputSettings, from: OutputSettings): OutputSettings {
       filterId,
       effects,
       beatSync,
+      background,
     },
     photo: {
       ...next.photo,
       layoutTemplateId: from.photo.layoutTemplateId,
       filterId: from.photo.filterId,
       effectId: from.photo.effectId,
+      background: from.photo.background,
     },
   };
 }
@@ -285,15 +290,12 @@ export const mediaPatchSchema = z
     beatSync: z.boolean(),
     photoFilterId: z.string().max(60).nullable(),
     photoEffectId: z.string().max(60).nullable(),
+    // CAP-10: what replaces the background behind guests, per booth (null = off).
+    background: backgroundSchema,
+    photoBackground: backgroundSchema,
   })
   .partial();
 export type MediaPatch = z.infer<typeof mediaPatchSchema>;
-
-/** Asset types each media slot accepts. */
-const MEDIA_ASSET_TYPES = {
-  introAssetId: ['intro'],
-  outroAssetId: ['outro'],
-} as const;
 
 /**
  * Change the event's media references. Every id must belong to this event (templates) or this
@@ -324,15 +326,13 @@ export async function patchMedia(
       if (patch.layoutTemplateId && kinds.get(patch.layoutTemplateId) !== 'layout')
         return { ok: false as const, issues: ['layoutTemplateId'] };
     }
-    const wanted: { id: string; types: readonly string[]; field: string }[] = [];
-    for (const field of ['introAssetId', 'outroAssetId'] as const) {
-      const v = patch[field];
-      if (v) wanted.push({ id: v, types: MEDIA_ASSET_TYPES[field], field });
-    }
-    if (patch.music) wanted.push({ id: patch.music.assetId, types: ['audio'], field: 'music' });
+    // Every asset the patch names must be a ready asset of THIS organization and of the type its slot
+    // takes (a background picture for a photo booth, a picture or video for the 360 booth: see
+    // mediaAssetRefs in @immersia/shared).
+    const wanted = mediaAssetRefs(patch);
     if (wanted.length) {
       const rows = await tx
-        .select({ id: schema.asset.id, type: schema.asset.type })
+        .select({ id: schema.asset.id, type: schema.asset.type, mime: schema.asset.mime })
         .from(schema.asset)
         .where(
           and(
@@ -345,13 +345,12 @@ export async function patchMedia(
             isNull(schema.asset.deletedAt),
           ),
         );
-      const types = new Map(rows.map((r) => [r.id, r.type as string]));
-      const bad = wanted.filter((w) => !w.types.includes(types.get(w.id) ?? ''));
-      if (bad.length) return { ok: false as const, issues: bad.map((b) => b.field) };
+      const bad = unmetAssetRefs(wanted, rows);
+      if (bad.length) return { ok: false as const, issues: bad };
     }
 
     const out = outputSettingsSchema.parse(current.outputSettings);
-    const { layoutTemplateId, photoFilterId, photoEffectId, ...video } = patch;
+    const { layoutTemplateId, photoFilterId, photoEffectId, photoBackground, ...video } = patch;
     const next = outputSettingsSchema.safeParse({
       ...out,
       video360: { ...out.video360, ...video },
@@ -360,6 +359,7 @@ export async function patchMedia(
         ...(layoutTemplateId !== undefined ? { layoutTemplateId } : {}),
         ...(photoFilterId !== undefined ? { filterId: photoFilterId } : {}),
         ...(photoEffectId !== undefined ? { effectId: photoEffectId } : {}),
+        ...(photoBackground !== undefined ? { background: photoBackground } : {}),
       },
     });
     if (!next.success) return { ok: false as const, issues: next.error.issues.map((i) => i.path.join('.')) };

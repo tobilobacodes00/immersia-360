@@ -5,7 +5,14 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**", "public/workers/**", "public/fonts/lib/**"],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        "dist/**",
+        "public/workers/**",
+        "public/fonts/lib/**",
+        "public/mediapipe/**"
+      ],
       "env": [
         "NEXT_PUBLIC_*",
         "DATABASE_URL",

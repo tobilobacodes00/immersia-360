@@ -1,12 +1,25 @@
+import type { PersonMask } from '@immersia/render-engine/background';
+
+/** An OffscreenCanvas, or a canvas element where there is none (Safari before 16.4). */
+function drawingSurface(width: number, height: number) {
+  if (typeof OffscreenCanvas !== 'undefined') {
+    const canvas = new OffscreenCanvas(width, height);
+    return { canvas, g: canvas.getContext('2d')! };
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  return { canvas, g: canvas.getContext('2d')! };
+}
+
 /**
  * A stand-in event photo for look and effect previews (screen 5): sky, warm and cool light, two
  * people with different skin tones, saturated props. Drawn, not shipped, so it costs no download
  * and carries no one's likeness; every look's character (warmth, contrast, toning, saturation)
  * shows on it.
  */
-export function sampleScene(width = 320, height = 400): OffscreenCanvas {
-  const c = new OffscreenCanvas(width, height);
-  const g = c.getContext('2d')!;
+export function sampleScene(width = 320, height = 400): OffscreenCanvas | HTMLCanvasElement {
+  const { canvas: c, g } = drawingSurface(width, height);
   const u = Math.min(width, height);
 
   const sky = g.createLinearGradient(0, 0, 0, height);
@@ -70,4 +83,37 @@ export function sampleScene(width = 320, height = 400): OffscreenCanvas {
     g.fillRect(x * width, y * height * 0.45, u * 0.006, u * 0.006);
   }
   return c;
+}
+
+/**
+ * The silhouette of the two people in `sampleScene`, as a person mask (1 inside, 0 outside, soft edges) on a grid
+ * `cell` times coarser than the picture. A real segmenter's mask is not available for a drawn scene, so the
+ * studio previews background replacement with this one: it shows how the background sits behind two people and
+ * how the edges look, not how well the model will follow a real guest.
+ */
+export function sampleMask(width = 320, height = 400, cell = 4): PersonMask {
+  const w = Math.max(1, Math.round(width / cell));
+  const h = Math.max(1, Math.round(height / cell));
+  const c = new OffscreenCanvas(w, h);
+  const g = c.getContext('2d', { willReadFrequently: true })!;
+  g.scale(w / width, h / height);
+  g.fillStyle = '#000';
+  g.fillRect(0, 0, width, height);
+  g.fillStyle = '#fff';
+  const u = Math.min(width, height);
+  // The same shapes as `person` in sampleScene: a rounded torso and a round head.
+  for (const x of [width * 0.36, width * 0.66]) {
+    const head = u * 0.11;
+    const top = height * 0.5;
+    g.beginPath();
+    g.roundRect(x - head * 1.5, top + head * 1.3, head * 3, height - top, head);
+    g.fill();
+    g.beginPath();
+    g.arc(x, top + head * 0.3, head * 1.02, 0, Math.PI * 2);
+    g.fill();
+  }
+  const pixels = g.getImageData(0, 0, w, h).data;
+  const data = new Float32Array(w * h);
+  for (let i = 0; i < data.length; i++) data[i] = pixels[i * 4]! / 255;
+  return { data, width: w, height: h };
 }

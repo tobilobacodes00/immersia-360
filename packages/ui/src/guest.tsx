@@ -6,7 +6,7 @@
  * used through the g-* colour tokens). Sizes are rem-based and follow `html.booth-active`.
  */
 import type { ReactNode } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion, useIsPresent, type HTMLMotionProps } from 'motion/react';
 import { EASE_OUT_EXPO, cx, tapSpring } from './cx';
 import { displayFontClass, type DisplayFont } from './guest-fonts';
 import { QrCode } from './qr';
@@ -19,6 +19,21 @@ export const fade = {
   exit: { opacity: 0 },
   transition: { duration: 0.3 },
 } as const;
+
+/**
+ * A full guest screen inside an `AnimatePresence`: fades in and out like `fade`, and is inert while it
+ * leaves. A screen that is on its way out (its 0.3 s exit) is still in the page, and a tap on its
+ * button would run a handler whose moment has passed (a second Start, a Keep for a session that is
+ * being retaken). Inert takes it out of pointer, keyboard and screen-reader reach at once.
+ */
+export function GuestScreen({ children, ...props }: HTMLMotionProps<'div'>) {
+  const present = useIsPresent();
+  return (
+    <motion.div {...fade} inert={!present} {...props}>
+      {children}
+    </motion.div>
+  );
+}
 
 export function Headline({
   children,

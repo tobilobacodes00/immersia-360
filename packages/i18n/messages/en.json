@@ -1123,11 +1123,29 @@
           "gold": "Gold"
         },
         "preview": "Preview of the chosen look and effects",
+        "previewUnavailable": "The preview needs WebGL2, which this browser or device can't provide here. Your choices are still saved and used.",
         "beatSync": "Beat sync",
         "beatSyncHelp": "Effects pulse on the music's beats, and slow motion starts and ends on a beat.",
         "beatSyncNeedsMusic": "Add music to the event to sync effects to its beat.",
         "photoEffect": "Photo effect",
         "photoEffectHelp": "Applied to every photo before the strip is made."
+      },
+      "background": {
+        "title": "Background",
+        "subtitle": "Swap what is behind your guests. It is found on the device: no picture ever leaves it.",
+        "video": "360 video background",
+        "photo": "Photo background",
+        "off": "Off",
+        "blur": "Blur",
+        "colour": "Colour",
+        "image": "Picture",
+        "imageOrVideo": "Picture or video",
+        "colourLabel": "Background colour",
+        "imageHelp": "A picture, or a video that plays behind the guest and starts over if it is shorter than the spin.",
+        "photoImageHelp": "A picture for every photo. Videos are not used for photos.",
+        "preview": "Preview of the background",
+        "previewNote": "The preview uses a drawn silhouette. On the booth the cut-out follows each guest.",
+        "needsImage": "Choose a picture to see the preview."
       }
     },
     "live": {
@@ -1572,6 +1590,7 @@
     "startBooth": "Start booth",
     "startHint": "Check the camera, then hand over to your guests.",
     "startingCamera": "Starting the camera…",
+    "backgroundUnavailable": "Background replacement is not available on this device; guests get the plain background.",
     "offline": "Offline",
     "lowStorage": "Storage low",
     "motionArmed": "Motion start on",

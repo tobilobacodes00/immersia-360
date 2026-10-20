@@ -1,10 +1,14 @@
 'use client';
 
-import { useId, type ReactNode } from 'react';
+import { useId, useRef, useState, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import { Check } from 'lucide-react';
 import { groupLenses, type GroupedLens, type Lens, type LensFacing } from '@immersia/capture';
 import { Pill, cx } from '@immersia/ui';
+import { useSettler } from './settle';
+
+/** How long the operator rests on a camera before the booth switches to it. */
+const SETTLE_MS = 600;
 
 export const DEFAULT_CAMERA = '__default__';
 export const SIMULATOR = '__simulator__';
@@ -69,33 +73,59 @@ export function LensPicker({
   const t = useTranslations('booth.settings');
   const name = useId();
   const groups = groupLenses(lenses);
+  // Arrowing through the cameras previews each one; the camera reopens for the one the operator rests on
+  // (after a short pause, at once on a click, Enter or leaving the list).
+  const [preview, setPreview] = useState<string | null>(null);
+  const byPointer = useRef(false);
+  const settler = useSettler<string>((value) => {
+    setPreview(null);
+    onSelect(value);
+  }, SETTLE_MS);
+  const shown = preview ?? selected;
 
   const option = (value: string, label: ReactNode, used = false) => (
     <label
       key={value}
+      onPointerDown={() => {
+        byPointer.current = true;
+      }}
       className={cx(
         'flex min-h-11 cursor-pointer items-center gap-3 rounded-[10px] border border-line-strong bg-elev px-3 py-2 text-sm transition-colors hover:border-[#c9c6bd]',
         'has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-accent-soft',
-        'has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50',
+        'has-[[aria-disabled=true]]:cursor-not-allowed has-[[aria-disabled=true]]:opacity-50',
       )}
     >
       <input
         type="radio"
         name={name}
         value={value}
-        checked={selected === value}
-        disabled={disabled}
-        onChange={() => onSelect(value)}
+        checked={shown === value}
+        // aria-disabled, not disabled: a disabled radio drops keyboard focus, and the list is disabled
+        // while the camera reopens, which is exactly after a choice was made with the keyboard.
+        aria-disabled={disabled || undefined}
+        onChange={() => {
+          if (disabled) return;
+          setPreview(value);
+          // A tap or click is a decision; an arrow key is a stop on the way.
+          settler.choose(value, byPointer.current);
+        }}
+        onKeyDown={(e) => {
+          byPointer.current = false;
+          if (e.key === 'Enter') {
+            e.preventDefault(); // a radio has no use for Enter, and it must not submit anything around it
+            settler.flush();
+          }
+        }}
         className="sr-only"
       />
       <span
         aria-hidden
         className={cx(
           'grid size-4 shrink-0 place-items-center rounded-full border',
-          selected === value ? 'border-accent bg-accent text-white' : 'border-line-strong bg-elev',
+          shown === value ? 'border-accent bg-accent text-white' : 'border-line-strong bg-elev',
         )}
       >
-        {selected === value && <Check className="size-3" strokeWidth={3} />}
+        {shown === value && <Check className="size-3" strokeWidth={3} />}
       </span>
       <span className="min-w-0 flex-1 truncate">{label}</span>
       {used && (
@@ -112,7 +142,15 @@ export function LensPicker({
     selected !== DEFAULT_CAMERA && selected !== SIMULATOR && !lenses.some((l) => l.deviceId === selected);
 
   return (
-    <div role="radiogroup" aria-label={t('camera')} className="space-y-3">
+    <div
+      role="radiogroup"
+      aria-label={t('camera')}
+      className="space-y-3"
+      onBlur={(e) => {
+        // Leaving the list settles the choice.
+        if (!e.currentTarget.contains(e.relatedTarget)) settler.flush();
+      }}
+    >
       {option(DEFAULT_CAMERA, t('defaultCamera'))}
       {savedButNotListed && option(selected, t('lenses.saved'))}
       {groups.map((g) => (

@@ -1123,11 +1123,29 @@
           "gold": "Dorado"
         },
         "preview": "Vista previa del estilo y los efectos elegidos",
+        "previewUnavailable": "La vista previa necesita WebGL2, que este navegador o dispositivo no puede ofrecer aquí. Tus elecciones se guardan y se usan igualmente.",
         "beatSync": "Sincronizar con el ritmo",
         "beatSyncHelp": "Los efectos laten con el ritmo de la música, y la cámara lenta empieza y termina en un tiempo.",
         "beatSyncNeedsMusic": "Agrega música al evento para sincronizar los efectos con su ritmo.",
         "photoEffect": "Efecto de foto",
         "photoEffectHelp": "Se aplica a cada foto antes de crear la tira."
+      },
+      "background": {
+        "title": "Fondo",
+        "subtitle": "Cambia lo que hay detrás de tus invitados. Se detecta en el dispositivo: ninguna imagen sale de él.",
+        "video": "Fondo del video 360",
+        "photo": "Fondo de las fotos",
+        "off": "Sin fondo",
+        "blur": "Desenfoque",
+        "colour": "Color",
+        "image": "Imagen",
+        "imageOrVideo": "Imagen o video",
+        "colourLabel": "Color de fondo",
+        "imageHelp": "Una imagen, o un video que se reproduce detrás del invitado y vuelve a empezar si es más corto que la vuelta.",
+        "photoImageHelp": "Una imagen para todas las fotos. Los videos no se usan en las fotos.",
+        "preview": "Vista previa del fondo",
+        "previewNote": "La vista previa usa una silueta dibujada. En la cabina el recorte sigue a cada invitado.",
+        "needsImage": "Elige una imagen para ver la vista previa."
       }
     },
     "live": {
@@ -1572,6 +1590,7 @@
     "startBooth": "Iniciar cabina",
     "startHint": "Revisa la cámara y luego cede el turno a tus invitados.",
     "startingCamera": "Iniciando la cámara…",
+    "backgroundUnavailable": "El reemplazo de fondo no está disponible en este dispositivo; los invitados verán el fondo real.",
     "offline": "Sin conexión",
     "lowStorage": "Poco almacenamiento",
     "motionArmed": "Inicio por movimiento activo",

@@ -16,7 +16,18 @@ import {
   type PhotoSettings,
   type Video360Settings,
 } from '@immersia/shared';
-import { Card, ColorField, Field, Pill, Segmented, Slider, TextInput, TokenField, cx } from '@immersia/ui';
+import {
+  Card,
+  ColorField,
+  Field,
+  Pill,
+  Segmented,
+  Slider,
+  TextInput,
+  TokenField,
+  cx,
+  useRadioGroup,
+} from '@immersia/ui';
 import { updateSectionAction } from '@/app/studio/actions';
 import { patchMediaAction } from '@/app/studio/design-actions';
 import { AudioEditor, type MusicEdit } from '@/components/audio-editor/AudioEditor';
@@ -24,8 +35,9 @@ import type { AssetView } from '@/server/assets';
 import type { TemplateSummary } from '@/server/templates';
 import { SaveIndicator } from '../setup/EventSetup';
 import { useAutosave } from '../setup/use-autosave';
+import { BackgroundCard } from './BackgroundCard';
 import { DesignCard } from './DesignCard';
-import { LooksCard } from './LooksCard';
+import { LooksCard, type LooksValue } from './LooksCard';
 import { MediaSlot } from './MediaSlot';
 
 type Music = NonNullable<Video360Settings['music']>;
@@ -79,6 +91,15 @@ export function BrandingEditor(p: BrandingEditorProps) {
   const [media, setMedia] = useState({ cardSeconds: p.video.cardSeconds, music: p.video.music });
   const [mediaError, setMediaError] = useState(false);
   const mediaStatus = useAutosave(media, async (m) => (await patchMediaAction(p.eventId, m)).ok);
+  // Looks and effects: kept here so a failed save shows in the card and in the indicator on top.
+  const [looks, setLooks] = useState<LooksValue>(() => ({
+    filterId: p.video.filterId,
+    effects: p.video.effects,
+    beatSync: p.video.beatSync,
+    photoFilterId: p.photo.filterId,
+    photoEffectId: p.photo.effectId,
+  }));
+  const looksStatus = useAutosave(looks, async (v) => (await patchMediaAction(p.eventId, v)).ok);
   const setRef = async (field: 'introAssetId' | 'outroAssetId', a: AssetView | null) => {
     if (a) remember(a);
     (field === 'introAssetId' ? setIntro : setOutro)(a?.id ?? null);
@@ -129,31 +150,43 @@ export function BrandingEditor(p: BrandingEditorProps) {
     setBranding((b) => ({ ...b, theme: { ...b.theme, ...patch } }));
   const setAttract = (patch: Partial<BrandingSettings['attract']>) =>
     setBranding((b) => ({ ...b, attract: { ...b.attract, ...patch } }));
+  const activePreset =
+    THEME_PRESETS.find(
+      (preset) =>
+        preset.theme.accent === theme.accent &&
+        preset.theme.background === theme.background &&
+        preset.theme.ink === theme.ink &&
+        preset.theme.font === theme.font,
+    )?.name ?? null;
+  const presets = useRadioGroup({
+    values: THEME_PRESETS.map((preset) => preset.name),
+    value: activePreset,
+    onChange: (name) => {
+      const preset = THEME_PRESETS.find((candidate) => candidate.name === name);
+      if (preset) setTheme(preset.theme);
+    },
+  });
 
   return (
     <fieldset disabled={p.readOnly} className="min-w-0 space-y-6">
       <legend className="sr-only">{t('title')}</legend>
       <div className="flex min-h-6 flex-wrap items-center justify-between gap-3">
         {p.readOnly ? <Pill>{t('readOnly')}</Pill> : <span />}
-        <SaveIndicator statuses={[brandingStatus, mediaStatus, ...(mediaError ? (['error'] as const) : [])]} />
+        <SaveIndicator
+          statuses={[brandingStatus, mediaStatus, looksStatus, ...(mediaError ? (['error'] as const) : [])]}
+        />
       </div>
 
       <Card title={t('theme.title')} subtitle={t('theme.subtitle')}>
         <Field label={t('theme.presets')} stack>
-          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t('theme.presets')}>
+          <div {...presets.group} className="flex flex-wrap gap-2" aria-label={t('theme.presets')}>
             {THEME_PRESETS.map((preset) => {
-              const active =
-                preset.theme.accent === theme.accent &&
-                preset.theme.background === theme.background &&
-                preset.theme.ink === theme.ink &&
-                preset.theme.font === theme.font;
+              const active = preset.name === activePreset;
               return (
                 <button
                   key={preset.name}
                   type="button"
-                  role="radio"
-                  aria-checked={active}
-                  onClick={() => setTheme(preset.theme)}
+                  {...presets.item(preset.name)}
                   className={cx(
                     'focus-ring flex items-center gap-2 rounded-full border py-1.5 pr-3.5 pl-1.5 text-[13px] transition-colors',
                     active ? 'border-accent bg-accent-soft' : 'border-line hover:border-line-strong',
@@ -309,17 +342,21 @@ export function BrandingEditor(p: BrandingEditorProps) {
       ))}
 
       <LooksCard
-        eventId={p.eventId}
         booths={p.booths}
         readOnly={p.readOnly}
         hasMusic={media.music !== null}
-        initial={{
-          filterId: p.video.filterId,
-          effects: p.video.effects,
-          beatSync: p.video.beatSync,
-          photoFilterId: p.photo.filterId,
-          photoEffectId: p.photo.effectId,
-        }}
+        value={looks}
+        onChange={(patch) => setLooks((v) => ({ ...v, ...patch }))}
+        status={looksStatus}
+      />
+
+      <BackgroundCard
+        eventId={p.eventId}
+        booths={p.booths}
+        readOnly={p.readOnly}
+        initial={{ background: p.video.background, photoBackground: p.photo.background }}
+        view={view}
+        remember={remember}
       />
 
       {p.booths.includes('video360') && (

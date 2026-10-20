@@ -20,6 +20,7 @@ import { createOpfsWorker } from '@immersia/offline/opfs-worker';
 import { StillRunner, findLook, findPhotoEffect } from '@immersia/effects';
 import { encodeGif, presetTemplate, renderToBlob, type Template } from '@immersia/layout';
 import { browserPrint } from '@immersia/layout/print';
+import { StillBackground } from '@immersia/render-engine/background';
 import { RenderClient } from '@immersia/render-engine/client';
 import {
   PRINT_SIZE_INCHES,
@@ -31,9 +32,11 @@ import {
   type PhotoSettings,
 } from '@immersia/shared';
 import { Pill } from '@immersia/ui';
-import { CountdownDisc, GuestButton, Headline, fade } from '@immersia/ui/guest';
+import { CountdownDisc, GuestButton, GuestScreen, Headline, fade } from '@immersia/ui/guest';
 import { readDeviceIdentity, type DeviceIdentity } from '@/lib/device-identity';
+import { pageSegmenter } from '@/lib/segmenter';
 import { workerUrl } from '@/lib/workers';
+import { useLiveBackground, useWarmSegmenter } from './background-source';
 import { useCaptureKeys, useHeartbeat, useOnline, useWakeLock } from './booth-hooks';
 import type { AssetView } from '@/server/assets';
 import { fillAssets } from './event-assets';
@@ -49,6 +52,7 @@ import { SettingsDrawer } from './SettingsDrawer';
 import { describeCamera, reconcileWithCamera, type ActiveCamera } from './active-camera';
 import { fillLightOf, needsReopen, type CameraChoice } from './camera-choice';
 import { FillLightFrame } from './FillLightFrame';
+import { useOpenGuard } from './open-guard';
 import { useCameraChoice } from './use-camera-choice';
 import { useUploadQueue } from './use-upload-queue';
 
@@ -77,6 +81,8 @@ type Phase =
   | { kind: 'ready' }
   | { kind: 'countdown'; shot: number; remaining: number }
   | { kind: 'flash'; shot: number }
+  /** Retake tapped: the review is gone and the next session is about to start (nothing on screen). */
+  | { kind: 'retake' }
   | { kind: 'review'; preview: string }
   | { kind: 'making' }
   /** `strip`: the kept strip at print resolution, for the guest's reprints. */
@@ -114,6 +120,12 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
   useEffect(() => {
     phaseRef.current = phase;
   });
+  /** A phase change from an event handler, visible to the next handler before React has rendered it. */
+  const enter = useCallback((next: Phase) => {
+    phaseRef.current = next;
+    setPhase(next);
+  }, []);
+  const openGuard = useOpenGuard();
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const camera = useRef<OpenedCamera | null>(null);
@@ -130,6 +142,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
     phase.kind === 'starting' ||
     phase.kind === 'countdown' ||
     phase.kind === 'flash' ||
+    phase.kind === 'retake' ||
     phase.kind === 'review' ||
     phase.kind === 'making';
   const closeGallery = useCallback(() => setGalleryOpen(false), []);
@@ -170,13 +183,17 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
   useEffect(
     () => () => {
       clearTimeout(keepTimer.current);
+      // An open still waiting on a permission prompt must not start a camera on a page that has gone.
+      openGuard.cancel();
       stopCamera();
     },
-    [stopCamera],
+    [stopCamera, openGuard],
   );
 
   const startCamera = useCallback(
     async (choice: CameraChoice) => {
+      // This open supersedes any other in flight (a double tap): only the newest may use its camera.
+      const token = openGuard.begin();
       setPhase({ kind: 'starting' });
       stopCamera();
       setActiveCamera(null);
@@ -194,17 +211,23 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
                 // A restart switches the light off and resets the zoom: put the operator's choice back (CAP-2, CAP-6).
                 restore: { zoom: choice.zoom, torch: choice.torch },
               });
+        if (!openGuard.isCurrent(token)) return cam.stop();
         camera.current = cam;
         setActiveCamera(describeCamera(cam));
         // Show what the camera really did with the saved zoom and torch, not what was asked of it.
         const latest = readChoice();
         const settled = reconcileWithCamera(latest, cam);
         if (settled !== latest) commitChoice(settled);
-        cam.track.addEventListener('ended', () => setPhase({ kind: 'error', code: 'lost' }));
+        // Only the open camera's own end counts: a camera that was replaced ends without it being an error.
+        cam.track.addEventListener('ended', () => {
+          if (camera.current === cam) setPhase({ kind: 'error', code: 'lost' });
+        });
         const v = videoRef.current;
         if (v) {
           v.srcObject = cam.stream;
           await v.play().catch(() => undefined);
+          // Replaced while the picture was starting: the newer open already stopped this camera.
+          if (!openGuard.isCurrent(token)) return;
           if (wantsClips) {
             motionBuffer.current = new MotionBuffer(v, CLIP_FPS);
             motionBuffer.current.start();
@@ -212,10 +235,10 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
         }
         setPhase({ kind: 'ready' });
       } catch (err) {
-        setPhase({ kind: 'error', code: toCameraError(err).code });
+        if (openGuard.isCurrent(token)) setPhase({ kind: 'error', code: toCameraError(err).code });
       }
     },
-    [stopCamera, wantsClips, readChoice, commitChoice],
+    [stopCamera, wantsClips, readChoice, commitChoice, openGuard],
   );
 
   // The event's own layout (fitted to the print size it has now), or the preset; no QR if the
@@ -293,8 +316,34 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
   /** PHO-2 extras, made after the guest already has their QR: GIF, boomerang, short video. */
   // PHO-10 and VID-11: the event's photo effect, then its look, on every still and clip frame.
   const runner = useRef<StillRunner | null>(null);
+  // CAP-10: the background goes behind the guest first, so the look and effect grade the whole picture.
+  const stills = useRef<StillBackground | null>(null);
+  const liveBackground = useLiveBackground(p.background, event.media.assets);
+  const [backgroundUnavailable, setBackgroundUnavailable] = useState(false);
+  useWarmSegmenter(p.background !== null, false);
+  useEffect(
+    () => () => {
+      stills.current?.dispose();
+      stills.current = null;
+    },
+    [],
+  );
   const grade = useCallback(
-    async (image: ImageBitmap): Promise<ImageBitmap> => {
+    /** `sequence`: another frame of the clip just graded, so the mask smoothing carries over. */
+    async (source: ImageBitmap, opts: { sequence?: boolean } = {}): Promise<ImageBitmap> => {
+      let image = source;
+      if (liveBackground) {
+        try {
+          stills.current ??= new StillBackground(pageSegmenter);
+          const replaced = await stills.current.replace(image, liveBackground, { reset: !opts.sequence });
+          image.close();
+          image = replaced;
+        } catch (err) {
+          // The guest still gets their photos, with the real background.
+          console.warn('[photo] background replacement unavailable', err);
+          setBackgroundUnavailable(true);
+        }
+      }
       const look = p.filterId ? findLook(p.filterId) : null;
       const effect = p.effectId ? findPhotoEffect(p.effectId) : null;
       if ((!look || look.id === 'none') && (!effect || effect.id === 'none')) return image;
@@ -316,7 +365,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
         return image;
       }
     },
-    [p.filterId, p.effectId],
+    [p.filterId, p.effectId, liveBackground],
   );
   useEffect(() => () => runner.current?.dispose(), []);
 
@@ -358,7 +407,13 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
         }
         const raw = await Promise.all(taken.map((x) => x.clip ?? Promise.resolve([] as ImageBitmap[])));
         // The motion clips get the same look and effect as the stills (PHO-10, VID-11).
-        const clips = await Promise.all(raw.map((frames) => Promise.all(frames.map(grade))));
+        // One frame after another: the background's mask smoothing runs along each clip.
+        const clips: ImageBitmap[][] = [];
+        for (const frames of raw) {
+          const graded: ImageBitmap[] = [];
+          for (const [i, frame] of frames.entries()) graded.push(await grade(frame, { sequence: i > 0 }));
+          clips.push(graded);
+        }
         const client = renderer.current;
         if (client && p.outputs.boomerang && clips.at(-1)?.length) {
           // The last shot's moment, forward and back. The worker takes ownership of the frames it
@@ -390,7 +445,8 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
     if (phaseRef.current.kind !== 'review') return;
     const s = store;
     if (!s) return;
-    setPhase({ kind: 'making' });
+    // Leaves 'review' at once, so a second tap (or the review timer) cannot keep the strip twice.
+    enter({ kind: 'making' });
     const session = await mintSession(db, { eventId: event.id, takeIds: [], capturedAt: Date.now() });
     const image = await composeStrip(session, 1);
     const { width, height } = canvasSizeFor(p.printSize);
@@ -409,7 +465,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
     setPhase({ kind: 'result', session, preview: URL.createObjectURL(image), strip: image });
     if (p.print.enabled && p.print.autoPrint) void print(image);
     void makeExtras(session);
-  }, [composeStrip, db, event.id, makeExtras, p, print, store, uploads]);
+  }, [composeStrip, db, enter, event.id, makeExtras, p, print, store, uploads]);
 
   /** One session: every shot with its countdown, then the reveal. */
   const runSession = useCallback(
@@ -441,9 +497,15 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
   );
 
   const retake = () => {
+    const current = phaseRef.current;
+    // One retake per review: the screen that offered it is on its way out and must not start a second session.
+    if (current.kind !== 'review') return;
     clearTimeout(keepTimer.current);
-    if (phaseRef.current.kind === 'review') URL.revokeObjectURL(phaseRef.current.preview);
+    URL.revokeObjectURL(current.preview);
     releaseShots();
+    // Leave 'review' now. Until the first shot the phase would still read 'review', and a Keep tapped in
+    // that gap would keep an empty strip while the new session carried on underneath it.
+    enter({ kind: 'retake' });
     void runSession(true);
   };
 
@@ -467,7 +529,8 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
   }
 
   const mirrored = cameraChoice.mirror ? '-scale-x-100' : '';
-  const live = phase.kind === 'ready' || phase.kind === 'countdown' || phase.kind === 'flash';
+  const live =
+    phase.kind === 'ready' || phase.kind === 'countdown' || phase.kind === 'flash' || phase.kind === 'retake';
   // The camera is left exactly as it is from the first tap until the guest is done with the result.
   const cameraBusy = phase.kind !== 'idle' && phase.kind !== 'ready' && phase.kind !== 'error';
 
@@ -478,6 +541,8 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
       <LookPreview
         video={videoRef}
         lookId={p.filterId}
+        background={liveBackground}
+        onBackgroundUnavailable={() => setBackgroundUnavailable(true)}
         className={`absolute inset-0 size-full object-cover ${mirrored}`}
       />
       {/* CAP-6: a glow around the screen edge that lights the guest (a front camera has no flash). */}
@@ -500,6 +565,11 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
           {!online && (
             <Pill tone="warn" className="text-[0.8rem]">
               <WifiOff className="size-3.5" aria-hidden /> {t('offline')}
+            </Pill>
+          )}
+          {backgroundUnavailable && !kiosk.locked && (
+            <Pill tone="warn" className="text-[0.8rem]">
+              {t('backgroundUnavailable')}
             </Pill>
           )}
           {uploads.status.waiting > 0 && (
@@ -534,11 +604,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
 
       <AnimatePresence mode="wait">
         {phase.kind === 'idle' && (
-          <motion.div
-            key="idle"
-            {...fade}
-            className="absolute inset-0 grid place-items-center bg-g-bg px-6 text-center"
-          >
+          <GuestScreen key="idle" className="absolute inset-0 grid place-items-center bg-g-bg px-6 text-center">
             <div className="flex flex-col items-center">
               <Headline font={event.theme.font} className="text-[clamp(3rem,8vw,7rem)]">
                 {event.name}
@@ -555,7 +621,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
                 {t('startBooth')}
               </GuestButton>
             </div>
-          </motion.div>
+          </GuestScreen>
         )}
 
         {phase.kind === 'starting' && (
@@ -566,7 +632,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
 
         {/* Screen 12: attract, over the live preview. */}
         {phase.kind === 'ready' && (
-          <motion.div
+          <GuestScreen
             key="ready"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
@@ -582,7 +648,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
                 <Camera className="size-6" aria-hidden /> {event.attract.cta}
               </GuestButton>
             )}
-          </motion.div>
+          </GuestScreen>
         )}
 
         {phase.kind === 'countdown' && (
@@ -612,7 +678,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
         )}
 
         {phase.kind === 'review' && (
-          <motion.div key="review" {...fade} className="absolute inset-0 z-10 grid place-items-center bg-g-bg px-6">
+          <GuestScreen key="review" className="absolute inset-0 z-10 grid place-items-center bg-g-bg px-6">
             <Confetti accent={event.theme.accent} />
             <div className="flex flex-col items-center gap-6 landscape:flex-row landscape:gap-12">
               {/* eslint-disable-next-line @next/next/no-img-element -- a local object URL */}
@@ -635,7 +701,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
                 )}
               </div>
             </div>
-          </motion.div>
+          </GuestScreen>
         )}
 
         {phase.kind === 'making' && (
@@ -673,7 +739,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
         )}
 
         {phase.kind === 'error' && (
-          <motion.div key="error" {...fade} className="absolute inset-0 z-10 grid place-items-center bg-g-bg px-6">
+          <GuestScreen key="error" className="absolute inset-0 z-10 grid place-items-center bg-g-bg px-6">
             <div role="alert" className="max-w-md text-center">
               <h2 className="text-[1.6rem] font-bold">{t('errors.title')}</h2>
               <p className="mt-2 opacity-70">{t(`errors.${errorKey(phase.code)}`)}</p>
@@ -681,7 +747,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
                 {t('errors.retry')}
               </GuestButton>
             </div>
-          </motion.div>
+          </GuestScreen>
         )}
       </AnimatePresence>
 
@@ -694,7 +760,8 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
       />
 
       <SettingsDrawer
-        open={drawer}
+        // Never while the kiosk is PIN-locked: the drawer changes the camera, its light and the fill light.
+        open={drawer && !kiosk.locked}
         onClose={() => setDrawer(false)}
         choice={cameraChoice}
         onChoice={(patch) => {

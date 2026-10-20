@@ -1,4 +1,7 @@
 import type { Rotation } from 'mediabunny';
+import { parseHexColor, type PersonMask } from '../background-math';
+import { BackgroundStage } from './background';
+import { coverCrop } from './crop';
 import {
   GLError,
   bindTexture,
@@ -19,14 +22,7 @@ import { BLIT, CARD, DOWN, FINAL, LK, LUMA, SMOOTH, SYNTH } from './shaders';
 const LEVELS = 5;
 const ITERATIONS = 3;
 
-/** Cover-crop parameters mapping output uv → display uv of a source. */
-export function coverCrop(srcW: number, srcH: number, rotation: Rotation, outW: number, outH: number) {
-  const [dw, dh] = rotation === 90 || rotation === 270 ? [srcH, srcW] : [srcW, srcH];
-  const scale = Math.max(outW / dw, outH / dh);
-  const sx = outW / (dw * scale);
-  const sy = outH / (dh * scale);
-  return { scale: [sx, sy] as [number, number], offset: [(1 - sx) / 2, (1 - sy) / 2] as [number, number] };
-}
+export { coverCrop };
 
 export interface SourceGeometry {
   width: number;
@@ -34,13 +30,22 @@ export interface SourceGeometry {
   rotation: Rotation;
 }
 
+/** What goes behind the person when a background is set (CAP-10). */
+export type BackgroundSetting =
+  | { kind: 'color'; color: string }
+  | { kind: 'blur' }
+  /** A still picture, any size: scaled to cover the frame. */
+  | { kind: 'image'; image: TexImageSource; width: number; height: number }
+  /** A video: each frame follows through `setBackgroundFrame`. */
+  | { kind: 'video' };
+
 /**
  * The WebGL2 compositor. Draws one output frame per call into its canvas:
  *   real frame  → crop/rotate into output space
  *   blended     → optical-flow interpolation between two real frames (VID-2)
  *   card        → a still (intro/outro, QR end card) covering the frame
- * then composites the event overlay (VID-4) on top. Filters and effects (M9) slot in before the
- * overlay pass.
+ * then, in this order: replaces the background (CAP-10), applies the look and effects (VID-7, VID-11),
+ * and composites the event overlay (VID-4) on top.
  */
 export class Compositor {
   readonly gl: WebGL2RenderingContext;
@@ -51,6 +56,8 @@ export class Compositor {
   private overlayTex: WebGLTexture | null = null;
   /** Look and effects (VID-7, VID-11), created on first use. */
   private grade: GradeStage | null = null;
+  /** Background replacement (CAP-10), alive only while a background is set. */
+  private background: BackgroundStage | null = null;
   private frame: Target;
   /** The source pair whose frames and flow are currently loaded (see drawBlend). */
   private flowKey: string | null = null;
@@ -118,6 +125,51 @@ export class Compositor {
     this.grade.configure(look, effects, seed);
   }
 
+  /**
+   * Replace everything but the person with a colour, a picture, a video or a blurred copy of the frame.
+   * Takes effect on the next `finish()`, once `setMask` has given it a mask; null switches it off and
+   * frees its memory, after which the output is exactly what it was before a background was ever set.
+   */
+  setBackground(background: BackgroundSetting | null) {
+    if (!background) {
+      this.background?.dispose();
+      this.background = null;
+      return;
+    }
+    const stage = (this.background ??= new BackgroundStage(this.gl, this.vao, this.width, this.height));
+    if (background.kind === 'color') {
+      const rgb = parseHexColor(background.color);
+      if (!rgb) throw new RangeError(`not a #rrggbb colour: ${background.color}`);
+      stage.setBackdrop({ kind: 'color', rgb });
+    } else if (background.kind === 'blur') stage.setBackdrop({ kind: 'blur' });
+    else {
+      stage.setBackdrop({ kind: 'image' });
+      if (background.kind === 'image') stage.setBackdropImage(background.image, background.width, background.height);
+    }
+  }
+
+  /** The current frame of a video background, scaled to cover the output. */
+  setBackgroundFrame(frame: TexImageSource, geo: SourceGeometry) {
+    this.background?.setBackdropImage(frame, geo.width, geo.height, geo.rotation);
+  }
+
+  /**
+   * Where the person is in the frame just composed, as the segmenter sees it (top row first, covering the
+   * whole OUTPUT frame, not the camera's). `reset` starts the temporal smoothing over: pass it for the first
+   * frame of a take or after a cut.
+   */
+  setMask(mask: PersonMask | null, opts?: { reset?: boolean }) {
+    this.background?.setMask(mask, opts);
+  }
+
+  /**
+   * A small copy of the frame just composed, for the segmenter (RGBA, top row first; its long side is at
+   * most `maxSide`). Null while no background is set.
+   */
+  readForSegmentation(maxSide: number): { data: Uint8ClampedArray; width: number; height: number } | null {
+    return this.background ? this.background.readSmall(this.frame.texture, maxSide) : null;
+  }
+
   /** Where the next frame sits in the footage and on the beat (VID-12). */
   setClock(clock: Clock) {
     this.grade?.setClock(clock);
@@ -144,8 +196,27 @@ export class Compositor {
     gl.uniform1i(prog.uniform('uRotation'), geo.rotation);
   }
 
-  /** Real frame → output frame. */
-  drawReal(frame: TexImageSource, geo: SourceGeometry) {
+  /** Effect history starts over: a new take, so frames drawn before it (an intro) never show as ghosts. */
+  resetHistory() {
+    this.grade?.resetHistory();
+  }
+
+  /**
+   * Real frame → output frame. `graded` is false for a card that happens to be a video clip (an intro,
+   * outro or end card): background replacement, the look and effects are for the guest's footage only,
+   * and a card frame must not enter the effect history either.
+   */
+  drawReal(frame: TexImageSource, geo: SourceGeometry, graded = true) {
+    this.composeReal(frame, geo);
+    this.finish(graded);
+  }
+
+  /**
+   * A real frame cropped and rotated into the working frame, without the passes that follow (background,
+   * look, effects, overlay): call `finish()` to run them. Splitting the two lets a caller look at the
+   * composed frame in between, which background replacement needs (it segments what is about to be shown).
+   */
+  composeReal(frame: TexImageSource, geo: SourceGeometry) {
     const gl = this.gl;
     upload(gl, this.srcA, frame);
     this.flowKey = null; // srcA now holds another frame
@@ -154,7 +225,6 @@ export class Compositor {
     gl.uniform1i(this.p.blit.uniform('uSrc'), 0);
     this.setCrop(this.p.blit, geo);
     this.draw();
-    this.finish();
   }
 
   /**
@@ -163,6 +233,12 @@ export class Compositor {
    * uploads and the flow estimate (the expensive part) are reused for all of them.
    */
   drawBlend(a: TexImageSource, b: TexImageSource, t: number, geo: SourceGeometry, pairKey?: string) {
+    this.composeBlend(a, b, t, geo, pairKey);
+    this.finish();
+  }
+
+  /** `drawBlend` without the passes after the composed frame (see `composeReal`). */
+  composeBlend(a: TexImageSource, b: TexImageSource, t: number, geo: SourceGeometry, pairKey?: string) {
     const gl = this.gl;
     const f = this.ensureFlow();
     if (pairKey === undefined || pairKey !== this.flowKey) {
@@ -184,7 +260,6 @@ export class Compositor {
     gl.uniform1f(this.p.synth.uniform('uT'), t);
     this.setCrop(this.p.synth, geo);
     this.draw();
-    this.finish();
   }
 
   /** A still card covering the frame (no overlay on cards). */
@@ -202,12 +277,21 @@ export class Compositor {
     gl.flush();
   }
 
-  /** Composite the frame and overlay into the canvas (what the encoder reads). */
-  private finish() {
+  /**
+   * Background replacement, look and effects, and the overlay, on the frame composed last, into the
+   * canvas (what the encoder reads). `guest` false (a card clip): none of the background, look or
+   * effects, and nothing enters the effect history.
+   */
+  finish(guest = true) {
     const gl = this.gl;
-    const graded = this.grade && !this.grade.idle ? this.grade.apply(this.frame.texture) : null;
+    // The background goes first, so the look grades the whole new picture. Without a mask yet (or with
+    // none set) the frame passes through untouched.
+    const composed =
+      (guest && this.background && !this.background.idle ? this.background.apply(this.frame.texture) : null) ??
+      this.frame.texture;
+    const graded = guest && this.grade && !this.grade.idle ? this.grade.apply(composed) : null;
     this.use(this.p.final, null);
-    bindTexture(gl, 0, graded ?? this.frame.texture);
+    bindTexture(gl, 0, graded ?? composed);
     gl.uniform1i(this.p.final.uniform('uFrame'), 0);
     gl.uniform1i(this.p.final.uniform('uFrameYUp'), graded ? 1 : 0);
     gl.uniform1i(this.p.final.uniform('uHasOverlay'), this.overlayTex ? 1 : 0);
@@ -362,6 +446,7 @@ export class Compositor {
     }
     for (const t of [this.srcA, this.srcB, this.overlayTex]) if (t) gl.deleteTexture(t);
     this.grade?.dispose();
+    this.background?.dispose();
     gl.getExtension('WEBGL_lose_context')?.loseContext();
   }
 }
