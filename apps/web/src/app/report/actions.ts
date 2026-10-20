@@ -57,10 +57,11 @@ export async function submitReport(form: FormData) {
   if (!parsed.success || !target) return;
 
   // One value per reporter per day. Without an address (a server with no proxy headers) the value is
-  // per session instead, so the per-session and per-event limits still hold.
+  // per session instead, so the per-session and per-event limits still hold. The same in E2E mode,
+  // where every browser shares one address and the suite files many reports.
   const address = await clientIp();
   const reporter = await reporterHash(
-    address === 'unknown' ? `unknown:${target.sessionId}` : address,
+    address === 'unknown' || env().E2E === '1' ? `unknown:${target.sessionId}` : address,
     env().BETTER_AUTH_SECRET,
   );
   const result = await createReport(target, parsed.data, reporter);
