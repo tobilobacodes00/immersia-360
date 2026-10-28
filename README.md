@@ -117,6 +117,32 @@ queue with its 24-hour clock. How reports, takedowns and hash matching work, and
 [SECURITY.md](SECURITY.md#abuse-reports-takedown-and-hash-matching). Video hash matching needs a vendor and a
 legal decision: the `MediaScanner` seam exists, and no scanner is connected.
 
+### Help centre, the setup check and the status page
+
+The help centre is Markdown, in `apps/web/content/help/{en,es,pt}/<slug>.md`: front matter (title, summary,
+category, order, keywords, `updated`, `related`, optionally `video` and `captions`, see
+`apps/web/src/lib/help/frontmatter.ts`) and a body in a small Markdown subset that the app renders itself into
+React elements (no HTML, no `dangerouslySetInnerHTML`, so there is no sanitiser to keep patched). Every article
+must exist in all three languages under the same slug, with the same category, order, related list, headings,
+tables, code blocks and links; `apps/web/src/lib/help/content.test.ts` enforces it, checks that every
+`help:slug#anchor` link lands on a real heading, and that search finds the obvious things in each language. A
+heading with a fixed `{#id}` is a deep link the app's screens use (the error articles carry one per error code:
+see `HELP_TARGETS` and the error helpers in `apps/web/src/lib/help-links.ts`). Names of buttons and settings
+in an article are bold and come word for word from `packages/i18n/messages/<locale>.json`. A tutorial video goes
+in `apps/web/public/help/videos/` with a `.vtt` captions file (the front matter refuses one without the other);
+none are shipped yet. Pages: `/help` (public) and `/studio/help` (inside the Studio), search runs in the browser
+over an index sent with the page, and the contact form emails `SUPPORT_EMAIL` (rate limited, with a honeypot).
+
+The setup check (`/booth/<event>/check`) walks the camera, storage, a test take through the booth's own capture
+path, the render engine (scaled to a 15 s 1080p clip: 45 s on a laptop, 90 s on a 2021 iPad), a test QR scan, a
+printer calibration sheet (photo events) and an upload test. Its server side is under `/api/devices/check`. The
+render path it measures is stored on the device record, and the booth emits `setup_check_completed`.
+
+`/status` and `/api/status` run live checks of the database, file storage, the Live Display hub (if configured)
+and the email sender, each with a 4 s timeout and a 20 s cache; no third-party status service is involved.
+Incidents are entries in `apps/web/content/status/incidents.json` (one text per language), written by hand and
+deployed when something happens.
+
 ## Principles
 
 - **Nothing behind payment.** Costs are held down by design: on-device rendering, expiring guest files,
