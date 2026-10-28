@@ -9,11 +9,5 @@ export type {
 export type { DeviceStatus } from '@immersia/shared/device';
 export type { TemplateCanvas, TemplateElement } from '@immersia/shared/template';
 
-/** Everything the server render worker needs to reproduce a local render exactly. */
-export interface RenderRecipe {
-  version: 1;
-  eventId: string;
-  takeId: string;
-  outputSettingsHash: string;
-  outputs: Array<'mp4' | 'small_mp4' | 'poster'>;
-}
+/** Everything the server render worker needs to reproduce a local render (the zod schema is the source of truth). */
+export type { RenderRecipe } from '@immersia/shared/render';

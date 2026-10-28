@@ -4,6 +4,7 @@ import { db, schema } from '@immersia/db';
 import { normalizeShortCode, shareSettingsSchema, type OutputKind, type RemovalBasis } from '@immersia/shared';
 import { isServed, removalOf, stateOf, type SessionState } from './share-state';
 import { EXT, slug } from './filenames';
+import { workingFileKeysForSession } from './render-jobs';
 import { deleteObjects, presignDownload, presignView } from './storage';
 
 const { event, captureSession, output, organization } = schema;
@@ -218,6 +219,8 @@ export async function expireSessions(limit = 200): Promise<{ sessions: number; o
       const keys = (
         await db().select({ key: output.objectKey }).from(output).where(eq(output.sessionId, s.id))
       ).flatMap((o) => (o.key ? [o.key] : []));
+      // Working copies of a server render (the take's original and what the booth drew for it) go with the session.
+      keys.push(...(await workingFileKeysForSession(s.id)));
       if (keys.length) objects += await deleteObjects(keys);
       await db()
         .update(captureSession)

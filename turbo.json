@@ -25,7 +25,10 @@
         "E2E",
         "VERCEL_*",
         "SMTP_URL",
-        "EMAIL_FROM"
+        "EMAIL_FROM",
+        "RENDER_WORKER_SECRET",
+        "FLY_*",
+        "SERVER_RENDER_*"
       ]
     },
     "typecheck": {

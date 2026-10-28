@@ -6,6 +6,7 @@ import { verifyConnections } from '@/server/cloud/integrations';
 import { env } from '@/server/env';
 import { purgeErasedSessions } from '@/server/erasure';
 import { runOrganizationDeletions } from '@/server/privacy';
+import { sweepServerRenders } from '@/server/render-jobs';
 import { expireSessions } from '@/server/share';
 
 // Copies stream large files: give the sweep the longest run the platform allows.
@@ -20,10 +21,12 @@ export const maxDuration = 300;
  *    due (the retries that back off over minutes and hours happen here), and notice connections the
  *    operator has revoked. First, so an expiring session's files leave for the operator's cloud
  *    before they go;
- * 2. the expiry sweep (DL-9) and the asset library's cleanup of abandoned uploads and deleted assets;
- * 3. privacy: finish what guest erasures (files a late upload left, then the rows) and organization
+ * 2. server renders: working files nothing is going to use are removed, and the render worker is woken if a
+ *    job is waiting (a wake-up that failed, or a lease that ran out while no worker was up to notice);
+ * 3. the expiry sweep (DL-9) and the asset library's cleanup of abandoned uploads and deleted assets;
+ * 4. privacy: finish what guest erasures (files a late upload left, then the rows) and organization
  *    deletions started;
- * 4. analytics: keep the monthly partitions created for the months ahead.
+ * 5. analytics: keep the monthly partitions created for the months ahead.
  *
  * Every stage is isolated: one that throws is logged and reported as `{ error }` under its name and
  * never stops the stages after it, because they have nothing to do with each other and all of them
@@ -48,6 +51,8 @@ export async function GET(request: Request) {
   const queued = await stage('cloud-queue', () => enqueueMissingCopies());
   const copies = await stage('cloud-copy', () => processCloudCopies(50, 150_000));
   const connections = await stage('cloud-verify', () => verifyConnections());
+  // Server renders: remove working files nothing will use, and wake the worker if work is waiting.
+  const renders = await stage('server-renders', () => sweepServerRenders());
   const expiry = await stage('expiry', () => expireSessions());
   const assets = await stage('assets', () => purgeAssets());
   const erased = await stage('erasure', () => purgeErasedSessions());
@@ -63,5 +68,6 @@ export async function GET(request: Request) {
     deletions,
     partitions,
     cloud: { queued, copies, connections },
+    renders,
   });
 }

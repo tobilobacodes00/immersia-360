@@ -9,6 +9,7 @@ import { loadRenderBackground } from './background-source';
 import { boothDb, sessionForTake } from '@immersia/offline';
 import { cachedAsset, fillAssets } from './event-assets';
 import { END_CARD_SECONDS, loadCard, renderEndCard, renderOverlay } from './media';
+import { describeBackground, describeCard } from './server-render-core';
 import type { RenderAssets } from './use-render-queue';
 
 export interface EventMedia {
@@ -69,6 +70,12 @@ export function useEventMedia(event: EventMedia, video: Video360Settings): Rende
       background: background ? () => loadRenderBackground(background, assets) : undefined,
       intro: card(video.introAssetId),
       outro: card(video.outroAssetId),
+      // For a server render (the recipe names library assets; the server resolves them itself).
+      describe: () => ({
+        intro: describeCard(video.introAssetId, byId, video.cardSeconds),
+        outro: describeCard(video.outroAssetId, byId, video.cardSeconds),
+        background: describeBackground(background, byId),
+      }),
       endCard: endCard
         ? async (take) => {
             const session = await sessionForTake(boothDb(), take.id);

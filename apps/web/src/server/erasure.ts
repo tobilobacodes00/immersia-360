@@ -6,6 +6,7 @@ import { audit } from './audit';
 import { cancelPendingCopies } from './cloud/copy';
 import { erasurePlan, purgeStage } from './erasure-core';
 import { withdrawSession } from './live';
+import { abandonServerRenders, deleteWorkingFiles } from './render-jobs';
 import { deleteObjects } from './storage';
 
 const { captureSession, event, output, guestContact, take } = schema;
@@ -105,6 +106,13 @@ export async function eraseSession(
     await deleteObjects(done.keys).catch((err: unknown) =>
       console.error('[erasure] file delete failed, the sweep will retry', err instanceof Error ? err.message : err),
     );
+  // A server render under way stops, and the working copies of the recording go (the sweep finishes either).
+  await abandonServerRenders(done.sessionId).catch((err: unknown) =>
+    console.error(
+      '[erasure] server render cleanup failed, the sweep will retry',
+      err instanceof Error ? err.name : err,
+    ),
+  );
   if (done.onScreen) await withdrawSession(done.eventId, done.sessionId);
   track({ name: 'guest_data_erased', by: eraser.by }, { eventId: done.eventId });
   return { result: 'erased', sessionId: done.sessionId, contacts: done.contacts, outputs: done.outputs };
@@ -141,6 +149,8 @@ export async function purgeErasedSessions(limit = 100): Promise<{ sessions: numb
       const removed = await db().delete(output).where(eq(output.sessionId, s.id)).returning({ id: output.id });
       rows += removed.length;
       const takeIds = [...new Set(outputs.flatMap((o) => (o.takeId ? [o.takeId] : [])))];
+      // Working copies of a server render belong to the takes that are about to go.
+      if (takeIds.length) await deleteWorkingFiles(takeIds);
       if (takeIds.length)
         await db()
           .delete(take)

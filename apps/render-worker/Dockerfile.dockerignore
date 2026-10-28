@@ -1,0 +1,17 @@
+**/node_modules
+**/.next
+**/.turbo
+**/.vercel
+**/.wrangler
+**/dist
+**/coverage
+**/playwright-report
+**/test-results
+.git
+.github
+.claude
+**/.env
+**/.env.*
+apps/web/public
+apps/web/src/fonts
+apps/render-worker/.cache

@@ -44,3 +44,6 @@ apps/web/public/mediapipe/
 
 # Local Claude Code state (agent worktrees)
 .claude/
+
+# The render worker's segmentation model cache (fetched at bundle time).
+apps/render-worker/.cache/

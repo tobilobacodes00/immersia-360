@@ -9,6 +9,7 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import type { ServerFileRole } from '@immersia/shared';
 import { env } from './env';
 
 /**
@@ -222,3 +223,10 @@ export const assetObjectKey = (organizationId: string, assetId: string) => `o/${
 
 /** Every object of an organization (events and library) lives under this prefix. */
 export const organizationPrefix = (organizationId: string) => `o/${organizationId}/`;
+
+/**
+ * Working copies for a server render (the take's original, and the overlay and end card the booth
+ * drew). The key is derived here from ids the server has already checked: a client never names a key.
+ */
+export const takeFileKey = (organizationId: string, eventId: string, takeId: string, role: ServerFileRole) =>
+  `o/${organizationId}/e/${eventId}/t/${takeId}/${role}`;

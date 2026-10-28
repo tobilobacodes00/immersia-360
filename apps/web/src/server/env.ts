@@ -13,6 +13,13 @@ import { parseKey } from './crypto-box';
 const optional = <T extends z.ZodType>(type: T) =>
   z.preprocess((v) => (typeof v === 'string' && v.trim() === '' ? undefined : v), type.optional());
 
+/** A positive whole number from the environment (empty counts as unset), with a default. */
+const intEnv = (fallback: number) =>
+  z.preprocess(
+    (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v),
+    z.coerce.number().int().min(1).max(1_000_000).default(fallback),
+  );
+
 const schema = z.object({
   DATABASE_URL: z.url(),
   BETTER_AUTH_SECRET: z.string().min(32, 'BETTER_AUTH_SECRET must be at least 32 characters'),
@@ -60,6 +67,20 @@ const schema = z.object({
   // Live Display hub (apps/realtime). Without it, screens poll the feed (still within LIV-2's 5 s).
   REALTIME_URL: z.url().optional(),
   REALTIME_SIGNING_SECRET: z.string().min(32).optional(),
+  /**
+   * Server render fallback (apps/render-worker). The worker authenticates to /api/render-worker/* with
+   * this shared secret (32+ random bytes: `openssl rand -base64 32`). Unset: the `server` rung of the
+   * render ladder is off and booths simply never offer it.
+   */
+  RENDER_WORKER_SECRET: optional(z.string().min(32, 'RENDER_WORKER_SECRET must be at least 32 characters')),
+  /** Fly Machines API: queued jobs start the scale-to-zero worker machine. Both unset: no-op (the worker runs elsewhere). */
+  FLY_API_TOKEN: optional(z.string().min(1)),
+  FLY_APP: optional(z.string().regex(/^[a-z0-9][a-z0-9-]{0,62}$/, 'FLY_APP must be a Fly app name')),
+  FLY_API_URL: optional(z.url()),
+  /** Server renders cost money per render: how many one event may queue per hour, in all, and one organization per day. */
+  SERVER_RENDER_LIMIT_EVENT_HOURLY: intEnv(60),
+  SERVER_RENDER_LIMIT_EVENT_TOTAL: intEnv(500),
+  SERVER_RENDER_LIMIT_ORG_DAILY: intEnv(1000),
   /**
    * Platform admins: a comma-separated list of email addresses allowed into /admin (success metrics,
    * the reports queue). Checked on the server on every admin page and action; everyone else gets a 404.

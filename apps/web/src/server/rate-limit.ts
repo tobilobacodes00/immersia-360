@@ -49,6 +49,15 @@ export const LIMITS = {
   /** Operators: exports and the by-email privacy search are heavy or sensitive, so they are bounded too. */
   privacyExportPerOrg: { limit: 12, windowS: 3600 },
   privacyLookupPerOrg: { limit: 60, windowS: 600 },
+  /**
+   * Server renders (apps/render-worker): a presigned upload and a queued job per request. The money
+   * limits are per event and organization, in the database (render-jobs-core.ts); these only bound
+   * how fast one device can hammer the endpoints.
+   */
+  serverFilesPerDevice: { limit: 180, windowS: 3600 },
+  serverRenderPerDevice: { limit: 240, windowS: 3600 },
+  /** A booth tells the server which rung of the render ladder worked (the device's record). */
+  renderPathPerDevice: { limit: 600, windowS: 3600 },
   /** POST /api/t: batches per booth, display or operator (a booth flushes every ~10 s while busy)… */
   analyticsIngest: { limit: 120, windowS: 60 },
   /** …and per address, so one network full of booths is not throttled by a single bad actor's key. */

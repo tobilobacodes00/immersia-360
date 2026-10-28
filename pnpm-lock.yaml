@@ -105,6 +105,9 @@ catalogs:
     globals:
       specifier: 17.13.0
       version: 17.13.0
+    h264-mp4-encoder:
+      specifier: 1.0.12
+      version: 1.0.12
     konva:
       specifier: 10.7.0
       version: 10.7.0
@@ -233,6 +236,40 @@ importers:
       wrangler:
         specifier: 'catalog:'
         version: 4.146.0(@cloudflare/workers-types@5.20261003.1)(@types/node@22.20.5)
+
+  apps/render-worker:
+    dependencies:
+      playwright:
+        specifier: 'catalog:'
+        version: 1.64.1
+    devDependencies:
+      '@immersia/capture':
+        specifier: workspace:*
+        version: link:../../packages/capture
+      '@immersia/render-engine':
+        specifier: workspace:*
+        version: link:../../packages/render-engine
+      '@immersia/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      '@mediapipe/tasks-vision':
+        specifier: 'catalog:'
+        version: 1.0.1
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.20.5
+      esbuild:
+        specifier: 'catalog:'
+        version: 0.28.2
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.5(@types/node@22.20.5)(@vitest/browser-playwright@5.0.5)(@vitest/ui@5.0.5)(vite@8.3.4(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0))
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.7
 
   apps/web:
     dependencies:
@@ -526,6 +563,9 @@ importers:
       '@mediabunny/aac-encoder':
         specifier: 'catalog:'
         version: 1.61.5(mediabunny@1.61.5(patch_hash=77089a1aac2ffe4dd5c6ca67b2f92a7704b4ada35b78106e05cd05b59cd16ae5))
+      h264-mp4-encoder:
+        specifier: 'catalog:'
+        version: 1.0.12
       mediabunny:
         specifier: 'catalog:'
         version: 1.61.5(patch_hash=77089a1aac2ffe4dd5c6ca67b2f92a7704b4ada35b78106e05cd05b59cd16ae5)
@@ -3191,6 +3231,9 @@ packages:
 
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
+
+  h264-mp4-encoder@1.0.12:
+    resolution: {integrity: sha512-xih3J+Go0o1RqGjhOt6TwXLWWGqLONRPyS8yoMu/RoS/S8WyEv4HuHp1KBsDDl8srZQ3gw9f95JYkCSjCuZbHQ==}
 
   hashery@1.5.1:
     resolution: {integrity: sha512-iZyKG96/JwPz1N55vj2Ie2vXbhu440zfUfJvSwEqEbeLluk7NnapfGqa7LH0mOsnDxTF85Mx8/dyR6HfqcbmbQ==}
@@ -6286,6 +6329,8 @@ snapshots:
   globals@17.13.0: {}
 
   graceful-fs@4.2.11: {}
+
+  h264-mp4-encoder@1.0.12: {}
 
   hashery@1.5.1:
     dependencies:

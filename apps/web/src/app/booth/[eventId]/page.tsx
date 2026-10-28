@@ -9,7 +9,9 @@ import {
   type BoothMode,
 } from '@immersia/shared';
 import { assetViews } from '@/server/assets';
+import { e2eModeOn } from '@/server/e2e';
 import { getEvent } from '@/server/events';
+import { serverRenderEnabled } from '@/server/render-jobs';
 import { requireOperator } from '@/server/session';
 import { getTemplate } from '@/server/templates';
 import { BoothClient } from './BoothClient';
@@ -97,6 +99,7 @@ export default async function BoothPage({
           endFrameQr: share.endFrameQr,
         },
         media: { ...media, name: event.name, date: event.date, overlay: design?.doc ?? null },
+        render: { server: serverRenderEnabled(), testHooks: e2eModeOn() },
       }}
     />
   );

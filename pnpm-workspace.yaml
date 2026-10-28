@@ -42,6 +42,9 @@ catalog:
   # Media and offline
   mediabunny: 1.61.5
   '@mediabunny/aac-encoder': 1.61.5
+  # WASM H.264 encoder for the `wasm` rung of the render ladder (MIT wrapper around public-domain minih264
+  # and MPL-1.1 libmp4v2; see packages/render-engine/README.md for the licence decision).
+  h264-mp4-encoder: 1.0.12
   dexie: 4.4.6
   # On-device person segmentation for background replacement (CAP-10), Apache-2.0
   '@mediapipe/tasks-vision': 1.0.1

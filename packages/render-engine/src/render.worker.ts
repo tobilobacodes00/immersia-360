@@ -7,6 +7,7 @@ import { SEGMENTER_ASSETS, createSegmenter, type Segmenter } from '@immersia/cap
 import type { MaskSource } from './background-math';
 import { encodeClip, messagingCopy, posterFrame } from './derive';
 import { RenderError, render, type RenderJob } from './render';
+import type { EncoderKind } from './wasm/wasm-h264';
 
 export {};
 declare const self: DedicatedWorkerGlobalScope;
@@ -40,11 +41,11 @@ function closeSegmenterWhenIdle() {
 }
 
 export type WorkerMessage =
-  | { type: 'render'; id: string; job: RenderJob }
+  | { type: 'render'; id: string; job: RenderJob; encoder?: EncoderKind }
   /** Poster and (optionally) the messaging copy of a finished render (DL-8). */
-  | { type: 'derive'; id: string; mp4: Blob; fps: number; poster: boolean; small: boolean }
+  | { type: 'derive'; id: string; mp4: Blob; fps: number; poster: boolean; small: boolean; encoder?: EncoderKind }
   /** A short MP4 from photo-booth motion frames (PHO-2). The bitmaps are transferred. */
-  | { type: 'clip'; id: string; frames: ImageBitmap[]; fps: number; pingPong: boolean }
+  | { type: 'clip'; id: string; frames: ImageBitmap[]; fps: number; pingPong: boolean; encoder?: EncoderKind }
   | { type: 'cancel'; id: string }
   | { type: 'pause' }
   | { type: 'resume' };
@@ -85,7 +86,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
   }
   if (msg.type === 'clip') {
     try {
-      const mp4 = await encodeClip(msg.frames, msg.fps, { pingPong: msg.pingPong });
+      const mp4 = await encodeClip(msg.frames, msg.fps, { pingPong: msg.pingPong, encoder: msg.encoder });
       self.postMessage({ type: 'clipped', id: msg.id, mp4 } satisfies WorkerReply);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -96,7 +97,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
   if (msg.type === 'derive') {
     try {
       const poster = msg.poster ? await posterFrame(msg.mp4) : null;
-      const small = msg.small ? await messagingCopy(msg.mp4, msg.fps) : null;
+      const small = msg.small ? await messagingCopy(msg.mp4, msg.fps, { encoder: msg.encoder }) : null;
       self.postMessage({ type: 'derived', id: msg.id, poster, small } satisfies WorkerReply);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -110,6 +111,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
     const result = await render(msg.job, {
       gate,
       signal: controller.signal,
+      encoder: msg.encoder,
       segmenter: openSegmenter,
       onProgress: (progress) => self.postMessage({ type: 'progress', id: msg.id, progress } satisfies WorkerReply),
     });

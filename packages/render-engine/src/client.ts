@@ -1,4 +1,5 @@
 import type { RenderJob, RenderResult } from './render';
+import type { EncoderKind } from './wasm/wasm-h264';
 
 export interface Derived {
   poster: Blob | null;
@@ -81,7 +82,7 @@ export class RenderClient {
     return w;
   }
 
-  render(id: string, job: RenderJob, onProgress?: (p: number) => void): RenderHandle {
+  render(id: string, job: RenderJob, onProgress?: (p: number) => void, encoder?: EncoderKind): RenderHandle {
     let cancelled = false;
     const result = new Promise<RenderResult>((resolve, reject) => {
       this.chain = this.chain
@@ -111,7 +112,7 @@ export class RenderClient {
               if (job.outro?.kind === 'still') transfer.push(job.outro.image);
               if (job.endCard) transfer.push(job.endCard.image);
               for (const ch of job.audio?.channels ?? []) transfer.push(ch.buffer);
-              this.ensure().postMessage({ type: 'render', id, job } satisfies WorkerMessage, transfer);
+              this.ensure().postMessage({ type: 'render', id, job, encoder } satisfies WorkerMessage, transfer);
             }),
         );
     });
@@ -129,7 +130,13 @@ export class RenderClient {
    * Poster and messaging copy of a finished render (DL-8), queued behind any render in progress: a
    * device has one GPU and one encoder worth sharing.
    */
-  derive(id: string, mp4: Blob, fps: number, want: { poster: boolean; small: boolean }): Promise<Derived> {
+  derive(
+    id: string,
+    mp4: Blob,
+    fps: number,
+    want: { poster: boolean; small: boolean },
+    encoder?: EncoderKind,
+  ): Promise<Derived> {
     return new Promise<Derived>((resolve, reject) => {
       this.chain = this.chain
         .catch(() => undefined)
@@ -146,14 +153,14 @@ export class RenderClient {
                   done();
                 },
               });
-              this.ensure().postMessage({ type: 'derive', id, mp4, fps, ...want } satisfies WorkerMessage);
+              this.ensure().postMessage({ type: 'derive', id, mp4, fps, ...want, encoder } satisfies WorkerMessage);
             }),
         );
     });
   }
 
   /** PHO-2: encode photo-booth motion frames into an MP4 (boomerang or short video). Takes ownership of the frames. */
-  clip(id: string, frames: ImageBitmap[], fps: number, pingPong: boolean): Promise<Blob> {
+  clip(id: string, frames: ImageBitmap[], fps: number, pingPong: boolean, encoder?: EncoderKind): Promise<Blob> {
     return new Promise<Blob>((resolve, reject) => {
       this.chain = this.chain
         .catch(() => undefined)
@@ -170,7 +177,10 @@ export class RenderClient {
                   done();
                 },
               });
-              this.ensure().postMessage({ type: 'clip', id, frames, fps, pingPong } satisfies WorkerMessage, frames);
+              this.ensure().postMessage(
+                { type: 'clip', id, frames, fps, pingPong, encoder } satisfies WorkerMessage,
+                frames,
+              );
             }),
         );
     });
