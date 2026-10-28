@@ -4,7 +4,7 @@ summary: Why a booth runs on a registered device, how to name, check and revoke 
 category: start
 order: 30
 keywords: [device, register, revoke, token, ipad, laptop, tablet, rename, online, last seen]
-updated: 2026-10-20
+updated: 2026-10-28
 related: [setup-check, offline-mode-and-uploads, team-roles]
 ---
 
@@ -41,7 +41,7 @@ The render path starts as a quick guess made at registration and is replaced by 
 - **Rename** changes the name in the list, not the device.
 - **Revoke** cuts a device off immediately. The next time it talks to the server it is refused, and its booth shows **This device was removed: register it again to upload**. Files already uploaded stay. Anything still waiting on the device stays there; register the device again to upload it.
 
-Owners and operators can register devices and see the list. Only owners can revoke. See [Team roles](help:team-roles).
+Owners and operators can register and rename devices; viewers can see the list. Only owners can revoke. See [Team roles](help:team-roles).
 
 ## Good habits
 

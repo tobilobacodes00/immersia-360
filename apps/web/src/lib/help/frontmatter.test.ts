@@ -53,6 +53,12 @@ describe('help front matter', () => {
     });
   });
 
+  it("keeps an apostrophe inside a plain item (marca d'água) and still reads a quoted one", () => {
+    expect(parseFrontmatterBlock("keywords: [marca d'água, 'it''s', \"say \\\"hi\\\"\", plain]")).toEqual({
+      keywords: ["marca d'água", "it's", 'say "hi"', 'plain'],
+    });
+  });
+
   it('reads a trailing comma but not a missing bracket in a wrapped list', () => {
     expect(parseFrontmatterBlock('keywords: [a, b,]')).toEqual({ keywords: ['a', 'b'] });
     expect(() => parseFrontmatterBlock('keywords:\n  [\n    a,\n    b,')).toThrow(/unterminated list/);

@@ -110,7 +110,8 @@ function parseList(value: string): (string | number)[] {
     if (quote) {
       if (ch === quote) quote = null;
       current += ch;
-    } else if (ch === '"' || ch === "'") {
+    } else if ((ch === '"' || ch === "'") && current.trim() === '') {
+      // A quote only opens a quoted item at its start: `marca d'água` is a plain item.
       quote = ch;
       current += ch;
     } else if (ch === ',') {

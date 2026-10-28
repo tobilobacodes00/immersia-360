@@ -4,7 +4,7 @@ summary: The settings that shape a 360 video (resolution, frame rate, spin lengt
 category: booth
 order: 10
 keywords: [360, spin, platform, video, resolution, 4k, fps, aspect, vertical, countdown, quality, microphone, sound]
-updated: 2026-10-20
+updated: 2026-10-28
 related: [slow-motion-tips, capture-triggers-and-shortcuts, render-speed-and-queue, setup-check]
 ---
 

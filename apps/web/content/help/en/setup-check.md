@@ -4,7 +4,7 @@ summary: Test a booth device before the event: camera, storage, a test recording
 category: start
 order: 20
 keywords: [test, check, wizard, fps, benchmark, render speed, calibration, ruler, qr test, readiness]
-updated: 2026-10-20
+updated: 2026-10-28
 related: [render-speed-and-queue, ios-storage-eviction, printing-setup, offline-mode-and-uploads]
 ---
 
@@ -46,7 +46,7 @@ Renders the test recording with this event's output settings in the real render 
 | 46 to 90 s     | **Check**: on target for a 2021 iPad, slow for a laptop |
 | More than 90 s | **Fix**: guests would wait a long time                  |
 
-The estimate is a little pessimistic, because a short clip includes start-up time. The result is saved on the device as its **render path**. See [Render speed and the queue](help:render-speed-and-queue).
+The estimate is a little pessimistic, because a short clip includes start-up time. If the event replaces the background, the test render does too, so the speed includes it, and you get a warning if the device can't start that feature. The result is saved on the device as its **render path**. See [Render speed and the render queue](help:render-speed-and-queue).
 
 ### Test QR scan
 

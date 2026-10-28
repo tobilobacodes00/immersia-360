@@ -35,7 +35,7 @@ In the event's **Setup**, under **Kiosk**, press **Set PIN** and choose 4 to 8 d
 - Leaving full screen (for example with Escape) shows a **Tap to return to the booth** screen.
 - The browser asks for confirmation before the tab is closed or reloaded (most browsers only do this once the page has been touched).
 
-The PIN is checked on the booth itself, so it works with no internet. Only a fingerprint of the PIN is sent to the device, never the PIN.
+The PIN is checked on the booth itself, so it works with no internet. The device receives only a fingerprint of the PIN, never the PIN itself.
 
 ### Getting out as the operator
 

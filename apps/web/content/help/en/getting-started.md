@@ -4,7 +4,7 @@ summary: From signing in to your first guest scanning a QR code, in the order th
 category: start
 order: 10
 keywords: [first event, begin, quick start, tutorial, new event, create event, sign in]
-updated: 2026-10-20
+updated: 2026-10-28
 related: [setup-check, devices-and-registration, 360-booth-setup, photo-booth-and-layouts]
 ---
 

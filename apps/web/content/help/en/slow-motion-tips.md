@@ -18,7 +18,7 @@ keywords:
     interpolation,
     boomerang,
   ]
-updated: 2026-10-20
+updated: 2026-10-28
 related: [360-booth-setup, render-speed-and-queue, booth-error-messages]
 ---
 

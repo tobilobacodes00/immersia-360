@@ -20,7 +20,7 @@ keywords:
     trigger,
     start,
   ]
-updated: 2026-10-20
+updated: 2026-10-28
 related: [360-booth-setup, kiosk-locking, templates-and-editor]
 ---
 
