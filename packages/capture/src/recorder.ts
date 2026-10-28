@@ -37,13 +37,30 @@ export function recordingBitrate(width: number, height: number, frameRate: numbe
   return Math.round(Math.min(60_000_000, Math.max(4_000_000, pixels * frameRate * perPixelPerFrame)));
 }
 
-export const extensionFor = (mime: string) => (mime.startsWith('video/mp4') ? 'mp4' : 'webm');
+export function extensionFor(mime: string): 'mp4' | 'mov' | 'webm' {
+  if (mime.startsWith('video/mp4')) return 'mp4';
+  // The companion's iOS recorder writes QuickTime movies (CAP-14).
+  if (mime.startsWith('video/quicktime')) return 'mov';
+  return 'webm';
+}
 
 export interface RecordingResult {
   mimeType: string;
   durationMs: number;
   bytes: number;
   chunks: number;
+}
+
+/**
+ * What the booth needs from whatever records a take: a browser MediaRecorder (`TakeRecorder`) or the
+ * companion app's native high-speed recorder (`NativeTakeRecorder`, CAP-14). Both hand the take's bytes, in
+ * order, to `onChunk`; `stop()` resolves once every byte is durable.
+ */
+export interface TakeCapture {
+  /** Milliseconds recorded so far (the whole take once stopped). */
+  readonly elapsedMs: number;
+  start(): void | Promise<void>;
+  stop(): Promise<RecordingResult>;
 }
 
 export interface TakeRecorderOptions {
@@ -55,7 +72,7 @@ export interface TakeRecorderOptions {
   onError?: (err: unknown) => void;
 }
 
-export class TakeRecorder {
+export class TakeRecorder implements TakeCapture {
   private recorder: MediaRecorder;
   private queue: Promise<void> = Promise.resolve();
   private index = 0;

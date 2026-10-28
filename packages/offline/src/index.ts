@@ -1,6 +1,7 @@
 export * from './db';
 export * from './take-store';
 export * from './takes';
+export * from './native-takes';
 export * from './storage';
 export * from './outputs';
 export * from './sessions';
