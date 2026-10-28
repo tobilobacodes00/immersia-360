@@ -1605,7 +1605,11 @@
     "saving": "Saving…",
     "saved": "Saved. Next guest!",
     "warnings": {
-      "storage": "This device had trouble saving the last take. Everything up to the problem was kept. Check free storage."
+      "storage": "This device had trouble saving the last take. Everything up to the problem was kept. Check free storage.",
+      "hfrThermal": "This device is running hot. The camera may stop on its own; let it cool down if recording fails.",
+      "hfrCall": "The camera was interrupted by a call or another app. The take so far was kept.",
+      "hfrBackground": "The app left the screen and the camera paused. The take so far was kept.",
+      "hfrInterrupted": "The high-speed camera stopped early. The take so far was kept."
     },
     "errors": {
       "title": "The camera isn't available",
@@ -1616,6 +1620,11 @@
       "insecure": "The camera only works over a secure (https) connection.",
       "lost": "The camera disconnected.",
       "recording_unsupported": "This browser can't record video. Use Chrome, Edge or Safari.",
+      "native_permission": "The camera or microphone was refused. Open this app's settings on the device, allow Camera and Microphone, then try again.",
+      "no_high_speed": "This camera has no high-speed mode at the chosen frame rate. Pick another camera or a lower frame rate in settings.",
+      "native_audio": "This phone's high-speed camera can't record sound. Turn the microphone off in event setup, or choose another camera.",
+      "native_storage": "This device is almost out of storage. Free some space, then try again.",
+      "native_failed": "The high-speed camera stopped working. Try again, or choose another camera in settings.",
       "unknown": "Something went wrong starting the camera.",
       "retry": "Try again"
     },
@@ -1644,6 +1653,15 @@
       },
       "cameraBusy": "Camera changes pause while a guest is using the booth.",
       "delivering": "Delivering {width}×{height} at {fps} fps",
+      "hfr": {
+        "group": "High-speed cameras · 120 to 240 fps",
+        "fps": "Frame rate",
+        "fpsOption": "{fps} fps",
+        "maxFps": "up to {fps} fps",
+        "help": "Records slow motion at the camera's own speed. This preview is the camera's raw picture: the look and the background are applied when the video is rendered.",
+        "unavailable": "This device has no camera that records 120 fps or more. Use a browser camera instead.",
+        "noMotion": "Motion start isn't available with this camera. Start with the button or the keyboard."
+      },
       "mirror": "Mirror the preview",
       "mirrorHelp": "Only on this screen. Recordings are never mirrored.",
       "zoom": "Zoom",

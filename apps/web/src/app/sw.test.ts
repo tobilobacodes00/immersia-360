@@ -42,3 +42,20 @@ describe('service worker: the segmentation runtime cache (CAP-10)', () => {
     expect(script).toContain('storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/');
   });
 });
+
+describe("service worker: the companion app's file URLs (CAP-14)", () => {
+  const sw = read('./sw.ts');
+
+  it("leaves Capacitor's file and content URLs to the WebView", () => {
+    expect(sw).toContain("'/_capacitor_file_/'");
+    expect(sw).toContain("'/_capacitor_content_/'");
+    expect(sw).toMatch(/event\.stopImmediatePropagation\(\)/);
+  });
+
+  it("is registered before Serwist's own fetch listener, or it would never get the event first", () => {
+    const mine = sw.indexOf("self.addEventListener('fetch'");
+    const serwist = sw.indexOf('serwist.addEventListeners()');
+    expect(mine).toBeGreaterThan(-1);
+    expect(serwist).toBeGreaterThan(mine);
+  });
+});

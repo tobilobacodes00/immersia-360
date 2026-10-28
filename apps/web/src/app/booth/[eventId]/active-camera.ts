@@ -1,8 +1,13 @@
-import type { LensClass, OpenedCamera } from '@immersia/capture';
+import type { LensClass, OpenedCamera, OpenedNativeCamera } from '@immersia/capture';
 import { reconcileChoice, type CameraChoice } from './camera-choice';
+
+/** A camera the booth has open: a browser camera or the simulator, or the companion's native one (CAP-14). */
+export type AnyCamera = OpenedCamera | OpenedNativeCamera;
 
 /** What the settings drawer needs to know about the camera that is open. */
 export interface ActiveCamera {
+  /** Whose picture this is: the browser's camera, the simulator, or the native high-speed camera. */
+  kind: AnyCamera['kind'];
   deviceId: string | null;
   /** The mode the browser reports, kept for classifying the browser's list of cameras. */
   facingMode: string | null;
@@ -15,10 +20,13 @@ export interface ActiveCamera {
   zoom: OpenedCamera['zoom'];
   /** The zoom in effect when it opened. */
   zoomAtOpen: number | null;
+  /** The motion trigger can read this camera's picture (the native camera may not offer it). */
+  motion: boolean;
 }
 
-export function describeCamera(cam: OpenedCamera): ActiveCamera {
+export function describeCamera(cam: AnyCamera): ActiveCamera {
   return {
+    kind: cam.kind,
     deviceId: cam.settings.deviceId,
     facingMode: cam.settings.facingMode,
     label: cam.label,
@@ -29,6 +37,7 @@ export function describeCamera(cam: OpenedCamera): ActiveCamera {
     torch: cam.torch,
     zoom: cam.zoom,
     zoomAtOpen: cam.applied.zoom,
+    motion: cam.kind !== 'native-hfr' || cam.motion.supported,
   };
 }
 
@@ -42,7 +51,10 @@ export function zoomUnit(range: { min: number; max: number }): '×' | '%' {
 }
 
 /** `choice` made to match what `cam` really did with its saved zoom and torch. */
-export function reconcileWithCamera(choice: CameraChoice, cam: OpenedCamera): CameraChoice {
+export function reconcileWithCamera(
+  choice: CameraChoice,
+  cam: Pick<AnyCamera, 'torch' | 'zoom' | 'applied'>,
+): CameraChoice {
   return reconcileChoice(choice, {
     torchSupported: cam.torch.supported,
     zoomSupported: cam.zoom.range !== null,

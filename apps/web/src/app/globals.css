@@ -16,3 +16,12 @@ html:has(.tv-root) body {
   overflow: hidden;
   overscroll-behavior: none;
 }
+
+/*
+ * The companion app's native camera preview (CAP-14) is drawn behind a transparent WebView. While it shows
+ * (Booth360 sets the class), the page paints no background of its own, so the booth's overlays sit on the picture.
+ */
+html.native-preview,
+html.native-preview body {
+  background: transparent;
+}

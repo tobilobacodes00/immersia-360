@@ -1605,7 +1605,11 @@
     "saving": "Salvando…",
     "saved": "Salvo. Próximo convidado!",
     "warnings": {
-      "storage": "Este dispositivo teve problemas para salvar a última gravação. Tudo até o problema foi mantido. Confira o armazenamento livre."
+      "storage": "Este dispositivo teve problemas para salvar a última gravação. Tudo até o problema foi mantido. Confira o armazenamento livre.",
+      "hfrThermal": "Este dispositivo está esquentando. A câmera pode parar sozinha; deixe-o esfriar se a gravação falhar.",
+      "hfrCall": "Uma chamada ou outro app interrompeu a câmera. A gravação até esse ponto foi mantida.",
+      "hfrBackground": "O app saiu da tela e a câmera pausou. A gravação até esse ponto foi mantida.",
+      "hfrInterrupted": "A câmera de alta velocidade parou antes da hora. A gravação até esse ponto foi mantida."
     },
     "errors": {
       "title": "A câmera não está disponível",
@@ -1616,6 +1620,11 @@
       "insecure": "A câmera só funciona em uma conexão segura (https).",
       "lost": "A câmera desconectou.",
       "recording_unsupported": "Este navegador não consegue gravar vídeo. Use Chrome, Edge ou Safari.",
+      "native_permission": "O acesso à câmera ou ao microfone foi recusado. Abra os ajustes deste app no dispositivo, permita Câmera e Microfone e tente de novo.",
+      "no_high_speed": "Esta câmera não tem modo de alta velocidade na taxa de quadros escolhida. Escolha outra câmera ou uma taxa menor nas configurações.",
+      "native_audio": "A câmera de alta velocidade deste celular não grava som. Desative o microfone na configuração do evento ou escolha outra câmera.",
+      "native_storage": "Este dispositivo está quase sem armazenamento. Libere espaço e tente de novo.",
+      "native_failed": "A câmera de alta velocidade parou de funcionar. Tente de novo ou escolha outra câmera nas configurações.",
       "unknown": "Algo deu errado ao iniciar a câmera.",
       "retry": "Tentar de novo"
     },
@@ -1644,6 +1653,15 @@
       },
       "cameraBusy": "As mudanças de câmera ficam em pausa enquanto um convidado usa a cabine.",
       "delivering": "Entregando {width}×{height} a {fps} fps",
+      "hfr": {
+        "group": "Câmeras de alta velocidade · 120 a 240 fps",
+        "fps": "Taxa de quadros",
+        "fpsOption": "{fps} fps",
+        "maxFps": "até {fps} fps",
+        "help": "Grava câmera lenta na velocidade própria da câmera. Esta prévia é a imagem bruta: o visual e o fundo são aplicados quando o vídeo é renderizado.",
+        "unavailable": "Este dispositivo não tem nenhuma câmera que grave a 120 fps ou mais. Use uma câmera do navegador.",
+        "noMotion": "O início por movimento não está disponível com esta câmera. Comece pelo botão ou pelo teclado."
+      },
       "mirror": "Espelhar a prévia",
       "mirrorHelp": "Só nesta tela. As gravações nunca são espelhadas.",
       "zoom": "Zoom",
