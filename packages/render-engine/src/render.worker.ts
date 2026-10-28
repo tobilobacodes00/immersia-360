@@ -6,6 +6,7 @@
 import { SEGMENTER_ASSETS, createSegmenter, type Segmenter } from '@immersia/capture/segment';
 import type { MaskSource } from './background-math';
 import { encodeClip, messagingCopy, posterFrame } from './derive';
+import { renderMontage, type MontageJob, type MontageResult } from './montage';
 import { RenderError, render, type RenderJob } from './render';
 
 export {};
@@ -41,6 +42,8 @@ function closeSegmenterWhenIdle() {
 
 export type WorkerMessage =
   | { type: 'render'; id: string; job: RenderJob }
+  /** The highlight reel (LIV-14): many clips, one MP4. The cards' bitmaps are transferred. */
+  | { type: 'montage'; id: string; job: MontageJob }
   /** Poster and (optionally) the messaging copy of a finished render (DL-8). */
   | { type: 'derive'; id: string; mp4: Blob; fps: number; poster: boolean; small: boolean }
   /** A short MP4 from photo-booth motion frames (PHO-2). The bitmaps are transferred. */
@@ -52,6 +55,7 @@ export type WorkerMessage =
 export type WorkerReply =
   | { type: 'progress'; id: string; progress: number }
   | { type: 'done'; id: string; result: Awaited<ReturnType<typeof render>> }
+  | { type: 'montaged'; id: string; result: MontageResult }
   | { type: 'derived'; id: string; poster: Blob | null; small: Blob | null }
   | { type: 'clipped'; id: string; mp4: Blob }
   | { type: 'error'; id: string; code: RenderError['code']; message: string };
@@ -101,6 +105,27 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       self.postMessage({ type: 'error', id: msg.id, code: 'failed', message } satisfies WorkerReply);
+    }
+    return;
+  }
+  if (msg.type === 'montage') {
+    const controller = new AbortController();
+    running.set(msg.id, controller);
+    try {
+      const result = await renderMontage(msg.job, {
+        gate,
+        signal: controller.signal,
+        onProgress: (progress) => self.postMessage({ type: 'progress', id: msg.id, progress } satisfies WorkerReply),
+      });
+      self.postMessage({ type: 'montaged', id: msg.id, result } satisfies WorkerReply);
+    } catch (err) {
+      const e2 =
+        err instanceof RenderError ? err : new RenderError('failed', err instanceof Error ? err.message : String(err));
+      self.postMessage({ type: 'error', id: msg.id, code: e2.code, message: e2.message } satisfies WorkerReply);
+    } finally {
+      running.delete(msg.id);
+      msg.job.intro?.close();
+      msg.job.end?.close();
     }
     return;
   }

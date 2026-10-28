@@ -228,3 +228,33 @@ uniform sampler2D uSrc;
 uniform vec2 uCropScale;
 uniform vec2 uCropOffset;
 void main() { oColor = vec4(texture(uSrc, uCropOffset + vUv * uCropScale).rgb, 1.0); }`;
+
+/**
+ * Two layers, each cropped (and zoomed) on its own and cross-faded: a frame of the highlight reel. The
+ * crop, like BLIT's, is cover-crop parameters plus the container's rotation; `uMix` 0 shows only A.
+ */
+export const MIX = /* glsl */ `#version 300 es
+precision highp float;
+in vec2 vUv;
+out vec4 oColor;
+uniform sampler2D uSrcA;
+uniform sampler2D uSrcB;
+uniform vec2 uScaleA;
+uniform vec2 uOffsetA;
+uniform int uRotA;
+uniform vec2 uScaleB;
+uniform vec2 uOffsetB;
+uniform int uRotB;
+uniform float uMix;
+vec2 upright(vec2 d, int rot) {
+  if (rot == 90) return vec2(d.y, 1.0 - d.x);
+  if (rot == 180) return vec2(1.0 - d.x, 1.0 - d.y);
+  if (rot == 270) return vec2(1.0 - d.y, d.x);
+  return d;
+}
+void main() {
+  vec2 uv = clamp(vUv, 0.0, 1.0);
+  vec3 a = texture(uSrcA, upright(uOffsetA + uv * uScaleA, uRotA)).rgb;
+  vec3 b = texture(uSrcB, upright(uOffsetB + uv * uScaleB, uRotB)).rgb;
+  oColor = vec4(mix(a, b, uMix), 1.0);
+}`;

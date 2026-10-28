@@ -3,7 +3,7 @@
  * video's length. Runs on the main thread — OfflineAudioContext doesn't exist in workers — and
  * returns planar float32 channels the render worker encodes as AAC.
  */
-import { analyseBeats } from './beats';
+import { analyseBeats, loopedBeats } from './beats';
 
 export interface MusicSettings {
   trimStartMs: number;
@@ -78,4 +78,70 @@ export async function musicBeats(
   const start = settings.trimStartMs / 1000;
   const end = settings.trimEndMs === null ? decoded.duration : settings.trimEndMs / 1000;
   return analyseBeats(channels, decoded.sampleRate, { startS: start, durationS: Math.min(maxSeconds, end - start) });
+}
+
+/** The part of a song a reel plays: from the trim start to the trim end (or the song's end). */
+function playedPart(settings: Pick<MusicSettings, 'trimStartMs' | 'trimEndMs'>, songS: number) {
+  const from = Math.min(songS, settings.trimStartMs / 1000);
+  const to = Math.min(songS, settings.trimEndMs === null ? songS : settings.trimEndMs / 1000);
+  return { from, length: Math.max(0, to - from) };
+}
+
+/** A song decoded once, for both the beat analysis and the mix of a highlight reel (LIV-14). */
+export async function decodeMusic(music: Blob): Promise<AudioBuffer> {
+  const ctx = new OfflineAudioContext({ numberOfChannels: 2, length: 1, sampleRate: MIX_SAMPLE_RATE });
+  return ctx.decodeAudioData(await music.arrayBuffer());
+}
+
+/**
+ * The song's beats on the reel's timeline (which starts with the song's trimmed part), repeated when the
+ * song is shorter than the reel and so plays again. Empty when the music has no steady beat to follow.
+ */
+export function reelBeats(
+  song: AudioBuffer,
+  settings: Pick<MusicSettings, 'trimStartMs' | 'trimEndMs'>,
+  outputS: number,
+  minConfidence = 0.3,
+): { beats: number[]; bpm: number; confidence: number } {
+  const { from, length } = playedPart(settings, song.duration);
+  const channels = Array.from({ length: song.numberOfChannels }, (_, i) => song.getChannelData(i));
+  const found = analyseBeats(channels, song.sampleRate, { startS: from, durationS: Math.min(length, 120) });
+  const beats = found.confidence >= minConfidence ? loopedBeats(found.beats, from, length, outputS) : [];
+  return { beats, bpm: found.bpm, confidence: found.confidence };
+}
+
+/**
+ * A highlight reel's soundtrack (LIV-14): the song from its trim start, played over again when it is shorter
+ * than the reel, faded in and out, at exactly the reel's length. Main thread, like `mixSoundtrack`.
+ */
+export async function mixReelMusic(
+  song: AudioBuffer,
+  settings: MusicSettings,
+  outputS: number,
+): Promise<{ sampleRate: number; channels: Float32Array[] }> {
+  const length = Math.max(1, Math.ceil(outputS * MIX_SAMPLE_RATE));
+  const ctx = new OfflineAudioContext({ numberOfChannels: 2, length, sampleRate: MIX_SAMPLE_RATE });
+  const { from, length: played } = playedPart(settings, song.duration);
+  if (played > 0) {
+    const src = ctx.createBufferSource();
+    src.buffer = song;
+    const loops = played < outputS;
+    if (loops) {
+      src.loop = true;
+      src.loopStart = from;
+      src.loopEnd = from + played;
+    }
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, 0);
+    // The song starts with the reel, so its fades are the reel's: asked for as an envelope over a song as long as the reel.
+    for (const [t, g] of gainEnvelope({ ...settings, offsetMs: 0, trimEndMs: null }, outputS + from, outputS))
+      gain.gain.linearRampToValueAtTime(g, t);
+    src.connect(gain).connect(ctx.destination);
+    src.start(0, from, loops ? outputS : Math.min(played, outputS));
+  }
+  const rendered = await ctx.startRendering();
+  return {
+    sampleRate: rendered.sampleRate,
+    channels: [rendered.getChannelData(0).slice(), rendered.getChannelData(1).slice()],
+  };
 }
