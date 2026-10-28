@@ -144,7 +144,8 @@ export function HighlightReel({
         return;
       }
       const { id, video, poster } = ticket.data;
-      if (poster && reel.poster) await putFile(reel.poster, poster);
+      // The poster is a nicety: if it does not arrive the server publishes the reel without one.
+      if (poster && reel.poster) await putFile(reel.poster, poster).catch(() => undefined);
       await putFile(reel.mp4, video, (fraction) => setPublishing({ kind: 'uploading', fraction }));
       const done = await completeHighlightUploadAction(eventId, id);
       if (!done.ok) {

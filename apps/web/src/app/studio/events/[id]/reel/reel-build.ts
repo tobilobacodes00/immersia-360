@@ -117,6 +117,7 @@ async function gather(
   const found: (Gathered | null)[] = items.map(() => null);
   let next = 0;
   let good = 0;
+  let failed = 0;
   const total = Math.min(items.length, want);
   const worker = async () => {
     while (good < want && next < items.length) {
@@ -128,13 +129,17 @@ async function gather(
       } catch (err) {
         // A capture that will not download is passed over; the reel is built from the rest.
         if (isAbort(err) || signal.aborted) throw err;
+        failed++;
       }
       onProgress({ stage: 'downloading', fraction: Math.min(1, good / want), done: Math.min(good, total), total });
     }
   };
   onProgress({ stage: 'downloading', fraction: 0, done: 0, total });
   await Promise.all(Array.from({ length: PARALLEL }, worker));
-  return found.filter((g): g is Gathered => g !== null);
+  const usable = found.filter((g): g is Gathered => g !== null);
+  // Nothing came down at all, and not for want of anything usable: the connection, not the captures.
+  if (usable.length === 0 && failed > 0) throw new ReelError('download');
+  return usable;
 }
 
 export async function buildHighlightReel(input: ReelBuildInput): Promise<BuiltReel> {
@@ -195,6 +200,8 @@ export async function buildHighlightReel(input: ReelBuildInput): Promise<BuiltRe
         link: plan.event.galleryUrl,
       }),
     ]);
+    // A cancel during the mix and the cards would otherwise start a render nobody wants.
+    signal.throwIfAborted();
     onProgress({ stage: 'analysing', fraction: 1 });
 
     client = new RenderClient(() => new Worker(workerUrl('render'), { type: 'module' }));
@@ -212,7 +219,8 @@ export async function buildHighlightReel(input: ReelBuildInput): Promise<BuiltRe
       (fraction) => onProgress({ stage: 'rendering', fraction }),
     );
     const cancel = () => handle.cancel();
-    signal.addEventListener('abort', cancel, { once: true });
+    if (signal.aborted) cancel();
+    else signal.addEventListener('abort', cancel, { once: true });
     const result = await handle.result.finally(() => signal.removeEventListener('abort', cancel));
 
     // A poster for the gallery's player, made in the same worker; a reel without one still plays.

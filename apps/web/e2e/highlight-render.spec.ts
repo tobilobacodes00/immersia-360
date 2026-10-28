@@ -48,7 +48,8 @@ async function enableLiveDisplay(page: Page, eventId: string) {
 
 test.beforeEach(({ page }) => reportPageErrors(page));
 
-test.describe('highlight reel (LIV-14)', () => {
+// @media: WebKit has no H.264 WebCodecs render; the webkit project skips what carries this tag.
+test.describe('highlight reel (LIV-14) @media', () => {
   test('builds from the gallery, previews, downloads, publishes to the client gallery, and goes when a guest erases their session', async ({
     page,
     browser,
@@ -88,7 +89,7 @@ test.describe('highlight reel (LIV-14)', () => {
     if (await failed.isVisible()) throw new Error(`The reel failed: ${await failed.innerText()}`);
 
     // Three strips, each a few seconds with a cross-fade between: well over the cards' five.
-    await expect(page.getByText(/^d+:d{2} · 3 captures/)).toBeVisible();
+    await expect(page.getByText(/^\d+:\d{2} · 3 captures/)).toBeVisible();
     await expect.poll(() => duration(page, 'Preview of the highlight reel'), { timeout: 20_000 }).toBeGreaterThan(8);
     expect(
       await page

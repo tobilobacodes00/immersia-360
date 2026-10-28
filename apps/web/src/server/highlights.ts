@@ -405,17 +405,18 @@ export async function completeHighlightUpload(
   }
 
   const replaced = await db().transaction(async (tx) => {
+    // The reel it replaces stops being the live one at once, but keeps its row until its files are gone: a file the
+    // store refuses to delete is then found again by the sweep, never left behind with nothing pointing at it.
     const previous = await tx
-      .delete(eventHighlight)
+      .update(eventHighlight)
+      .set({ uploadedAt: null })
       .where(and(eq(eventHighlight.eventId, row.eventId), isNotNull(eventHighlight.uploadedAt)))
-      .returning({ objectKey: eventHighlight.objectKey, posterKey: eventHighlight.posterKey });
+      .returning();
     await tx.update(eventHighlight).set({ uploadedAt: new Date(), posterKey }).where(eq(eventHighlight.id, row.id));
     return previous;
   });
-  // The reel it replaced is gone from the database; its files follow.
-  await deleteObjects(replaced.flatMap((r) => (r.posterKey ? [r.objectKey, r.posterKey] : [r.objectKey]))).catch(
-    (err: unknown) =>
-      console.error('[highlight] could not delete the replaced reel', err instanceof Error ? err.message : err),
+  await removeRows(replaced).catch((err: unknown) =>
+    console.error('[highlight] could not delete the replaced reel', err instanceof Error ? err.message : err),
   );
   return ok(await summaryOf({ ...row, posterKey, uploadedAt: new Date() }));
 }
@@ -469,8 +470,9 @@ export async function withdrawHighlightsWith(sessionId: string): Promise<number>
 }
 
 /**
- * The hourly sweep: a reel whose clips include a session that was erased or has expired is deleted (the footage it
- * holds is meant to be gone), and so is an upload that was started and never finished.
+ * The hourly sweep: a reel whose clips include a session that was erased, has expired or whose guest asked to stay off
+ * screen is deleted (the footage it holds is meant to be gone), and so is an upload that was started and never finished.
+ * A clip the operator merely hid only keeps the reel off the gallery until it is rebuilt.
  */
 export async function sweepHighlights(limit = 50): Promise<{ reels: number }> {
   const gone = await db()
@@ -480,7 +482,7 @@ export async function sweepHighlights(limit = 50): Promise<{ reels: number }> {
       sql`exists (
         select 1 from jsonb_array_elements_text(${eventHighlight.sessionIds}) as sid
         join ${captureSession} s on s.id = sid::uuid
-        where s.erased_at is not null or s.expired_at is not null
+        where s.erased_at is not null or s.expired_at is not null or s.opted_out_of_display
       )`,
     )
     .limit(limit);
