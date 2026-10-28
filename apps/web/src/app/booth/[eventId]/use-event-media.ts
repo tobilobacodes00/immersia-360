@@ -3,10 +3,11 @@
 import { useEffect, useMemo } from 'react';
 import type { Template } from '@immersia/layout';
 import { outputSize } from '@immersia/render-engine';
-import { eventTokens, overlayCanvasFor, type Video360Settings } from '@immersia/shared';
+import { eventTokens, overlayCanvasFor, sessionUrl, type EventTheme, type Video360Settings } from '@immersia/shared';
 import type { AssetView } from '@/server/assets';
+import { boothDb, sessionForTake } from '@immersia/offline';
 import { cachedAsset, fillAssets } from './event-assets';
-import { loadCard, renderOverlay } from './media';
+import { END_CARD_SECONDS, loadCard, renderEndCard, renderOverlay } from './media';
 import type { RenderAssets } from './use-render-queue';
 
 export interface EventMedia {
@@ -17,6 +18,8 @@ export interface EventMedia {
   overlay: Template | null;
   /** Every file the media uses, with signed URLs that fill the device cache. */
   assets: AssetView[];
+  /** DL-4: close every video with the guest's QR (the hint is already translated). */
+  endCard: { theme: EventTheme; hint: string } | null;
 }
 
 /**
@@ -26,7 +29,7 @@ export interface EventMedia {
  * still online, then copied for every job.
  */
 export function useEventMedia(event: EventMedia, video: Video360Settings): RenderAssets {
-  const { overlay: design, assets, name, date, branding } = event;
+  const { overlay: design, assets, name, date, branding, endCard } = event;
   const byId = useMemo(() => new Map(assets.map((a) => [a.id, a])), [assets]);
   const size = useMemo(() => outputSize(video.resolution, video.aspect), [video.resolution, video.aspect]);
 
@@ -63,6 +66,22 @@ export function useEventMedia(event: EventMedia, video: Video360Settings): Rende
         : undefined,
       intro: card(video.introAssetId),
       outro: card(video.outroAssetId),
+      endCard: endCard
+        ? async (take) => {
+            const session = await sessionForTake(boothDb(), take.id);
+            if (!session) return null;
+            const image = await renderEndCard({
+              target: overlayCanvasFor(video.aspect),
+              size,
+              theme: endCard.theme,
+              eventName: name,
+              hint: endCard.hint,
+              link: sessionUrl(window.location.origin, session.linkId, 'outro'),
+              code: session.shortCode,
+            });
+            return { kind: 'still' as const, image, seconds: END_CARD_SECONDS };
+          }
+        : undefined,
     };
   }, [
     assets,
@@ -72,6 +91,7 @@ export function useEventMedia(event: EventMedia, video: Video360Settings): Rende
     name,
     date,
     branding,
+    endCard,
     video.aspect,
     video.music,
     video.cardSeconds,

@@ -19,6 +19,8 @@ export function EventTabs({ id }: { id: string }) {
       // The editor (screen 6) is reached from branding, so it keeps that tab lit.
       active: path.startsWith(`${base}/branding`) || path.startsWith(`${base}/design`),
     },
+    { href: `${base}/live` as const, label: t('live'), active: path.startsWith(`${base}/live`) },
+    { href: `${base}/signage` as const, label: t('signage'), active: path.startsWith(`${base}/signage`) },
   ];
   return (
     <nav aria-label={t('label')} className="-mb-px mt-5 flex gap-1 overflow-x-auto">

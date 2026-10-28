@@ -4,12 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useTranslations, type Messages } from 'next-intl';
 import { AnimatePresence, motion } from 'motion/react';
-import { ArrowLeft, Camera, Printer, RotateCcw, Settings2, WifiOff } from 'lucide-react';
+import { ArrowLeft, Camera, Images, Printer, RotateCcw, Settings2, WifiOff } from 'lucide-react';
 import { openCamera, openSimulatedCamera, toCameraError, type OpenedCamera } from '@immersia/capture';
 import {
   boothDb,
   mintSession,
   putOutput,
+  optOutOfDisplay,
   queueEmail,
   takeStore,
   type LocalSession,
@@ -37,6 +38,7 @@ import type { AssetView } from '@/server/assets';
 import { fillAssets } from './event-assets';
 import { fitted, templateResources } from './media';
 import { Confetti } from './Confetti';
+import { Gallery } from './Gallery';
 import { KioskLockLayer, useKioskLock } from './KioskLock';
 import { MotionBuffer } from './motion-buffer';
 import { RegisterDevice } from './RegisterDevice';
@@ -58,6 +60,8 @@ export interface PhotoBoothEvent {
   share: { qr: boolean; email: boolean; sms: boolean; whatsapp: boolean; stripQr: boolean };
   /** The event's print layout from the editor (screen 6), or null for the preset one. */
   layout: Template | null;
+  /** LIV-8: guests are told their capture may appear on the Live Display, and can opt out. */
+  liveDisplay: boolean;
   /** Dynamic fields and every file the layout draws (screen 5). */
   media: { branding: { hashtag: string; custom1: string; custom2: string; custom3: string }; assets: AssetView[] };
 }
@@ -98,6 +102,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
   const [activeCamera, setActiveCamera] = useState<ActiveCamera | null>(null);
   const [store, setStore] = useState<TakeStore | null>(null);
   const [drawer, setDrawer] = useState(false);
+  const [galleryOpen, setGalleryOpen] = useState(false);
   const [printsLeft, setPrintsLeft] = useState(0);
   const [printing, setPrinting] = useState(false);
   const phaseRef = useRef(phase);
@@ -115,6 +120,14 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
   const p = event.photo;
   const wantsClips = p.outputs.boomerang || p.outputs.shortVideo;
   const kiosk = useKioskLock(event.kioskPinHash);
+  // A session is under way, from the first countdown until the strip is kept: the gallery stays out of its way.
+  const capturing =
+    phase.kind === 'starting' ||
+    phase.kind === 'countdown' ||
+    phase.kind === 'flash' ||
+    phase.kind === 'review' ||
+    phase.kind === 'making';
+  const closeGallery = useCallback(() => setGalleryOpen(false), []);
   const uploads = useUploadQueue({ eventId: event.id, token: identity?.token ?? null, store });
   useWakeLock(phase.kind !== 'idle');
   useHeartbeat(
@@ -444,14 +457,24 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
             </Pill>
           )}
           {!kiosk.locked && (
-            <button
-              type="button"
-              onClick={() => setDrawer(true)}
-              aria-label={t('settings.title')}
-              className="focus-ring grid size-11 place-items-center rounded-full bg-g-bg/95"
-            >
-              <Settings2 className="size-5" />
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => setGalleryOpen(true)}
+                aria-label={t('gallery.open')}
+                className="focus-ring grid size-11 place-items-center rounded-full bg-g-bg/95"
+              >
+                <Images className="size-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setDrawer(true)}
+                aria-label={t('settings.title')}
+                className="focus-ring grid size-11 place-items-center rounded-full bg-g-bg/95"
+              >
+                <Settings2 className="size-5" />
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -578,6 +601,8 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
             preview={phase.preview}
             event={{ name: event.name, font: event.theme.font, share: event.share }}
             onEmail={(email) => queueEmail(db, phase.session.id, email)}
+            liveDisplay={event.liveDisplay}
+            onOptOut={() => optOutOfDisplay(db, phase.session.id).then(() => uploads.nudgeSession(phase.session.id))}
             onDone={backToReady}
             actions={
               p.print.enabled ? (
@@ -606,6 +631,14 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <Gallery
+        open={galleryOpen && !kiosk.locked}
+        onClose={closeGallery}
+        eventId={event.id}
+        eventName={event.name}
+        capturing={capturing}
+      />
 
       <SettingsDrawer
         open={drawer}

@@ -16,6 +16,8 @@ catalog:
   # Layout and overlay editor (PHO-4, PHO-6)
   konva: 10.7.0
   react-konva: 19.3.0
+  # Streaming ZIP downloads (EVT-4, SHR-5, screen 15)
+  client-zip: 2.5.1
   zod: 4.6.7
   '@serwist/turbopack': 9.5.13
   serwist: 9.5.13
@@ -41,6 +43,9 @@ catalog:
   mediabunny: 1.61.5
   '@mediabunny/aac-encoder': 1.61.5
   dexie: 4.4.6
+  # Realtime hub (Cloudflare Worker, apps/realtime)
+  wrangler: 4.146.0
+  '@cloudflare/workers-types': 5.20261003.1
   # Tooling
   typescript: 5.9.3
   '@types/react': 19.3.0
@@ -69,6 +74,7 @@ onlyBuiltDependencies:
   - sharp
   - unrs-resolver
   - '@parcel/watcher'
+  - workerd
 patchedDependencies:
   # Chrome writes VP9 vpcC level 0, which WebCodecs rejects; derive it from the picture size.
   mediabunny@1.61.5: patches/mediabunny@1.61.5.patch

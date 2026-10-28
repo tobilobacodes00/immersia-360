@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   CalendarDays,
+  Cloud,
   FolderOpen,
   LayoutDashboard,
   LogOut,
@@ -24,7 +25,7 @@ import { OperatorProvider } from './operator-context';
 
 interface NavItem {
   href: Route;
-  key: 'home' | 'events' | 'assets' | 'devices';
+  key: 'home' | 'events' | 'assets' | 'devices' | 'integrations';
   icon: LucideIcon;
   match: (path: string) => boolean;
 }
@@ -49,6 +50,12 @@ const NAV: { group: 'overview' | 'prepare' | 'system'; items: NavItem[] }[] = [
         key: 'devices',
         icon: MonitorSmartphone,
         match: (p) => p.startsWith('/studio/devices'),
+      },
+      {
+        href: '/studio/integrations',
+        key: 'integrations',
+        icon: Cloud,
+        match: (p) => p.startsWith('/studio/integrations'),
       },
     ],
   },

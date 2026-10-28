@@ -213,7 +213,7 @@ export function Select<T extends string>({
 }: {
   value: T;
   onChange: (v: T) => void;
-  options: readonly { value: T; label: string }[];
+  options: readonly { value: T; label: string; disabled?: boolean }[];
   className?: string;
   label?: string;
   id?: string;
@@ -230,7 +230,7 @@ export function Select<T extends string>({
         className="h-9 w-full cursor-pointer appearance-none rounded-[10px] border border-line-strong bg-elev pr-8 pl-3 text-sm outline-none transition-colors hover:border-[#c9c6bd] focus:border-accent focus:ring-3 focus:ring-accent-soft disabled:cursor-wait disabled:opacity-60"
       >
         {options.map((o) => (
-          <option key={o.value} value={o.value}>
+          <option key={o.value} value={o.value} disabled={o.disabled}>
             {o.label}
           </option>
         ))}
