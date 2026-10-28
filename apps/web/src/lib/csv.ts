@@ -19,8 +19,11 @@ export function csvCell(value: CsvValue): string {
   if (value === null || value === undefined) return '';
   let text: string;
   if (value instanceof Date) text = value.toISOString();
-  else if (typeof value === 'number') text = Number.isFinite(value) ? String(value) : '';
-  else text = FORMULA_START.test(value) ? `'${value}` : value;
+  // NaN and the infinities are no more a number than null is: an empty cell, not an empty string.
+  else if (typeof value === 'number') {
+    if (!Number.isFinite(value)) return '';
+    text = String(value);
+  } else text = FORMULA_START.test(value) ? `'${value}` : value;
   return `"${text.replace(/"/g, '""')}"`;
 }
 

@@ -4,7 +4,7 @@ import { memo, useCallback, useDeferredValue, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import { LayoutTemplate, Plus, SearchX } from 'lucide-react';
-import { TEMPLATE_CATEGORIES, type TemplateCategory } from '@immersia/layout';
+import { TEMPLATE_CATEGORIES } from '@immersia/layout';
 import type { TokenContext } from '@immersia/shared';
 import { Button, EmptyState, Modal, Pill, Select, TextInput, buttonClass, cx } from '@immersia/ui';
 import { applyDesignAction, saveToLibraryAction } from '@/app/studio/design-actions';

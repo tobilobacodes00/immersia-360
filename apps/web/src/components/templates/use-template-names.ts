@@ -40,13 +40,14 @@ export function useTemplateNames() {
     const sizeOptions = SIZE_KEYS.map((key) => ({ value: key, label: sizeLabel(key) }));
     const category = (c: TemplateCategory) => t(`categories.${c}`);
     // Each occasion is previewed with its own sample event (an event name in the reader's language).
-    const samples = Object.fromEntries(
+    const samples = new Map<TemplateCategory, TokenContext>(
       TEMPLATE_CATEGORIES.map((c) => [
         c,
         eventTokens({ name: t(`samples.${c}`), date: '2026-06-14' }, { hashtag: '#immersia' }, null),
       ]),
-    ) as Record<TemplateCategory, TokenContext>;
-    const tokens = (c: TemplateCategory | undefined): TokenContext => samples[c ?? 'wedding'];
+    );
+    const wedding = samples.get('wedding') ?? {};
+    const tokens = (c: TemplateCategory | undefined): TokenContext => (c && samples.get(c)) || wedding;
     return { sizeLabel, describe, occasion, name, sizeOptions, category, tokens };
   }, [t]);
 }
