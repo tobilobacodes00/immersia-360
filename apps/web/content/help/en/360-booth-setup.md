@@ -39,14 +39,18 @@ Slow motion slows one part of the spin and plays the rest at normal speed. **Rev
 - **Keyboard and Bluetooth remotes**: Space, Enter or a remote's page buttons. See [Starting with a keyboard or remote](help:capture-triggers-and-shortcuts).
 - **Motion**: recording starts when the platform starts turning. The **Motion needed** setting decides how much of the picture must move sideways; a lower value starts sooner.
 
-A guest can also be handed a clip that is already shot: in **Booth settings** press **Choose files** under **Import videos**, or drag video files onto the booth screen. They are rendered like any other take.
+You can also add a clip that is already shot, for example one filmed in a phone's own camera app: in **Booth settings** press **Choose files** under **Import videos**, or drag video files onto the booth screen. They are rendered like any other take.
+
+## Make it yours
+
+On the **Branding** tab you add an overlay, an intro and an outro, music, a colour look, effects and a replacement background. See [Templates and the design editor](help:templates-and-editor) and [Looks, effects and background replacement](help:looks-and-effects).
 
 ## In the booth
 
-Open **Booth settings** (the sliders button in the top corner) to choose the camera and lens, set zoom, the camera's light or an on-screen fill light, and mirror the preview. The mirror only affects the screen; recordings are never mirrored.
+Open **Booth settings** (the sliders button in the top corner) to choose the camera and lens, set zoom, the camera's light or an on-screen fill light, and mirror the preview. The mirror only affects the screen; recordings are never mirrored. The fill light is a glowing frame around the screen that lights guests' faces; it doesn't appear in recordings.
 
-The booth asks the screen to stay awake while it is open. Keep the device on power, and stop it from sleeping in its own settings too. See [Kiosk lock](help:kiosk-locking).
+The booth asks the screen to stay awake while it is open. Keep the device on power, and stop it from sleeping in its own settings too. See [Lock the booth for guests](help:kiosk-locking).
 
 ## What the guest gets
 
-Right after the spin the booth shows a QR code and a short code. The guest's page opens at once and fills in when the video is ready, usually within a minute or two. See [Sharing with guests](help:sharing-with-guests) and [Render speed and the queue](help:render-speed-and-queue).
+Right after the spin the booth shows a QR code and a short code. The guest's page opens at once and fills in when the video is ready, usually within a minute or two. See [How guests get their photos and videos](help:sharing-with-guests) and [Render speed and the render queue](help:render-speed-and-queue).

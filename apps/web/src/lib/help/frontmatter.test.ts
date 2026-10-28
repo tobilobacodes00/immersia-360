@@ -30,6 +30,34 @@ describe('help front matter', () => {
     expect(body.startsWith('## First heading')).toBe(true);
   });
 
+  it('reads a list wrapped over several lines, as Prettier formats a long one', () => {
+    const wrapped = valid.replace(
+      'keywords: [test, "camera, lens", \'fps\']',
+      'keywords:\n  [\n    test,\n    "camera, lens",\n    \'fps\',\n  ]',
+    );
+    expect(parseArticleSource(wrapped).data.keywords).toEqual(['test', 'camera, lens', 'fps']);
+    expect(parseArticleSource(wrapped).data.related).toEqual(['getting-started', 'camera-permissions']);
+  });
+
+  it('keeps a bare number in the keywords as a search word', () => {
+    const { data } = parseArticleSource(
+      valid.replace('keywords: [test, "camera, lens", \'fps\']', 'keywords: [360, 4k]'),
+    );
+    expect(data.keywords).toEqual(['360', '4k']);
+  });
+
+  it('reads a list written as a block, and an empty list', () => {
+    expect(parseFrontmatterBlock('keywords:\n  - one\n  - "two, three"\nrelated: []')).toEqual({
+      keywords: ['one', 'two, three'],
+      related: [],
+    });
+  });
+
+  it('reads a trailing comma but not a missing bracket in a wrapped list', () => {
+    expect(parseFrontmatterBlock('keywords: [a, b,]')).toEqual({ keywords: ['a', 'b'] });
+    expect(() => parseFrontmatterBlock('keywords:\n  [\n    a,\n    b,')).toThrow(/unterminated list/);
+  });
+
   it('accepts Windows line endings and a byte order mark', () => {
     const { data } = parseArticleSource(`﻿${valid.replace(/\n/g, '\r\n')}`);
     expect(data.title).toBe('Run the setup check');

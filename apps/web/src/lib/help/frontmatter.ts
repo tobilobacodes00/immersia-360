@@ -43,7 +43,11 @@ export const frontmatterSchema = z
     /** Position within its category (ascending). */
     order: z.number().int().min(0).max(999),
     /** Extra words people may search with (synonyms, product names). */
-    keywords: z.array(z.string().trim().min(1).max(40)).max(20).default([]),
+    // A bare `360` is a number to the list reader; as a search word it is text.
+    keywords: z
+      .array(z.union([z.string(), z.number()]).transform(String).pipe(z.string().trim().min(1).max(40)))
+      .max(20)
+      .default([]),
     /** Last review, YYYY-MM-DD. */
     updated: z.iso.date(),
     /** Slugs of articles worth reading next. */
@@ -116,30 +120,52 @@ function parseList(value: string): (string | number)[] {
   }
   if (quote) throw new FrontmatterError(`unterminated quote in list: ${value}`);
   parts.push(current);
-  return parts.map(parseScalar);
+  // A trailing comma (Prettier writes one when it wraps a long list) leaves an empty last item.
+  return parts.filter((p, i) => p.trim() !== '' || i < parts.length - 1).map(parseScalar);
 }
 
-/** Parse the lines between the `---` fences into a plain object (before validation). */
+/** A block list: lines of `- item`. */
+function parseBlockList(lines: readonly string[]): (string | number)[] {
+  return lines.map((l) => {
+    const m = /^\s*-\s+(.*)$/.exec(l);
+    if (!m) throw new FrontmatterError(`cannot read list item: ${l}`);
+    return parseScalar(m[1]!);
+  });
+}
+
+const isContinuation = (line: string | undefined) => line !== undefined && /^\s+\S/.test(line);
+
+/**
+ * Parse the lines between the `---` fences into a plain object (before validation). Lists may be
+ * written inline (`[a, b]`), wrapped over several lines (as Prettier formats long ones) or as a
+ * `- item` block.
+ */
 export function parseFrontmatterBlock(raw: string): Record<string, unknown> {
   const out: Record<string, unknown> = {};
-  for (const line of raw.split('\n')) {
+  const lines = raw.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]!;
     if (line.trim() === '' || line.trimStart().startsWith('#')) continue;
     const m = /^([A-Za-z][\w-]*):(?:\s+(.*))?$/.exec(line);
     if (!m) throw new FrontmatterError(`cannot read front matter line: ${line}`);
-    const [, key, value = ''] = m as unknown as [string, string, string | undefined];
+    const [, key, first = ''] = m as unknown as [string, string, string | undefined];
     if (key in out) throw new FrontmatterError(`front matter key repeated: ${key}`);
-    out[key] = value.trim().startsWith('[')
-      ? value.trim().endsWith(']')
-        ? parseList(value)
-        : fail(line)
-      : parseScalar(value);
+    // Whatever is indented under the key belongs to its value.
+    const rest: string[] = [];
+    while (isContinuation(lines[i + 1])) rest.push(lines[++i]!);
+    let value = first.trim();
+    if (value === '' && rest.length > 0 && /^\s*-\s/.test(rest[0]!)) {
+      out[key] = parseBlockList(rest);
+      continue;
+    }
+    if (rest.length > 0) value = [value, ...rest.map((r) => r.trim())].join(' ').trim();
+    if (value.startsWith('[')) {
+      if (!value.endsWith(']')) throw new FrontmatterError(`unterminated list: ${line}`);
+      out[key] = parseList(value);
+    } else out[key] = parseScalar(value);
   }
   return out;
 }
-
-const fail = (line: string): never => {
-  throw new FrontmatterError(`unterminated list: ${line}`);
-};
 
 /** An article file → validated front matter and Markdown body. */
 export function parseArticleSource(source: string): { data: Frontmatter; body: string } {
