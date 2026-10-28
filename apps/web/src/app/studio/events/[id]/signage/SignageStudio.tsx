@@ -8,6 +8,7 @@ import type { EventTheme, TokenContext } from '@immersia/shared';
 import { Button, Card, Field, Segmented, TextInput } from '@immersia/ui';
 import { TemplateCanvas } from '@/components/editor/TemplateCanvas';
 import { useTemplateInputs } from '@/components/editor/use-template-inputs';
+import { NfcWrite } from '@/components/nfc/NfcWrite';
 import { saveBlob, signageFilename, signagePdf, signagePng } from '@/lib/signage-export';
 import type { AssetView } from '@/server/assets';
 
@@ -25,6 +26,7 @@ export function SignageStudio({
   hashtag,
   logo,
   link,
+  nfcLink,
 }: {
   eventName: string;
   theme: EventTheme;
@@ -33,6 +35,8 @@ export function SignageStudio({
   logo: AssetView | null;
   /** The gallery link the code opens (tagged as the event QR route). */
   link: string;
+  /** The same gallery tagged as the NFC route (DL-13), for tags and wristbands (DL-10). */
+  nfcLink: string;
 }) {
   const t = useTranslations('studio.signage');
   const [format, setFormat] = useState<SignageFormat>('a4');
@@ -165,6 +169,12 @@ export function SignageStudio({
             <span className="sr-only" role="status">
               {copied ? t('link.copied') : ''}
             </span>
+          </div>
+        </Card>
+
+        <Card title={t('nfc.title')} subtitle={t('nfc.subtitle')}>
+          <div className="py-3">
+            <NfcWrite url={nfcLink} />
           </div>
         </Card>
       </div>

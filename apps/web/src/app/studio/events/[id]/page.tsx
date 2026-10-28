@@ -126,6 +126,7 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
           eventId={id}
           eventName={event.name}
           url={galleryUrl(appOrigin(), event.gallerySlug, 'direct')}
+          nfcUrl={galleryUrl(appOrigin(), event.gallerySlug, 'nfc')}
           items={gallery.items}
           locked={event.galleryPasswordHash !== null}
         />

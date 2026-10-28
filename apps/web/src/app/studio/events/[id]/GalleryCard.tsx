@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { Check, Copy, ExternalLink, Lock, LockOpen } from 'lucide-react';
 import { Button, Card, Field, Pill, TextInput } from '@immersia/ui';
+import { NfcWrite } from '@/components/nfc/NfcWrite';
 import { ZipDownload } from '@/components/zip/ZipDownload';
 import { setGalleryPasswordAction } from '../../gallery-actions';
 import { useCan } from '../../operator-context';
@@ -13,12 +14,15 @@ export function GalleryCard({
   eventId,
   eventName,
   url,
+  nfcUrl,
   items,
   locked,
 }: {
   eventId: string;
   eventName: string;
   url: string;
+  /** The same gallery, tagged as the NFC route (DL-13), for tags and wristbands. */
+  nfcUrl: string;
   items: number;
   locked: boolean;
 }) {
@@ -62,6 +66,9 @@ export function GalleryCard({
             {t('openLink')} <ExternalLink className="size-3.5" aria-hidden />
           </a>
         </div>
+      </Field>
+      <Field label={t('nfc')} help={t('nfcHelp')} stack>
+        <NfcWrite url={nfcUrl} />
       </Field>
       <Field
         label={t('password')}
