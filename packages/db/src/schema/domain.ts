@@ -471,15 +471,39 @@ export const serverRenderJob = pgTable(
     takeId: uuid('take_id')
       .notNull()
       .references(() => take.id, { onDelete: 'cascade' }),
+    /** The booth device that asked for it. */
+    deviceId: uuid('device_id').references(() => device.id, { onDelete: 'set null' }),
     recipe: jsonb('recipe').$type<RenderRecipe>().notNull(),
     status: renderJobStatus('status').notNull().default('queued'),
+    /** Tries started, including the one in progress. */
     attempts: smallint('attempts').notNull().default(0),
+    /** A stable code (SERVER_RENDER_ERRORS in @immersia/shared), never provider text. */
     error: text('error'),
+    /**
+     * While `queued`: the earliest time a worker may claim it (backoff after a failed try). While
+     * `running`: when the claim's lease runs out, so a worker that died mid-render does not park the job.
+     */
+    nextAttemptAt: ts('next_attempt_at'),
+    /** Proves a later call comes from the worker that holds the claim; cleared when the claim ends. */
+    claimToken: text('claim_token'),
+    workerId: text('worker_id'),
+    renderMs: integer('render_ms'),
     createdAt: createdAt(),
     startedAt: ts('started_at'),
     finishedAt: ts('finished_at'),
   },
-  (t) => [index('server_render_job_status_idx').on(t.status, t.createdAt)],
+  (t) => [
+    index('server_render_job_status_idx').on(t.status, t.createdAt),
+    index('server_render_job_event_idx').on(t.eventId, t.createdAt),
+    // What a worker polls: due queued jobs and lapsed leases.
+    index('server_render_job_queue_idx')
+      .on(t.status, t.nextAttemptAt)
+      .where(sql`${t.status} in ('queued', 'running')`),
+    // One job in flight per take, however often the booth asks (a finished or failed take can be rendered again).
+    uniqueIndex('server_render_job_take_active_idx')
+      .on(t.takeId)
+      .where(sql`${t.status} in ('queued', 'running')`),
+  ],
 );
 
 /** First-party analytics. Partitioned by month in SQL (see the custom migration). */
