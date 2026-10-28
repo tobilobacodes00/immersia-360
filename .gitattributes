@@ -4,3 +4,6 @@
 *.jpg binary
 *.mp4 binary
 *.mov binary
+# The Gradle wrapper of the companion app (CAP-14): the jar is binary and the Windows script needs CRLF.
+*.jar binary
+*.bat text eol=crlf
