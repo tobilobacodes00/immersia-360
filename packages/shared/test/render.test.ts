@@ -31,6 +31,7 @@ const recipe = (patch: Partial<RenderRecipe> = {}): RenderRecipe => ({
     fadeOutMs: 1000,
     volume: 0.9,
   },
+  background: { kind: 'color', color: '#2b3fe6' },
   intro: { assetId: OTHER, kind: 'image', seconds: 2 },
   outro: null,
   endCard: { seconds: 2 },
@@ -94,6 +95,26 @@ describe('render recipe (server render request)', () => {
     expect(recipeAssetIds(recipe())).toEqual([ASSET, OTHER]);
     expect(recipeAssetIds(recipe({ music: null, intro: null }))).toEqual([]);
     expect(recipeAssetIds(recipe({ outro: { assetId: OTHER, kind: 'video', seconds: 2 } }))).toEqual([ASSET, OTHER]);
+  });
+
+  it('counts a background picture or video as an asset, and a colour or blur as none', () => {
+    const BG = '0198f7a0-6b1c-7d3e-8f4a-5b6c7d8e9f03';
+    const only = { music: null, intro: null };
+    expect(recipeAssetIds(recipe({ ...only, background: { kind: 'image', assetId: BG } }))).toEqual([BG]);
+    expect(recipeAssetIds(recipe({ ...only, background: { kind: 'video', assetId: BG } }))).toEqual([BG]);
+    expect(recipeAssetIds(recipe({ ...only, background: { kind: 'blur' } }))).toEqual([]);
+    expect(recipeAssetIds(recipe({ ...only, background: null }))).toEqual([]);
+  });
+
+  it('validates the background', () => {
+    const ok = (background: unknown) => renderRecipeSchema.safeParse({ ...recipe(), background }).success;
+    expect(ok({ kind: 'color', color: '#00ff88' })).toBe(true);
+    expect(ok({ kind: 'blur' })).toBe(true);
+    expect(ok(null)).toBe(true);
+    expect(ok({ kind: 'color', color: 'red' })).toBe(false);
+    expect(ok({ kind: 'image', assetId: 'nope' })).toBe(false);
+    expect(ok({ kind: 'blur', extra: 1 })).toBe(false);
+    expect(ok({ kind: 'gif', assetId: ASSET })).toBe(false);
   });
 });
 

@@ -149,7 +149,15 @@ export async function requestRender(
   const [session] = await db()
     .select({ id: captureSession.id })
     .from(captureSession)
-    .where(and(eq(captureSession.id, input.sessionId), eq(captureSession.eventId, t.eventId)))
+    .where(
+      and(
+        eq(captureSession.id, input.sessionId),
+        eq(captureSession.eventId, t.eventId),
+        // An erased or expired session has no guest to render for.
+        isNull(captureSession.erasedAt),
+        isNull(captureSession.expiredAt),
+      ),
+    )
     .limit(1);
   if (!session) return { error: 'session_not_found' };
 
@@ -221,7 +229,20 @@ async function assetsAreUsable(organizationId: string, recipe: RenderRecipe): Pr
     return Boolean(a && a.type === type && a.mime.startsWith(c.kind === 'image' ? 'image/' : 'video/'));
   };
   const music = recipe.music ? byId.get(recipe.music.assetId) : null;
-  return (!recipe.music || music?.type === 'audio') && card(recipe.intro, 'intro') && card(recipe.outro, 'outro');
+  const bg = recipe.background;
+  const backgroundOk =
+    !bg ||
+    !('assetId' in bg) ||
+    (() => {
+      const a = byId.get(bg.assetId);
+      return Boolean(a && a.type === 'background' && a.mime.startsWith(bg.kind === 'image' ? 'image/' : 'video/'));
+    })();
+  return (
+    (!recipe.music || music?.type === 'audio') &&
+    card(recipe.intro, 'intro') &&
+    card(recipe.outro, 'outro') &&
+    backgroundOk
+  );
 }
 
 export function quotaLimits() {
@@ -318,6 +339,19 @@ export async function claimJob(workerId: string): Promise<WorkerClaim> {
         .limit(1)
         .for('update', { skipLocked: true });
       if (!row) return null;
+      // The guest erased the session, or it expired, while the job waited: there is nothing to render for.
+      const [open] = await tx
+        .select({ id: captureSession.id })
+        .from(captureSession)
+        .where(
+          and(eq(captureSession.id, row.sessionId), isNull(captureSession.erasedAt), isNull(captureSession.expiredAt)),
+        )
+        .limit(1);
+      if (!open) {
+        const gone = failureTransition(row, 'source_missing', now);
+        await tx.update(job).set(write(gone, now)).where(eq(job.id, row.id));
+        return { row, claimToken: null, ended: 'source_missing' };
+      }
       const next = claimTransition(row, now);
       if (next.finished) {
         await tx.update(job).set(write(next, now)).where(eq(job.id, row.id));
@@ -377,25 +411,36 @@ async function downloadUrls(row: JobRow, recipe: RenderRecipe): Promise<NonNulla
     const key = id ? keyOf.get(id) : undefined;
     return key ? presignView(key, URL_TTL_S) : null;
   };
-  const [original, overlay, endCard, intro, outro, music] = await Promise.all([
+  const bgId = recipe.background && 'assetId' in recipe.background ? recipe.background.assetId : undefined;
+  const [original, overlay, endCard, intro, outro, music, background] = await Promise.all([
     file('original'),
     recipe.files.overlay ? file('overlay') : null,
     recipe.files.endCard ? file('end_card') : null,
     assetUrl(recipe.intro?.assetId),
     assetUrl(recipe.outro?.assetId),
     assetUrl(recipe.music?.assetId),
+    assetUrl(bgId),
   ]);
-  return { original, overlay, endCard, intro, outro, music };
+  return { original, overlay, endCard, intro, outro, music, background };
 }
 
 /** The running job this token holds, or null (it finished, was reclaimed, or the token is wrong). */
 async function heldJob(jobId: string, claimToken: string): Promise<JobRow | null> {
   const [row] = await db()
-    .select()
+    .select({ job })
     .from(job)
-    .where(and(eq(job.id, jobId), eq(job.status, 'running'), eq(job.claimToken, claimToken)))
+    .innerJoin(captureSession, eq(captureSession.id, job.sessionId))
+    .where(
+      and(
+        eq(job.id, jobId),
+        eq(job.status, 'running'),
+        eq(job.claimToken, claimToken),
+        // A guest who erased their session must not get files back through a render already under way.
+        isNull(captureSession.erasedAt),
+      ),
+    )
     .limit(1);
-  return row ?? null;
+  return row?.job ?? null;
 }
 
 /** Extend the lease while a render goes on. `timeout`: it ran past the time limit and was stopped. */
@@ -579,6 +624,27 @@ export async function deleteWorkingFiles(takeIds: string[]): Promise<number> {
     console.error('[render-jobs] could not delete working files', err instanceof Error ? err.name : err);
     return 0;
   }
+}
+
+/**
+ * A session was erased: its open server renders stop (no worker may publish files for it any more)
+ * and the working copies of its takes are deleted. Idempotent; best effort on the files, which the
+ * erasure sweep removes again.
+ */
+export async function abandonServerRenders(sessionId: string): Promise<void> {
+  await db()
+    .update(job)
+    .set({
+      status: 'failed',
+      error: 'source_missing',
+      finishedAt: new Date(),
+      nextAttemptAt: null,
+      claimToken: null,
+      workerId: null,
+    })
+    .where(and(eq(job.sessionId, sessionId), inArray(job.status, ['queued', 'running'])));
+  const takes = await db().selectDistinct({ id: job.takeId }).from(job).where(eq(job.sessionId, sessionId));
+  await deleteWorkingFiles(takes.map((t) => t.id));
 }
 
 /** Object keys of the working files of the jobs of a session (for the expiry sweep). */

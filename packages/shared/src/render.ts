@@ -81,6 +81,14 @@ const card = z
   })
   .strict();
 
+/** CAP-10: what replaces the background behind the guest. A picture or video is a library asset of type `background`. */
+const backgroundRecipe = z.union([
+  z.strictObject({ kind: z.literal('color'), color: z.string().regex(/^#[0-9a-fA-F]{6}$/) }),
+  z.strictObject({ kind: z.literal('blur') }),
+  z.strictObject({ kind: z.literal('image'), assetId: z.uuid() }),
+  z.strictObject({ kind: z.literal('video'), assetId: z.uuid() }),
+]);
+
 const slowMotion = z
   .object({
     enabled: z.boolean(),
@@ -124,6 +132,7 @@ export const renderRecipeSchema = z
     beats: z.array(z.number().min(0).max(3600)).max(4000),
     seed: z.number().int().min(0).max(1_000_000),
     music: musicSchema.nullable(),
+    background: backgroundRecipe.nullable(),
     intro: card.nullable(),
     outro: card.nullable(),
     /** DL-4: the closing QR card (drawn by the booth and uploaded as `end_card`). */
@@ -149,7 +158,14 @@ export type RenderRecipe = z.infer<typeof renderRecipeSchema>;
 /** Library assets a recipe refers to (they must belong to the event's organization). */
 export function recipeAssetIds(recipe: RenderRecipe): string[] {
   return [
-    ...new Set([recipe.music?.assetId, recipe.intro?.assetId, recipe.outro?.assetId].filter((x): x is string => !!x)),
+    ...new Set(
+      [
+        recipe.music?.assetId,
+        recipe.intro?.assetId,
+        recipe.outro?.assetId,
+        recipe.background && 'assetId' in recipe.background ? recipe.background.assetId : undefined,
+      ].filter((x): x is string => !!x),
+    ),
   ];
 }
 
@@ -251,6 +267,7 @@ export interface WorkerJobUrls {
   intro: string | null;
   outro: string | null;
   music: string | null;
+  background: string | null;
 }
 
 export interface WorkerClaim {
