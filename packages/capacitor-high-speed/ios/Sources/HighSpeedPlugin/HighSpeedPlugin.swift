@@ -153,8 +153,8 @@ public class HighSpeedPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func listRecordings(_ call: CAPPluginCall) {
-        DispatchQueue.global(qos: .utility).async {
-            call.resolve(["recordings": self.controller.listRecordings()])
+        controller.listRecordings { recordings in
+            call.resolve(["recordings": recordings])
         }
     }
 }

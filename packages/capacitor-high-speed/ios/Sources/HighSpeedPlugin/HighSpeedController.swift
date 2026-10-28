@@ -569,22 +569,34 @@ final class HighSpeedController: NSObject, AVCaptureFileOutputRecordingDelegate 
         }
     }
 
-    /// Finished movies still on disk (never an unfinished `.mov` that is being written now).
-    func listRecordings() -> [[String: Any]] {
-        let directory = HighSpeedController.recordingsDirectory()
-        let keys: [URLResourceKey] = [.fileSizeKey, .contentModificationDateKey]
-        let files = (try? FileManager.default.contentsOfDirectory(
-            at: directory, includingPropertiesForKeys: keys, options: [.skipsHiddenFiles]
-        )) ?? []
-        return files.compactMap { file -> [String: Any]? in
-            guard file.pathExtension == HighSpeedController.finishedExtension else { return nil }
-            let values = try? file.resourceValues(forKeys: Set(keys))
-            return [
-                "id": file.deletingPathExtension().lastPathComponent,
-                "path": file.absoluteString,
-                "bytes": Int64(values?.fileSize ?? 0),
-                "modifiedMs": Int64((values?.contentModificationDate?.timeIntervalSince1970 ?? 0) * 1000)
-            ]
+    /// Movies still on disk: the finished ones, and a `.mov` that a crash cut short (it is not being written
+    /// by this session, and its fragments may still play), which is given the finished name so the web layer
+    /// can bring it home like the others.
+    func listRecordings(completion: @escaping ([[String: Any]]) -> Void) {
+        sessionQueue.async { [weak self] in
+            let directory = HighSpeedController.recordingsDirectory()
+            let keys: [URLResourceKey] = [.fileSizeKey, .contentModificationDateKey]
+            let activeURL = self?.recording?.url
+            var files = (try? FileManager.default.contentsOfDirectory(
+                at: directory, includingPropertiesForKeys: keys, options: [.skipsHiddenFiles]
+            )) ?? []
+            files = files.map { file -> URL in
+                guard file.pathExtension == "mov", file != activeURL else { return file }
+                let finished = file.deletingPathExtension().appendingPathExtension(HighSpeedController.finishedExtension)
+                try? FileManager.default.removeItem(at: finished)
+                return (try? FileManager.default.moveItem(at: file, to: finished)) != nil ? finished : file
+            }
+            let list = files.compactMap { file -> [String: Any]? in
+                guard file.pathExtension == HighSpeedController.finishedExtension else { return nil }
+                let values = try? file.resourceValues(forKeys: Set(keys))
+                return [
+                    "id": file.deletingPathExtension().lastPathComponent,
+                    "path": file.absoluteString,
+                    "bytes": Int64(values?.fileSize ?? 0),
+                    "modifiedMs": Int64((values?.contentModificationDate?.timeIntervalSince1970 ?? 0) * 1000)
+                ]
+            }
+            DispatchQueue.main.async { completion(list) }
         }
     }
 
