@@ -27,6 +27,7 @@ const config: NextConfig = {
     '@immersia/db',
     '@immersia/capture',
     '@immersia/offline',
+    '@immersia/layout',
   ],
   typedRoutes: true,
   env: {

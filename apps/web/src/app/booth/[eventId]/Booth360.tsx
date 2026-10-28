@@ -44,6 +44,7 @@ import { CountdownDisc, GuestButton, Headline, fade } from '@immersia/ui/guest';
 import { readDeviceIdentity, type DeviceIdentity } from '@/lib/device-identity';
 import { useCaptureKeys, useHeartbeat, useHeld, useLiveQuery, useOnline, useWakeLock } from './booth-hooks';
 import { RegisterDevice } from './RegisterDevice';
+import { KioskLockLayer, useKioskLock } from './KioskLock';
 import { RenderQueue } from './RenderQueue';
 import { ResultScreen } from './ResultScreen';
 import { useUploadQueue } from './use-upload-queue';
@@ -65,6 +66,8 @@ export interface BoothEvent {
   triggers: { tap: boolean; keyboard: boolean; motion: { enabled: boolean; threshold: number; cooldownS: number } };
   theme: EventTheme;
   attract: { headline: string; cta: string };
+  /** KIO-1: with a PIN set, the booth runs locked full screen. Only the hash is sent. */
+  kioskPinHash: string | null;
   /** SHR-1/2/3: what the result screen offers the guest. */
   share: { qr: boolean; email: boolean; sms: boolean; whatsapp: boolean; smallerVersion: boolean };
 }
@@ -131,6 +134,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
     phase.kind === 'saving' ||
     phase.kind === 'saved';
   const renderPaused = useHeld(capturing, RENDER_RESUME_MS);
+  const kiosk = useKioskLock(event.kioskPinHash);
   const uploads = useUploadQueue({ eventId: event.id, token: identity?.token ?? null, store: storeReady });
   const renderQueue = useRenderQueue({
     eventId: event.id,
@@ -430,13 +434,17 @@ export function Booth360({ event }: { event: BoothEvent }) {
 
       {/* Top bar */}
       <div className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 p-[1.25rem]">
-        <Link
-          href={`/studio/events/${event.id}`}
-          className="focus-ring flex items-center gap-2 rounded-full bg-g-bg/95 py-2 pr-4 pl-3 text-[0.95rem] font-semibold"
-        >
-          <ArrowLeft className="size-5" aria-hidden />
-          <span className="max-w-[40vw] truncate">{event.name}</span>
-        </Link>
+        {kiosk.locked ? (
+          <span className="py-2 pl-3 text-[0.95rem] font-semibold">{event.name}</span>
+        ) : (
+          <Link
+            href={`/studio/events/${event.id}`}
+            className="focus-ring flex items-center gap-2 rounded-full bg-g-bg/95 py-2 pr-4 pl-3 text-[0.95rem] font-semibold"
+          >
+            <ArrowLeft className="size-5" aria-hidden />
+            <span className="max-w-[40vw] truncate">{event.name}</span>
+          </Link>
+        )}
         <div className="flex flex-wrap items-center justify-end gap-2" role="status" aria-live="polite">
           {!online && (
             <Pill tone="warn" className="text-[0.8rem]">
@@ -468,30 +476,34 @@ export function Booth360({ event }: { event: BoothEvent }) {
                     : t('uploads.offline', { count: uploads.status.waiting })}
             </Pill>
           )}
-          <button
-            type="button"
-            onClick={() => setQueueOpen(true)}
-            className="focus-ring rounded-full"
-            aria-label={t('queue', { count: pending })}
-          >
-            <Pill
-              tone={renderQueue.current ? 'info' : 'neutral'}
-              dot={Boolean(renderQueue.current)}
-              className="text-[0.8rem]"
-            >
-              {renderQueue.current
-                ? t('rendering', { percent: Math.round(renderQueue.current.progress * 100) })
-                : t('queue', { count: pending })}
-            </Pill>
-          </button>
-          <button
-            type="button"
-            onClick={() => setDrawer(true)}
-            aria-label={t('settings.title')}
-            className="focus-ring grid size-11 place-items-center rounded-full bg-g-bg/95"
-          >
-            <Settings2 className="size-5" />
-          </button>
+          {!kiosk.locked && (
+            <>
+              <button
+                type="button"
+                onClick={() => setQueueOpen(true)}
+                className="focus-ring rounded-full"
+                aria-label={t('queue', { count: pending })}
+              >
+                <Pill
+                  tone={renderQueue.current ? 'info' : 'neutral'}
+                  dot={Boolean(renderQueue.current)}
+                  className="text-[0.8rem]"
+                >
+                  {renderQueue.current
+                    ? t('rendering', { percent: Math.round(renderQueue.current.progress * 100) })
+                    : t('queue', { count: pending })}
+                </Pill>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDrawer(true)}
+                aria-label={t('settings.title')}
+                className="focus-ring grid size-11 place-items-center rounded-full bg-g-bg/95"
+              >
+                <Settings2 className="size-5" />
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -521,7 +533,14 @@ export function Booth360({ event }: { event: BoothEvent }) {
                 {event.name}
               </Headline>
               <p className="mt-4 text-[1.2rem] opacity-70">{t('startHint')}</p>
-              <GuestButton primary className="mt-10" onClick={() => void startCamera(cameraChoice)}>
+              <GuestButton
+                primary
+                className="mt-10"
+                onClick={() => {
+                  void kiosk.enter();
+                  void startCamera(cameraChoice);
+                }}
+              >
                 {t('startBooth')}
               </GuestButton>
             </div>
@@ -671,16 +690,20 @@ export function Booth360({ event }: { event: BoothEvent }) {
           if (phase.kind !== 'idle' && phase.kind !== 'recording') void startCamera(c);
         }}
         camera={activeCamera}
-        motion={{ enabled: motionOn, threshold }}
-        onMotion={(m) => {
-          setMotionOn(m.enabled);
-          setThreshold(m.threshold);
+        capture360={{
+          motion: { enabled: motionOn, threshold },
+          onMotion: (m) => {
+            setMotionOn(m.enabled);
+            setThreshold(m.threshold);
+          },
+          takes,
+          onImport: importFiles,
+          storeBackend: backend,
+          importIcon: <Upload className="size-4" />,
         }}
-        takes={takes}
-        onImport={importFiles}
-        storeBackend={backend}
-        importIcon={<Upload className="size-4" />}
       />
+
+      <KioskLockLayer eventId={event.id} pinHash={event.kioskPinHash} kiosk={kiosk} />
     </div>
   );
 }

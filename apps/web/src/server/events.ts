@@ -6,6 +6,7 @@ import {
   defaultBranding,
   defaultOutputSettings,
   defaultShareSettings,
+  kioskPinHash,
   newLinkId,
   outputSettingsSchema,
   shareSettingsSchema,
@@ -345,4 +346,14 @@ export async function extendGuestFiles(organizationId: string, eventId: string, 
     .where(and(eq(captureSession.eventId, eventId), isNull(captureSession.expiredAt)))
     .returning({ id: captureSession.id });
   return rows.length;
+}
+
+/** KIO-1: set (or clear, with null) the event's kiosk PIN. Only its hash is stored. */
+export async function setKioskPin(organizationId: string, eventId: string, pin: string | null): Promise<boolean> {
+  const rows = await db()
+    .update(event)
+    .set({ kioskPinHash: pin === null ? null : await kioskPinHash(eventId, pin) })
+    .where(and(eq(event.id, eventId), eq(event.organizationId, organizationId)))
+    .returning({ id: event.id });
+  return rows.length > 0;
 }

@@ -15,7 +15,8 @@
     "./event": "./src/event.ts",
     "./template": "./src/template.ts",
     "./device": "./src/device.ts",
-    "./session": "./src/session.ts"
+    "./session": "./src/session.ts",
+    "./kiosk": "./src/kiosk.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
