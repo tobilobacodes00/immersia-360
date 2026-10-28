@@ -9,6 +9,7 @@ import {
   RENDER_TARGET_TABLET_MS,
   chooseRenderPath,
   gradeRender,
+  worst,
   type Finding,
   type RenderCode,
 } from '@/lib/setup-check/grading';
@@ -43,7 +44,11 @@ export function RenderStep({ session, plan, onDone }: StepProps) {
           outcome,
           findings: gradeRender(
             outcome.kind === 'done'
-              ? { kind: 'estimate', referenceMs: outcome.referenceMs }
+              ? {
+                  kind: 'estimate',
+                  referenceMs: outcome.referenceMs,
+                  backgroundUnavailable: outcome.background === 'unavailable',
+                }
               : { kind: 'error', code: noTake ? 'noTake' : outcome.code },
           ),
         });
@@ -105,7 +110,7 @@ export function RenderStep({ session, plan, onDone }: StepProps) {
       )}
       <StepActions
         busy={!done}
-        status={done ? done.findings[0]!.status : null}
+        status={done ? worst(done.findings) : null}
         onRetry={() => {
           setState({ kind: 'rendering', share: 0 });
           setAttempt((n) => n + 1);

@@ -2024,6 +2024,7 @@
         "gpu": "A aceleração gráfica (WebGL 2) não está disponível, então os vídeos não podem ser compostos. Ative a aceleração de hardware nas configurações do navegador, atualize o driver de vídeo e tente de novo.",
         "cancelled": "A renderização foi cancelada. Tente de novo.",
         "noTake": "Não há gravação de teste para renderizar. Refaça o teste e grave primeiro o teste.",
+        "backgroundUnavailable": "O evento troca o fundo, mas este dispositivo não conseguiu iniciar esse recurso (ele precisa do modelo e de um navegador com gráficos funcionando, e baixa o modelo no primeiro uso com conexão). Os convidados receberiam o fundo original. Conecte-se à internet e refaça o teste; se persistir, use uma versão mais recente do Chrome, Edge ou Safari, ou desligue o fundo em Marca.",
         "failed": "A renderização de teste falhou. Tente de novo; se falhar outra vez, atualize o navegador e reinicie o dispositivo."
       }
     },

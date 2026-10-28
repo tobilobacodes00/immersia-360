@@ -3,7 +3,8 @@ title: Render speed and the render queue
 summary: How the booth makes videos in the background, what the queue shows, how fast it should be, and what to change when it is slow.
 category: booth
 order: 40
-keywords: [render, queue, slow, speed, encoder, background, waiting, rendering, failed, retry, ipad, laptop, performance]
+keywords:
+  [render, queue, slow, speed, encoder, background, waiting, rendering, failed, retry, ipad, laptop, performance]
 updated: 2026-10-20
 related: [setup-check, 360-booth-setup, booth-error-messages, offline-mode-and-uploads]
 ---
@@ -18,14 +19,14 @@ To keep the camera smooth, rendering pauses while a guest is being captured, fro
 
 The pill in the booth's top bar shows the state: **Nothing waiting**, **3 takes waiting**, or **Rendering 40%**. Press it to open the **Render queue**. Each take shows when it was made, its length and size, and a status:
 
-| Status              | Meaning                                                                 |
-| ------------------- | ----------------------------------------------------------------------- |
-| **Ready to render** | Saved and waiting its turn.                                             |
-| **Rendering**       | Being made now. The **Cancel render** button stops it.                  |
-| **Rendered**        | Done. **Play** shows the finished video.                                |
-| **Failed**          | Something stopped the render. The reason is shown; **Try again** re-queues it. |
+| Status              | Meaning                                                                                 |
+| ------------------- | --------------------------------------------------------------------------------------- |
+| **Ready to render** | Saved and waiting its turn.                                                             |
+| **Rendering**       | Being made now. The **Cancel render** button stops it.                                  |
+| **Rendered**        | Done. **Play** shows the finished video.                                                |
+| **Failed**          | Something stopped the render. The reason is shown; **Try again** re-queues it.          |
 | **Recovered**       | The page was closed or crashed during the recording. What was saved up to then is kept. |
-| **Imported**        | A video file you added from disk.                                       |
+| **Imported**        | A video file you added from disk.                                                       |
 
 A take is never deleted by itself. **Delete** removes it and anything rendered from it from this device; files already uploaded are not affected. If the booth tab is closed in the middle of a render, that take simply goes back in the queue when the booth opens again.
 

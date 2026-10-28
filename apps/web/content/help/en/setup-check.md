@@ -40,11 +40,11 @@ Records four seconds through the booth's own recorder, writes them to the device
 
 Renders the test recording with this event's output settings in the real render engine, then scales the time to a 15 s, 1080p clip, the yardstick we promise:
 
-| Result                  | Meaning                                          |
-| ----------------------- | ------------------------------------------------ |
-| 45 s or less            | **Good**: on target for a laptop                 |
-| 46 to 90 s              | **Check**: on target for a 2021 iPad, slow for a laptop |
-| More than 90 s          | **Fix**: guests would wait a long time           |
+| Result         | Meaning                                                 |
+| -------------- | ------------------------------------------------------- |
+| 45 s or less   | **Good**: on target for a laptop                        |
+| 46 to 90 s     | **Check**: on target for a 2021 iPad, slow for a laptop |
+| More than 90 s | **Fix**: guests would wait a long time                  |
 
 The estimate is a little pessimistic, because a short clip includes start-up time. The result is saved on the device as its **render path**. See [Render speed and the queue](help:render-speed-and-queue).
 

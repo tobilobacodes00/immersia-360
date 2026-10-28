@@ -26,11 +26,11 @@ Registering gives the browser a long random token, stored in that browser. The s
 
 For each device you see its name, its platform and browser, when it was last seen, and its render path:
 
-| Label                           | Meaning                                                              |
-| ------------------------------- | -------------------------------------------------------------------- |
-| renders on device               | The device can render videos itself at the target speed.            |
-| renders on device (slower)      | It can, but slower than the target, or without hardware video encoding. Use a faster device for busy events. |
-| renders in the cloud            | The browser lacks what rendering needs (hardware-accelerated graphics or video encoding), or the setup check could not render a test clip. |
+| Label                      | Meaning                                                                                                                                    |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| renders on device          | The device can render videos itself at the target speed.                                                                                   |
+| renders on device (slower) | It can, but slower than the target, or without hardware video encoding. Use a faster device for busy events.                               |
+| renders in the cloud       | The browser lacks what rendering needs (hardware-accelerated graphics or video encoding), or the setup check could not render a test clip. |
 
 A device shows **Online** when it was seen in the last two minutes. A booth that is open reports in every 30 seconds, along with how many takes are waiting to render and how many files are waiting to upload.
 

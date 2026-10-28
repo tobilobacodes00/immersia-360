@@ -1,7 +1,9 @@
 import type { Resolution } from '@immersia/capture';
+import type { RenderBackground } from '@immersia/render-engine';
 import {
   type PRINT_SIZES,
   video360Schema,
+  type Background,
   type BoothMode,
   type OutputSettings,
   type Video360Settings,
@@ -18,6 +20,19 @@ export interface CheckPlan {
   render: Video360Settings;
   /** The photo booth's print job, for the printer step; null for the 360 booth, which does not print. */
   print: { size: (typeof PRINT_SIZES)[number]; twoUp: boolean; enabled: boolean } | null;
+}
+
+/**
+ * The background (CAP-10) the test render replaces, so the measured speed includes finding the person in
+ * every frame, which is most of its cost. A colour or a blur is used as the event has it. A picture or video
+ * lives in the event's assets, which this page does not load, so a flat grey stands in for it: the same
+ * person-finding work, without the cost of drawing the picture.
+ */
+export function testBackground(bg: Background): RenderBackground | null {
+  if (!bg) return null;
+  if ('color' in bg) return { kind: 'color', color: bg.color };
+  if ('blur' in bg) return { kind: 'blur' };
+  return { kind: 'color', color: '#808080' };
 }
 
 /**

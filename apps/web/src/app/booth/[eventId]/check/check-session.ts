@@ -20,7 +20,7 @@ import {
   testSlowMotion,
   type RenderMeasurement,
 } from '@/lib/setup-check/render-estimate';
-import type { CheckPlan } from '@/lib/setup-check/config';
+import { testBackground, type CheckPlan } from '@/lib/setup-check/config';
 import { isAppleTouchDevice, isStandalone, sleep } from '@/lib/setup-check/measure';
 import type { CameraChoice } from '../camera-choice';
 import type { CheckApi } from './check-api';
@@ -60,6 +60,8 @@ export type RenderOutcome =
       /** A 15 s clip of the event's own preset (resolution and frame rate) at the measured speed. */
       eventMs: number;
       interpolatedFrames: number;
+      /** CAP-10: whether the background the event asks for was replaced in the test render. */
+      background: 'none' | 'applied' | 'unavailable';
     }
   | { kind: 'error'; code: string };
 
@@ -239,6 +241,7 @@ export class CheckSession {
       effects: video.effects.map((e) => ({ id: e.id, intensity: e.intensity, colorMode: e.colorMode ?? null })),
       beats: [],
       seed: 0,
+      background: testBackground(video.background),
     };
     this.renderer ??= new RenderClient(() => new Worker(workerUrl('render'), { type: 'module' }));
     try {
@@ -257,7 +260,14 @@ export class CheckSession {
         height: size.height,
       });
       if (referenceMs === null || eventMs === null) return { kind: 'error', code: 'failed' };
-      return { kind: 'done', measurement, referenceMs, eventMs, interpolatedFrames: result.interpolatedFrames };
+      return {
+        kind: 'done',
+        measurement,
+        referenceMs,
+        eventMs,
+        interpolatedFrames: result.interpolatedFrames,
+        background: result.background,
+      };
     } catch (err) {
       console.warn('[setup check] render', err);
       return { kind: 'error', code: err instanceof RenderFailure ? err.code : 'failed' };

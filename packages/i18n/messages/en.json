@@ -2024,6 +2024,7 @@
         "gpu": "Graphics acceleration (WebGL 2) isn't available, so videos can't be composed. Turn on hardware acceleration in the browser settings, update the graphics driver, then try again.",
         "cancelled": "The render was cancelled. Try again.",
         "noTake": "There is no test recording to render. Run the check again and record the test take first.",
+        "backgroundUnavailable": "The event replaces the background, but this device could not start that feature (it needs its model and a browser with working graphics, and it downloads the model on first use while online). Guests would get the plain background. Connect to the internet and run the check again; if it persists, use a newer Chrome, Edge or Safari, or turn the background off in Branding.",
         "failed": "The test render failed. Try again; if it fails again, update the browser and restart the device."
       }
     },

@@ -8,7 +8,7 @@ import {
   testSlowMotion,
   type RenderMeasurement,
 } from './render-estimate';
-import { RENDER_TARGET_LAPTOP_MS, RENDER_TARGET_TABLET_MS, chooseRenderPath, gradeRender } from './grading';
+import { RENDER_TARGET_LAPTOP_MS, RENDER_TARGET_TABLET_MS, chooseRenderPath, gradeRender, worst } from './grading';
 
 /** A test clip of 4 s at 1080×1920, 30 fps: 120 frames. */
 const measured = (renderMs: number, over: Partial<RenderMeasurement> = {}): RenderMeasurement => ({
@@ -75,6 +75,15 @@ describe('render speed grade (PRD: 45 s laptop, 90 s 2021 iPad)', () => {
       status: 'fail',
       code: 'slow',
     });
+  });
+
+  it('warns when the event replaces the background and this device cannot', () => {
+    const f = gradeRender({ kind: 'estimate', referenceMs: 20_000, backgroundUnavailable: true });
+    expect(f.map((x) => [x.status, x.code])).toEqual([
+      ['pass', 'fast'],
+      ['warn', 'backgroundUnavailable'],
+    ]);
+    expect(worst(f)).toBe('warn');
   });
 
   it('reports the estimate in whole seconds', () => {

@@ -166,6 +166,7 @@ export type RenderCode =
   | 'gpu'
   | 'cancelled'
   | 'noTake'
+  | 'backgroundUnavailable'
   | 'failed';
 
 const RENDER_FAILURES: readonly RenderCode[] = [
@@ -177,18 +178,26 @@ const RENDER_FAILURES: readonly RenderCode[] = [
   'noTake',
 ];
 
-/** Grade the estimated time for the reference clip (see render-estimate.ts), or a failed render. */
+/**
+ * Grade the estimated time for the reference clip (see render-estimate.ts), or a failed render.
+ * `backgroundUnavailable`: the event replaces the background (CAP-10) but this device could not start the
+ * person segmenter, so its videos would come out with the plain background.
+ */
 export function gradeRender(
-  input: { kind: 'estimate'; referenceMs: number } | { kind: 'error'; code: string },
+  input: { kind: 'estimate'; referenceMs: number; backgroundUnavailable?: boolean } | { kind: 'error'; code: string },
 ): Finding<RenderCode>[] {
   if (input.kind === 'error') {
     const code = (RENDER_FAILURES as readonly string[]).includes(input.code) ? (input.code as RenderCode) : 'failed';
     return [{ status: 'fail', code }];
   }
   const seconds = Math.round(input.referenceMs / 1000);
-  if (input.referenceMs <= RENDER_TARGET_LAPTOP_MS) return [{ status: 'pass', code: 'fast', params: { seconds } }];
-  if (input.referenceMs <= RENDER_TARGET_TABLET_MS) return [{ status: 'warn', code: 'slower', params: { seconds } }];
-  return [{ status: 'fail', code: 'slow', params: { seconds } }];
+  const speed: Finding<RenderCode> =
+    input.referenceMs <= RENDER_TARGET_LAPTOP_MS
+      ? { status: 'pass', code: 'fast', params: { seconds } }
+      : input.referenceMs <= RENDER_TARGET_TABLET_MS
+        ? { status: 'warn', code: 'slower', params: { seconds } }
+        : { status: 'fail', code: 'slow', params: { seconds } };
+  return input.backgroundUnavailable ? [speed, { status: 'warn', code: 'backgroundUnavailable' }] : [speed];
 }
 
 /**

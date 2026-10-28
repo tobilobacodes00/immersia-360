@@ -3,7 +3,21 @@ title: Slow motion and frame rates
 summary: Choose the slow-motion segment and speed, and get smooth results with 60 fps cameras or clips shot on an iPhone.
 category: booth
 order: 20
-keywords: [slow motion, slowmo, 240 fps, 120 fps, 60 fps, iphone, most compatible, hevc, h.264, import, interpolation, boomerang]
+keywords:
+  [
+    slow motion,
+    slowmo,
+    240 fps,
+    120 fps,
+    60 fps,
+    iphone,
+    most compatible,
+    hevc,
+    h.264,
+    import,
+    interpolation,
+    boomerang,
+  ]
 updated: 2026-10-20
 related: [360-booth-setup, render-speed-and-queue, booth-error-messages]
 ---

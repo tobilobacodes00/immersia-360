@@ -2024,6 +2024,7 @@
         "gpu": "La aceleración gráfica (WebGL 2) no está disponible, así que no se pueden componer los videos. Activa la aceleración por hardware en los ajustes del navegador, actualiza el controlador de gráficos e inténtalo de nuevo.",
         "cancelled": "Se canceló el renderizado. Inténtalo de nuevo.",
         "noTake": "No hay ninguna grabación de prueba que renderizar. Repite la prueba y graba primero la toma de prueba.",
+        "backgroundUnavailable": "El evento reemplaza el fondo, pero este dispositivo no pudo iniciar esa función (necesita su modelo y un navegador con gráficos que funcionen, y descarga el modelo la primera vez con conexión). Los invitados recibirían el fondo original. Conéctate a internet y repite la prueba; si persiste, usa una versión más reciente de Chrome, Edge o Safari, o desactiva el fondo en Marca.",
         "failed": "Falló el renderizado de prueba. Inténtalo de nuevo; si vuelve a fallar, actualiza el navegador y reinicia el dispositivo."
       }
     },

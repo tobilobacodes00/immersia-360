@@ -12,15 +12,15 @@ A 360 booth records one continuous take while the platform turns, then renders t
 
 ## The video
 
-| Setting          | Choices                              | Notes                                                                 |
-| ---------------- | ------------------------------------ | --------------------------------------------------------------------- |
-| **Resolution**   | 720p, 1080p, 4K                      | 1080p by default. 4K only where the camera supports it.               |
-| **Frame rate**   | 30 fps, 60 fps                       | 60 fps by default. 60 fps gives smoother slow motion.                 |
-| **Aspect ratio** | 9:16, 1:1, 16:9                      | 9:16 is a vertical video made for phones.                             |
-| **Spin length**  | 3 to 20 seconds, in half seconds     | 8 seconds by default. Recording stops on its own after this.          |
-| **Countdown**    | 0 to 10 seconds                      | 3 seconds by default.                                                 |
-| **Quality**      | Small, Balanced, Original            | Balanced is about 8 to 12 MB for a 15 s clip at 1080p.                |
-| **Record sound** | On or off                            | Off by default: the soundtrack comes from the event's music.          |
+| Setting          | Choices                          | Notes                                                        |
+| ---------------- | -------------------------------- | ------------------------------------------------------------ |
+| **Resolution**   | 720p, 1080p, 4K                  | 1080p by default. 4K only where the camera supports it.      |
+| **Frame rate**   | 30 fps, 60 fps                   | 60 fps by default. 60 fps gives smoother slow motion.        |
+| **Aspect ratio** | 9:16, 1:1, 16:9                  | 9:16 is a vertical video made for phones.                    |
+| **Spin length**  | 3 to 20 seconds, in half seconds | 8 seconds by default. Recording stops on its own after this. |
+| **Countdown**    | 0 to 10 seconds                  | 3 seconds by default.                                        |
+| **Quality**      | Small, Balanced, Original        | Balanced is about 8 to 12 MB for a 15 s clip at 1080p.       |
+| **Record sound** | On or off                        | Off by default: the soundtrack comes from the event's music. |
 
 At 1080p a 9:16 video is 1080 × 1920 pixels; at 4K it is 2160 × 3840. The recording that comes off the camera is saved on the device at a high bitrate and the guest's video is made from it, so a lower output quality does not lower the original you keep until you delete it.
 

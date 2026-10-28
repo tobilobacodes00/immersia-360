@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { defaultOutputSettings, outputSettingsSchema } from '@immersia/shared';
-import { planCheck } from './config';
+import { planCheck, testBackground } from './config';
 
 describe('setup check plan', () => {
   it("the 360 booth is checked with the event's own camera request and render preset", () => {
@@ -30,5 +30,29 @@ describe('setup check plan', () => {
     expect(photo('2x6', true)).toEqual({ size: '2x6', twoUp: true, enabled: true });
     expect(photo('2x6', false)?.twoUp).toBe(false);
     expect(photo('4x6', true)?.twoUp).toBe(false);
+  });
+});
+
+describe('test render background (CAP-10)', () => {
+  it('renders without one when the event has none', () => {
+    expect(testBackground(null)).toBeNull();
+  });
+
+  it('uses a colour or a blur as the event has it', () => {
+    expect(testBackground({ color: '#112233' })).toEqual({ kind: 'color', color: '#112233' });
+    expect(testBackground({ blur: true })).toEqual({ kind: 'blur' });
+  });
+
+  it('stands in a flat colour for a picture or video the page does not load', () => {
+    expect(testBackground({ assetId: '0190f3a0-0000-7000-8000-000000000001' })).toEqual({
+      kind: 'color',
+      color: '#808080',
+    });
+  });
+
+  it("the plan carries the event's background for a 360 booth only", () => {
+    const output = outputSettingsSchema.parse({ video360: { background: { blur: true } } });
+    expect(planCheck('video360', output).render.background).toEqual({ blur: true });
+    expect(planCheck('photo', output).render.background).toBeNull();
   });
 });
