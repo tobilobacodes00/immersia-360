@@ -50,6 +50,7 @@ import { RegisterDevice } from './RegisterDevice';
 import { ResultScreen } from './ResultScreen';
 import { SettingsDrawer } from './SettingsDrawer';
 import { describeCamera, reconcileWithCamera, type ActiveCamera } from './active-camera';
+import { localEncoder, warmWasmEncoder } from './device-ladder';
 import { fillLightOf, needsReopen, type CameraChoice } from './camera-choice';
 import { FillLightFrame } from './FillLightFrame';
 import { useOpenGuard } from './open-guard';
@@ -162,6 +163,11 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
       renderer.current?.dispose();
       renderer.current = null;
     };
+  }, []);
+
+  // A browser without an H.264 encoder fetches the WebAssembly one now, while online, for the boomerang and the short video.
+  useEffect(() => {
+    void warmWasmEncoder(false);
   }, []);
 
   const releaseShots = useCallback(() => {
@@ -415,20 +421,22 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
           clips.push(graded);
         }
         const client = renderer.current;
+        // The browser's H.264 encoder, or the WebAssembly one on a browser that has none.
+        const encoder = await localEncoder();
         if (client && p.outputs.boomerang && clips.at(-1)?.length) {
           // The last shot's moment, forward and back. The worker takes ownership of the frames it
           // gets, so when the short video also needs them, the boomerang gets copies.
           const last = clips.at(-1)!;
           const frames = p.outputs.shortVideo ? await Promise.all(last.map((f) => createImageBitmap(f))) : last;
           const { width, height } = frames[0]!;
-          const mp4 = await client.clip(`${session.id}:boomerang`, frames, CLIP_FPS, true);
+          const mp4 = await client.clip(`${session.id}:boomerang`, frames, CLIP_FPS, true, encoder);
           if (!p.outputs.shortVideo) clips[clips.length - 1] = [];
           await save('boomerang', mp4, width, height, Math.round(((frames.length * 2 - 2) / CLIP_FPS) * 1000));
         }
         const all = clips.flat();
         if (client && p.outputs.shortVideo && all.length) {
           const { width, height } = all[0]!;
-          const mp4 = await client.clip(`${session.id}:short`, all, CLIP_FPS, false);
+          const mp4 = await client.clip(`${session.id}:short`, all, CLIP_FPS, false, encoder);
           await save('short_video', mp4, width, height, Math.round((all.length / CLIP_FPS) * 1000));
         } else all.forEach((f) => f.close());
       } catch (err) {

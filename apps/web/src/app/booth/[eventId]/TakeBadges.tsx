@@ -22,6 +22,7 @@ export function takeStage(take: LocalTake): LocalTake['status'] {
 const STAGE_TONE: Partial<Record<LocalTake['status'], PillTone>> = {
   rendered: 'ok',
   rendering: 'info',
+  server: 'info',
   failed: 'bad',
 };
 

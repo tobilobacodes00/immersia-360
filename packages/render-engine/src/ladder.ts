@@ -71,11 +71,6 @@ export function availableRungs(
   };
 }
 
-/** Memory seeded from the device's registered capabilities (the label the server has for it). */
-export function seedMemory(registered: RenderPath | null | undefined): RungMemory {
-  return { working: registered ?? null, failed: {} };
-}
-
 /**
  * Where the next render starts: the first rung, from the top, that is available and not currently
  * skipped. Starting from the top (not from the rung that last worked) is what lets a device recover

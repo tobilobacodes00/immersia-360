@@ -87,6 +87,12 @@ export interface BoothEvent {
   media: Omit<EventMedia, 'endCard'>;
   /** LIV-8: guests are told their capture may appear on the Live Display, and can opt out. */
   liveDisplay: boolean;
+  render: {
+    /** The server has a render worker: the last rung of the render ladder exists. */
+    server: boolean;
+    /** The server runs in E2E test mode: tests may fail render rungs on purpose. Never true in production. */
+    testHooks: boolean;
+  };
 }
 
 type Phase =
@@ -174,6 +180,9 @@ export function Booth360({ event }: { event: BoothEvent }) {
     store: storeReady,
     paused: renderPaused,
     smallerVersion: event.share.smallerVersion,
+    token: identity?.token ?? null,
+    serverRender: event.render.server,
+    testHooks: event.render.testHooks,
     onRendered: (take) => uploads.nudge(take.id),
   });
 

@@ -23,7 +23,7 @@ import { beatState, foldTempo } from './beats';
 import { FrameSource } from './frame-source';
 import { Compositor } from './gl/compositor';
 import { probeTake, type TakeProbe } from './probe';
-import { buildSourceTimes, resolveFrames, type SlowMotion } from './timeline';
+import { buildSourceTimes, plannedDurationFromCards, resolveFrames, type SlowMotion } from './timeline';
 import { isWasmEncoderError, withVideoEncoder, type EncoderKind } from './wasm/wasm-h264';
 
 /** A still card (intro/outro, QR end card), already rendered to a bitmap. */
@@ -134,13 +134,11 @@ export function plannedDurationS(
   job: Pick<RenderJob, 'intro' | 'outro' | 'endCard' | 'slowMotion' | 'reverse' | 'output'>,
   takeDurationS: number,
 ): number {
-  const frames = buildSourceTimes({
-    durationS: takeDurationS,
-    outputFps: job.output.fps,
-    slowMotion: job.slowMotion,
-    reverse: job.reverse,
-  }).length;
-  return frames / job.output.fps + cardSeconds(job.intro) + cardSeconds(job.outro) + cardSeconds(job.endCard);
+  return plannedDurationFromCards(
+    job,
+    { intro: cardSeconds(job.intro), outro: cardSeconds(job.outro), end: cardSeconds(job.endCard) },
+    takeDurationS,
+  );
 }
 
 /**

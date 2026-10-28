@@ -33,6 +33,7 @@ export function RenderQueue({
 }) {
   const t = useTranslations('booth.renderQueue');
   const te = useTranslations('booth.renderErrors');
+  const tp = useTranslations('booth.renderQueue.path');
   const locale = useLocale();
   const [playing, setPlaying] = useState<{ url: string; takeId: string } | null>(null);
   const [deleting, setDeleting] = useState<LocalTake | null>(null);
@@ -95,6 +96,8 @@ export function RenderQueue({
                   <ul className="divide-y divide-line">
                     {takes.map((tk) => {
                       const active = current?.takeId === tk.id;
+                      // Where it is being (or was) rendered; the usual way, on this device, needs no mention.
+                      const path = active ? current.path : tk.renderPath;
                       return (
                         <li key={tk.id} className="px-6 py-3.5">
                           <div className="flex items-center gap-3">
@@ -104,7 +107,8 @@ export function RenderQueue({
                               </div>
                               <div className="tabular text-[12px] text-faint">
                                 {(tk.durationMs / 1000).toFixed(1)} s · {formatBytes(tk.bytes, locale)}
-                                {tk.status === 'failed' && tk.error && (
+                                {path && path !== 'local' && <> · {tp(path)}</>}
+                                {(tk.status === 'failed' || tk.status === 'server') && tk.error && (
                                   <>
                                     {' '}
                                     ·{' '}
@@ -115,7 +119,8 @@ export function RenderQueue({
                             </div>
                             <TakeBadges take={tk} />
                             <div className="flex items-center gap-0.5">
-                              {tk.status === 'rendered' && (
+                              {/* A video the server made is not on this device to play. */}
+                              {tk.status === 'rendered' && tk.renderPath !== 'server' && (
                                 <IconButton label={t('open')} onClick={() => void play(tk)}>
                                   <Play className="size-4" />
                                 </IconButton>

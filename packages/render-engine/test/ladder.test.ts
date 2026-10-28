@@ -9,7 +9,6 @@ import {
   parseMemory,
   recordFailure,
   recordSuccess,
-  seedMemory,
   startRung,
   type Availability,
 } from '../src/ladder';
@@ -151,10 +150,5 @@ describe('what is stored on the device', () => {
       working: 'wasm',
       failed: { wasm: { code: 'gpu', at: 1 } },
     });
-  });
-
-  it('seeds from the label registered with the server', () => {
-    expect(seedMemory('wasm').working).toBe('wasm');
-    expect(seedMemory(null).working).toBeNull();
   });
 });
