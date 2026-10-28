@@ -2,7 +2,7 @@
   "version": "8",
   "dialect": "postgres",
   "id": "1a0608f6-57de-474d-9aa5-d5bf072b8612",
-  "prevIds": ["a80e3a4c-8e6b-41fc-856e-1161347b1594"],
+  "prevIds": ["d2b07364-2588-4010-b3b5-942f19a1c799"],
   "ddl": [
     {
       "values": ["pending", "ready"],
@@ -211,6 +211,12 @@
     {
       "isRlsEnabled": false,
       "name": "event",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "event_highlight",
       "entityType": "tables",
       "schema": "public"
     },
@@ -1620,6 +1626,32 @@
       "table": "capture_session"
     },
     {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "name": "view_count",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "capture_session"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "name": "display_scans",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "capture_session"
+    },
+    {
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -2255,6 +2287,175 @@
       "entityType": "columns",
       "schema": "public",
       "table": "event"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "event_highlight"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "event_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "event_highlight"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "object_key",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "event_highlight"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "poster_key",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "event_highlight"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'video/mp4'",
+      "generated": null,
+      "identity": null,
+      "name": "mime",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "event_highlight"
+    },
+    {
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "bytes",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "event_highlight"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "width",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "event_highlight"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "height",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "event_highlight"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "duration_ms",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "event_highlight"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'[]'",
+      "generated": null,
+      "identity": null,
+      "name": "session_ids",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "event_highlight"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "created_by",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "event_highlight"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "event_highlight"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "uploaded_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "event_highlight"
     },
     {
       "type": "uuid",
@@ -4415,6 +4616,48 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
+      "name": "event_highlight_event_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "event_highlight"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "event_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": "\"uploaded_at\" is not null",
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "event_highlight_live_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "event_highlight"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "event_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
       "name": "guest_contact_event_idx",
       "entityType": "indexes",
       "schema": "public",
@@ -5213,6 +5456,32 @@
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
+      "name": "event_highlight_event_id_event_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "event_highlight"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["created_by"],
+      "schemaTo": "public",
+      "tableTo": "user",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "name": "event_highlight_created_by_user_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "event_highlight"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["event_id"],
+      "schemaTo": "public",
+      "tableTo": "event",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
       "name": "guest_contact_event_id_event_id_fkey",
       "entityType": "fks",
       "schema": "public",
@@ -5575,6 +5844,14 @@
       "name": "event_pkey",
       "schema": "public",
       "table": "event",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "event_highlight_pkey",
+      "schema": "public",
+      "table": "event_highlight",
       "entityType": "pks"
     },
     {
