@@ -16,6 +16,8 @@ export const statements = {
   guest: ['read', 'export', 'delete'],
   /** The organization's own data export (privacy): the account holder only. */
   account: ['export'],
+  /** Abuse reports on the organization's events: see them, and hide a reported item at once. */
+  report: ['read', 'hide'],
 } as const;
 
 export const ac = createAccessControl(statements);
@@ -31,6 +33,7 @@ export const owner = ac.newRole({
   gallery: ['export'],
   guest: ['read', 'export', 'delete'],
   account: ['export'],
+  report: ['read', 'hide'],
 });
 
 /** An assistant who runs booths: everything about events and devices, nothing about the team. */
@@ -40,6 +43,7 @@ export const operator = ac.newRole({
   asset: ['create', 'read', 'delete'],
   gallery: ['export'],
   guest: ['read', 'export', 'delete'],
+  report: ['read', 'hide'],
 });
 
 /** Read-only: sees events, galleries and devices; can export a gallery for a client. */
@@ -48,6 +52,7 @@ export const viewer = ac.newRole({
   device: ['read'],
   asset: ['read'],
   gallery: ['export'],
+  report: ['read'],
 });
 
 export const roles = { owner, operator, viewer };

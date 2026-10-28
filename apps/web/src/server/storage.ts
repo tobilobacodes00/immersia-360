@@ -1,5 +1,6 @@
 import 'server-only';
 import {
+  CopyObjectCommand,
   DeleteObjectsCommand,
   GetObjectCommand,
   HeadObjectCommand,
@@ -172,6 +173,44 @@ export async function listKeys(prefix: string, max = 1000): Promise<string[]> {
     new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix, MaxKeys: Math.min(1000, Math.max(1, max)) }),
   );
   return (res.Contents ?? []).flatMap((o) => (o.Key ? [o.Key] : []));
+}
+
+/**
+ * Quarantined objects live under this prefix, which nothing in the app ever reads or signs. It sits
+ * outside every organization prefix, so deleting an organization's files never reaches it: what was
+ * quarantined as illegal content stays preserved until the bucket's lifecycle rule on `q/` expires it.
+ */
+export const QUARANTINE_PREFIX = 'q/';
+
+/**
+ * Take objects out of service without destroying them (illegal content): each is copied to
+ * `q/<key>` and the original deleted, so it can no longer be served by any link, however old, yet is
+ * preserved should the law require handing it over. A bucket lifecycle rule on `q/` decides how
+ * long it is kept (see SECURITY.md). Keys already gone count as missing, not as failures; any other
+ * error stops before anything is deleted, so retrying is safe.
+ */
+export async function quarantineObjects(keys: string[]): Promise<{ moved: number; missing: number }> {
+  if (keys.length === 0) return { moved: 0, missing: 0 };
+  const { s3, bucket } = storage();
+  let moved = 0;
+  let missing = 0;
+  for (const key of keys) {
+    try {
+      await s3.send(
+        new CopyObjectCommand({
+          Bucket: bucket,
+          Key: `${QUARANTINE_PREFIX}${key}`,
+          CopySource: `${bucket}/${key.split('/').map(encodeURIComponent).join('/')}`,
+        }),
+      );
+      moved++;
+    } catch (err) {
+      if (!isMissingObject(err)) throw err;
+      missing++;
+    }
+  }
+  await deleteObjects(keys);
+  return { moved, missing };
 }
 
 /** Object key layout: one prefix per event, so an event's files are easy to export or purge. */

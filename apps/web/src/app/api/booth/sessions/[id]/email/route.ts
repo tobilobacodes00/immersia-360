@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { UPLOAD_REFUSAL_CODES } from '@immersia/shared';
 import { authenticateDevice } from '@/server/devices';
 import { localeFromRequest } from '@/server/email';
 import { emailSessionLink } from '@/server/sessions';
@@ -14,7 +15,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));
   if (!/^[0-9a-f-]{36}$/i.test(id) || !parsed.success) return NextResponse.json({ error: 'invalid' }, { status: 400 });
   const result = await emailSessionLink(device, id, parsed.data.email, localeFromRequest(request.headers));
-  if (result === 'erased') return NextResponse.json({ error: 'session_erased' }, { status: 410 });
+  if (result === 'erased' || result === 'removed')
+    return NextResponse.json({ error: UPLOAD_REFUSAL_CODES[result] }, { status: 410 });
   const status = result === 'sent' ? 200 : result === 'not_found' ? 404 : 429;
   return NextResponse.json({ result }, { status });
 }

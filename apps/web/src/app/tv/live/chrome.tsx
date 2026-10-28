@@ -63,6 +63,17 @@ export function QrBlock({
   );
 }
 
+/** A QR's link tagged with this screen's layout, so the guest page can say which layout got scanned (analytics). */
+function scanUrl(url: string, layout: string): string {
+  try {
+    const u = new URL(url);
+    u.searchParams.set('dl', layout);
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
 /** Where guests type a short code: the short domain when there is one, else this app's /c. */
 function codeEntryHost(): string {
   const short = process.env.NEXT_PUBLIC_SHORT_ORIGIN;
@@ -125,7 +136,8 @@ function railOrder(position: QrPosition): string {
 function ItemCard({ item }: { item: DisplayItem }) {
   const t = useTranslations('tv.display');
   const reduced = useReducedMotion();
-  const { qrSize } = useDisplay().config.settings;
+  const { config } = useDisplay();
+  const { qrSize } = config.settings;
   const code = formatShortCode(item.shortCode);
   return (
     <motion.div
@@ -135,7 +147,7 @@ function ItemCard({ item }: { item: DisplayItem }) {
       className="flex w-full justify-center"
     >
       <QrBlock
-        value={item.link}
+        value={scanUrl(item.link, config.layout)}
         label={t('itemAlt', { code })}
         rem={QR_REM.item[qrSize]}
         fit="100%"
@@ -169,7 +181,7 @@ export function Rail({ item }: { item: DisplayItem | null }) {
     >
       <div className={cx('flex min-w-0 portrait:flex-1', corner)}>
         <QrBlock
-          value={config.event.galleryUrl}
+          value={scanUrl(config.event.galleryUrl, config.layout)}
           label={t('galleryAlt')}
           rem={QR_REM.event[qrSize]}
           caption={t('gallery')}
@@ -216,7 +228,7 @@ export function Centrepiece({ children }: { children?: ReactNode }) {
         {children}
       </div>
       <QrBlock
-        value={config.event.galleryUrl}
+        value={scanUrl(config.event.galleryUrl, config.layout)}
         label={t('galleryAlt')}
         rem={QR_REM.centre[config.settings.qrSize]}
         fit="44vmin"

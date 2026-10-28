@@ -54,6 +54,7 @@ import { fillLightOf, needsReopen, type CameraChoice } from './camera-choice';
 import { FillLightFrame } from './FillLightFrame';
 import { useOpenGuard } from './open-guard';
 import { useCameraChoice } from './use-camera-choice';
+import { boothBrowser, useBoothAnalytics } from './use-booth-analytics';
 import { useUploadQueue } from './use-upload-queue';
 
 export interface PhotoBoothEvent {
@@ -86,7 +87,7 @@ type Phase =
   | { kind: 'review'; preview: string }
   | { kind: 'making' }
   /** `strip`: the kept strip at print resolution, for the guest's reprints. */
-  | { kind: 'result'; session: LocalSession; preview: string; strip: Blob }
+  | { kind: 'result'; session: LocalSession; preview: string; strip: Blob; endedAt: number }
   | { kind: 'error'; code: string };
 
 /** Frames per second of the motion clips (PHO-2). */
@@ -146,7 +147,10 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
     phase.kind === 'review' ||
     phase.kind === 'making';
   const closeGallery = useCallback(() => setGalleryOpen(false), []);
-  const uploads = useUploadQueue({ eventId: event.id, token: identity?.token ?? null, store });
+  const track = useBoothAnalytics({ eventId: event.id, mode: 'photo', token: identity?.token ?? null });
+  const uploads = useUploadQueue({ eventId: event.id, token: identity?.token ?? null, store, onTrack: track });
+  // When a guest's session began and its last shot was taken (analytics), and how they started it.
+  const timing = useRef({ startedAt: 0, lastShotAt: 0, trigger: 'tap' as 'tap' | 'keyboard' });
   useWakeLock(phase.kind !== 'idle');
   useHeartbeat(
     identity?.token ?? null,
@@ -304,13 +308,19 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
           twoUp: p.print.doubleStrip && p.printSize === '2x6',
         });
         setPrintsLeft((n) => Math.max(0, n - 1));
+        track({
+          name: 'print_sent',
+          size: p.printSize,
+          copies: p.print.copies,
+          double_strip: p.print.doubleStrip && p.printSize === '2x6',
+        });
       } catch (err) {
         console.warn('[print]', err);
       } finally {
         setPrinting(false);
       }
     },
-    [p],
+    [p, track],
   );
 
   /** PHO-2 extras, made after the guest already has their QR: GIF, boomerang, short video. */
@@ -448,7 +458,15 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
     // Leaves 'review' at once, so a second tap (or the review timer) cannot keep the strip twice.
     enter({ kind: 'making' });
     const session = await mintSession(db, { eventId: event.id, takeIds: [], capturedAt: Date.now() });
-    const image = await composeStrip(session, 1);
+    const renderStarted = performance.now();
+    let image: Blob;
+    try {
+      image = await composeStrip(session, 1);
+    } catch (err) {
+      track({ name: 'render_failed', error_code: 'strip_failed', path: 'local', browser: boothBrowser() });
+      throw err;
+    }
+    const renderMs = performance.now() - renderStarted;
     const { width, height } = canvasSizeFor(p.printSize);
     await putOutput(db, s, {
       takeId: null,
@@ -461,19 +479,41 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
       durationMs: 0,
     });
     uploads.nudgeSession(session.id);
+    // Usage and capture-to-QR timing (success metrics).
+    const { startedAt, lastShotAt, trigger } = timing.current;
+    const cam = camera.current?.settings;
+    track({
+      name: 'take_recorded',
+      mode: 'photo',
+      duration_s: Math.min(86_400, Math.max(0, (lastShotAt - startedAt) / 1000)),
+      fps: Math.round(cam?.frameRate ?? 30),
+      resolution: cam ? `${cam.width}x${cam.height}` : '1920x1080',
+      trigger,
+    });
+    track({
+      name: 'render_completed',
+      render_ms: Math.min(3_600_000, Math.round(renderMs)),
+      path: 'local',
+      preset: `strip-${p.printSize}`,
+      effects_count: (p.filterId ? 1 : 0) + (p.effectId ? 1 : 0),
+      seconds_since_take: Math.min(86_400, Math.max(0, (performance.now() - lastShotAt) / 1000)),
+      mode: 'photo',
+    });
     setPrintsLeft(p.print.enabled ? p.print.maxGuestCopies : 0);
-    setPhase({ kind: 'result', session, preview: URL.createObjectURL(image), strip: image });
+    setPhase({ kind: 'result', session, preview: URL.createObjectURL(image), strip: image, endedAt: lastShotAt });
     if (p.print.enabled && p.print.autoPrint) void print(image);
     void makeExtras(session);
-  }, [composeStrip, db, enter, event.id, makeExtras, p, print, store, uploads]);
+  }, [composeStrip, db, enter, event.id, makeExtras, p, print, store, track, uploads]);
 
   /** One session: every shot with its countdown, then the reveal. */
   const runSession = useCallback(
-    async (force = false) => {
+    async (force = false, via?: 'tap' | 'keyboard') => {
       if (!force && !ARMED.includes(phaseRef.current.kind)) return;
       const v = videoRef.current;
       if (!v) return;
       releaseShots();
+      timing.current.startedAt = performance.now();
+      if (via) timing.current.trigger = via;
       for (let shot = 0; shot < p.shots; shot++) {
         let remaining = shot === 0 ? p.countdownSeconds : Math.round(p.secondsBetweenShots);
         while (remaining > 0) {
@@ -485,6 +525,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
         const clip = motionBuffer.current ? motionBuffer.current.clip(500) : null;
         const still = await grade(await createImageBitmap(v));
         shots.current.push({ still, clip });
+        timing.current.lastShotAt = performance.now();
         setPhase({ kind: 'flash', shot });
         await wait(450);
       }
@@ -516,7 +557,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
     });
   }, []);
 
-  useCaptureKeys(event.triggers.keyboard && ARMED.includes(phase.kind), () => void runSession());
+  useCaptureKeys(event.triggers.keyboard && ARMED.includes(phase.kind), () => void runSession(false, 'keyboard'));
 
   const themeVars = useMemo(() => guestThemeVars(event.theme), [event.theme]);
 
@@ -644,7 +685,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
               {event.attract.headline}
             </Headline>
             {event.triggers.tap && (
-              <GuestButton primary className="min-w-[16rem]" onClick={() => void runSession()}>
+              <GuestButton primary className="min-w-[16rem]" onClick={() => void runSession(false, 'tap')}>
                 <Camera className="size-6" aria-hidden /> {event.attract.cta}
               </GuestButton>
             )}
@@ -723,6 +764,14 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
             liveDisplay={event.liveDisplay}
             onOptOut={() => optOutOfDisplay(db, phase.session.id).then(() => uploads.nudgeSession(phase.session.id))}
             onDone={backToReady}
+            // The QR is on screen: the capture-to-QR time, from the last shot.
+            onShown={() =>
+              track({
+                name: 'qr_shown',
+                seconds_since_take: Math.max(0, (performance.now() - phase.endedAt) / 1000),
+                mode: 'photo',
+              })
+            }
             actions={
               p.print.enabled ? (
                 <GuestButton

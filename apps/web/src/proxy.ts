@@ -5,7 +5,7 @@ import en from '@immersia/i18n/messages/en';
 import es from '@immersia/i18n/messages/es';
 import pt from '@immersia/i18n/messages/pt';
 import { isLinkId } from '@immersia/shared/ids';
-import { contactHref, sessionState } from '@/server/share-state';
+import { contactHref, isServed, sessionState, stateHttpStatus } from '@/server/share-state';
 
 export function proxy(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith('/s/')) return shareGate(request);
@@ -29,58 +29,69 @@ function studioGate(request: NextRequest) {
 interface GonePage {
   expired: { title: string; body: string };
   erased: { title: string; body: string };
+  /** Hidden by the operator or taken down by the platform (410). */
+  removed: { title: string; body: string };
+  /** Taken down as illegal content (451). */
+  removedLegal: { title: string; body: string };
   contact: string;
   privacy: string;
   terms: string;
 }
 
-/** What the self-contained 410 pages say, per language (small slices of the catalogues). */
+/** What the self-contained 410/451 pages say, per language (small slices of the catalogues). */
 const COPY: Record<Locale, GonePage> = {
-  en: {
-    expired: { title: en.share.endedTitle, body: en.share.endedBody },
-    erased: { title: en.share.erasedTitle, body: en.share.erasedBody },
-    contact: en.share.endedContact,
-    privacy: en.common.privacy,
-    terms: en.common.terms,
-  },
-  es: {
-    expired: { title: es.share.endedTitle, body: es.share.endedBody },
-    erased: { title: es.share.erasedTitle, body: es.share.erasedBody },
-    contact: es.share.endedContact,
-    privacy: es.common.privacy,
-    terms: es.common.terms,
-  },
-  pt: {
-    expired: { title: pt.share.endedTitle, body: pt.share.endedBody },
-    erased: { title: pt.share.erasedTitle, body: pt.share.erasedBody },
-    contact: pt.share.endedContact,
-    privacy: pt.common.privacy,
-    terms: pt.common.terms,
-  },
+  en: gonePage(en),
+  es: gonePage(es),
+  pt: gonePage(pt),
 };
+
+function gonePage(m: typeof en): GonePage {
+  return {
+    expired: { title: m.share.endedTitle, body: m.share.endedBody },
+    erased: { title: m.share.erasedTitle, body: m.share.erasedBody },
+    removed: { title: m.share.removedTitle, body: m.share.removedBody },
+    removedLegal: { title: m.share.removedLegalTitle, body: m.share.removedLegalBody },
+    contact: m.share.endedContact,
+    privacy: m.common.privacy,
+    terms: m.common.terms,
+  };
+}
 
 const escape = (s: string) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 
 /**
- * DL-9: an expired session answers 410 Gone with an "event has ended" page; a session its guest
- * deleted answers 410 with "deleted at your request" instead. Done here because a page can't set
- * its own status once it streams. One indexed lookup; anything else (unknown or pending link ids, a
- * database hiccup) falls through to the page, which handles it.
+ * DL-9: a session that is not served answers with a self-contained page and the right status, per
+ * the session-state model in share-state.ts: 410 Gone with "this event has ended" (expired), "deleted
+ * at your request" (erased by the guest) or "no longer available" (hidden by the operator), and for a
+ * takedown by the platform 451 (illegal content) or 410 "removed". Done here because a page can't set
+ * its own status once it streams. One indexed lookup; anything else (unknown or pending or live link
+ * ids, a database hiccup) falls through to the page, which handles it.
  */
 async function shareGate(request: NextRequest) {
   const linkId = request.nextUrl.pathname.split('/')[2] ?? '';
   if (!isLinkId(linkId)) return NextResponse.next();
   const state = await sessionState(linkId).catch(() => null);
-  if (state?.state !== 'expired' && state?.state !== 'erased') return NextResponse.next();
+  if (!state || isServed(state.state)) return NextResponse.next();
 
   const cookie = request.cookies.get(LOCALE_COOKIE)?.value;
   const locale = isLocale(cookie) ? cookie : negotiateLocale(request.headers.get('accept-language'));
   const copy = COPY[locale];
-  const { title, body } = state.state === 'erased' ? copy.erased : copy.expired;
-  // DL-12: the operator's contact, linked when it is an email address or phone number. Shown for a
-  // deleted session too: copies the organizer saved elsewhere are theirs to remove.
+  const removed = state.state === 'removed' || state.state === 'hidden';
+  const legal = state.removal === 'legal';
+  const { title, body } =
+    state.state === 'erased'
+      ? copy.erased
+      : removed
+        ? {
+            title: legal ? copy.removedLegal.title : copy.removed.title,
+            body: legal ? copy.removedLegal.body : copy.removed.body,
+          }
+        : copy.expired;
+  // DL-12: the operator's contact, linked when it is an email address or phone number. Shown for an
+  // ended event and for a deleted session too (copies the organizer saved elsewhere are theirs to
+  // remove), not on a page for something that was removed.
   let contactLine = '';
-  if (state.contact) {
+  if (!removed && state.contact) {
     const href = contactHref(state.contact);
     const who = href ? `<a href="${escape(href)}">${escape(state.contact)}</a>` : escape(state.contact);
     const [before, after = ''] = copy.contact.split('{contact}');
@@ -96,7 +107,8 @@ main{max-width:28rem;text-align:center}h1{font-size:clamp(1.75rem,6vw,2.5rem);li
 p{color:#55534e;margin:0}.contact{margin-top:16px}a{color:#2b3fe6;font-weight:600}
 footer{margin-top:24px;font-size:14px}footer a{display:inline-block;padding:8px;font-weight:500}</style></head><body><main><h1>${escape(title)}</h1><p>${escape(body)}</p>${contactLine}<footer><a href="/privacy">${escape(copy.privacy)}</a><a href="/terms">${escape(copy.terms)}</a></footer></main></body></html>`;
   return new NextResponse(html, {
-    status: 410,
+    // 451 Unavailable For Legal Reasons for illegal content; 410 Gone for everything else.
+    status: stateHttpStatus(state.state, state.removal),
     headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-robots-tag': 'noindex' },
   });
 }

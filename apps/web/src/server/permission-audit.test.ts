@@ -10,7 +10,8 @@ import { roleCan, type Permission } from '../lib/permissions';
  * running it, so it is cheap, and it pins the decisions in one place:
  *
  *  - every exported function of a `'use server'` file is guarded (withOperator / withMember /
- *    withSession) or is on the short list of public, non-operator actions;
+ *    withSession, or requirePlatformAdmin for the /admin actions) or is on the short list of public,
+ *    non-operator actions;
  *  - an action guarded by a permission that mutates (anything but read/export) names one the viewer
  *    does not hold; an action guarded only by read permissions is on the list of read-only actions;
  *  - every route handler under app/api is classified, and the operator ones check the permission.
@@ -44,8 +45,9 @@ const isMutating = (p: Permission) =>
 // Server actions
 
 /**
- * Actions that touch no operator session: guests' code lookup, the language cookie, and the guest's own
- * form and erasure on their session page (SHR-6), where holding the session link is the authority.
+ * Actions that touch no operator session: guests' code lookup, the language cookie, the guest's own
+ * form and erasure on their session page (SHR-6), where holding the session link is the authority,
+ * and the report form (Abuse NFR), open to any guest and limited per reporter, session and event.
  */
 const PUBLIC_ACTIONS = new Set([
   'app/c/actions.ts#findCode',
@@ -53,6 +55,19 @@ const PUBLIC_ACTIONS = new Set([
   'app/guest-actions.ts#submitGuestFormAction',
   'app/guest-actions.ts#skipGuestFormAction',
   'app/guest-actions.ts#eraseSessionAction',
+  'app/report/actions.ts#submitReport',
+]);
+/**
+ * The /admin actions (decide a report, enter the month's cloud bill). Platform admins are named in
+ * ADMIN_EMAILS, not in an organization role, so `roleCan` does not apply: each one must start with
+ * `requirePlatformAdmin()`, which answers 404 to everyone else before anything runs.
+ */
+const PLATFORM_ADMIN_ACTIONS = new Set([
+  'app/admin/actions.ts#takeDownAction',
+  'app/admin/actions.ts#dismissAction',
+  'app/admin/actions.ts#escalateAction',
+  'app/admin/actions.ts#saveCostAction',
+  'app/admin/actions.ts#deleteCostAction',
 ]);
 /** Guarded by a read permission, and read-only. A mutating action must never be added here. */
 const READ_ONLY_ACTIONS = new Set([
@@ -109,6 +124,11 @@ describe('server actions: who may call them', () => {
 
   it.each(actions.map((a) => [`${a.file}#${a.name}`, a] as const))('%s is guarded', (id, action) => {
     if (PUBLIC_ACTIONS.has(id)) return;
+    if (PLATFORM_ADMIN_ACTIONS.has(id)) {
+      const firstCall = /await (\w+)\(/.exec(action.body)?.[1];
+      expect(firstCall, `${id} must check the platform admin before anything else`).toBe('requirePlatformAdmin');
+      return;
+    }
     const operator = /withOperator\(\s*(\{[^}]*\})/.exec(action.body);
     const self = /\b(withMember|withSession)\(/.test(action.body);
     expect(Boolean(operator) || self, `${id} has no withOperator/withMember/withSession guard`).toBe(true);
@@ -129,11 +149,24 @@ describe('server actions: who may call them', () => {
   it('keeps the allow-lists honest: every name on them is a real action', () => {
     const names = new Set(actions.map((a) => a.name));
     for (const name of [...READ_ONLY_ACTIONS, ...SELF_SERVICE_ACTIONS]) expect(names.has(name), name).toBe(true);
-    for (const id of PUBLIC_ACTIONS)
+    for (const id of [...PUBLIC_ACTIONS, ...PLATFORM_ADMIN_ACTIONS])
       expect(
         actions.some((a) => `${a.file}#${a.name}` === id),
         id,
       ).toBe(true);
+  });
+
+  it('keeps every /admin action on the platform-admin list (a new one fails here until it is classified)', () => {
+    const inAdmin = actions.filter((a) => a.file.startsWith('app/admin/')).map((a) => `${a.file}#${a.name}`);
+    expect(inAdmin.sort()).toEqual([...PLATFORM_ADMIN_ACTIONS].sort());
+  });
+
+  it('never lets an organization role or a guest-facing allow-list stand in for the platform admin check', () => {
+    for (const id of PLATFORM_ADMIN_ACTIONS) {
+      expect(PUBLIC_ACTIONS.has(id), id).toBe(false);
+      const body = actions.find((a) => `${a.file}#${a.name}` === id)?.body ?? '';
+      expect(body, id).not.toMatch(/withOperator|withMember|withSession/);
+    }
   });
 
   it('team actions need the team permissions, which only owners hold', () => {
@@ -172,6 +205,13 @@ type RouteKind =
   | 'cron'
   /** Only when E2E=1 and the run's token is sent. */
   | 'e2e'
+  /**
+   * Client analytics (POST /api/t): a booth's device token, a Live Display's token or a signed-in
+   * operator's same-origin session, resolved by `authenticateIngest`; anyone else gets 401. It only
+   * ever adds analytics rows, validated per event against the catalogue (a source may emit only
+   * its own events).
+   */
+  | 'ingest'
   /** Guests and TV screens: a short code, a gallery password or a signed URL, never an operator session. */
   | 'public';
 
@@ -196,6 +236,9 @@ const ROUTES: Record<string, RouteKind> = {
   'app/api/live/pair/route.ts': 'public',
   'app/api/share/[linkId]/route.ts': 'public',
   'app/api/studio/export/route.ts': { operator: { mutates: false } },
+  'app/api/t/route.ts': 'ingest',
+  'app/api/test/age-report/route.ts': 'e2e',
+  'app/api/test/analytics/route.ts': 'e2e',
   'app/api/test/expire/route.ts': 'e2e',
   'app/api/test/mailbox/route.ts': 'e2e',
 };
@@ -218,6 +261,10 @@ describe('route handlers under app/api: who may call them', () => {
       expect(source).toContain('CRON_SECRET');
     } else if (kind === 'e2e') {
       expect(source).toMatch(/if \(!isE2ERequest\(request\)\)/);
+    } else if (kind === 'ingest') {
+      expect(source, 'ingest authenticates before it reads the batch').toMatch(/authenticateIngest\(request\)/);
+      expect(source).toMatch(/if \(!actor\)/);
+      expect(source).not.toMatch(/getOperator|requireOperator/);
     } else if (kind === 'public') {
       // Public routes must not pick up an operator session by accident.
       expect(source).not.toMatch(/getOperator|requireOperator/);

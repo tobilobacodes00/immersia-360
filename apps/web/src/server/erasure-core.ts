@@ -2,6 +2,8 @@
  * The decisions behind erasing a guest session (GDPR Art. 17 / NDPA), kept free of the database and
  * the storage SDK so they can be tested on their own. server/erasure.ts applies them.
  */
+import type { RemovalBasis } from '@immersia/shared/reports';
+import { isPlatformRemoval, removalOf } from './share-state';
 
 /**
  * Upload URLs handed to a booth are valid for an hour (storage.presignUpload). A booth that
@@ -54,10 +56,22 @@ export function applyErasure<T extends ErasableSession>(session: T, plan: Erasur
 }
 
 /**
- * A booth uploading for a session: refused once the session has been erased, never resurrected. The
- * booth treats the answer as final (it stops retrying), see `session_erased` in the upload queue.
+ * Why a booth's upload for a session is refused. The one guard for both ways a session becomes final:
+ * erased by its guest, or taken down by the platform. Whatever the booth sends for such a session is
+ * discarded and the session is never resurrected; the booth treats the answer as final and settles
+ * the session quietly instead of retrying (the codes `session_erased` and `session_removed`, see
+ * the upload queue). An operator's own hide is not a refusal: it is reversible and touches no files,
+ * so the booth keeps uploading and a restore finds everything there. A takedown is reported ahead of
+ * an erasure, the same precedence the guest's link uses (share-state.ts).
  */
-export function uploadGate(session: { erasedAt: Date | null }): 'ok' | 'erased' {
+export type UploadRefusal = 'removed' | 'erased';
+
+export function uploadGate(session: {
+  erasedAt: Date | null;
+  removedAt?: Date | null;
+  removal?: RemovalBasis | null;
+}): 'ok' | UploadRefusal {
+  if (isPlatformRemoval(removalOf(session))) return 'removed';
   return session.erasedAt ? 'erased' : 'ok';
 }
 

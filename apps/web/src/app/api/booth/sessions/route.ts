@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { registerSessionSchema } from '@immersia/shared';
+import { UPLOAD_REFUSAL_CODES, registerSessionSchema } from '@immersia/shared';
 import { authenticateDevice } from '@/server/devices';
 import { registerSession } from '@/server/sessions';
 import { StorageUnavailableError } from '@/server/storage';
@@ -16,9 +16,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'invalid', issues: parsed.error.issues.length }, { status: 400 });
   try {
     const res = await registerSession(device, parsed.data);
-    // 410: the guest deleted this session. The booth treats it as final and stops uploading it.
+    // 410: the guest deleted this session or the platform took it down. The booth treats it as final
+    // and stops uploading it.
     if ('error' in res) {
-      if (res.error === 'erased') return NextResponse.json({ error: 'session_erased' }, { status: 410 });
+      if (res.error === 'erased' || res.error === 'removed')
+        return NextResponse.json({ error: UPLOAD_REFUSAL_CODES[res.error] }, { status: 410 });
       return NextResponse.json(res, { status: res.error === 'not_found' ? 404 : 409 });
     }
     return NextResponse.json(res);

@@ -137,6 +137,13 @@
       "body": "Míralo, descárgalo y compártelo desde tu página. El enlace funciona hasta el {date}.",
       "action": "Abrir mis archivos",
       "footer": "Lo recibes porque lo pediste en el fotomatón. No guardamos tu dirección."
+    },
+    "reportOperator": {
+      "subject": "Un invitado reportó algo de {event}",
+      "heading": "Un reporte sobre {event}",
+      "body": "Un invitado reportó una foto o un video de este evento. Motivo: {reason}. Puedes ocultarlo de inmediato; Immersia revisa cada reporte en un máximo de 24 horas.",
+      "action": "Abrir el evento",
+      "footer": "Recibes esto porque eres propietario de este evento o lo creaste."
     }
   },
   "studio": {
@@ -158,7 +165,10 @@
       "closeMenu": "Cerrar menú",
       "organization": "Organización",
       "switchFailed": "No se pudo cambiar de organización. Inténtalo de nuevo.",
-      "settings": "Ajustes"
+      "settings": "Ajustes",
+      "reports": "Reportes",
+      "reportsOpen": "{count, plural, one {# reporte abierto} other {# reportes abiertos}}",
+      "admin": "Administración"
     },
     "launcher": {
       "title": "¿Qué vamos a montar?",
@@ -278,7 +288,10 @@
       "cloudWaiting": "{count, plural, one {Hay # archivo en espera.} other {Hay # archivos en espera.}}",
       "cloudDisconnected": "Este evento se copia a {provider}, pero {provider} no está conectado. Conéctalo y los archivos de este evento se pondrán al día.",
       "cloudFailed": "{count, plural, one {# archivo no llegó a {provider}.} other {# archivos no llegaron a {provider}.}}",
-      "cloudFix": "Abrir Integraciones"
+      "cloudFix": "Abrir Integraciones",
+      "reportsTitle": "Reportes",
+      "reportsOpen": "{count, plural, one {# reporte espera una decisión} other {# reportes esperan una decisión}}",
+      "reportsSettled": "Todos los reportes de este evento ya se resolvieron."
     },
     "setup": {
       "title": "Configuración del evento",
@@ -1584,6 +1597,35 @@
           "failed": "No se pudo eliminar la organización. Inténtalo de nuevo."
         }
       }
+    },
+    "reports": {
+      "title": "Reportes",
+      "subtitle": "Los invitados pueden reportar cualquier cosa que vean de tus eventos. Puedes ocultar un elemento de inmediato; Immersia revisa cada reporte en un máximo de 24 horas.",
+      "emptyTitle": "Sin reportes",
+      "emptyBody": "No se ha reportado nada de tus eventos.",
+      "reasons": {
+        "not_me": "Alguien no aceptó que se compartiera",
+        "inappropriate": "Inapropiado",
+        "illegal": "Podría ser ilegal",
+        "privacy": "Problema de privacidad",
+        "other": "Otro"
+      },
+      "status": {
+        "open": "En espera de revisión",
+        "escalated": "Escalado",
+        "actioned": "Eliminado",
+        "dismissed": "Descartado"
+      },
+      "stateHidden": "Oculto por ti",
+      "stateRemoved": "Eliminado por Immersia",
+      "capture": "Captura",
+      "open": "Abrir la página",
+      "hide": "Ocultar ahora",
+      "restore": "Restaurar",
+      "hiddenDone": "Oculto. Ya no está en la página de descarga, la galería ni las pantallas.",
+      "restoredDone": "Restaurado. Los invitados pueden volver a abrirlo.",
+      "takenDown": "Immersia eliminó este elemento, por lo que no se puede restaurar.",
+      "failed": "No funcionó. Inténtalo de nuevo."
     }
   },
   "booth": {
@@ -1936,7 +1978,12 @@
       "confirm": "Sí, eliminar mis archivos",
       "tooMany": "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
       "failed": "No se pudieron eliminar tus archivos. Inténtalo de nuevo en un momento."
-    }
+    },
+    "report": "Reportar esto",
+    "removedTitle": "Se eliminó este contenido",
+    "removedBody": "Las fotos y los videos de esta página ya no están disponibles.",
+    "removedLegalTitle": "No disponible por motivos legales",
+    "removedLegalBody": "Este contenido se eliminó porque podría ser ilegal."
   },
   "code": {
     "metaTitle": "Encuentra tus archivos",
@@ -1994,7 +2041,8 @@
         "tooMany": "Demasiados intentos. Espera unos minutos y vuelve a intentarlo.",
         "failed": "No se pudo comprobar la contraseña. Revisa tu conexión y vuelve a intentarlo."
       }
-    }
+    },
+    "report": "Reportar algo de esta galería"
   },
   "zip": {
     "progress": "{files, plural, one {# archivo} other {# archivos}} · {size}",
@@ -2302,6 +2350,41 @@
           "p1": "Preguntas sobre estos términos: {email}."
         }
       }
+    }
+  },
+  "report": {
+    "metaTitle": "Reportar este contenido",
+    "title": "Reportar este contenido",
+    "intro": "Cuéntanos qué pasa. Una persona lee cada reporte y actúa en un máximo de 24 horas. No necesitas una cuenta.",
+    "reasonLabel": "¿Cuál es el problema?",
+    "reasons": {
+      "not_me": "No acepté que se compartiera esto",
+      "inappropriate": "Es inapropiado u ofensivo",
+      "illegal": "Podría ser ilegal",
+      "privacy": "Muestra información privada o a un menor",
+      "other": "Otro motivo"
+    },
+    "detailsLabel": "Algo más que debamos saber (opcional)",
+    "detailsHelp": "Evita incluir datos personales que no quieras que leamos.",
+    "contactLabel": "Tu correo, si quieres una respuesta (opcional)",
+    "contactHelp": "Solo se usa para responder este reporte y luego se elimina. No guardamos tu dirección ni los datos de tu dispositivo.",
+    "codeLabel": "Código de la foto o del video",
+    "codeHelp": "Los seis caracteres que aparecen debajo en la galería, como K7M-2QX.",
+    "codePlaceholder": "K7M-2QX",
+    "honeypot": "Deja este campo vacío",
+    "submit": "Enviar reporte",
+    "back": "Volver",
+    "errors": {
+      "invalid": "Elige cuál es el problema y vuelve a enviar.",
+      "contact": "Ese correo no parece válido.",
+      "not_found": "No encontramos esa foto o ese video. Revisa el código e inténtalo de nuevo.",
+      "too_many": "Hubo demasiados reportes desde aquí hoy. Inténtalo de nuevo mañana."
+    },
+    "sent": {
+      "title": "Gracias",
+      "body": "Enviamos tu reporte. Alguien lo revisará en un máximo de 24 horas.",
+      "removedBody": "Ese contenido ya se eliminó. Gracias por avisarnos.",
+      "back": "Volver a la página"
     }
   }
 }
