@@ -43,6 +43,8 @@ catalog:
   mediabunny: 1.61.5
   '@mediabunny/aac-encoder': 1.61.5
   dexie: 4.4.6
+  # On-device person segmentation for background replacement (CAP-10), Apache-2.0
+  '@mediapipe/tasks-vision': 1.0.1
   # Realtime hub (Cloudflare Worker, apps/realtime)
   wrangler: 4.146.0
   '@cloudflare/workers-types': 5.20261003.1

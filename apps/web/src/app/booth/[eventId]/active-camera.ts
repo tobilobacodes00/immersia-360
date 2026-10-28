@@ -32,6 +32,15 @@ export function describeCamera(cam: OpenedCamera): ActiveCamera {
   };
 }
 
+/**
+ * The unit to show a zoom value in. Phone cameras report a multiplier (1 to 10, "2×"); UVC webcams in
+ * Chrome on Windows and macOS report a percentage scale (100 to 500, where 100 is no zoom), which "×"
+ * would turn into "300×".
+ */
+export function zoomUnit(range: { min: number; max: number }): '×' | '%' {
+  return range.max <= 20 ? '×' : '%';
+}
+
 /** `choice` made to match what `cam` really did with its saved zoom and torch. */
 export function reconcileWithCamera(choice: CameraChoice, cam: OpenedCamera): CameraChoice {
   return reconcileChoice(choice, {

@@ -53,6 +53,7 @@ export default async function BrandingPage({ params }: { params: Promise<{ id: s
     output.video360.introAssetId,
     output.video360.outroAssetId,
     output.video360.music?.assetId ?? null,
+    ...[output.video360.background, output.photo.background].map((b) => (b && 'assetId' in b ? b.assetId : null)),
     ...designs.flatMap((d) => [
       ...(d.design ? templateAssetIds(d.design.doc) : []),
       ...d.library.flatMap((l) => templateAssetIds(l.doc)),

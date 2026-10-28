@@ -24,6 +24,8 @@ export interface AssetPickerProps {
   onPick: (asset: AssetView) => void;
   selectedId?: string | null;
   title?: string;
+  /** Narrows the library further than `types` do (e.g. pictures only for a photo booth's background). */
+  accept?: (asset: AssetView) => boolean;
 }
 
 type Load = { status: 'loading' } | { status: 'error' } | { status: 'ready'; assets: AssetView[] };
@@ -68,10 +70,12 @@ function PickerBody({
   types,
   onPick,
   selectedId,
+  accept,
 }: {
   types: AssetType[];
   onPick: (asset: AssetView) => void;
   selectedId: string | null;
+  accept?: (asset: AssetView) => boolean;
 }) {
   const t = useTranslations('studio.assets');
   const locale = useLocale();
@@ -105,8 +109,8 @@ function PickerBody({
   };
 
   const needle = query.trim().toLowerCase();
-  const assets =
-    load.status === 'ready' ? load.assets.filter((a) => !needle || a.name.toLowerCase().includes(needle)) : [];
+  const usable = load.status === 'ready' ? load.assets.filter((a) => !accept || accept(a)) : [];
+  const assets = usable.filter((a) => !needle || a.name.toLowerCase().includes(needle));
   const showType = accepted.length > 1;
 
   return (
@@ -151,8 +155,8 @@ function PickerBody({
         <div className="card">
           <EmptyState
             icon={<FolderOpen className="size-5" />}
-            title={load.assets.length === 0 ? t('picker.emptyTitle') : t('picker.noMatchTitle')}
-            body={load.assets.length === 0 ? t('picker.emptyBody') : t('picker.noMatchBody')}
+            title={usable.length === 0 ? t('picker.emptyTitle') : t('picker.noMatchTitle')}
+            body={usable.length === 0 ? t('picker.emptyBody') : t('picker.noMatchBody')}
           />
         </div>
       )}
@@ -200,12 +204,12 @@ function PickerBody({
  * Choose a library asset for a slot (a logo, a music track, an overlay): searchable, with upload
  * built in. The cards are buttons, so Tab, the arrow keys and Enter all work.
  */
-export function AssetPicker({ open, onClose, types, onPick, selectedId, title }: AssetPickerProps) {
+export function AssetPicker({ open, onClose, types, onPick, selectedId, title, accept }: AssetPickerProps) {
   const t = useTranslations('studio.assets');
   return (
     <Modal open={open} onClose={onClose} title={title ?? t('picker.title')} width="max-w-3xl">
       {/* Mounted while open, so the list is fetched fresh each time (and its signed URLs are new). */}
-      <PickerBody key={types.join(',')} types={types} onPick={onPick} selectedId={selectedId ?? null} />
+      <PickerBody key={types.join(',')} types={types} onPick={onPick} selectedId={selectedId ?? null} accept={accept} />
     </Modal>
   );
 }

@@ -41,6 +41,7 @@ export function MediaSlot({
   onRemove,
   readOnly,
   icon: Icon = ImageIcon,
+  accept,
 }: {
   label: string;
   help?: string;
@@ -50,6 +51,8 @@ export function MediaSlot({
   onRemove: () => void;
   readOnly: boolean;
   icon?: LucideIcon;
+  /** Narrows the picker beyond `types` (see AssetPicker). */
+  accept?: (a: AssetView) => boolean;
 }) {
   const t = useTranslations('studio.branding.media');
   const [open, setOpen] = useState(false);
@@ -99,6 +102,7 @@ export function MediaSlot({
         open={open}
         onClose={() => setOpen(false)}
         types={types}
+        accept={accept}
         selectedId={asset?.id ?? null}
         title={label}
         onPick={(a) => {

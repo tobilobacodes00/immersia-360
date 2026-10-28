@@ -41,8 +41,11 @@ export default async function BoothPage({
   const designId = mode === 'photo' ? output.photo.layoutTemplateId : output.video360.overlayTemplateId;
   const design = designId ? await getTemplate(op.organizationId, designId) : null;
   const v = output.video360;
+  // The background picture or video (CAP-10) of the booth being run, for the offline cache.
+  const background = mode === 'photo' ? output.photo.background : v.background;
   const ids = [
     ...(design ? templateAssetIds(design.doc) : []),
+    background && 'assetId' in background ? background.assetId : null,
     ...(mode === 'video360' ? [v.introAssetId, v.outroAssetId, v.music?.assetId ?? null] : []),
   ].filter((x): x is string => !!x);
   const assets = await assetViews(op.organizationId, [...new Set(ids)], ASSET_URL_TTL_S);

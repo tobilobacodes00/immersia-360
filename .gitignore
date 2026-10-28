@@ -38,5 +38,8 @@ apps/web/src/fonts/*.woff2
 # The PHO-9 font library is fetched from Google Fonts' static host at build time (pinned by URL and sha256).
 apps/web/public/fonts/lib/
 
+# The CAP-10 segmentation runtime: the wasm is copied from @mediapipe/tasks-vision and the model is fetched, at build time.
+apps/web/public/mediapipe/
+
 # Local Claude Code state (agent worktrees)
 .claude/
