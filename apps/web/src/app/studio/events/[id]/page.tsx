@@ -2,18 +2,22 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { AlertTriangle } from 'lucide-react';
-import { Stat, buttonClass } from '@immersia/ui';
+import { Card, Stat, buttonClass } from '@immersia/ui';
 import { formatBytes } from '@/lib/format';
+import { roleCan } from '@/lib/permissions';
 import { galleryUrl } from '@immersia/shared';
 import { eventCloudAlert } from '@/server/cloud/integrations';
 import { appOrigin } from '@/server/env';
 import { eventStats, getEvent, guestFilesSummary } from '@/server/events';
 import { galleryStats } from '@/server/gallery';
 import { listServerRenders, serverRenderCounts } from '@/server/render-jobs';
+import { reportsForOrganization, type ReportItem } from '@/server/reports';
 import { requireOperator } from '@/server/session';
 import { ExtendGuestFiles } from './ExtendGuestFiles';
 import { GalleryCard } from './GalleryCard';
 import { ServerRenders } from './ServerRenders';
+import { ReportList } from '../../reports/ReportList';
+import { toReportView } from '../../reports/views';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const op = await requireOperator();
@@ -25,7 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function EventDashboardPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const op = await requireOperator({ event: ['read'] });
-  const [t, ti, locale, s, files, event, gallery, cloud, renders, renderCounts] = await Promise.all([
+  const [t, ti, locale, s, files, event, gallery, cloud, reports, renders, renderCounts] = await Promise.all([
     getTranslations('studio.dashboard'),
     getTranslations('studio.integrations'),
     getLocale(),
@@ -34,9 +38,13 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
     getEvent(op.organizationId, id),
     galleryStats(id),
     eventCloudAlert(op.organizationId, id),
+    roleCan(op.role, { report: ['read'] })
+      ? reportsForOrganization(op.organizationId, { eventId: id, limit: 50 })
+      : Promise.resolve<ReportItem[]>([]),
     listServerRenders(op.organizationId, id),
     serverRenderCounts(op.organizationId, id),
   ]);
+  const unresolved = reports.filter((r) => r.status === 'open' || r.status === 'escalated').length;
   const n = (v: number) => v.toLocaleString(locale);
   const cloudName = cloud ? ti(`providers.${cloud.provider}`) : '';
   return (
@@ -74,6 +82,16 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
             {t('cloudFix')}
           </Link>
         </section>
+      )}
+      {reports.length > 0 && (
+        // Abuse: guests reported something from this event. The operator can hide it right here.
+        <Card
+          id="reports"
+          title={t('reportsTitle')}
+          subtitle={unresolved > 0 ? t('reportsOpen', { count: unresolved }) : t('reportsSettled')}
+        >
+          <ReportList items={reports.map((r) => toReportView(r, locale))} />
+        </Card>
       )}
       <section aria-labelledby="capture-heading">
         <h2 id="capture-heading" className="sr-only">

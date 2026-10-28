@@ -207,6 +207,8 @@ describe('what the booth makes of a failed call', () => {
     const zod = Object.assign(new Error('bad'), { name: 'ZodError' });
     expect(outcomeOf(zod, 0, false)).toEqual({ kind: 'fail', error: 'server_upload' });
     expect(outcomeOf(err(400, 'invalid'), 0, false)).toEqual({ kind: 'fail', error: 'server_failed' });
+    // The guest erased the session, the platform took it down, or it expired: nothing to render for.
+    expect(outcomeOf(err(410, 'session_gone'), 0, false)).toEqual({ kind: 'fail', error: 'server_failed' });
   });
 
   it('turns an outcome into what is written to the take', () => {
@@ -236,6 +238,7 @@ describe('what a server job’s state means for the take', () => {
     status,
     attempts: 1,
     error,
+    renderMs: status === 'done' ? 41_000 : null,
   });
 
   it('keeps asking, every few seconds, while the job is queued or rendering', () => {
@@ -247,7 +250,11 @@ describe('what a server job’s state means for the take', () => {
   });
 
   it('marks the take rendered when the job is done', () => {
-    expect(progressOf(job('done'), NOW)).toEqual({ kind: 'rendered', patch: { serverJobId: 'job-1' } });
+    expect(progressOf(job('done'), NOW)).toEqual({
+      kind: 'rendered',
+      patch: { serverJobId: 'job-1' },
+      renderMs: 41_000,
+    });
   });
 
   it('fails the take with the job’s own reason when it is one the operator can read, and a general one otherwise', () => {
@@ -264,6 +271,7 @@ describe('a take that failed on the server', () => {
     status,
     attempts: 1,
     error: null,
+    renderMs: status === 'done' ? 41_000 : null,
   });
 
   it('is looked at again later, in case the operator started the job again from the studio', () => {
@@ -274,7 +282,11 @@ describe('a take that failed on the server', () => {
   it('follows the job once it moves: back to waiting while it renders, rendered when it is done', () => {
     expect(recheckOf(job('queued'), NOW)).toMatchObject({ kind: 'wait', patch: { serverJobId: 'job-1' } });
     expect(recheckOf(job('running'), NOW).kind).toBe('wait');
-    expect(recheckOf(job('done'), NOW)).toEqual({ kind: 'rendered', patch: { serverJobId: 'job-1' } });
+    expect(recheckOf(job('done'), NOW)).toEqual({
+      kind: 'rendered',
+      patch: { serverJobId: 'job-1' },
+      renderMs: 41_000,
+    });
   });
 
   it('is watched only while it has a job to look at', () => {
@@ -299,6 +311,7 @@ describe('one step of a take on the server', () => {
     status,
     attempts: 0,
     error,
+    renderMs: null,
   });
 
   function fake(

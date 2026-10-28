@@ -166,7 +166,7 @@ export class Compositor {
    * A small copy of the frame just composed, for the segmenter (RGBA, top row first; its long side is at
    * most `maxSide`). Null while no background is set.
    */
-  readForSegmentation(maxSide: number): { data: Uint8ClampedArray; width: number; height: number } | null {
+  readForSegmentation(maxSide: number): { data: Uint8ClampedArray<ArrayBuffer>; width: number; height: number } | null {
     return this.background ? this.background.readSmall(this.frame.texture, maxSide) : null;
   }
 

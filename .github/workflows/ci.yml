@@ -116,6 +116,9 @@ jobs:
       # Turns the `server` rung on. No worker runs in CI: render-ladder.spec.ts plays the worker's part
       # through the same endpoints (claim, outputs, complete) with this secret.
       RENDER_WORKER_SECRET: ci-only-render-worker-secret-0123456789abcdef
+      # Platform admins for the e2e admin console: one per browser project, so parallel sign-ins
+      # never share a mailbox.
+      ADMIN_EMAILS: e2e-admin-chrome@example.com,e2e-admin-webkit@example.com
     steps:
       - uses: actions/checkout@v5
         with:

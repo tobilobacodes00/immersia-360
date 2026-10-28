@@ -209,6 +209,8 @@ export function outcomeOf(err: unknown, attempts: number, stripped: boolean): Ou
     case 'asset_invalid':
       return stripped ? { kind: 'fail', error: 'server_failed' } : { kind: 'strip_assets' };
     case 'invalid':
+    case 'session_gone':
+      // Erased, taken down or expired: nothing to render for, ever.
       return { kind: 'fail', error: 'server_failed' };
     default:
       // The server keeps answering with the same error (a storage that is not configured, say): give up
@@ -232,12 +234,13 @@ export interface ServerProgress {
 
 export type StepResult =
   | { kind: 'wait'; patch: ServerProgress }
-  | { kind: 'rendered'; patch: ServerProgress }
+  /** `renderMs`: how long the worker took, for analytics. */
+  | { kind: 'rendered'; patch: ServerProgress; renderMs: number | null }
   | { kind: 'failed'; error: TakeServerError; patch: ServerProgress };
 
 /** What a job's state means for the take. */
 export function progressOf(job: ServerRenderJobView, now: number): StepResult {
-  if (job.status === 'done') return { kind: 'rendered', patch: { serverJobId: job.id } };
+  if (job.status === 'done') return { kind: 'rendered', patch: { serverJobId: job.id }, renderMs: job.renderMs };
   if (job.status === 'failed') return { kind: 'failed', error: jobFailure(job.error), patch: { serverJobId: job.id } };
   return {
     kind: 'wait',

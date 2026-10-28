@@ -1,8 +1,8 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "7a3b1983-0d71-42c1-bbe8-4d28b8e6eefd",
-  "prevIds": ["1744fcaf-a1f5-48e6-8206-c78943792509"],
+  "id": "1a0608f6-57de-474d-9aa5-d5bf072b8612",
+  "prevIds": ["a80e3a4c-8e6b-41fc-856e-1161347b1594"],
   "ddl": [
     {
       "values": ["pending", "ready"],
@@ -71,6 +71,12 @@
       "schema": "public"
     },
     {
+      "values": ["operator", "policy", "legal"],
+      "name": "removal_basis",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
       "values": ["queued", "running", "done", "failed"],
       "name": "render_job_status",
       "entityType": "enums",
@@ -83,7 +89,7 @@
       "schema": "public"
     },
     {
-      "values": ["open", "actioned", "dismissed"],
+      "values": ["open", "actioned", "dismissed", "escalated"],
       "name": "report_status",
       "entityType": "enums",
       "schema": "public"
@@ -229,6 +235,12 @@
     {
       "isRlsEnabled": false,
       "name": "output",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "platform_cost",
       "entityType": "tables",
       "schema": "public"
     },
@@ -1049,6 +1061,32 @@
       "table": "analytics_event"
     },
     {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "client_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "analytics_event"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'server'",
+      "generated": null,
+      "identity": null,
+      "name": "source",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "analytics_event"
+    },
+    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
@@ -1538,6 +1576,45 @@
       "generated": null,
       "identity": null,
       "name": "erased_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "capture_session"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "removed_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "capture_session"
+    },
+    {
+      "type": "removal_basis",
+      "typeSchema": "public",
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "removal",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "capture_session"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "removed_by",
       "entityType": "columns",
       "schema": "public",
       "table": "capture_session"
@@ -2752,6 +2829,71 @@
       "table": "output"
     },
     {
+      "type": "date",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "month",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "platform_cost"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "amount_cents",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "platform_cost"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "note",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "platform_cost"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "updated_by",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "platform_cost"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "platform_cost"
+    },
+    {
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -2830,6 +2972,19 @@
       "table": "report"
     },
     {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "contact_email",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "report"
+    },
+    {
       "type": "report_status",
       "typeSchema": "public",
       "notNull": true,
@@ -2838,6 +2993,19 @@
       "generated": null,
       "identity": null,
       "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "report"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "decision_note",
       "entityType": "columns",
       "schema": "public",
       "table": "report"
@@ -3829,6 +3997,27 @@
       "nameExplicit": true,
       "columns": [
         {
+          "value": "client_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": "\"client_id\" is not null",
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "analytics_event_client_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "analytics_event"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
           "value": "organization_id",
           "isExpression": false,
           "asc": true,
@@ -3877,6 +4066,34 @@
       "method": "btree",
       "concurrently": false,
       "name": "audit_log_org_time_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "audit_log"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "action",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "created_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "audit_log_action_time_idx",
       "entityType": "indexes",
       "schema": "public",
       "table": "audit_log"
@@ -4403,6 +4620,34 @@
       "nameExplicit": true,
       "columns": [
         {
+          "value": "session_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "created_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "report_session_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "report"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
           "value": "status",
           "isExpression": false,
           "asc": true,
@@ -4845,6 +5090,19 @@
     },
     {
       "nameExplicit": false,
+      "columns": ["removed_by"],
+      "schemaTo": "public",
+      "tableTo": "user",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "name": "capture_session_removed_by_user_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "capture_session"
+    },
+    {
+      "nameExplicit": false,
       "columns": ["organization_id"],
       "schemaTo": "public",
       "tableTo": "organization",
@@ -5011,6 +5269,19 @@
       "entityType": "fks",
       "schema": "public",
       "table": "output"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["updated_by"],
+      "schemaTo": "public",
+      "tableTo": "user",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "name": "platform_cost_updated_by_user_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "platform_cost"
     },
     {
       "nameExplicit": false,
@@ -5339,6 +5610,14 @@
       "entityType": "pks"
     },
     {
+      "columns": ["month"],
+      "nameExplicit": false,
+      "name": "platform_cost_pkey",
+      "schema": "public",
+      "table": "platform_cost",
+      "entityType": "pks"
+    },
+    {
       "columns": ["id"],
       "nameExplicit": false,
       "name": "report_pkey",
@@ -5419,6 +5698,13 @@
       "entityType": "checks",
       "schema": "public",
       "table": "event"
+    },
+    {
+      "value": "\"amount_cents\" >= 0",
+      "name": "platform_cost_amount_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "platform_cost"
     }
   ],
   "renames": []

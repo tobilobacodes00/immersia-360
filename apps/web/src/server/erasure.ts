@@ -3,8 +3,9 @@ import { and, asc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import { db, schema } from '@immersia/db';
 import { track } from './analytics';
 import { audit } from './audit';
+import { cancelPendingCopies } from './cloud/copy';
 import { erasurePlan, purgeStage } from './erasure-core';
-import { removeSessionItem } from './live';
+import { withdrawSession } from './live';
 import { abandonServerRenders, deleteWorkingFiles } from './render-jobs';
 import { deleteObjects } from './storage';
 
@@ -73,6 +74,8 @@ export async function eraseSession(
       .set({ uploadedAt: null })
       .where(eq(output.sessionId, row.id))
       .returning({ key: output.objectKey });
+    // Copies to the operator's cloud that have not happened do not happen (finished ones are theirs).
+    await cancelPendingCopies(tx, row.id);
     await audit(
       {
         organizationId: row.organizationId,
@@ -110,7 +113,7 @@ export async function eraseSession(
       err instanceof Error ? err.name : err,
     ),
   );
-  if (done.onScreen) await removeSessionItem(done.eventId, done.sessionId);
+  if (done.onScreen) await withdrawSession(done.eventId, done.sessionId);
   track({ name: 'guest_data_erased', by: eraser.by }, { eventId: done.eventId });
   return { result: 'erased', sessionId: done.sessionId, contacts: done.contacts, outputs: done.outputs };
 }

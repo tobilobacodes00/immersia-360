@@ -3,7 +3,7 @@ import {
   SERVER_FILE_LIMITS,
   recipeAssetIds,
   renderRecipeSchema,
-  renderReportSchema,
+  renderPathRequestSchema,
   serverFilesRequestSchema,
   workerOutputsRequestSchema,
   type RenderRecipe,
@@ -151,23 +151,12 @@ describe('worker contracts', () => {
   });
 });
 
-describe('render report (booth analytics)', () => {
-  it('is a completed or a failed render on one of the three paths', () => {
-    expect(
-      renderReportSchema.safeParse({
-        outcome: 'completed',
-        path: 'wasm',
-        renderMs: 52_000,
-        preset: 'balanced',
-        effectsCount: 2,
-      }).success,
-    ).toBe(true);
-    expect(
-      renderReportSchema.safeParse({ outcome: 'failed', path: 'local', errorCode: 'encoder_stall', browser: 'Chrome' })
-        .success,
-    ).toBe(true);
-    expect(
-      renderReportSchema.safeParse({ outcome: 'failed', path: 'cloud', errorCode: 'x', browser: 'Chrome' }).success,
-    ).toBe(false);
+describe('the rung a booth reports', () => {
+  it('is one of the three rungs of the ladder', () => {
+    for (const path of ['local', 'wasm', 'server'])
+      expect(renderPathRequestSchema.safeParse({ path }).success).toBe(true);
+    expect(renderPathRequestSchema.safeParse({ path: 'cloud' }).success).toBe(false);
+    expect(renderPathRequestSchema.safeParse({}).success).toBe(false);
+    expect(renderPathRequestSchema.safeParse({ path: 'wasm', extra: 1 }).success).toBe(false);
   });
 });

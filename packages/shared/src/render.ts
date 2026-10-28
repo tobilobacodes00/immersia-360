@@ -12,10 +12,10 @@
  *   the worker itself validate against the same definitions.
  */
 import { z } from 'zod';
-import type { RenderPath } from './analytics';
+import { RENDER_PATHS } from './analytics';
 import { musicSchema } from './event';
 
-export const RENDER_PATHS = ['local', 'wasm', 'server'] as const satisfies readonly RenderPath[];
+/** The rungs of the render ladder (the catalogue's `RENDER_PATHS`). */
 export const renderPathSchema = z.enum(RENDER_PATHS);
 
 // ---------------------------------------------------------------------------------------------
@@ -212,47 +212,28 @@ export interface ServerRenderJobView {
   status: RenderJobStatus;
   attempts: number;
   error: ServerRenderError | null;
+  /** How long the worker took to render it, once it is done. */
+  renderMs: number | null;
 }
 
 /** Why the server refused a render request (the booth surfaces these). */
 export type ServerRenderRefusal =
   | { error: 'render_rate_limited'; scope: 'event_hourly' | 'event_total' | 'org_daily'; retryAfterS: number }
   | { error: 'server_render_unavailable' }
+  /** The guest erased the session, the platform took it down, or it expired: nothing to render for, ever. */
+  | { error: 'session_gone' }
   | { error: 'take_not_registered' | 'session_not_found' | 'files_incomplete' | 'asset_invalid' | 'invalid' };
 
 // ---------------------------------------------------------------------------------------------
-// Booth → server: what a render did (analytics and the device's remembered rung)
+// Booth → server: the rung that worked
 
-export const renderReportSchema = z.discriminatedUnion('outcome', [
-  z
-    .object({
-      outcome: z.literal('completed'),
-      path: renderPathSchema,
-      renderMs: z.number().int().min(0).max(3_600_000),
-      preset: z.enum(['small', 'balanced', 'original']),
-      effectsCount: z.number().int().min(0).max(8),
-    })
-    .strict(),
-  z
-    .object({
-      outcome: z.literal('failed'),
-      path: renderPathSchema,
-      errorCode: z.string().min(1).max(60),
-      browser: z.string().min(1).max(60),
-    })
-    .strict(),
-]);
-export type RenderReport = z.infer<typeof renderReportSchema>;
-
-/** What a booth sends after a render: how it went, and the rung that worked (to remember for the device). */
-export const renderReportRequestSchema = z
-  .object({
-    report: renderReportSchema,
-    remember: renderPathSchema.optional(),
-    eventId: z.uuid().optional(),
-  })
-  .strict();
-export type RenderReportRequest = z.infer<typeof renderReportRequestSchema>;
+/**
+ * After a render, the booth tells the server which rung of the ladder produced the video, for the device's
+ * record (its `capabilities.renderPath`, shown on the Devices screen). How long it took and how it ended go
+ * to analytics through the booth's own outbox (`render_completed` / `render_failed` in the catalogue).
+ */
+export const renderPathRequestSchema = z.object({ path: renderPathSchema }).strict();
+export type RenderPathRequest = z.infer<typeof renderPathRequestSchema>;
 
 // ---------------------------------------------------------------------------------------------
 // Worker ↔ server (authenticated by RENDER_WORKER_SECRET)

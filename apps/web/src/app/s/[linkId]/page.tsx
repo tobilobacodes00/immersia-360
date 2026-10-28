@@ -1,16 +1,19 @@
 import type { ReactNode } from 'react';
 import type { Metadata } from 'next';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { Download } from 'lucide-react';
 import {
+  browserFamily,
   formatShortCode,
   guestFormCookie,
   guestThemeVars,
   isGuestFormChoice,
   isLinkId,
-  parseRoute,
+  isLinkPreviewBot,
+  parseDisplayLayout,
+  parseRouteParams,
   type OutputKind,
 } from '@immersia/shared';
 import { displayFontClass } from '@immersia/ui/guest-fonts';
@@ -31,7 +34,14 @@ import { ShareActions } from './ShareActions';
  */
 export const dynamic = 'force-dynamic';
 
-type Props = { params: Promise<{ linkId: string }>; searchParams: Promise<{ r?: string; f?: string }> };
+type Props = {
+  params: Promise<{ linkId: string }>;
+  /**
+   * `r` (or `route`) is how the guest got here (DL-13); `dl` the layout of the Live Display they
+   * scanned; `f` that the guest form was just sent.
+   */
+  searchParams: Promise<{ r?: string; route?: string; dl?: string; f?: string }>;
+};
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { linkId } = await params;
@@ -50,13 +60,14 @@ const PRIMARY: OutputKind[] = ['mp4', 'strip', 'gif', 'boomerang', 'short_video'
 export default async function SharePage({ params, searchParams }: Props) {
   const { linkId } = await params;
   if (!isLinkId(linkId)) notFound();
-  const query = await searchParams;
-  const route = parseRoute(query.r);
+  const sp = await searchParams;
+  const route = parseRouteParams(sp);
   const [page, t, format] = await Promise.all([sharePage(linkId), getTranslations('share'), getFormatter()]);
 
   // Minted on the booth, not registered yet (offline booth, upload queue): the QR still works.
   if (!page) return <OnTheWayScreen linkId={linkId} />;
-  // The proxy answers 410 for expired and erased sessions; this covers the moment in between.
+  // The proxy answers 410/451 for every state but live and pending; this covers a proxy that could
+  // not look it up, and the moment between a change of state and the next request.
   if (page.state === 'erased')
     return (
       <Shell theme={page.event.theme}>
@@ -65,6 +76,15 @@ export default async function SharePage({ params, searchParams }: Props) {
         </h1>
         <p className="mt-3 opacity-70">{t('erasedBody')}</p>
         {page.contact && <Contact contact={page.contact} template={t.raw('endedContact') as string} />}
+      </Shell>
+    );
+  if (page.state === 'removed' || page.state === 'hidden')
+    return (
+      <Shell theme={page.event.theme}>
+        <h1 className="text-[clamp(1.9rem,6vw,2.75rem)] leading-tight font-bold tracking-[-0.03em]">
+          {t(page.removal === 'legal' ? 'removedLegalTitle' : 'removedTitle')}
+        </h1>
+        <p className="mt-3 opacity-70">{t(page.removal === 'legal' ? 'removedLegalBody' : 'removedBody')}</p>
       </Shell>
     );
   if (page.state === 'expired')
@@ -78,7 +98,24 @@ export default async function SharePage({ params, searchParams }: Props) {
       </Shell>
     );
 
-  track({ name: 'share_page_viewed', output_kind: 'session', route }, { eventId: page.event.id });
+  // First-party and anonymous: no cookie, no address, and from the user agent only a browser family.
+  // Link-preview robots (a messaging app unfurling the link) are not guests and are left out.
+  const ua = (await headers()).get('user-agent');
+  if (!isLinkPreviewBot(ua)) {
+    const scope = { eventId: page.event.id, organizationId: page.event.organizationId };
+    track(
+      {
+        name: 'share_page_viewed',
+        output_kind: 'session',
+        route,
+        session_id: page.sessionId,
+        browser: browserFamily(ua),
+      },
+      scope,
+    );
+    // The big screen's QR: a scan, by the layout it was shown in.
+    if (route === 'display') track({ name: 'display_qr_scanned', layout: parseDisplayLayout(sp.dl) }, scope);
+  }
 
   const ready = page.files.filter((f) => f.viewUrl);
   const pending = page.files.length - ready.length;
@@ -145,7 +182,7 @@ export default async function SharePage({ params, searchParams }: Props) {
           fingerprint={consent.fingerprint}
         />
       )}
-      {!consent && query.f === 'sent' && (
+      {!consent && sp.f === 'sent' && (
         <p role="status" className="mt-5 font-semibold">
           {t('form.sent', { operator: page.operator })}
         </p>
@@ -210,6 +247,16 @@ export default async function SharePage({ params, searchParams }: Props) {
       </p>
 
       <EraseSession linkId={linkId} />
+      {/* Abuse NFR: a way to report this content, in one tap from the page itself. */}
+      <p className="mt-6 text-sm">
+        <a
+          href={`/report?l=${linkId}${route === 'direct' ? '' : `&r=${route}`}`}
+          rel="nofollow"
+          className="focus-ring underline underline-offset-4 opacity-70 hover:opacity-100"
+        >
+          {t('report')}
+        </a>
+      </p>
     </Shell>
   );
 }

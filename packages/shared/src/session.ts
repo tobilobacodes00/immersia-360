@@ -77,6 +77,17 @@ export type TakeMeta = z.infer<typeof takeMetaSchema>;
 export type RegisterSessionInput = z.infer<typeof registerSessionSchema>;
 export type OutputMeta = z.infer<typeof outputMetaSchema>;
 
+/**
+ * What the server answers (HTTP 410, in `error`) when a booth uploads, confirms or emails for a
+ * session it will never take again: the guest erased it, or the platform took it down. The codes are
+ * a contract with the booth's upload queue, which settles such a session quietly instead of retrying
+ * it or parking it as failed for the operator. An operator's own hide is not among them (reversible).
+ */
+export const UPLOAD_REFUSAL_CODES = { erased: 'session_erased', removed: 'session_removed' } as const;
+export type UploadRefusalCode = (typeof UPLOAD_REFUSAL_CODES)[keyof typeof UPLOAD_REFUSAL_CODES];
+export const isUploadRefusalCode = (code: string): code is UploadRefusalCode =>
+  (Object.values(UPLOAD_REFUSAL_CODES) as string[]).includes(code);
+
 export const reserveCodesSchema = z.object({
   eventId: z.uuid(),
   count: z.number().int().min(1).max(300),

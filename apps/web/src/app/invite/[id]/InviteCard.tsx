@@ -129,7 +129,7 @@ export function InviteCard({
   }
 
   // Everything else is a message. (`ready` without an organization cannot happen; it reads as not found.)
-  const key = MESSAGE[view === 'ready' || view === 'wrong_account' ? 'not_found' : view];
+  const key = MESSAGE[view === 'ready' ? 'not_found' : view];
   return (
     <div>
       <div className="eyebrow mb-3">{t('eyebrow')}</div>

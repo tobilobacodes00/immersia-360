@@ -14,7 +14,7 @@ import {
   topUpCodes,
 } from '../src/sessions';
 import { createIdbTakeStore, type TakeStore } from '../src/take-store';
-import { BoothApiError, SESSION_ERASED, UploadQueue, backoffMs, type BoothApi } from '../src/uploader';
+import { BoothApiError, SESSION_ERASED, SESSION_REMOVED, UploadQueue, backoffMs, type BoothApi } from '../src/uploader';
 
 let db: BoothDB;
 let store: TakeStore;
@@ -241,6 +241,27 @@ describe('upload queue', () => {
     expect(settled.pendingEmails).toEqual([]);
     expect(settled.lastError).toBeUndefined();
     // Nothing more is attempted for it, and it does not count as one the operator must look at.
+    expect(await queue.runOnce()).toEqual({ kind: 'idle' });
+    expect(server.emails).toEqual([]);
+  });
+
+  it('settles a session the platform took down the same way, with its own stable code', async () => {
+    expect(SESSION_REMOVED).toBe('session_removed');
+    expect(SESSION_REMOVED).not.toBe(SESSION_ERASED);
+    const server = new FakeServer();
+    const queue = new UploadQueue(db, store, server, now);
+    await addTake('t1', 'rendered');
+    await addOutput('t1', 'mp4', 1000);
+    const session = await mintSession(db, { eventId: 'evt', takeIds: ['t1'], capturedAt: clock });
+    await queueEmail(db, session.id, 'guest@example.com');
+
+    server.failNext = new BoothApiError(410, SESSION_REMOVED, false);
+    expect(await queue.runOnce()).toEqual({ kind: 'done', sessionId: session.id });
+    const settled = (await db.sessions.get(session.id))!;
+    expect(settled.state).toBe('done');
+    expect(settled.pendingEmails).toEqual([]);
+    expect(settled.lastError).toBeUndefined();
+    // No retry loop, nothing parked for the operator.
     expect(await queue.runOnce()).toEqual({ kind: 'idle' });
     expect(server.emails).toEqual([]);
   });

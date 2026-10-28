@@ -13,8 +13,14 @@ const allowed = (role: string) => ALL.filter(([resource, action]) => can(role, r
 const key = ([resource, action]: readonly [string, string]) => `${resource}:${action}`;
 
 describe('role permissions (ACC-3)', () => {
-  it('viewers can read and export galleries, and nothing else', () => {
-    expect(allowed('viewer').map(key).sort()).toEqual(['asset:read', 'device:read', 'event:read', 'gallery:export']);
+  it('viewers can read and export galleries, and see abuse reports, and nothing else', () => {
+    expect(allowed('viewer').map(key).sort()).toEqual([
+      'asset:read',
+      'device:read',
+      'event:read',
+      'gallery:export',
+      'report:read',
+    ]);
   });
 
   it('operators run events and devices but have no say over the team, clouds or revoking devices', () => {
@@ -34,6 +40,8 @@ describe('role permissions (ACC-3)', () => {
         'guest:delete',
         'guest:export',
         'guest:read',
+        'report:hide',
+        'report:read',
       ].sort(),
     );
     for (const denied of [
@@ -128,5 +136,20 @@ describe('guest data permissions', () => {
 
   it('refuses an unknown role', () => {
     expect(roleCan('guest', { guest: ['read'] })).toBe(false);
+  });
+});
+
+/** Abuse reports (PRD Abuse NFR): the organization sees reports on its events and can hide a reported item. */
+describe('report permissions', () => {
+  it('owners and operators see reports and hide a reported item at once', () => {
+    for (const role of ['owner', 'operator']) {
+      expect(roleCan(role, { report: ['read'] }), `${role} read`).toBe(true);
+      expect(roleCan(role, { report: ['hide'] }), `${role} hide`).toBe(true);
+    }
+  });
+
+  it('viewers see reports but cannot hide anything', () => {
+    expect(roleCan('viewer', { report: ['read'] })).toBe(true);
+    expect(roleCan('viewer', { report: ['hide'] })).toBe(false);
   });
 });

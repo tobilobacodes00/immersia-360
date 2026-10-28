@@ -24,7 +24,6 @@ import {
   type WorkerOutputsRequest,
 } from '@immersia/shared';
 import type { DeviceRow } from './devices';
-import { track } from './analytics';
 import { env } from './env';
 import {
   checkQuota,
@@ -42,6 +41,7 @@ import {
   type Transition,
 } from './render-jobs-core';
 import { wakeRenderWorker } from './render-worker-wake';
+import { uploadGate } from './erasure-core';
 import { markOutputUploaded } from './sessions';
 import { deleteObjects, objectKey, objectSize, presignUpload, presignView, takeFileKey } from './storage';
 
@@ -60,12 +60,34 @@ const WORKING_FILES_KEEP_MS = 7 * 24 * HOUR_MS;
 
 const EXT: Record<WorkerOutputKind, string> = { mp4: 'mp4', small_mp4: 'mp4', poster: 'jpg' };
 
-const viewOf = (row: Pick<JobRow, 'id' | 'status' | 'attempts' | 'error'>): ServerRenderJobView => ({
+const viewOf = (row: Pick<JobRow, 'id' | 'status' | 'attempts' | 'error' | 'renderMs'>): ServerRenderJobView => ({
   id: row.id,
   status: row.status,
   attempts: row.attempts,
+  renderMs: row.renderMs,
   error: row.error === null ? null : isServerRenderError(row.error) ? row.error : 'failed',
 });
+
+/** The columns that say whether a session still takes files (see uploadGate in erasure-core.ts). */
+const sessionGateColumns = {
+  id: captureSession.id,
+  erasedAt: captureSession.erasedAt,
+  expiredAt: captureSession.expiredAt,
+  removedAt: captureSession.removedAt,
+  removal: captureSession.removal,
+};
+
+/**
+ * Whether a server render may still produce files for this session. The same rule a booth's own uploads
+ * follow: not erased by the guest, not taken down by the platform (an operator's hide is reversible and
+ * touches no files, so it does not stop a render), and not expired.
+ */
+const sessionAcceptsFiles = (session: {
+  erasedAt: Date | null;
+  expiredAt: Date | null;
+  removedAt: Date | null;
+  removal: typeof captureSession.$inferSelect.removal;
+}) => session.expiredAt === null && uploadGate(session) === 'ok';
 
 function isUniqueViolation(err: unknown): boolean {
   let e: unknown = err;
@@ -147,19 +169,13 @@ export async function requestRender(
   if (existing && existing.status !== 'failed') return { job: viewOf(existing) };
 
   const [session] = await db()
-    .select({ id: captureSession.id })
+    .select(sessionGateColumns)
     .from(captureSession)
-    .where(
-      and(
-        eq(captureSession.id, input.sessionId),
-        eq(captureSession.eventId, t.eventId),
-        // An erased or expired session has no guest to render for.
-        isNull(captureSession.erasedAt),
-        isNull(captureSession.expiredAt),
-      ),
-    )
+    .where(and(eq(captureSession.id, input.sessionId), eq(captureSession.eventId, t.eventId)))
     .limit(1);
   if (!session) return { error: 'session_not_found' };
+  // An erased, taken-down or expired session has no guest to render for: final, not worth retrying.
+  if (!sessionAcceptsFiles(session)) return { error: 'session_gone' };
 
   // The recipe says what was uploaded; storage says whether it really was.
   const { recipe } = input;
@@ -201,7 +217,7 @@ export async function requestRender(
     throw err;
   }
   after(() => void wakeRenderWorker());
-  return { job: { id, status: 'queued', attempts: 0, error: null } };
+  return { job: { id, status: 'queued', attempts: 0, error: null, renderMs: null } };
 }
 
 /**
@@ -339,15 +355,13 @@ export async function claimJob(workerId: string): Promise<WorkerClaim> {
         .limit(1)
         .for('update', { skipLocked: true });
       if (!row) return null;
-      // The guest erased the session, or it expired, while the job waited: there is nothing to render for.
-      const [open] = await tx
-        .select({ id: captureSession.id })
+      // The guest erased the session, the platform took it down, or it expired, while the job waited.
+      const [state] = await tx
+        .select(sessionGateColumns)
         .from(captureSession)
-        .where(
-          and(eq(captureSession.id, row.sessionId), isNull(captureSession.erasedAt), isNull(captureSession.expiredAt)),
-        )
+        .where(eq(captureSession.id, row.sessionId))
         .limit(1);
-      if (!open) {
+      if (!state || !sessionAcceptsFiles(state)) {
         const gone = failureTransition(row, 'source_missing', now);
         await tx.update(job).set(write(gone, now)).where(eq(job.id, row.id));
         return { row, claimToken: null, ended: 'source_missing' };
@@ -365,10 +379,7 @@ export async function claimJob(workerId: string): Promise<WorkerClaim> {
       return { row: { ...row, attempts: next.attempts }, claimToken, ended: null };
     });
     if (!claimed) return { job: null };
-    if (claimed.ended) {
-      await reportFailure(claimed.row, claimed.ended);
-      continue;
-    }
+    if (claimed.ended) continue;
     const recipe = renderRecipeSchema.safeParse(claimed.row.recipe);
     if (!recipe.success) {
       // A booth and a worker that disagree on the recipe: not fixable by trying again.
@@ -427,20 +438,14 @@ async function downloadUrls(row: JobRow, recipe: RenderRecipe): Promise<NonNulla
 /** The running job this token holds, or null (it finished, was reclaimed, or the token is wrong). */
 async function heldJob(jobId: string, claimToken: string): Promise<JobRow | null> {
   const [row] = await db()
-    .select({ job })
+    .select({ job, session: sessionGateColumns })
     .from(job)
     .innerJoin(captureSession, eq(captureSession.id, job.sessionId))
-    .where(
-      and(
-        eq(job.id, jobId),
-        eq(job.status, 'running'),
-        eq(job.claimToken, claimToken),
-        // A guest who erased their session must not get files back through a render already under way.
-        isNull(captureSession.erasedAt),
-      ),
-    )
+    .where(and(eq(job.id, jobId), eq(job.status, 'running'), eq(job.claimToken, claimToken)))
     .limit(1);
-  return row?.job ?? null;
+  // A guest who erased their session (or a platform takedown) must not get files back through a render
+  // already under way: the worker is told the job is no longer its own.
+  return row && sessionAcceptsFiles(row.session) ? row.job : null;
 }
 
 /** Extend the lease while a render goes on. `timeout`: it ran past the time limit and was stopped. */
@@ -515,7 +520,7 @@ export async function completeJob(
   const row = await heldJob(jobId, claimToken);
   if (!row) return 'lease_lost';
   const pending = await db()
-    .select({ id: output.id, kind: output.kind, key: output.objectKey, bytes: output.bytes })
+    .select({ id: output.id, kind: output.kind, key: output.objectKey, mime: output.mime, bytes: output.bytes })
     .from(output)
     .where(
       and(
@@ -531,8 +536,17 @@ export async function completeJob(
   }
   // The poster first: the share page shows it before the video loads.
   const order: Record<string, number> = { poster: 0, small_mp4: 1, mp4: 2 };
+  const organizationId = await organizationOf(row);
   for (const p of [...pending].sort((a, b) => order[a.kind]! - order[b.kind]!))
-    await markOutputUploaded(p.id, row.sessionId);
+    await markOutputUploaded({
+      outputId: p.id,
+      sessionId: row.sessionId,
+      eventId: row.eventId,
+      organizationId,
+      objectKey: p.key!,
+      mime: p.mime,
+      bytes: p.bytes!,
+    });
   const now = new Date();
   const done = await db()
     .update(job)
@@ -548,18 +562,6 @@ export async function completeJob(
     .where(and(eq(job.id, jobId), eq(job.claimToken, claimToken)))
     .returning({ id: job.id });
   if (!done.length) return 'lease_lost';
-  const recipe = renderRecipeSchema.safeParse(row.recipe);
-  const scope = await jobScope(row);
-  track(
-    {
-      name: 'render_completed',
-      render_ms: renderMs,
-      path: 'server',
-      preset: recipe.success ? recipe.data.preset : 'balanced',
-      effects_count: recipe.success ? recipe.data.effects.length : 0,
-    },
-    scope,
-  );
   // The working copies have done their job; the guest's files are the outputs.
   after(() => deleteWorkingFiles([row.takeId]));
   return 'ok';
@@ -580,25 +582,16 @@ async function settleFailure(jobId: string, claimToken: string, code: ServerRend
     .set(write(next, now))
     .where(and(eq(job.id, jobId), eq(job.claimToken, claimToken)))
     .returning({ id: job.id });
-  if (!rows.length) return false;
-  if (next.finished) await reportFailure(row, code);
-  return true;
+  return rows.length > 0;
 }
 
-async function reportFailure(row: JobRow, code: ServerRenderError | null) {
-  track(
-    { name: 'render_failed', error_code: code ?? 'failed', path: 'server', browser: 'headless-chrome' },
-    await jobScope(row),
-  );
-}
-
-async function jobScope(row: JobRow) {
+async function organizationOf(row: JobRow): Promise<string> {
   const [ev] = await db()
     .select({ organizationId: event.organizationId })
     .from(event)
     .where(eq(event.id, row.eventId))
     .limit(1);
-  return { organizationId: ev?.organizationId ?? null, eventId: row.eventId, deviceId: row.deviceId };
+  return ev!.organizationId;
 }
 
 // ---------------------------------------------------------------------------------------------

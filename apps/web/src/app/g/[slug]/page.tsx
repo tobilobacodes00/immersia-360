@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { Search } from 'lucide-react';
@@ -8,7 +8,9 @@ import {
   guestFormCookie,
   guestThemeVars,
   isGuestFormChoice,
-  parseRoute,
+  isLinkPreviewBot,
+  parseDisplayLayout,
+  parseRouteParams,
   type BoothMode,
 } from '@immersia/shared';
 import { cx } from '@immersia/ui';
@@ -29,7 +31,7 @@ export const dynamic = 'force-dynamic';
 
 type Props = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ r?: string; booth?: string; code?: string; cursor?: string }>;
+  searchParams: Promise<{ r?: string; route?: string; dl?: string; booth?: string; code?: string; cursor?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -48,7 +50,7 @@ export default async function GalleryPage({ params, searchParams }: Props) {
   const ev = await galleryEvent(slug);
   if (!ev) notFound();
   const [t, format] = await Promise.all([getTranslations('gallery'), getFormatter()]);
-  const route = parseRoute(sp.r);
+  const route = parseRouteParams(sp);
 
   if (ev.passwordHash && !validGalleryPass(slug, ev.passwordHash, (await cookies()).get(galleryCookie(slug))?.value))
     return (
@@ -73,7 +75,13 @@ export default async function GalleryPage({ params, searchParams }: Props) {
   const booth: BoothMode | null = sp.booth === 'photo' || sp.booth === 'video360' ? sp.booth : null;
   const code = sp.code?.trim() || null;
   const { items, next } = await galleryItems(ev.id, { booth, code, cursor: sp.cursor ?? null });
-  if (!sp.cursor) track({ name: 'gallery_viewed', route }, { eventId: ev.id, organizationId: ev.organizationId });
+  // First page only, and not a link-preview robot: anonymous, no cookie, no address, no user agent.
+  if (!sp.cursor && !isLinkPreviewBot((await headers()).get('user-agent'))) {
+    const scope = { eventId: ev.id, organizationId: ev.organizationId };
+    track({ name: 'gallery_viewed', route }, scope);
+    // The big screen's gallery QR: a scan, by the layout it was shown in.
+    if (route === 'display') track({ name: 'display_qr_scanned', layout: parseDisplayLayout(sp.dl) }, scope);
+  }
 
   // Every link keeps how the guest got here (DL-13) and the current filters.
   const href = (patch: Record<string, string | null>) => {
@@ -231,6 +239,16 @@ export default async function GalleryPage({ params, searchParams }: Props) {
             </a>
           )}
         </div>
+
+        <p className="mt-10 text-center text-sm">
+          <a
+            href={`/report?g=${slug}${route === 'direct' ? '' : `&r=${route}`}`}
+            rel="nofollow"
+            className="focus-ring underline underline-offset-4 opacity-70 hover:opacity-100"
+          >
+            {t('report')}
+          </a>
+        </p>
 
         <GuestFooter />
       </main>

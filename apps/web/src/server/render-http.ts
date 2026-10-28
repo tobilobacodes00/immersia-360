@@ -11,6 +11,7 @@ const STATUS: Record<ServerRenderRefusal['error'], number> = {
   server_render_unavailable: 503,
   take_not_registered: 404,
   session_not_found: 404,
+  session_gone: 410,
   files_incomplete: 409,
   asset_invalid: 422,
   invalid: 400,

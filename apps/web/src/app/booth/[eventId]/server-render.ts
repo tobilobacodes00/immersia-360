@@ -1,6 +1,6 @@
 import { outputSize, videoBitrate } from '@immersia/render-engine';
 import { sessionForTake, boothDb, type LocalTake, type TakeStore } from '@immersia/offline';
-import type { RenderReportRequest, Video360Settings } from '@immersia/shared';
+import type { RenderPath, Video360Settings } from '@immersia/shared';
 import { cardSecondsOf, planTiming, seedOf } from './render-plan';
 import {
   ServerApiError,
@@ -53,15 +53,16 @@ export function createServerRenderApi(token: string): ServerRenderApi {
 }
 
 /**
- * Tell the server how a render went (first-party analytics, and the rung that worked for the device's
- * record). Best effort: it never stands between a guest and their video, so a failure here is dropped.
+ * Tell the server which rung of the render ladder produced the video, for the device's record (the Devices
+ * screen). Best effort: it never stands between a guest and their video, so a failure here is dropped. How
+ * long renders take and how they end are analytics events, sent through the booth's outbox instead.
  */
-export function reportRender(token: string | null, body: RenderReportRequest): void {
+export function reportRenderPath(token: string | null, path: RenderPath): void {
   if (!token || !navigator.onLine) return;
-  void fetch('/api/booth/render-report', {
+  void fetch('/api/booth/render-path', {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Device ${token}` },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ path }),
     keepalive: true,
   }).catch(() => undefined);
 }

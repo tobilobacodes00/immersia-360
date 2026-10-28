@@ -26,12 +26,14 @@ import {
   type RenderRung,
   type TakeStore,
 } from '@immersia/offline';
-import { describeUserAgent, type Video360Settings } from '@immersia/shared';
+import type { EventFrom, Video360Settings } from '@immersia/shared';
 import { workerUrl } from '@/lib/workers';
 import { availability, warmWasmEncoder } from './device-ladder';
 import { codeOfFailure, runLadder } from './ladder-run';
 import { cardSecondsOf, planTiming, seedOf } from './render-plan';
-import { createServerRenderApi, reportRender, serverStepDeps } from './server-render';
+import { renderCompleted, renderFailed } from './render-events';
+import { createServerRenderApi, reportRenderPath, serverStepDeps } from './server-render';
+import { boothBrowser } from './use-booth-analytics';
 import {
   FAILED_RECHECK_MS,
   recheckOf,
@@ -117,6 +119,8 @@ export function useRenderQueue(opts: {
   testHooks?: boolean;
   /** `outputId` is null when the video is not on this device (rendered by the server). */
   onRendered?: (take: LocalTake, outputId: string | null) => void;
+  /** Analytics: `render_completed` and `render_failed`, with the rung of the ladder (`path`) that did the work. */
+  onTrack?: (event: EventFrom<'device'>) => void;
 }) {
   const db = boothDb();
   const [current, setCurrent] = useState<RenderState | null>(null);
@@ -267,7 +271,6 @@ export function useRenderQueue(opts: {
       await db.takes.update(take.id, { status: 'rendering', updatedAt: Date.now() });
       setCurrent({ takeId: take.id, progress: 0, path: 'local' });
       const started = Date.now();
-      const browser = describeUserAgent(navigator.userAgent).browser;
       try {
         const outcome = await runLadder({
           available: await availability(Boolean(optsRef.current.serverRender)),
@@ -297,28 +300,18 @@ export function useRenderQueue(opts: {
             updatedAt: Date.now(),
           });
           optsRef.current.onRendered?.({ ...take, status: 'rendered' }, outcome.result.outputId);
-          reportRender(token ?? null, {
-            eventId: take.eventId,
-            remember: outcome.rung,
-            report: {
-              outcome: 'completed',
-              path: outcome.rung,
-              renderMs: outcome.result.renderMs,
-              preset: video.quality,
-              effectsCount: video.effects.length,
-            },
-          });
+          optsRef.current.onTrack?.(
+            renderCompleted({ take, video, path: outcome.rung, renderMs: outcome.result.renderMs, now: Date.now() }),
+          );
+          reportRenderPath(token ?? null, outcome.rung);
         } else if (outcome.kind === 'server') {
           wakeServer.current();
         } else {
           // A cancel parks the take as failed so it doesn't restart by itself; Retry re-queues it.
           await db.takes.update(take.id, { status: 'failed', error: outcome.code, updatedAt: Date.now() });
           console.warn('[render]', take.id, outcome.code, Date.now() - started, 'ms');
-          if (outcome.code !== 'cancelled')
-            reportRender(token ?? null, {
-              eventId: take.eventId,
-              report: { outcome: 'failed', path: outcome.rung ?? 'local', errorCode: outcome.code, browser },
-            });
+          const failed = renderFailed({ code: outcome.code, path: outcome.rung ?? 'local', browser: boothBrowser() });
+          if (failed) optsRef.current.onTrack?.(failed);
         }
       } catch (err) {
         // The ladder itself never throws; this is the device database or the like giving way.
@@ -420,11 +413,11 @@ export function useRenderQueue(opts: {
 
   const serverOne = useCallback(
     async (take: LocalTake) => {
-      const { token, store, video, assets, smallerVersion, eventId } = optsRef.current;
+      const { token, store, video, assets, smallerVersion } = optsRef.current;
       if (!token || !store) return;
       const now = Date.now();
       const api = createServerRenderApi(token);
-      const rendered = async (patch: ServerProgress) => {
+      const rendered = async (patch: ServerProgress, renderMs: number | null) => {
         await db.takes.update(take.id, {
           ...patch,
           status: 'rendered',
@@ -435,13 +428,15 @@ export function useRenderQueue(opts: {
         });
         await saveMemory(db, recordSuccess(await loadMemory(db), 'server'));
         optsRef.current.onRendered?.({ ...take, status: 'rendered' }, null);
+        optsRef.current.onTrack?.(renderCompleted({ take, video, path: 'server', renderMs: renderMs ?? 0, now }));
+        reportRenderPath(token, 'server');
       };
 
       if (take.status === 'failed') {
         // Failed on the server and looked at again now and then: the operator may have started it again.
         const job = await api.job(take.id).catch(() => null);
         const seen = recheckOf(job, now);
-        if (seen.kind === 'rendered') await rendered(seen.patch);
+        if (seen.kind === 'rendered') await rendered(seen.patch, seen.renderMs);
         else if (seen.kind === 'wait')
           await db.takes.update(take.id, { ...seen.patch, status: 'server', error: undefined, updatedAt: now });
         else await db.takes.update(take.id, { ...seen.patch, updatedAt: now });
@@ -463,7 +458,7 @@ export function useRenderQueue(opts: {
       if (step.kind === 'wait') {
         await db.takes.update(take.id, { ...step.patch, updatedAt: now });
       } else if (step.kind === 'rendered') {
-        await rendered(step.patch);
+        await rendered(step.patch, step.renderMs);
       } else {
         await db.takes.update(take.id, {
           ...step.patch,
@@ -474,17 +469,8 @@ export function useRenderQueue(opts: {
           serverCheckAt: step.patch.serverJobId ? now + FAILED_RECHECK_MS : undefined,
           updatedAt: now,
         });
-        // The server records the failures of its own jobs; these it never saw.
-        if (step.error === 'server_limit' || step.error === 'server_unavailable' || step.error === 'server_upload')
-          reportRender(token, {
-            eventId,
-            report: {
-              outcome: 'failed',
-              path: 'server',
-              errorCode: step.error,
-              browser: describeUserAgent(navigator.userAgent).browser,
-            },
-          });
+        const failed = renderFailed({ code: step.error, path: 'server', browser: boothBrowser() });
+        if (failed) optsRef.current.onTrack?.(failed);
       }
     },
     [db],

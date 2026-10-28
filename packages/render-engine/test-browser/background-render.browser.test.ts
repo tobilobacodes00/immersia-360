@@ -69,7 +69,7 @@ async function pixelsPerFrame(mp4: Blob, points: readonly (readonly [number, num
   return frames;
 }
 
-const isGreen = ([r, g, b]: number[]) => r < 50 && g > 200 && b < 50;
+const isGreen = ([r = 0, g = 0, b = 0]: readonly number[]) => r < 50 && g > 200 && b < 50;
 const CORNER = [12, 12] as const;
 const GUEST = [W / 2, Math.round(H * 0.625)] as const;
 
