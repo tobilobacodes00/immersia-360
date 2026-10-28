@@ -129,7 +129,7 @@ tables, code blocks and links; `apps/web/src/lib/help/content.test.ts` enforces 
 heading with a fixed `{#id}` is a deep link the app's screens use (the error articles carry one per error code:
 see `HELP_TARGETS` and the error helpers in `apps/web/src/lib/help-links.ts`). Names of buttons and settings
 in an article are bold and come word for word from `packages/i18n/messages/<locale>.json`. A tutorial video goes
-in `apps/web/public/help/videos/` with a `.vtt` captions file (the front matter refuses one without the other);
+in `apps/web/public/help/videos/` (create the folder) with a `.vtt` captions file (the front matter refuses one without the other);
 none are shipped yet. Pages: `/help` (public) and `/studio/help` (inside the Studio), search runs in the browser
 over an index sent with the page, and the contact form emails `SUPPORT_EMAIL` (rate limited, with a honeypot).
 
