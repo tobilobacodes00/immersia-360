@@ -1383,6 +1383,8 @@
       "copy": "Copy",
       "copied": "Copied",
       "openLink": "Open",
+      "nfc": "NFC tag or wristband",
+      "nfcHelp": "Write the gallery link to a tag or wristband and guests open the gallery by tapping it with their phone.",
       "password": "Password",
       "passwordHelp": "Optional. Anyone with the link needs it once per browser. Hidden captures and guests who asked to stay off screen never appear here.",
       "locked": "Protected",
@@ -1399,6 +1401,95 @@
       "export": "All files",
       "exportHelp": "Every full-quality file of the event as one ZIP, including hidden captures, saved straight from storage by your browser.",
       "exportButton": "Download every file (ZIP)"
+    },
+    "nfc": {
+      "intro": "Tap to open: write this link to an NFC tag, sticker or wristband. It is the gallery link marked as the NFC route, so your analytics show how many guests arrived by tapping.",
+      "linkLabel": "NFC link",
+      "copy": "Copy NFC link",
+      "copied": "Copied",
+      "write": "Write to NFC tag",
+      "cancel": "Cancel",
+      "waiting": "Hold the tag against the back of this phone and keep it there until this message changes.",
+      "written": "Written. Tap the tag with another phone to check that it opens the gallery.",
+      "unsupported": "Writing tags from this browser isn’t possible: Web NFC only works in Chrome on an Android phone. Copy the link above and write it with any NFC-writing app on a phone (for example NFC Tools or NXP TagWriter), as a URL record.",
+      "insecure": "Web NFC only works on secure (https) pages. Open the studio over https to write tags from here, or copy the link above and use an NFC-writing app.",
+      "failures": {
+        "denied": "This browser blocked NFC. Allow it for this site in the browser’s site settings, then try again.",
+        "unavailable": "NFC is switched off on this phone, or it has none. Turn NFC on in the phone’s settings and try again.",
+        "unreadable": "This tag couldn’t be written to. It may be locked, or not a tag for links. Try another one.",
+        "lost": "The tag moved away before it was written. Hold it still against the phone and try again.",
+        "failed": "Couldn’t write the tag. Try again."
+      },
+      "tips": {
+        "title": "Tips for tags and wristbands",
+        "tags": "Buy NTAG213, NTAG215 or NTAG216 tags or wristbands: they hold a link with room to spare and work with iPhones and Android phones.",
+        "record": "Write a URL (web link) record, not plain text. Most NFC apps call it “URL” or “Link”.",
+        "test": "Test every tag with a phone before the event. iPhones read near the top edge of the phone, most Android phones near the camera.",
+        "metal": "Metal blocks the signal: stick tags on plastic, wood or paper, or buy tags made for metal surfaces.",
+        "lock": "Don’t lock a tag until you have tested it. A locked tag can’t be rewritten."
+      }
+    },
+    "highlightReel": {
+      "title": "Highlight reel",
+      "subtitle": "A montage of your best captures, built in this browser from what is in the client gallery.",
+      "empty": "Nothing is in the client gallery yet. Once guests have captures there, you can build a reel from them.",
+      "options": {
+        "length": "Length",
+        "lengthSeconds": "{seconds} s",
+        "quality": "Quality",
+        "qualityHelp": "720p downloads less and builds faster; 1080p looks best on a big screen.",
+        "format": "Format",
+        "transitions": "Cuts",
+        "beat": "On the beat",
+        "fade": "Cross-fade",
+        "transitionsHelp": "On the beat follows the event’s music; with no music it cuts at an even pace."
+      },
+      "music": {
+        "with": "The event’s music plays under the reel, and the cuts follow its beat.",
+        "without": "This event has no music, so the reel will be silent. Add a track in Setup to score it."
+      },
+      "build": "Build highlight reel",
+      "cancel": "Cancel",
+      "progress": {
+        "label": "Building the reel",
+        "downloading": "Downloading captures ({done} of {total})",
+        "analysing": "Listening to the music and planning the cuts",
+        "rendering": "Rendering the reel",
+        "finishing": "Finishing up"
+      },
+      "summary": "{duration} · {clips, plural, one {# capture} other {# captures}} · {size}",
+      "ready": {
+        "title": "Your reel is ready",
+        "beatSynced": "The cuts land on the beat.",
+        "preview": "Preview of the highlight reel",
+        "download": "Download MP4",
+        "publish": "Show on the client gallery",
+        "uploading": "Uploading {percent}",
+        "again": "Build another",
+        "published": "It is on the client gallery now."
+      },
+      "published": {
+        "title": "On the client gallery",
+        "hidden": "Not showing",
+        "when": "Published {date}",
+        "withheld": "{count, plural, one {# capture in it has} other {# captures in it have}} since been hidden or taken off screen, so the reel is not showing to guests. Build a new one.",
+        "preview": "The published highlight reel",
+        "remove": "Take it down",
+        "removed": "The reel was taken off the client gallery."
+      },
+      "card": {
+        "subtitle": "Highlights",
+        "hint": "Scan for every photo and video"
+      },
+      "errors": {
+        "nothing": "None of the gallery’s captures could be used. Check that the gallery has videos or photo strips, then try again.",
+        "download": "A capture could not be downloaded. Check your connection and try again.",
+        "unsupported": "This browser can’t build the reel. Use Chrome or Edge on a computer.",
+        "failed": "The reel couldn’t be built. Try again, or pick a shorter length or 720p.",
+        "publish": "The reel couldn’t be uploaded. Try again.",
+        "withheld": "A capture in the reel has been hidden since it was planned. Build the reel again.",
+        "remove": "Couldn’t take the reel down. Try again."
+      }
     },
     "signage": {
       "title": "QR signage",
@@ -1433,6 +1524,10 @@
         "label": "Gallery link",
         "copy": "Copy link",
         "copied": "Copied"
+      },
+      "nfc": {
+        "title": "NFC tag",
+        "subtitle": "Tap to open as well as scan to open: write the gallery link to a tag or wristband."
       },
       "preview": {
         "title": "Preview",
@@ -2093,6 +2188,11 @@
     "open": "Open capture {code}",
     "older": "Older",
     "newest": "Back to the newest",
+    "highlight": {
+      "title": "Highlight reel",
+      "player": "Highlight reel of the event",
+      "download": "Download the reel"
+    },
     "lock": {
       "body": "This gallery is protected.",
       "label": "Password",

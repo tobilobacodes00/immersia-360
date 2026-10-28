@@ -164,7 +164,7 @@ export interface GalleryItem {
 export const GALLERY_PAGE = 48;
 
 /** Sessions guests may browse: live, not expired, not hidden or removed, not opted out. */
-const publicSessions = (eventId: string) =>
+export const publicSessions = (eventId: string) =>
   and(
     eq(captureSession.eventId, eventId),
     eq(captureSession.status, 'live'),

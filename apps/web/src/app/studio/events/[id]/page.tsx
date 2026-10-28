@@ -4,17 +4,19 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { AlertTriangle } from 'lucide-react';
 import { Card, Stat, buttonClass } from '@immersia/ui';
 import { formatBytes } from '@/lib/format';
+import { galleryUrl, outputSettingsSchema } from '@immersia/shared';
 import { roleCan } from '@/lib/permissions';
-import { galleryUrl } from '@immersia/shared';
 import { eventCloudAlert } from '@/server/cloud/integrations';
 import { appOrigin } from '@/server/env';
 import { eventStats, getEvent, guestFilesSummary } from '@/server/events';
 import { galleryStats } from '@/server/gallery';
+import { highlightSummary } from '@/server/highlights';
 import { listServerRenders, serverRenderCounts } from '@/server/render-jobs';
 import { reportsForOrganization, type ReportItem } from '@/server/reports';
 import { requireOperator } from '@/server/session';
 import { ExtendGuestFiles } from './ExtendGuestFiles';
 import { GalleryCard } from './GalleryCard';
+import { HighlightReel } from './HighlightReel';
 import { ServerRenders } from './ServerRenders';
 import { ReportList } from '../../reports/ReportList';
 import { toReportView } from '../../reports/views';
@@ -29,7 +31,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function EventDashboardPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const op = await requireOperator({ event: ['read'] });
-  const [t, ti, locale, s, files, event, gallery, cloud, reports, renders, renderCounts] = await Promise.all([
+  const [t, ti, locale, s, files, event, gallery, cloud, reports, renders, renderCounts, reel] = await Promise.all([
     getTranslations('studio.dashboard'),
     getTranslations('studio.integrations'),
     getLocale(),
@@ -43,10 +45,12 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
       : Promise.resolve<ReportItem[]>([]),
     listServerRenders(op.organizationId, id),
     serverRenderCounts(op.organizationId, id),
+    highlightSummary(op.organizationId, id),
   ]);
   const unresolved = reports.filter((r) => r.status === 'open' || r.status === 'escalated').length;
   const n = (v: number) => v.toLocaleString(locale);
   const cloudName = cloud ? ti(`providers.${cloud.provider}`) : '';
+  const video = event ? outputSettingsSchema.parse(event.outputSettings).video360 : null;
   return (
     <div className="space-y-6">
       {cloud && (
@@ -159,8 +163,20 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
           eventId={id}
           eventName={event.name}
           url={galleryUrl(appOrigin(), event.gallerySlug, 'direct')}
+          nfcUrl={galleryUrl(appOrigin(), event.gallerySlug, 'nfc')}
           items={gallery.items}
           locked={event.galleryPasswordHash !== null}
+        />
+      )}
+      {event && video && roleCan(op.role, { event: ['update'] }) && (
+        <HighlightReel
+          eventId={id}
+          eventName={event.name}
+          eventDate={event.date}
+          aspect={video.aspect}
+          items={gallery.items}
+          hasMusic={video.music !== null}
+          existing={reel}
         />
       )}
     </div>

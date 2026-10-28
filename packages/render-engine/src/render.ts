@@ -117,7 +117,7 @@ let aacReady: Promise<void> | null = null;
  * MP4 needs AAC for universal playback. Desktop Linux Chrome and Firefox have no native AAC encoder,
  * so a WASM build of FFmpeg's encoder is registered there (once) and used transparently.
  */
-function ensureAac(): Promise<void> {
+export function ensureAac(): Promise<void> {
   aacReady ??= (async () => {
     if (await canEncodeAudio('aac')) return;
     // ~1 MB of WASM: loaded only on browsers that need it (a separate chunk).

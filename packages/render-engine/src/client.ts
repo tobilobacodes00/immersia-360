@@ -1,3 +1,4 @@
+import type { MontageJob, MontageResult } from './montage';
 import type { RenderJob, RenderResult } from './render';
 import type { EncoderKind } from './wasm/wasm-h264';
 
@@ -7,9 +8,9 @@ export interface Derived {
 }
 import type { WorkerMessage, WorkerReply } from './render.worker';
 
-export interface RenderHandle {
+export interface RenderHandle<R = RenderResult> {
   id: string;
-  result: Promise<RenderResult>;
+  result: Promise<R>;
   cancel: () => void;
 }
 
@@ -32,7 +33,7 @@ export class RenderClient {
   private pending = new Map<
     string,
     {
-      resolve: (r: RenderResult | Derived | Blob) => void;
+      resolve: (r: RenderResult | MontageResult | Derived | Blob) => void;
       reject: (e: Error) => void;
       onProgress?: (p: number) => void;
     }
@@ -64,7 +65,7 @@ export class RenderClient {
       if (m.type === 'progress') p.onProgress?.(m.progress);
       else {
         this.pending.delete(m.id);
-        if (m.type === 'done') p.resolve(m.result);
+        if (m.type === 'done' || m.type === 'montaged') p.resolve(m.result);
         else if (m.type === 'derived') p.resolve({ poster: m.poster, small: m.small } satisfies Derived);
         else if (m.type === 'clipped') p.resolve(m.mp4);
         else p.reject(new RenderFailure(m.code, m.message));
@@ -113,6 +114,56 @@ export class RenderClient {
               if (job.endCard) transfer.push(job.endCard.image);
               for (const ch of job.audio?.channels ?? []) transfer.push(ch.buffer);
               this.ensure().postMessage({ type: 'render', id, job, encoder } satisfies WorkerMessage, transfer);
+            }),
+        );
+    });
+    return {
+      id,
+      result,
+      cancel: () => {
+        cancelled = true;
+        this.worker?.postMessage({ type: 'cancel', id } satisfies WorkerMessage);
+      },
+    };
+  }
+
+  /**
+   * The highlight reel (LIV-14): one job for the whole montage, queued like any render. Takes ownership of the
+   * job's card bitmaps and audio buffers.
+   */
+  montage(
+    id: string,
+    job: MontageJob,
+    onProgress?: (p: number) => void,
+    encoder?: EncoderKind,
+  ): RenderHandle<MontageResult> {
+    let cancelled = false;
+    const result = new Promise<MontageResult>((resolve, reject) => {
+      this.chain = this.chain
+        .catch(() => undefined)
+        .then(
+          () =>
+            new Promise<void>((done) => {
+              if (cancelled) {
+                reject(new RenderFailure('cancelled', 'Render cancelled'));
+                return done();
+              }
+              this.pending.set(id, {
+                resolve: (r) => {
+                  resolve(r as MontageResult);
+                  done();
+                },
+                reject: (e) => {
+                  reject(e);
+                  done();
+                },
+                onProgress,
+              });
+              const transfer: Transferable[] = [];
+              if (job.intro) transfer.push(job.intro);
+              if (job.end) transfer.push(job.end);
+              for (const ch of job.audio?.channels ?? []) transfer.push(ch.buffer);
+              this.ensure().postMessage({ type: 'montage', id, job, encoder } satisfies WorkerMessage, transfer);
             }),
         );
     });

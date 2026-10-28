@@ -13,3 +13,5 @@ export {
   withVideoEncoder,
   type EncoderKind,
 } from './wasm/wasm-h264';
+export * from './montage-plan';
+export type { MontageFile, MontageJob, MontageResult } from './montage';

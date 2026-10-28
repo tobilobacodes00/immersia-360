@@ -30,6 +30,7 @@ export default async function SignagePage({ params }: { params: Promise<{ id: st
       hashtag={branding.hashtag}
       logo={logo ?? null}
       link={galleryUrl(appOrigin(), event.gallerySlug, 'event_qr')}
+      nfcLink={galleryUrl(appOrigin(), event.gallerySlug, 'nfc')}
     />
   );
 }

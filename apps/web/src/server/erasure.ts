@@ -5,6 +5,7 @@ import { track } from './analytics';
 import { audit } from './audit';
 import { cancelPendingCopies } from './cloud/copy';
 import { erasurePlan, purgeStage } from './erasure-core';
+import { withdrawHighlightsWith } from './highlights';
 import { withdrawSession } from './live';
 import { abandonServerRenders, deleteWorkingFiles } from './render-jobs';
 import { deleteObjects } from './storage';
@@ -111,6 +112,13 @@ export async function eraseSession(
     console.error(
       '[erasure] server render cleanup failed, the sweep will retry',
       err instanceof Error ? err.name : err,
+    ),
+  );
+  // A highlight reel with the guest's footage in it goes too (LIV-14); the sweep finishes it if a file would not delete.
+  await withdrawHighlightsWith(done.sessionId).catch((err: unknown) =>
+    console.error(
+      '[erasure] highlight reel withdrawal failed, the sweep will retry',
+      err instanceof Error ? err.message : err,
     ),
   );
   if (done.onScreen) await withdrawSession(done.eventId, done.sessionId);

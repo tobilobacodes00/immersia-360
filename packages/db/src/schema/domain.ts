@@ -278,6 +278,12 @@ export const captureSession = pgTable(
     removedAt: ts('removed_at'),
     removal: removalBasis('removal'),
     removedBy: text('removed_by').references(() => user.id, { onDelete: 'set null' }),
+    /**
+     * Engagement, for ranking the highlight reel's clips (LIV-14): how often the share page was opened, and how many of
+     * those opens came through the QR the Live Display shows (route `display`). Counts only: no one is identified.
+     */
+    viewCount: integer('view_count').notNull().default(0),
+    displayScans: integer('display_scans').notNull().default(0),
   },
   (t) => [
     uniqueIndex('capture_session_link_idx').on(t.linkId),
@@ -317,6 +323,43 @@ export const output = pgTable(
     index('output_session_idx').on(t.sessionId),
     // One output of each kind per take (or per session when take_id is null, e.g. a strip).
     unique('output_session_kind_take_uq').on(t.sessionId, t.kind, t.takeId).nullsNotDistinct(),
+  ],
+);
+
+/**
+ * The event's highlight reel (LIV-14): a montage the operator built in the browser and chose to publish, shown at
+ * the top of the client gallery. At most one is live per event (a new one replaces it); a row without `uploaded_at`
+ * is an upload in flight.
+ */
+export const eventHighlight = pgTable(
+  'event_highlight',
+  {
+    id: uuid('id').primaryKey(),
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => event.id, { onDelete: 'cascade' }),
+    objectKey: text('object_key').notNull(),
+    /** A JPEG still shown before the video loads; null when the browser could not make one. */
+    posterKey: text('poster_key'),
+    mime: text('mime').notNull().default('video/mp4'),
+    bytes: bigint('bytes', { mode: 'number' }).notNull(),
+    width: integer('width').notNull(),
+    height: integer('height').notNull(),
+    durationMs: integer('duration_ms').notNull(),
+    /**
+     * The guest sessions whose footage is in it. The reel is pulled when any of them is erased or expires, and
+     * hidden from the gallery while any of them is hidden or opted out (it holds that guest's footage).
+     */
+    sessionIds: jsonb('session_ids').$type<string[]>().notNull().default([]),
+    createdBy: text('created_by').references(() => user.id, { onDelete: 'set null' }),
+    createdAt: createdAt(),
+    uploadedAt: ts('uploaded_at'),
+  },
+  (t) => [
+    index('event_highlight_event_idx').on(t.eventId),
+    uniqueIndex('event_highlight_live_idx')
+      .on(t.eventId)
+      .where(sql`${t.uploadedAt} is not null`),
   ],
 );
 
