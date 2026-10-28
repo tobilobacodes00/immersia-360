@@ -11,7 +11,7 @@ import {
   type Program,
   type Target,
 } from './gl';
-import { BLIT, CARD, DOWN, FINAL, LK, LUMA, SMOOTH, SYNTH } from './shaders';
+import { BLIT, CARD, DOWN, FINAL, LK, LUMA, SELECT, SMOOTH, SYNTH } from './shaders';
 
 // Five levels: coarse-to-fine reach of roughly 200 px of motion per frame at 1080p output, which
 // covers a fast platform sweep; the coarsest levels are tiny, so the cost is negligible.
@@ -44,7 +44,7 @@ export interface SourceGeometry {
 export class Compositor {
   readonly gl: WebGL2RenderingContext;
   private vao: WebGLVertexArrayObject;
-  private p: Record<'blit' | 'luma' | 'down' | 'lk' | 'smooth' | 'synth' | 'final' | 'card', Program>;
+  private p: Record<'blit' | 'luma' | 'down' | 'lk' | 'select' | 'smooth' | 'synth' | 'final' | 'card', Program>;
   private srcA: WebGLTexture;
   private srcB: WebGLTexture;
   private overlayTex: WebGLTexture | null = null;
@@ -87,6 +87,7 @@ export class Compositor {
       luma: compile(gl, LUMA),
       down: compile(gl, DOWN),
       lk: compile(gl, LK),
+      select: compile(gl, SELECT),
       smooth: compile(gl, SMOOTH),
       synth: compile(gl, SYNTH),
       final: compile(gl, FINAL),
@@ -274,6 +275,22 @@ export class Compositor {
       let fromCoarser = false;
       for (let l = LEVELS - 1; l >= 0; l--) {
         const [ping, pong] = flows[l]!;
+        // Below the coarsest level, pick each pixel's best start (inherited, zero or a neighbour's)
+        // so a wrong coarse estimate isn't refined into a wrong answer.
+        if (fromCoarser) {
+          const dst = ping!;
+          this.use(this.p.select, dst);
+          bindTexture(gl, 0, lumA[l]!.texture);
+          bindTexture(gl, 1, lumB[l]!.texture);
+          bindTexture(gl, 2, current.texture);
+          gl.uniform1i(this.p.select.uniform('uA'), 0);
+          gl.uniform1i(this.p.select.uniform('uB'), 1);
+          gl.uniform1i(this.p.select.uniform('uFlow'), 2);
+          gl.uniform2f(this.p.select.uniform('uSize'), lumA[l]!.width, lumA[l]!.height);
+          gl.uniform1f(this.p.select.uniform('uFlowScale'), 2);
+          this.draw();
+          current = dst;
+        }
         for (let it = 0; it < ITERATIONS; it++) {
           const dst = current === ping ? pong! : ping!;
           this.use(this.p.lk, dst);
@@ -284,8 +301,8 @@ export class Compositor {
           gl.uniform1i(this.p.lk.uniform('uB'), 1);
           gl.uniform1i(this.p.lk.uniform('uFlow'), 2);
           gl.uniform2f(this.p.lk.uniform('uSize'), lumA[l]!.width, lumA[l]!.height);
-          // Flow from the coarser level is in half-size pixels: double it on the first pass.
-          gl.uniform1f(this.p.lk.uniform('uFlowScale'), it === 0 && fromCoarser ? 2 : 1);
+          // The selection pass already brought the coarser level's flow to this level's pixels.
+          gl.uniform1f(this.p.lk.uniform('uFlowScale'), 1);
           this.draw();
           current = dst;
         }
