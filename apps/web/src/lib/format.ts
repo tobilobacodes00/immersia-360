@@ -15,6 +15,25 @@ export function formatBytes(bytes: number, locale: string): string {
   }).format(value);
 }
 
+/** A running time, as a player shows it: 0:07, 3:21, 1:02:03. */
+export function formatClock(ms: number): string {
+  const total = Math.max(0, Math.round(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const ss = String(total % 60).padStart(2, '0');
+  return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
+}
+
+/** A length of time in words, for limits: 30 seconds, 15 minutes. */
+export function formatSpan(ms: number, locale: string): string {
+  const whole = ms >= 60_000 && ms % 60_000 === 0;
+  return new Intl.NumberFormat(locale, {
+    style: 'unit',
+    unit: whole ? 'minute' : 'second',
+    unitDisplay: 'long',
+  }).format(whole ? ms / 60_000 : ms / 1000);
+}
+
 /** An event date (YYYY-MM-DD, no time zone) — formatted without shifting across midnight. */
 export function formatEventDate(isoDate: string, locale: string, style: 'medium' | 'long' = 'medium'): string {
   const [y, m, d] = isoDate.split('-').map(Number);

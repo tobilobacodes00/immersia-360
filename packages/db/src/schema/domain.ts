@@ -69,6 +69,8 @@ export const assetType = pgEnum('asset_type', [
   'logo',
   'background',
 ]);
+/** An upload is `pending` until its object is verified (size and magic bytes); only `ready` assets are usable. */
+export const assetStatus = pgEnum('asset_status', ['pending', 'ready']);
 export const templateKind = pgEnum('template_kind', ['layout', 'overlay']);
 export const takeStatus = pgEnum('take_status', ['local', 'uploading', 'uploaded', 'failed']);
 export const captureTrigger = pgEnum('capture_trigger', ['tap', 'timer', 'motion', 'remote', 'keyboard', 'import']);
@@ -163,6 +165,7 @@ export const asset = pgTable(
     id: uuid('id').primaryKey(),
     organizationId: orgId(),
     type: assetType('type').notNull(),
+    status: assetStatus('status').notNull().default('pending'),
     name: text('name').notNull(),
     objectKey: text('object_key').notNull(),
     mime: text('mime').notNull(),

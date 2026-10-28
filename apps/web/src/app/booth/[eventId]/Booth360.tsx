@@ -48,6 +48,7 @@ import { KioskLockLayer, useKioskLock } from './KioskLock';
 import { RenderQueue } from './RenderQueue';
 import { ResultScreen } from './ResultScreen';
 import { useUploadQueue } from './use-upload-queue';
+import { useEventMedia, type EventMedia } from './use-event-media';
 import { RENDERABLE, useRenderQueue } from './use-render-queue';
 import { SettingsDrawer, readCameraChoice, type CameraChoice } from './SettingsDrawer';
 
@@ -70,6 +71,8 @@ export interface BoothEvent {
   kioskPinHash: string | null;
   /** SHR-1/2/3: what the result screen offers the guest. */
   share: { qr: boolean; email: boolean; sms: boolean; whatsapp: boolean; smallerVersion: boolean };
+  /** Overlay, intro/outro and music (screen 5), from the device's offline cache. */
+  media: EventMedia;
 }
 
 type Phase =
@@ -136,9 +139,11 @@ export function Booth360({ event }: { event: BoothEvent }) {
   const renderPaused = useHeld(capturing, RENDER_RESUME_MS);
   const kiosk = useKioskLock(event.kioskPinHash);
   const uploads = useUploadQueue({ eventId: event.id, token: identity?.token ?? null, store: storeReady });
+  const renderMedia = useEventMedia(event.media, event.video);
   const renderQueue = useRenderQueue({
     eventId: event.id,
     video: event.video,
+    assets: renderMedia,
     store: storeReady,
     paused: renderPaused,
     smallerVersion: event.share.smallerVersion,

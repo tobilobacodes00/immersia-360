@@ -146,6 +146,7 @@
       },
       "home": "Inicio",
       "events": "Eventos",
+      "assets": "Recursos",
       "devices": "Dispositivos",
       "signOut": "Cerrar sesión",
       "openMenu": "Abrir menú",
@@ -233,7 +234,8 @@
     "eventTabs": {
       "label": "Secciones del evento",
       "overview": "Resumen",
-      "setup": "Configuración"
+      "setup": "Configuración",
+      "branding": "Marca"
     },
     "dashboard": {
       "capture": "Capturado",
@@ -402,6 +404,33 @@
         "failed": "No se pudo guardar el PIN. Inténtalo de nuevo."
       }
     },
+    "audioEditor": {
+      "empty": "Añade una canción para editarla aquí.",
+      "loading": "Leyendo la canción…",
+      "decodeError": "No se pudo leer este archivo de audio. Prueba con un MP3, M4A o WAV.",
+      "song": "Canción",
+      "songHelp": "Arrastra los controles para elegir la parte de la canción que suena.",
+      "waveform": "Forma de onda de la canción",
+      "trimStart": "Inicio del recorte",
+      "trimEnd": "Fin del recorte",
+      "from": "Desde {time}",
+      "to": "Hasta {time}",
+      "length": "Duración {time}",
+      "inVideo": "En el video",
+      "inVideoHelp": "Dónde queda la música en la línea de tiempo del video y a qué volumen suena.",
+      "stripLabel": "Suena de {from} a {to} con el volumen al {volume}%.",
+      "stripEmpty": "La música no suena dentro del video. Haz que empiece antes o conserva una parte más larga de la canción.",
+      "clipped": "El video termina antes que la canción, así que el fundido de salida ocurre al final del video.",
+      "play": "Reproducir vista previa",
+      "stop": "Detener vista previa",
+      "offset": "Inicio de la música",
+      "offsetHelp": "Segundo del video en el que empieza a sonar.",
+      "fadeIn": "Fundido de entrada",
+      "fadeInHelp": "Cuánto tarda la música en subir desde el silencio.",
+      "fadeOut": "Fundido de salida",
+      "fadeOutHelp": "Cuánto tarda en bajar hasta el silencio al final.",
+      "volume": "Volumen"
+    },
     "devices": {
       "title": "Dispositivos",
       "subtitle": "Cada portátil, tableta y teléfono que usa una cabina en esta cuenta. Sin límite.",
@@ -436,6 +465,426 @@
         "storage": "Registrado, pero este navegador bloquea el almacenamiento y no lo recordará. Permite los datos del sitio y regístralo de nuevo.",
         "rename": "No se pudo renombrar el dispositivo.",
         "revoke": "No se pudo revocar el dispositivo."
+      }
+    },
+    "assets": {
+      "title": "Recursos",
+      "subtitle": "Superposiciones, intros, música, fuentes y logotipos que comparten todos los eventos de esta cuenta. Súbelos una vez y úsalos donde quieras.",
+      "groupsLabel": "Tipo de recurso",
+      "groups": {
+        "overlays": "Superposiciones y marcos",
+        "intros": "Intros y cierres",
+        "music": "Música",
+        "fonts": "Fuentes",
+        "logos": "Logotipos",
+        "backgrounds": "Fondos"
+      },
+      "types": {
+        "overlay": "Superposición",
+        "layout": "Marco",
+        "intro": "Intro",
+        "outro": "Cierre",
+        "audio": "Música",
+        "font": "Fuente",
+        "logo": "Logotipo",
+        "background": "Fondo"
+      },
+      "accepts": {
+        "overlays": "Superposiciones: PNG o WebP con transparencia. Marcos: PNG, JPEG o WebP. Hasta 25 MB cada uno.",
+        "intros": "Video (MP4, MOV o WebM) de hasta 30 segundos y 200 MB, o una imagen (PNG, JPEG o WebP) de hasta 25 MB.",
+        "music": "MP3, M4A, AAC o WAV, hasta 15 minutos y 50 MB.",
+        "fonts": "WOFF2, WOFF, TTF u OTF, hasta 10 MB.",
+        "logos": "PNG, JPEG o WebP, hasta 10 MB. No se admite SVG.",
+        "backgrounds": "Imágenes (PNG, JPEG o WebP) de hasta 25 MB, o video (MP4 o WebM) de hasta 200 MB."
+      },
+      "upload": "Subir archivos",
+      "uploadAs": "Subir como",
+      "dropHint": "Arrastra archivos aquí o usa el botón.",
+      "dropActive": "Suelta para subir",
+      "progress": {
+        "checking": "Revisando…",
+        "uploading": "Subiendo {percent}",
+        "finishing": "Terminando…"
+      },
+      "cancel": "Cancelar",
+      "retry": "Reintentar",
+      "dismiss": "Descartar",
+      "renameNamed": "Renombrar {name}",
+      "renameLabel": "Nombre del recurso",
+      "play": "Reproducir {name}",
+      "pause": "Pausar {name}",
+      "delete": "Eliminar",
+      "deleteNamed": "Eliminar {name}",
+      "deleteTitle": "¿Eliminar {name}?",
+      "deleteBody": "El archivo se quita de tu biblioteca para siempre. Los eventos que lo usan deben cambiarse antes.",
+      "usedTitle": "{name} sigue en uso",
+      "usedBody": "No se puede eliminar mientras lo usen estos elementos. Cámbialos por otro recurso y vuelve a intentarlo.",
+      "usedByTemplate": "{name} (plantilla)",
+      "close": "Cerrar",
+      "empty": {
+        "overlays": {
+          "title": "Aún no hay superposiciones ni marcos",
+          "body": "Sube PNG o WebP transparentes para enmarcar tus videos 360, o marcos para las tiras de la cabina de fotos."
+        },
+        "intros": {
+          "title": "Aún no hay intros ni cierres",
+          "body": "Agrega un clip corto o una imagen para mostrar antes o después de cada video."
+        },
+        "music": {
+          "title": "Aún no hay música",
+          "body": "Sube una pista para reproducirla sobre tus videos 360 y en la pantalla en vivo."
+        },
+        "fonts": {
+          "title": "Aún no hay fuentes",
+          "body": "Sube las tipografías de tu marca y elígelas en superposiciones y diseños."
+        },
+        "logos": {
+          "title": "Aún no hay logotipos",
+          "body": "Agrega tu logotipo para mostrarlo en las páginas de los invitados y en las superposiciones."
+        },
+        "backgrounds": {
+          "title": "Aún no hay fondos",
+          "body": "Sube una imagen o un video en bucle para usarlo detrás de las pantallas y los diseños de la cabina."
+        }
+      },
+      "picker": {
+        "title": "Elegir un recurso",
+        "search": "Buscar recursos",
+        "loading": "Cargando recursos…",
+        "emptyTitle": "Aún no hay nada que elegir",
+        "emptyBody": "Sube un archivo y pasará a tu biblioteca.",
+        "noMatchTitle": "Ningún recurso coincide",
+        "noMatchBody": "Prueba con otro nombre.",
+        "selected": "Seleccionado"
+      },
+      "storageOff": {
+        "title": "El almacenamiento de archivos no está configurado",
+        "body": "La biblioteca guarda los archivos en almacenamiento de objetos. Agrega la configuración S3 a este despliegue para activarla."
+      },
+      "uploaded": "Se subió {name}",
+      "deleted": "Se eliminó {name}",
+      "errors": {
+        "wrongType": "Este tipo de archivo no se acepta aquí.",
+        "tooBig": "El archivo supera {max}.",
+        "tooLong": "El archivo dura más de {max}.",
+        "unreadable": "No pudimos leer este archivo. Puede estar dañado o tener un formato que este navegador no abre.",
+        "quota": "Tu biblioteca alcanzó el límite de 5 GB. Elimina lo que ya no uses e inténtalo de nuevo.",
+        "failed": "La subida no se completó. Revisa tu conexión e inténtalo de nuevo.",
+        "load": "No se pudieron cargar los recursos.",
+        "rename": "No se pudo renombrar el recurso.",
+        "delete": "No se pudo eliminar el recurso."
+      }
+    },
+    "editor": {
+      "titleLayout": "Editor de diseño",
+      "titleOverlay": "Editor de superposición",
+      "toolbar": "Herramientas del editor",
+      "canvasLabel": "Lienzo de diseño. Haz clic en un elemento para seleccionarlo, arrástralo para moverlo y usa los controles para cambiar su tamaño o girarlo. Las flechas mueven la selección.",
+      "pickImage": "Elegir una imagen",
+      "undo": "Deshacer (Ctrl+Z)",
+      "redo": "Rehacer (Ctrl+Mayús+Z)",
+      "zoomIn": "Acercar",
+      "zoomOut": "Alejar",
+      "zoomFit": "Ajustar a la pantalla",
+      "label": "Elemento",
+      "shotN": "Foto {n}",
+      "qrHint": "Los códigos QR impresos miden al menos 18 mm para que los teléfonos los lean con el brazo extendido.",
+      "add": {
+        "photo": "Agregar un espacio de foto",
+        "text": "Agregar texto",
+        "image": "Agregar una imagen",
+        "rect": "Agregar un rectángulo",
+        "ellipse": "Agregar una elipse",
+        "qr": "Agregar el código QR del invitado"
+      },
+      "status": {
+        "saved": "Todos los cambios guardados",
+        "saving": "Guardando…",
+        "error": "No se pudo guardar. Reintentando…",
+        "conflict": "Sin guardar: se cambió en otro lugar"
+      },
+      "conflict": {
+        "body": "Este diseño se cambió en otra pestaña o en otro dispositivo.",
+        "theirs": "Cargar su versión",
+        "mine": "Conservar la mía"
+      },
+      "issues": {
+        "qr_too_small": "QR de menos de 18 mm",
+        "qr_off_canvas": "QR fuera de la página"
+      },
+      "panels": {
+        "label": "Panel",
+        "layers": "Capas",
+        "templates": "Plantillas",
+        "inspect": "Propiedades"
+      },
+      "layers": {
+        "title": "Capas",
+        "empty": "Todavía no hay nada. Agrega texto, una imagen o una forma desde la barra de herramientas.",
+        "up": "Traer adelante",
+        "down": "Enviar atrás",
+        "show": "Mostrar",
+        "hide": "Ocultar",
+        "lock": "Bloquear",
+        "unlock": "Desbloquear"
+      },
+      "types": {
+        "photo": "Espacio de foto",
+        "image": "Imagen",
+        "text": "Texto",
+        "shape": "Forma",
+        "qr": "Código QR"
+      },
+      "sections": {
+        "text": "Texto",
+        "photo": "Foto",
+        "image": "Imagen",
+        "shape": "Forma",
+        "qr": "Código QR"
+      },
+      "actions": {
+        "duplicate": "Duplicar (Ctrl+D)",
+        "delete": "Eliminar"
+      },
+      "multi": {
+        "title": "{count} seleccionados",
+        "actions": "Selección"
+      },
+      "align": {
+        "label": "Alinear",
+        "left": "Alinear a la izquierda",
+        "hcenter": "Centrar horizontalmente",
+        "right": "Alinear a la derecha",
+        "top": "Alinear arriba",
+        "vcenter": "Centrar verticalmente",
+        "bottom": "Alinear abajo"
+      },
+      "canvas": {
+        "title": "Lienzo",
+        "size": "Tamaño",
+        "dpi": "{width} × {height} px a 300 DPI: lo que ves es lo que se imprime.",
+        "background": "Fondo",
+        "backgroundColour": "Color de fondo",
+        "backgroundImage": "Imagen de fondo",
+        "choose": "Elegir…",
+        "replace": "Reemplazar",
+        "removeImage": "Quitar la imagen de fondo",
+        "overlayHint": "Deja el fondo transparente para que se vea el video.",
+        "tip": "Selecciona un elemento para editarlo. Mayús+clic o arrastra sobre el lienzo para seleccionar varios."
+      },
+      "printSizes": {
+        "2x6": "Tira de 2 × 6 in",
+        "4x4": "Cuadrado de 4 × 4 in",
+        "4x6": "Vertical de 4 × 6 in",
+        "6x4": "Horizontal de 6 × 4 in",
+        "5x7": "Vertical de 5 × 7 in"
+      },
+      "fields": {
+        "name": "Nombre",
+        "namePlaceholder": "Opcional",
+        "x": "Posición X",
+        "y": "Posición Y",
+        "width": "Ancho",
+        "height": "Alto",
+        "rotation": "Rotación",
+        "opacity": "Opacidad",
+        "text": "Texto",
+        "weight": "Grosor",
+        "fontSize": "Tamaño",
+        "lineHeight": "Interlineado",
+        "letterSpacing": "Espaciado",
+        "colour": "Color",
+        "colourOpacity": "Opacidad del color",
+        "align": "Alineación",
+        "verticalAlign": "Alineación vertical",
+        "uppercase": "Mayúsculas",
+        "autoFit": "Reducir para ajustar",
+        "shot": "Muestra",
+        "fit": "Ajuste",
+        "cornerRadius": "Radio de esquina",
+        "asset": "Imagen",
+        "shape": "Forma",
+        "fill": "Relleno",
+        "fillOpacity": "Opacidad del relleno",
+        "stroke": "Contorno",
+        "strokeColour": "Color del contorno",
+        "strokeOpacity": "Opacidad del contorno",
+        "strokeWidth": "Grosor del contorno",
+        "qrDark": "Color del código",
+        "qrDarkOpacity": "Opacidad del código",
+        "qrLight": "Fondo",
+        "qrLightOpacity": "Opacidad del fondo",
+        "showCode": "Mostrar el código corto"
+      },
+      "weights": {
+        "100": "Delgada",
+        "200": "Extraligera",
+        "300": "Ligera",
+        "400": "Normal",
+        "500": "Media",
+        "600": "Seminegrita",
+        "700": "Negrita",
+        "800": "Extranegrita",
+        "900": "Black"
+      },
+      "alignText": {
+        "left": "Izquierda",
+        "center": "Centro",
+        "right": "Derecha",
+        "top": "Arriba",
+        "middle": "Medio",
+        "bottom": "Abajo"
+      },
+      "fit": {
+        "cover": "Llenar",
+        "contain": "Ajustar"
+      },
+      "shapes": {
+        "rect": "Rectángulo",
+        "ellipse": "Elipse"
+      },
+      "fonts": {
+        "title": "Fuentes",
+        "change": "Cambiar",
+        "search": "Buscar fuentes",
+        "category": "Categoría",
+        "none": "Ninguna fuente coincide.",
+        "licence": "{count} fuentes de licencia abierta (SIL OFL y Apache), libres para impresión y video. Sube las tuyas en Recursos.",
+        "categories": {
+          "all": "Todas",
+          "sans": "Sans",
+          "serif": "Serif",
+          "display": "Display",
+          "handwriting": "Manuscrita",
+          "mono": "Mono",
+          "uploaded": "Subidas"
+        }
+      },
+      "templates": {
+        "presets": "Empezar desde",
+        "presetShots": "{count, plural, one {# foto} other {# fotos}}",
+        "overlayStyles": {
+          "band": "Franja con nombre",
+          "frame": "Marco",
+          "pill": "Etiqueta con nombre",
+          "blank": "En blanco"
+        },
+        "saved": "Plantillas guardadas",
+        "savedEmpty": "Guarda un diseño aquí para reutilizarlo en otros eventos.",
+        "saveCurrent": "Guardar",
+        "saveTitle": "Guardar como plantilla",
+        "name": "Nombre de la plantilla",
+        "namePlaceholder": "p. ej. Tira dorada de boda",
+        "saveFailed": "No se pudo guardar la plantilla. Inténtalo de nuevo.",
+        "save": "Guardar plantilla",
+        "cancel": "Cancelar",
+        "delete": "Eliminar {name}",
+        "applyTitle": "¿Usar «{name}»?",
+        "applyBody": "Reemplaza el diseño actual. Puedes deshacerlo.",
+        "apply": "Usar este diseño"
+      }
+    },
+    "branding": {
+      "title": "Marca",
+      "readOnly": "Solo lectura",
+      "theme": {
+        "title": "Tema",
+        "subtitle": "Un color de acento para la cabina, las páginas para compartir, la galería y Live Display.",
+        "presets": "Predefinidos",
+        "names": {
+          "Cobalt": "Cobalto",
+          "Vermilion": "Bermellón",
+          "Forest": "Bosque",
+          "Champagne": "Champán",
+          "Monochrome": "Monocromo"
+        },
+        "accent": "Acento",
+        "background": "Fondo",
+        "ink": "Texto",
+        "font": "Tipografía",
+        "sans": "Sans",
+        "serif": "Serif"
+      },
+      "logo": {
+        "label": "Logo",
+        "help": "Aparece en la pantalla de espera, las páginas para compartir y Live Display."
+      },
+      "attract": {
+        "title": "Pantalla de espera",
+        "subtitle": "Lo que ven los invitados mientras la cabina espera.",
+        "headline": "Título",
+        "subline": "Subtítulo",
+        "cta": "Botón de inicio",
+        "ctaPlaceholder": "Toca para empezar",
+        "thanks": "Mensaje de agradecimiento",
+        "background": "Fondo",
+        "backgroundHelp": "Una foto o un video en bucle detrás de la pantalla de espera."
+      },
+      "fields": {
+        "title": "Campos dinámicos",
+        "subtitle": "Valores para los tokens que puedes colocar en diseños, superposiciones y mensajes.",
+        "hashtag": "Hashtag",
+        "custom1": "Texto personalizado 1",
+        "custom2": "Texto personalizado 2",
+        "custom3": "Texto personalizado 3",
+        "token": "Token: {token}"
+      },
+      "design": {
+        "layoutTitle": "Diseño de impresión",
+        "layoutSubtitle": "La tira o impresión que cada invitado se lleva.",
+        "overlayTitle": "Superposición de video",
+        "overlaySubtitle": "Un marco transparente sobre cada video 360.",
+        "currentLayout": "El diseño de impresión del evento",
+        "currentOverlay": "La superposición de video del evento",
+        "noOverlay": "Sin superposición: los videos se ven limpios.",
+        "defaultLayout": "Se usa el diseño estándar para el tamaño de impresión.",
+        "layoutHelp": "Organiza los espacios de foto, el texto, los logos y el código QR en el editor, o empieza desde un predefinido o una plantilla guardada.",
+        "overlayHelp": "Agrega el nombre del evento, un logo o un marco sobre el video. Sube un PNG transparente en Recursos para usarlo tal cual.",
+        "edit": "Abrir el editor",
+        "design": "Diseñar uno",
+        "choose": "Elegir un diseño",
+        "fullScreen": "Pantalla completa",
+        "removeOverlay": "Quitar la superposición",
+        "chooserTitle": "Elegir un diseño",
+        "chooserNote": "El diseño elegido reemplaza el actual del evento y se puede editar como cualquier otro.",
+        "applyFailed": "No se pudo usar ese diseño. Inténtalo de nuevo.",
+        "viewerTitle": "Vista previa",
+        "noSaved": "Todavía no hay plantillas guardadas. Guarda una desde el editor.",
+        "noUploads": "Todavía no hay marcos subidos. Sube PNG transparentes en Recursos.",
+        "presetShots": "{count, plural, one {# foto} other {# fotos}}",
+        "overlayStyles": {
+          "band": "Franja con nombre",
+          "frame": "Marco",
+          "pill": "Etiqueta con nombre",
+          "blank": "En blanco"
+        },
+        "tabs": {
+          "presets": "Predefinidos",
+          "saved": "Guardados ({count})",
+          "uploads": "Subidos ({count})"
+        }
+      },
+      "cards": {
+        "title": "Intro y cierre",
+        "subtitle": "Un clip corto o una tarjeta fija antes y después de cada video.",
+        "intro": "Intro",
+        "introHelp": "Se reproduce antes del giro.",
+        "outro": "Cierre",
+        "outroHelp": "Se reproduce después del giro.",
+        "length": "Duración de la tarjeta",
+        "lengthHelp": "Cuánto dura una tarjeta fija. Los clips duran como máximo esto."
+      },
+      "music": {
+        "title": "Música",
+        "subtitle": "Una pista bajo cada video, recortada, con fundidos y nivelada.",
+        "track": "Pista",
+        "trackHelp": "MP3, M4A/AAC o WAV, de tus recursos.",
+        "loading": "Cargando la pista"
+      },
+      "media": {
+        "choose": "Elegir…",
+        "replace": "Reemplazar",
+        "remove": "Quitar {name}"
       }
     }
   },

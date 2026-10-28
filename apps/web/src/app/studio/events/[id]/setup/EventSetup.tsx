@@ -44,7 +44,7 @@ interface Basics {
 
 const SPEEDS = ['0.125', '0.25', '0.5', '0.75', '1'] as const;
 
-function SaveIndicator({ statuses }: { statuses: SaveStatus[] }) {
+export function SaveIndicator({ statuses }: { statuses: SaveStatus[] }) {
   const t = useTranslations('studio.setup.save');
   const status: SaveStatus = statuses.includes('error')
     ? 'error'

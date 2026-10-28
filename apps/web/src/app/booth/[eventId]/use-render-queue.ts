@@ -4,7 +4,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { liveQuery } from 'dexie';
 import { RenderClient, RenderFailure, type RenderHandle } from '@immersia/render-engine/client';
 import { mixSoundtrack } from '@immersia/render-engine/audio';
-import { messagingSize, outputSize, plannedDurationS, probeTake, videoBitrate } from '@immersia/render-engine';
+import {
+  messagingSize,
+  outputSize,
+  plannedDurationS,
+  probeTake,
+  videoBitrate,
+  type Card,
+} from '@immersia/render-engine';
 import { boothDb, outputsForTake, putOutput, type LocalTake, type TakeStore } from '@immersia/offline';
 import type { Video360Settings } from '@immersia/shared';
 import { workerUrl } from '@/lib/workers';
@@ -12,9 +19,12 @@ import { workerUrl } from '@/lib/workers';
 /** Takes waiting to render. */
 export const RENDERABLE: LocalTake['status'][] = ['recorded', 'interrupted', 'imported'];
 
+/** The event's media for each render. Called per job: the worker takes ownership of what it is sent. */
 export interface RenderAssets {
   overlay?: () => Promise<ImageBitmap | null>;
   music?: () => Promise<Blob | null>;
+  intro?: () => Promise<Card | null>;
+  outro?: () => Promise<Card | null>;
 }
 
 export interface RenderState {
@@ -94,8 +104,15 @@ export function useRenderQueue(opts: {
           fps: video.fps,
           bitrate: videoBitrate(video.quality, size.width, size.height, video.fps),
         };
-        const base = { output, slowMotion: video.slowMotion, reverse: video.reverse };
-        const [overlay, music] = await Promise.all([assets?.overlay?.() ?? null, assets?.music?.() ?? null]);
+        // A missing or unreadable file renders the video without it rather than failing the take.
+        const media = <T>(get?: () => Promise<T | null>) => (get ? get().catch(() => null) : Promise.resolve(null));
+        const [overlay, music, intro, outro] = await Promise.all([
+          media(assets?.overlay),
+          media(assets?.music),
+          media(assets?.intro),
+          media(assets?.outro),
+        ]);
+        const base = { output, slowMotion: video.slowMotion, reverse: video.reverse, intro, outro };
         let audio = null;
         if (music && video.music) {
           // The soundtrack is mixed to the exact output length before rendering.

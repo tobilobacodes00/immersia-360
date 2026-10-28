@@ -23,6 +23,8 @@ export const LIMITS = {
   /** SHR-2: a booth can't be turned into a mailer. */
   emailPerSession: { limit: 5, windowS: 3600 },
   emailPerDevice: { limit: 120, windowS: 3600 },
+  /** Each asset upload is a database row and a presigned URL: bound them per organization. */
+  assetUploadPerOrg: { limit: 300, windowS: 3600 },
 } satisfies Record<string, Limit>;
 
 type Name = keyof typeof LIMITS;

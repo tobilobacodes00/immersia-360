@@ -1,8 +1,10 @@
 import 'server-only';
 import { and, count, desc, eq, gte, ilike, inArray, isNotNull, isNull, lte, ne, sql, sum } from 'drizzle-orm';
 import { db, schema } from '@immersia/db';
+import { z } from 'zod';
 import {
   brandingSchema,
+  musicSchema,
   defaultBranding,
   defaultOutputSettings,
   defaultShareSettings,
@@ -218,17 +220,124 @@ export async function updateSection<S extends JsonSection>(
   const parsed = SECTION_SCHEMA[section].safeParse(value);
   if (!parsed.success)
     return { ok: false, issues: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`) };
-  const set = { [section]: parsed.data } as Partial<{
-    outputSettings: OutputSettings;
-    shareSettings: ShareSettings;
-    branding: BrandingSettings;
-  }>;
-  const rows = await db()
-    .update(event)
-    .set(set)
-    .where(and(eq(event.id, id), eq(event.organizationId, organizationId)))
-    .returning({ id: event.id });
-  return rows.length ? { ok: true } : { ok: false, issues: ['event not found'] };
+  return db().transaction(async (tx) => {
+    const [current] = await tx
+      .select({ outputSettings: event.outputSettings })
+      .from(event)
+      .where(and(eq(event.id, id), eq(event.organizationId, organizationId)))
+      .for('update');
+    if (!current) return { ok: false as const, issues: ['event not found'] };
+    // The setup screen sends the whole output section, but the media references in it belong to the
+    // branding screen and the editor: keep the stored ones, so a stale setup tab can't unset them.
+    const data =
+      section === 'outputSettings'
+        ? withMedia(parsed.data as OutputSettings, outputSettingsSchema.parse(current.outputSettings))
+        : parsed.data;
+    const set = { [section]: data } as Partial<{
+      outputSettings: OutputSettings;
+      shareSettings: ShareSettings;
+      branding: BrandingSettings;
+    }>;
+    await tx.update(event).set(set).where(eq(event.id, id));
+    return { ok: true as const };
+  });
+}
+
+/** `next` with the media references (overlay, intro, outro, music, layout) taken from `from`. */
+function withMedia(next: OutputSettings, from: OutputSettings): OutputSettings {
+  const { overlayTemplateId, introAssetId, outroAssetId, cardSeconds, music } = from.video360;
+  return {
+    ...next,
+    video360: { ...next.video360, overlayTemplateId, introAssetId, outroAssetId, cardSeconds, music },
+    photo: { ...next.photo, layoutTemplateId: from.photo.layoutTemplateId },
+  };
+}
+
+/** What the branding screen (screen 5) and the editor change in the output settings. */
+export const mediaPatchSchema = z
+  .object({
+    overlayTemplateId: z.uuid().nullable(),
+    introAssetId: z.uuid().nullable(),
+    outroAssetId: z.uuid().nullable(),
+    cardSeconds: z.number().min(1).max(5),
+    music: musicSchema.nullable(),
+    layoutTemplateId: z.uuid().nullable(),
+  })
+  .partial();
+export type MediaPatch = z.infer<typeof mediaPatchSchema>;
+
+/** Asset types each media slot accepts. */
+const MEDIA_ASSET_TYPES = {
+  introAssetId: ['intro'],
+  outroAssetId: ['outro'],
+} as const;
+
+/**
+ * Change the event's media references. Every id must belong to this event (templates) or this
+ * organisation (assets, of the right type), so an event can never point at another account's files.
+ */
+export async function patchMedia(
+  organizationId: string,
+  eventId: string,
+  patch: MediaPatch,
+): Promise<{ ok: true } | { ok: false; issues: string[] }> {
+  return db().transaction(async (tx) => {
+    const [current] = await tx
+      .select({ outputSettings: event.outputSettings })
+      .from(event)
+      .where(and(eq(event.id, eventId), eq(event.organizationId, organizationId)))
+      .for('update');
+    if (!current) return { ok: false as const, issues: ['event not found'] };
+
+    const templateIds = [patch.overlayTemplateId, patch.layoutTemplateId].filter((x): x is string => !!x);
+    if (templateIds.length) {
+      const found = await tx
+        .select({ id: template.id, kind: template.kind })
+        .from(template)
+        .where(and(inArray(template.id, templateIds), eq(template.eventId, eventId)));
+      const kinds = new Map(found.map((t) => [t.id, t.kind]));
+      if (patch.overlayTemplateId && kinds.get(patch.overlayTemplateId) !== 'overlay')
+        return { ok: false as const, issues: ['overlayTemplateId'] };
+      if (patch.layoutTemplateId && kinds.get(patch.layoutTemplateId) !== 'layout')
+        return { ok: false as const, issues: ['layoutTemplateId'] };
+    }
+    const wanted: { id: string; types: readonly string[]; field: string }[] = [];
+    for (const field of ['introAssetId', 'outroAssetId'] as const) {
+      const v = patch[field];
+      if (v) wanted.push({ id: v, types: MEDIA_ASSET_TYPES[field], field });
+    }
+    if (patch.music) wanted.push({ id: patch.music.assetId, types: ['audio'], field: 'music' });
+    if (wanted.length) {
+      const rows = await tx
+        .select({ id: schema.asset.id, type: schema.asset.type })
+        .from(schema.asset)
+        .where(
+          and(
+            inArray(
+              schema.asset.id,
+              wanted.map((w) => w.id),
+            ),
+            eq(schema.asset.organizationId, organizationId),
+            eq(schema.asset.status, 'ready'),
+            isNull(schema.asset.deletedAt),
+          ),
+        );
+      const types = new Map(rows.map((r) => [r.id, r.type as string]));
+      const bad = wanted.filter((w) => !w.types.includes(types.get(w.id) ?? ''));
+      if (bad.length) return { ok: false as const, issues: bad.map((b) => b.field) };
+    }
+
+    const out = outputSettingsSchema.parse(current.outputSettings);
+    const { layoutTemplateId, ...video } = patch;
+    const next = outputSettingsSchema.safeParse({
+      ...out,
+      video360: { ...out.video360, ...video },
+      photo: layoutTemplateId === undefined ? out.photo : { ...out.photo, layoutTemplateId },
+    });
+    if (!next.success) return { ok: false as const, issues: next.error.issues.map((i) => i.path.join('.')) };
+    await tx.update(event).set({ outputSettings: next.data }).where(eq(event.id, eventId));
+    return { ok: true as const };
+  });
 }
 
 export interface EventStats {

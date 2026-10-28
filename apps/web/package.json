@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node scripts/fetch-fonts.mjs && node scripts/build-workers.mjs && next dev",
-    "build": "node scripts/fetch-fonts.mjs && node scripts/build-workers.mjs && next build",
+    "dev": "node scripts/fetch-fonts.mjs && node scripts/fetch-font-library.mjs && node scripts/build-workers.mjs && next dev",
+    "build": "node scripts/fetch-fonts.mjs && node scripts/fetch-font-library.mjs && node scripts/build-workers.mjs && next build",
     "start": "next start",
     "typecheck": "next typegen && tsc --noEmit && tsc --noEmit -p tsconfig.sw.json",
     "lint": "eslint .",
@@ -42,7 +42,10 @@
     "@immersia/render-engine": "workspace:*",
     "@aws-sdk/client-s3": "catalog:",
     "@aws-sdk/s3-request-presigner": "catalog:",
-    "@immersia/layout": "workspace:*"
+    "@immersia/layout": "workspace:*",
+    "@immersia/fonts": "workspace:*",
+    "konva": "catalog:",
+    "react-konva": "catalog:"
   },
   "devDependencies": {
     "@axe-core/playwright": "catalog:",
