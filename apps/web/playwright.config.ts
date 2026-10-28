@@ -39,13 +39,14 @@ export default defineConfig({
   projects: [
     {
       name: 'chrome',
-      testIgnore: /(render|sharing)\.spec\.ts/,
+      testIgnore: /(render|sharing|setup-check)\.spec\.ts/,
       use: chromeUse,
     },
     {
-      // Specs that wait on a full render run last and alone (see e2e/render.spec.ts).
+      // Specs that wait on a full render run last and alone (see e2e/render.spec.ts). The setup check
+      // renders a test take, so its spec is one of them.
       name: 'chrome-render',
-      testMatch: /(render|sharing)\.spec\.ts/,
+      testMatch: /(render|sharing|setup-check)\.spec\.ts/,
       dependencies: ['chrome', 'webkit'],
       // One at a time: two software renders side by side only slow each other down.
       workers: 1,
