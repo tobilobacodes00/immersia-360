@@ -91,7 +91,10 @@ export const integrationStatus = pgEnum('integration_status', ['connected', 'nee
 export const uploadTarget = pgEnum('upload_target', ['hosted', 'drive', 'dropbox']);
 export const uploadStatus = pgEnum('upload_status', ['pending', 'uploading', 'done', 'failed']);
 export const reportReason = pgEnum('report_reason', ['not_me', 'inappropriate', 'illegal', 'privacy', 'other']);
-export const reportStatus = pgEnum('report_status', ['open', 'actioned', 'dismissed']);
+/** `escalated` is passed up for a decision: unresolved, so it keeps the 24-hour clock. */
+export const reportStatus = pgEnum('report_status', ['open', 'actioned', 'dismissed', 'escalated']);
+/** Why a session is no longer served: hidden by its operator, or taken down by the platform (policy, or illegal → 451). */
+export const removalBasis = pgEnum('removal_basis', ['operator', 'policy', 'legal']);
 export const renderJobStatus = pgEnum('render_job_status', ['queued', 'running', 'done', 'failed']);
 
 // ---------------------------------------------------------------------------------------------
@@ -260,6 +263,21 @@ export const captureSession = pgTable(
     receivedAt: ts('received_at').notNull().defaultNow(),
     expiresAt: ts('expires_at').notNull(),
     expiredAt: ts('expired_at'),
+    /**
+     * Set when the guest (or the operator, on the guest's request) erased the session (GDPR Art. 17).
+     * The row stays as a tombstone so the link answers "deleted at your request" rather than the
+     * generic expired page, and so a booth still holding the session cannot resurrect it. expired_at
+     * is set at the same moment, which is what takes it out of the gallery, Live Display and sweeps.
+     */
+    erasedAt: ts('erased_at'),
+    /**
+     * Taken down or hidden (reports): the share page answers 451/410, and the gallery, Live Display
+     * and Sharing Station stop serving it at once. `removal` says by whom and why; only the
+     * operator's own `operator` hide can be undone by the operator.
+     */
+    removedAt: ts('removed_at'),
+    removal: removalBasis('removal'),
+    removedBy: text('removed_by').references(() => user.id, { onDelete: 'set null' }),
   },
   (t) => [
     uniqueIndex('capture_session_link_idx').on(t.linkId),
@@ -269,6 +287,9 @@ export const captureSession = pgTable(
     index('capture_session_expiry_idx')
       .on(t.expiresAt)
       .where(sql`${t.expiredAt} is null`),
+    index('capture_session_erased_idx')
+      .on(t.erasedAt)
+      .where(sql`${t.erasedAt} is not null`),
   ],
 );
 
@@ -426,13 +447,32 @@ export const guestContact = pgTable(
     eventId: uuid('event_id')
       .notNull()
       .references(() => event.id, { onDelete: 'cascade' }),
-    sessionId: uuid('session_id').references(() => captureSession.id, { onDelete: 'set null' }),
+    /** The session whose page the form was on; null for the event gallery. Goes with the session. */
+    sessionId: uuid('session_id').references(() => captureSession.id, { onDelete: 'cascade' }),
     name: text('name'),
+    /** Trimmed and lower-cased, so one person is one row and a lookup by address is exact. */
     email: text('email').notNull(),
     consentAt: ts('consent_at').notNull(),
+    /** Proof of consent (GDPR Art. 7(1)): the exact sentence the guest ticked, in the language shown. */
+    consentText: text('consent_text').notNull().default(''),
+    consentLocale: text('consent_locale').notNull().default('en'),
+    /** The operator's privacy-policy link shown next to the checkbox ('' = Immersia's general notice). */
+    policyUrl: text('policy_url').notNull().default(''),
     createdAt: createdAt(),
   },
-  (t) => [index('guest_contact_event_idx').on(t.eventId)],
+  (t) => [
+    index('guest_contact_event_idx').on(t.eventId),
+    index('guest_contact_session_idx').on(t.sessionId),
+    index('guest_contact_email_idx').on(t.email),
+    // One row per person per session, and per person for the gallery (no session): resubmitting
+    // updates the row instead of piling up duplicates.
+    uniqueIndex('guest_contact_session_email_idx')
+      .on(t.sessionId, t.email)
+      .where(sql`${t.sessionId} is not null`),
+    uniqueIndex('guest_contact_event_email_idx')
+      .on(t.eventId, t.email)
+      .where(sql`${t.sessionId} is null`),
+  ],
 );
 
 export const report = pgTable(
@@ -447,12 +487,19 @@ export const report = pgTable(
     details: text('details'),
     /** Salted hash, rotated daily: enough to rate-limit, never enough to identify. */
     reporterHash: text('reporter_hash'),
+    /** Only to reply to the reporter; cleared when the report is decided. */
+    contactEmail: text('contact_email'),
     status: reportStatus('status').notNull().default('open'),
+    /** The admin's note on the decision (why it was dismissed, what it was escalated for). */
+    decisionNote: text('decision_note'),
     createdAt: createdAt(),
     actionedAt: ts('actioned_at'),
     actionedBy: text('actioned_by').references(() => user.id, { onDelete: 'set null' }),
   },
-  (t) => [index('report_status_idx').on(t.status, t.createdAt)],
+  (t) => [
+    index('report_status_idx').on(t.status, t.createdAt),
+    index('report_session_idx').on(t.sessionId, t.createdAt),
+  ],
 );
 
 // ---------------------------------------------------------------------------------------------
@@ -482,7 +529,12 @@ export const serverRenderJob = pgTable(
   (t) => [index('server_render_job_status_idx').on(t.status, t.createdAt)],
 );
 
-/** First-party analytics. Partitioned by month in SQL (see the custom migration). */
+/**
+ * First-party analytics. Partitioned by month on `occurred_at` in SQL (the `analytics_partitions`
+ * migration; Drizzle does not model partitions, so this definition is the logical table). A default
+ * partition catches anything outside the months that exist, so an insert never fails; the hourly
+ * cron calls `analytics_ensure_partitions` to keep the months ahead created.
+ */
 export const analyticsEvent = pgTable(
   'analytics_event',
   {
@@ -492,10 +544,33 @@ export const analyticsEvent = pgTable(
     organizationId: text('organization_id'),
     eventId: uuid('event_id'),
     deviceId: uuid('device_id'),
+    /** The id the device minted for the event: a batch retried after a lost response is not counted twice. */
+    clientId: uuid('client_id'),
+    /** Who recorded it: our own code (`server`) or a booth, display or studio over POST /api/t. */
+    source: text('source').notNull().default('server'),
     occurredAt: ts('occurred_at').notNull(),
     receivedAt: ts('received_at').notNull().defaultNow(),
   },
-  (t) => [index('analytics_event_name_time_idx').on(t.name, t.occurredAt)],
+  (t) => [
+    index('analytics_event_name_time_idx').on(t.name, t.occurredAt),
+    index('analytics_event_client_idx')
+      .on(t.clientId)
+      .where(sql`${t.clientId} is not null`),
+  ],
+);
+
+/** The month's cloud bill, entered by a platform admin (no billing integration): cost per active operator. */
+export const platformCost = pgTable(
+  'platform_cost',
+  {
+    /** First day of the billing month. */
+    month: date('month', { mode: 'string' }).primaryKey(),
+    amountCents: integer('amount_cents').notNull(),
+    note: text('note'),
+    updatedBy: text('updated_by').references(() => user.id, { onDelete: 'set null' }),
+    updatedAt: updatedAt(),
+  },
+  (t) => [check('platform_cost_amount_check', sql`${t.amountCents} >= 0`)],
 );
 
 export const auditLog = pgTable(
@@ -509,5 +584,36 @@ export const auditLog = pgTable(
     meta: jsonb('meta').$type<Record<string, unknown>>().notNull().default({}),
     createdAt: createdAt(),
   },
-  (t) => [index('audit_log_org_time_idx').on(t.organizationId, t.createdAt)],
+  (t) => [
+    index('audit_log_org_time_idx').on(t.organizationId, t.createdAt),
+    index('audit_log_action_time_idx').on(t.action, t.createdAt),
+  ],
+);
+
+/**
+ * A deleted organization's leftovers (privacy: "Delete organization"). The organization row and
+ * everything that cascades from it are removed in one transaction; what cannot be removed in a
+ * transaction (every file under the organization's storage prefix, its analytics rows) is queued
+ * here and swept by the hourly cron until nothing is left. There is deliberately no foreign key:
+ * the organization row is already gone.
+ */
+export const organizationDeletion = pgTable(
+  'organization_deletion',
+  {
+    id: uuid('id').primaryKey(),
+    organizationId: text('organization_id').notNull(),
+    /** Every object of the organization lives under this prefix (see objectKey in server/storage.ts). */
+    storagePrefix: text('storage_prefix').notNull(),
+    requestedAt: ts('requested_at').notNull().defaultNow(),
+    objectsDeleted: integer('objects_deleted').notNull().default(0),
+    analyticsPurgedAt: ts('analytics_purged_at'),
+    attempts: smallint('attempts').notNull().default(0),
+    lastError: text('last_error'),
+    completedAt: ts('completed_at'),
+  },
+  (t) => [
+    index('organization_deletion_open_idx')
+      .on(t.requestedAt)
+      .where(sql`${t.completedAt} is null`),
+  ],
 );

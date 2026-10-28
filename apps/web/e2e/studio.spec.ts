@@ -7,7 +7,7 @@ test.describe('accounts (ACC-1)', () => {
     await page.goto('/studio/devices');
     await expect(page).toHaveURL(/\/sign-in\?next=%2Fstudio%2Fdevices/);
     await signIn(page, uniqueEmail(), '/studio/devices');
-    await expect(page.getByRole('heading', { level: 1, name: 'Devices' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Devices and team' })).toBeVisible();
   });
 
   test('a new operator gets their own organization as owner', async ({ page }) => {
@@ -168,6 +168,7 @@ test.describe('accessibility (WCAG 2.2 AA)', () => {
       `/studio/events/${id}`,
       `/studio/events/${id}/setup`,
       '/studio/devices',
+      '/studio/devices/team',
     ]) {
       await page.goto(path);
       const r = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();

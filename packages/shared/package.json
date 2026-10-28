@@ -13,13 +13,18 @@
     "./routes": "./src/routes.ts",
     "./analytics": "./src/analytics.ts",
     "./event": "./src/event.ts",
+    "./guest-form": "./src/guest-form.ts",
     "./template": "./src/template.ts",
     "./device": "./src/device.ts",
     "./session": "./src/session.ts",
     "./kiosk": "./src/kiosk.ts",
     "./asset": "./src/asset.ts",
     "./media-refs": "./src/media-refs.ts",
-    "./live": "./src/live.ts"
+    "./live": "./src/live.ts",
+    "./browser": "./src/browser.ts",
+    "./crash": "./src/crash.ts",
+    "./metrics": "./src/metrics.ts",
+    "./reports": "./src/reports.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

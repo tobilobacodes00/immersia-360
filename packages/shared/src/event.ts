@@ -4,6 +4,7 @@
  * Ranges are the PRD's own (CAP-5 spin length, VID-1 slow-motion speed, SHR-8 expiry, …).
  */
 import { z } from 'zod';
+import { guestFormSettingsSchema } from './guest-form';
 import { DEFAULT_THEME } from './theme';
 
 const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/);
@@ -152,9 +153,7 @@ export const shareSettingsSchema = z.object({
   sms: z.boolean().default(true),
   whatsapp: z.boolean().default(true),
   /** SHR-6: optional guest data capture before download. */
-  guestForm: z
-    .object({ enabled: z.boolean(), requireName: z.boolean(), consentText: z.string().max(500) })
-    .default({ enabled: false, requireName: false, consentText: '' }),
+  guestForm: guestFormSettingsSchema.default(() => guestFormSettingsSchema.parse({})),
   /** DL-3: corner QR on printed strips. */
   stripQr: z.boolean().default(true),
   /** DL-4: 2 s QR end card on videos. */

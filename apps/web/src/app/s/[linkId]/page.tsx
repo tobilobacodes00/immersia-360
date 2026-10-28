@@ -1,11 +1,27 @@
 import type { ReactNode } from 'react';
 import type { Metadata } from 'next';
+import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { Download } from 'lucide-react';
-import { formatShortCode, guestThemeVars, isLinkId, parseRoute, type OutputKind } from '@immersia/shared';
+import {
+  browserFamily,
+  formatShortCode,
+  guestFormCookie,
+  guestThemeVars,
+  isGuestFormChoice,
+  isLinkId,
+  isLinkPreviewBot,
+  parseDisplayLayout,
+  parseRouteParams,
+  type OutputKind,
+} from '@immersia/shared';
 import { displayFontClass } from '@immersia/ui/guest-fonts';
+import { EraseSession } from '@/components/guest/EraseSession';
+import { GuestFooter } from '@/components/guest/GuestFooter';
+import { GuestForm } from '@/components/guest/GuestForm';
 import { track } from '@/server/analytics';
+import { guestConsent } from '@/server/guest-form';
 import { sharePage, type ShareFile } from '@/server/share';
 import { contactHref } from '@/server/share-state';
 import { OnTheWay } from './OnTheWay';
@@ -18,7 +34,14 @@ import { ShareActions } from './ShareActions';
  */
 export const dynamic = 'force-dynamic';
 
-type Props = { params: Promise<{ linkId: string }>; searchParams: Promise<{ r?: string }> };
+type Props = {
+  params: Promise<{ linkId: string }>;
+  /**
+   * `r` (or `route`) is how the guest got here (DL-13); `dl` the layout of the Live Display they
+   * scanned; `f` that the guest form was just sent.
+   */
+  searchParams: Promise<{ r?: string; route?: string; dl?: string; f?: string }>;
+};
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { linkId } = await params;
@@ -37,12 +60,33 @@ const PRIMARY: OutputKind[] = ['mp4', 'strip', 'gif', 'boomerang', 'short_video'
 export default async function SharePage({ params, searchParams }: Props) {
   const { linkId } = await params;
   if (!isLinkId(linkId)) notFound();
-  const route = parseRoute((await searchParams).r);
+  const sp = await searchParams;
+  const route = parseRouteParams(sp);
   const [page, t, format] = await Promise.all([sharePage(linkId), getTranslations('share'), getFormatter()]);
 
   // Minted on the booth, not registered yet (offline booth, upload queue): the QR still works.
   if (!page) return <OnTheWayScreen linkId={linkId} />;
-  // The proxy answers 410 for expired sessions; this covers the moment between expiry and the sweep.
+  // The proxy answers 410/451 for every state but live and pending; this covers a proxy that could
+  // not look it up, and the moment between a change of state and the next request.
+  if (page.state === 'erased')
+    return (
+      <Shell theme={page.event.theme}>
+        <h1 className="text-[clamp(1.9rem,6vw,2.75rem)] leading-tight font-bold tracking-[-0.03em]">
+          {t('erasedTitle')}
+        </h1>
+        <p className="mt-3 opacity-70">{t('erasedBody')}</p>
+        {page.contact && <Contact contact={page.contact} template={t.raw('endedContact') as string} />}
+      </Shell>
+    );
+  if (page.state === 'removed' || page.state === 'hidden')
+    return (
+      <Shell theme={page.event.theme}>
+        <h1 className="text-[clamp(1.9rem,6vw,2.75rem)] leading-tight font-bold tracking-[-0.03em]">
+          {t(page.removal === 'legal' ? 'removedLegalTitle' : 'removedTitle')}
+        </h1>
+        <p className="mt-3 opacity-70">{t(page.removal === 'legal' ? 'removedLegalBody' : 'removedBody')}</p>
+      </Shell>
+    );
   if (page.state === 'expired')
     return (
       <Shell theme={page.event.theme}>
@@ -54,7 +98,24 @@ export default async function SharePage({ params, searchParams }: Props) {
       </Shell>
     );
 
-  track({ name: 'share_page_viewed', output_kind: 'session', route }, { eventId: page.event.id });
+  // First-party and anonymous: no cookie, no address, and from the user agent only a browser family.
+  // Link-preview robots (a messaging app unfurling the link) are not guests and are left out.
+  const ua = (await headers()).get('user-agent');
+  if (!isLinkPreviewBot(ua)) {
+    const scope = { eventId: page.event.id, organizationId: page.event.organizationId };
+    track(
+      {
+        name: 'share_page_viewed',
+        output_kind: 'session',
+        route,
+        session_id: page.sessionId,
+        browser: browserFamily(ua),
+      },
+      scope,
+    );
+    // The big screen's QR: a scan, by the layout it was shown in.
+    if (route === 'display') track({ name: 'display_qr_scanned', layout: parseDisplayLayout(sp.dl) }, scope);
+  }
 
   const ready = page.files.filter((f) => f.viewUrl);
   const pending = page.files.length - ready.length;
@@ -79,6 +140,23 @@ export default async function SharePage({ params, searchParams }: Props) {
       </Shell>
     );
 
+  // SHR-6: the optional guest form comes before the download buttons until this browser has sent it
+  // or skipped it. It only orders the page: the files themselves never depend on it (GDPR Art. 7(4)).
+  const choice = (await cookies()).get(guestFormCookie(page.event.id))?.value;
+  const consent =
+    page.guestForm.enabled && !isGuestFormChoice(choice)
+      ? await guestConsent({
+          operator: page.operator,
+          eventName: page.event.name,
+          settings: {
+            enabled: true,
+            requireName: page.guestForm.requireName,
+            consentText: page.guestForm.extra,
+            policyUrl: page.guestForm.policyUrl,
+          },
+        })
+      : null;
+
   return (
     <Shell theme={page.event.theme}>
       {eyebrow}
@@ -92,21 +170,45 @@ export default async function SharePage({ params, searchParams }: Props) {
         label={primary.mime.startsWith('video/') ? t('player') : t(`kinds.${primary.kind}`)}
       />
 
-      <div className="mt-5 flex flex-wrap gap-3">
-        <a
-          href={dl(primary)}
-          className="focus-ring inline-flex min-h-12 items-center gap-2 rounded-full bg-g-accent px-6 font-semibold text-g-on-accent"
-        >
-          <Download className="size-5" aria-hidden /> {t('download')}
-        </a>
-        <ShareActions
-          file={{ url: primary.viewUrl!, mime: primary.mime, name: `${page.event.name}.${primary.mime.split('/')[1]}` }}
-          title={page.event.name}
-          labels={{ save: t('save'), share: t('share'), copied: t('copied') }}
+      {consent && (
+        <GuestForm
+          scope="session"
+          refId={linkId}
+          route={route === 'direct' ? '' : route}
+          operator={page.operator}
+          requireName={page.guestForm.requireName}
+          consentText={consent.text}
+          policyUrl={consent.policyUrl}
+          fingerprint={consent.fingerprint}
         />
-      </div>
+      )}
+      {!consent && sp.f === 'sent' && (
+        <p role="status" className="mt-5 font-semibold">
+          {t('form.sent', { operator: page.operator })}
+        </p>
+      )}
 
-      {downloads.length > 1 && (
+      {!consent && (
+        <div className="mt-5 flex flex-wrap gap-3">
+          <a
+            href={dl(primary)}
+            className="focus-ring inline-flex min-h-12 items-center gap-2 rounded-full bg-g-accent px-6 font-semibold text-g-on-accent"
+          >
+            <Download className="size-5" aria-hidden /> {t('download')}
+          </a>
+          <ShareActions
+            file={{
+              url: primary.viewUrl!,
+              mime: primary.mime,
+              name: `${page.event.name}.${primary.mime.split('/')[1]}`,
+            }}
+            title={page.event.name}
+            labels={{ save: t('save'), share: t('share'), copied: t('copied') }}
+          />
+        </div>
+      )}
+
+      {!consent && downloads.length > 1 && (
         <ul className="mt-8 divide-y divide-g-ink/10 border-y border-g-ink/10">
           {downloads.map((f) => (
             <li key={f.id} className="flex items-center justify-between gap-4 py-3">
@@ -142,6 +244,18 @@ export default async function SharePage({ params, searchParams }: Props) {
       </dl>
       <p className="mt-2 text-sm opacity-60">
         {t('expires', { date: format.dateTime(page.expiresAt, { dateStyle: 'long' }) })}
+      </p>
+
+      <EraseSession linkId={linkId} />
+      {/* Abuse NFR: a way to report this content, in one tap from the page itself. */}
+      <p className="mt-6 text-sm">
+        <a
+          href={`/report?l=${linkId}${route === 'direct' ? '' : `&r=${route}`}`}
+          rel="nofollow"
+          className="focus-ring underline underline-offset-4 opacity-70 hover:opacity-100"
+        >
+          {t('report')}
+        </a>
       </p>
     </Shell>
   );
@@ -201,7 +315,10 @@ function Shell({
 }) {
   return (
     <div style={guestThemeVars(theme)} className="min-h-dvh bg-g-bg text-g-ink">
-      <main className="mx-auto max-w-xl px-4 pt-10 pb-16 sm:px-6 sm:pt-16">{children}</main>
+      <main className="mx-auto max-w-xl px-4 pt-10 pb-16 sm:px-6 sm:pt-16">
+        {children}
+        <GuestFooter />
+      </main>
     </div>
   );
 }
@@ -211,6 +328,7 @@ function OnTheWayScreen({ linkId }: { linkId: string }) {
     <div className="min-h-dvh bg-g-bg text-g-ink">
       <main className="mx-auto max-w-xl px-4 pt-16 pb-16 sm:px-6">
         <OnTheWay linkId={linkId} ready={0} />
+        <GuestFooter />
       </main>
     </div>
   );

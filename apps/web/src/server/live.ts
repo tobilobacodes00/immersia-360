@@ -106,6 +106,8 @@ export async function resolveMedia(outputId: string, exp: number, sig: string): 
         isNotNull(output.uploadedAt),
         eq(captureSession.displayStatus, 'shown'),
         isNull(captureSession.expiredAt),
+        isNull(captureSession.erasedAt),
+        isNull(captureSession.removedAt),
         eq(event.liveDisplayEnabled, true),
       ),
     )
@@ -203,6 +205,8 @@ async function shownItems(ev: EventRow, origin: string): Promise<DisplayItem[]> 
         eq(captureSession.eventId, ev.id),
         eq(captureSession.displayStatus, 'shown'),
         isNull(captureSession.expiredAt),
+        isNull(captureSession.erasedAt),
+        isNull(captureSession.removedAt),
       ),
     )
     .orderBy(desc(captureSession.displayedAt))
@@ -224,6 +228,9 @@ export async function refreshSessionItem(sessionId: string, origin: string): Pro
     .limit(1);
   if (!row) return;
   const { session, ev } = row;
+  // An erased, hidden or taken-down session never goes on screen (and a late upload from a booth
+  // must not bring it back): see the session-state model in share-state.ts.
+  if (session.erasedAt || session.removedAt) return;
   if (session.displayStatus === 'hidden' || session.displayStatus === 'opted_out') return;
   if (session.optedOutOfDisplay || !ev.liveDisplayEnabled) {
     await db().update(captureSession).set({ displayStatus: 'opted_out' }).where(eq(captureSession.id, sessionId));
@@ -283,7 +290,7 @@ async function eventConfig(ev: EventRow, origin: string, d: DisplayRow | null): 
   const [counted] = await db()
     .select({ moments: sql<number>`count(*)`.mapWith(Number) })
     .from(captureSession)
-    .where(eq(captureSession.eventId, ev.id));
+    .where(and(eq(captureSession.eventId, ev.id), isNull(captureSession.erasedAt), isNull(captureSession.removedAt)));
   return {
     displayId: d?.id ?? null,
     name: d?.name ?? ev.name,
@@ -373,7 +380,7 @@ export async function createPairing(op: Operator, eventId: string): Promise<{ co
 /** The TV types the code (or opens the pairing QR): it becomes a display, no login needed. */
 export async function claimPairing(
   code: string,
-): Promise<{ token: string; displayId: string } | 'invalid' | 'expired'> {
+): Promise<{ token: string; displayId: string; eventId: string } | 'invalid' | 'expired'> {
   const normalized = code.trim().toUpperCase();
   return db().transaction(async (tx) => {
     const [pairing] = await tx
@@ -401,7 +408,7 @@ export async function claimPairing(
       .update(displayPairing)
       .set({ claimedAt: new Date(), displayId: id })
       .where(eq(displayPairing.code, normalized));
-    return { token, displayId: id };
+    return { token, displayId: id, eventId: pairing.eventId };
   });
 }
 
@@ -498,6 +505,8 @@ export async function moderationLists(
           eq(captureSession.displayStatus, status),
           eq(captureSession.optedOutOfDisplay, false),
           isNull(captureSession.expiredAt),
+          isNull(captureSession.erasedAt),
+          isNull(captureSession.removedAt),
         ),
       )
       .orderBy(desc(status === 'pending' ? captureSession.capturedAt : captureSession.displayedAt))
@@ -523,6 +532,9 @@ export async function moderate(
     .where(and(eq(captureSession.id, sessionId), eq(event.organizationId, organizationId)))
     .limit(1);
   if (!row || row.session.displayStatus === 'opted_out' || row.session.optedOutOfDisplay) return false;
+  // Erasure and reports have their own controls: an erased, hidden or taken-down session can't be put
+  // back on screen from here.
+  if (row.session.erasedAt || row.session.removedAt) return false;
   if (action === 'hide') {
     await db().update(captureSession).set({ displayStatus: 'hidden' }).where(eq(captureSession.id, sessionId));
     await publish(row.ev.id, { type: 'remove', id: sessionId });
@@ -537,6 +549,17 @@ export async function moderate(
   }
   await publish(row.ev.id, { type: 'queue' });
   return true;
+}
+
+/**
+ * A session stopped being served (erased by its guest, hidden by its operator or taken down by the
+ * platform): off every connected screen and out of the operator's approval queue at once. The
+ * database already excludes it from the feed (expired, or `removed_at` set), so a screen that
+ * misses the message drops it on its next refetch; this makes it immediate.
+ */
+export async function withdrawSession(eventId: string, sessionId: string): Promise<void> {
+  await publish(eventId, { type: 'remove', id: sessionId });
+  await publish(eventId, { type: 'queue' });
 }
 
 /** LIV-8 from the booth's result screen. Opting out is final for this session. */

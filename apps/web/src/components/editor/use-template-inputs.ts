@@ -81,6 +81,8 @@ export function useTemplateInputs({
 
   return {
     inputs,
+    /** The fonts the documents need are loaded: drawing before that would use a fallback face. */
+    fontsReady: fonts !== null,
     /** Changes when an image or a font finishes loading. */
     redrawKey: images.size * 1000 + (fonts?.version ?? 0),
     views,

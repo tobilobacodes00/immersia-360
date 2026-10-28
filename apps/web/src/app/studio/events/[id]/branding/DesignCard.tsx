@@ -262,6 +262,11 @@ export function DesignCard({
             </ul>
           )}
           <p className="text-[12px] leading-relaxed text-faint">{t('chooserNote')}</p>
+          <p className="text-[13px]">
+            <Link href="/studio/templates" className="focus-ring rounded font-medium text-accent hover:underline">
+              {t('browseLibrary')}
+            </Link>
+          </p>
         </div>
       </Modal>
 

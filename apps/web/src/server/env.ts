@@ -1,5 +1,6 @@
 import 'server-only';
 import { z } from 'zod';
+import { resolveSupportEmail } from '@/lib/support-email';
 import { parseKey } from './crypto-box';
 
 /**
@@ -22,6 +23,8 @@ const schema = z.object({
   /** e.g. smtps://booth%40gmail.com:app-password@smtp.gmail.com:465 */
   SMTP_URL: z.url().optional(),
   EMAIL_FROM: z.string().min(3).default('Immersia 360 <onboarding@resend.dev>'),
+  /** Where privacy and support requests go (shown on /privacy and /terms); see lib/support-email.ts. */
+  SUPPORT_EMAIL: optional(z.email()),
   UPSTASH_REDIS_REST_URL: z.url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
   /** Object storage for guest files (S3 API: Cloudflare R2, MinIO in CI). All four or none. */
@@ -57,6 +60,13 @@ const schema = z.object({
   // Live Display hub (apps/realtime). Without it, screens poll the feed (still within LIV-2's 5 s).
   REALTIME_URL: z.url().optional(),
   REALTIME_SIGNING_SECRET: z.string().min(32).optional(),
+  /**
+   * Platform admins: a comma-separated list of email addresses allowed into /admin (success metrics,
+   * the reports queue). Checked on the server on every admin page and action; everyone else gets a 404.
+   */
+  ADMIN_EMAILS: optional(z.string().max(4000)),
+  /** Where escalated reports are sent for a legal or trust decision. Optional. */
+  TRUST_EMAIL: optional(z.email()),
   /** Enables test-only endpoints (the e2e mailbox). Refused on any Vercel deployment. */
   E2E: z.enum(['0', '1']).default('0'),
   /** Required with E2E=1: test-only routes also demand it as the x-e2e-token header (fail closed). */
@@ -85,6 +95,12 @@ export function env(): ServerEnv {
 }
 
 export const isProduction = () => process.env.VERCEL_ENV === 'production';
+
+/** The contact for privacy and support requests: SUPPORT_EMAIL, with a fallback (see lib/support-email.ts). */
+export function supportEmail(): string {
+  const e = env();
+  return resolveSupportEmail({ supportEmail: e.SUPPORT_EMAIL, emailFrom: e.EMAIL_FROM, origin: appOrigin() });
+}
 
 /** Public origin of this deployment, for links in emails and QR codes. */
 export function appOrigin(): string {

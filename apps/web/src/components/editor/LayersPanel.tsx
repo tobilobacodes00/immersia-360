@@ -12,6 +12,7 @@ import {
   LockOpen,
   QrCode,
   Shapes,
+  Sparkles,
   Type,
   User,
 } from 'lucide-react';
@@ -19,7 +20,7 @@ import type { TemplateElement } from '@immersia/shared';
 import { IconButton, cx } from '@immersia/ui';
 import { elementLabel, type EditorAction } from './state';
 
-const ICONS = { photo: User, image: ImageIcon, text: Type, shape: Shapes, qr: QrCode } as const;
+const ICONS = { photo: User, image: ImageIcon, text: Type, shape: Shapes, qr: QrCode, ornament: Sparkles } as const;
 
 /** Layers (PHO-4 layer order): topmost first, as in every design tool. */
 export function LayersPanel({

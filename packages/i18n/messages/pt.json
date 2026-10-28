@@ -5,7 +5,9 @@
     "language": "Idioma",
     "skipToContent": "Pular para o conteúdo",
     "loading": "Carregando…",
-    "offline": "Você está offline. Tudo o que você capturar fica salvo neste dispositivo e é enviado quando a conexão voltar."
+    "offline": "Você está offline. Tudo o que você capturar fica salvo neste dispositivo e é enviado quando a conexão voltar.",
+    "privacy": "Privacidade",
+    "terms": "Termos"
   },
   "home": {
     "eyebrow": "Grátis para sempre · Sem marca d'água · Qualquer dispositivo",
@@ -111,7 +113,8 @@
     "errors": {
       "generic": "Algo deu errado. Tente novamente.",
       "rateLimited": "Muitas tentativas. Aguarde um minuto e tente novamente."
-    }
+    },
+    "inviteHint": "Entre com o endereço de e-mail para o qual o convite foi enviado."
   },
   "email": {
     "magicLink": {
@@ -134,6 +137,13 @@
       "body": "Assista, baixe e compartilhe na sua página. O link funciona até {date}.",
       "action": "Abrir meus arquivos",
       "footer": "Você recebeu isto porque pediu na cabine. Não guardamos seu endereço."
+    },
+    "reportOperator": {
+      "subject": "Um convidado denunciou algo em {event}",
+      "heading": "Uma denúncia sobre {event}",
+      "body": "Um convidado denunciou uma foto ou um vídeo deste evento. Motivo: {reason}. Você pode ocultá-lo na hora; a Immersia analisa cada denúncia em até 24 horas.",
+      "action": "Abrir o evento",
+      "footer": "Você recebeu isto porque é dono(a) deste evento ou o criou."
     }
   },
   "studio": {
@@ -147,11 +157,18 @@
       "home": "Início",
       "events": "Eventos",
       "assets": "Recursos",
-      "devices": "Dispositivos",
+      "templates": "Modelos",
+      "devices": "Dispositivos e equipe",
       "integrations": "Integrações",
       "signOut": "Sair",
       "openMenu": "Abrir menu",
-      "closeMenu": "Fechar menu"
+      "closeMenu": "Fechar menu",
+      "organization": "Organização",
+      "switchFailed": "Não foi possível trocar de organização. Tente novamente.",
+      "settings": "Ajustes",
+      "reports": "Denúncias",
+      "reportsOpen": "{count, plural, one {# denúncia aberta} other {# denúncias abertas}}",
+      "admin": "Administração"
     },
     "launcher": {
       "title": "O que vamos montar?",
@@ -168,7 +185,8 @@
       "recent": "Eventos recentes",
       "allEvents": "Todos os eventos",
       "emptyTitle": "Nenhum evento ainda",
-      "emptyBody": "Escolha um modo de cabine acima para criar seu primeiro evento."
+      "emptyBody": "Escolha um modo de cabine acima para criar seu primeiro evento.",
+      "denied": "Sua função aqui é {role}, e essa página é para funções com mais acesso. Peça a um proprietário se precisar dela."
     },
     "events": {
       "title": "Eventos",
@@ -238,7 +256,8 @@
       "setup": "Configuração",
       "branding": "Marca",
       "live": "Live Display",
-      "signage": "Cartazes com QR"
+      "signage": "Cartazes com QR",
+      "guests": "Convidados"
     },
     "dashboard": {
       "capture": "Capturado",
@@ -269,7 +288,10 @@
       "cloudWaiting": "{count, plural, one {# arquivo em espera.} other {# arquivos em espera.}}",
       "cloudDisconnected": "Este evento é copiado para o {provider}, mas o {provider} não está conectado. Conecte e os arquivos deste evento serão atualizados.",
       "cloudFailed": "{count, plural, one {# arquivo não chegou ao {provider}.} other {# arquivos não chegaram ao {provider}.}}",
-      "cloudFix": "Abrir Integrações"
+      "cloudFix": "Abrir Integrações",
+      "reportsTitle": "Denúncias",
+      "reportsOpen": "{count, plural, one {# denúncia aguarda uma decisão} other {# denúncias aguardam uma decisão}}",
+      "reportsSettled": "Todas as denúncias deste evento já foram resolvidas."
     },
     "setup": {
       "title": "Configuração do evento",
@@ -286,7 +308,8 @@
         "slow_motion_end_before_start": "O trecho em câmera lenta deve terminar depois de começar.",
         "half_second_grid": "Use passos de meio segundo.",
         "trim_end_before_start": "A música deve terminar depois de começar.",
-        "generic": "Algumas configurações estão fora do intervalo."
+        "generic": "Algumas configurações estão fora do intervalo.",
+        "policy_url_invalid": "O link da política de privacidade deve ser um endereço web começando com https://."
       },
       "basics": {
         "title": "Básico",
@@ -391,10 +414,10 @@
         "endFrame": "Código QR no fim dos vídeos",
         "endFrameHelp": "Um cartão final de 2 segundos, para que um vídeo encaminhado ainda leve ao download.",
         "guestForm": "Pedir dados aos convidados",
-        "guestFormHelp": "Nome e e-mail com uma caixa de consentimento antes do download.",
+        "guestFormHelp": "Nome e e-mail com uma caixa de consentimento que começa desmarcada. Os convidados sempre podem pular e receber seus arquivos.",
         "requireName": "Exigir um nome",
-        "consent": "Texto de consentimento",
-        "consentHelp": "Com o que os convidados concordam, nas suas palavras.",
+        "consent": "Frase de consentimento adicional",
+        "consentHelp": "Acrescentada depois do texto padrão. Diga para que mais você vai usar os dados, por exemplo uma newsletter. Deixe em branco se não houver mais nada.",
         "contact": "Contato para convidados",
         "contactHelp": "Aparece nas páginas dos convidados quando os arquivos do evento expiram, para que possam falar com você. Um e-mail ou telefone.",
         "cloud": "Copiar também para a minha nuvem",
@@ -410,7 +433,14 @@
           "disconnected": "O {provider} não está conectado, então este evento não é copiado para lá.",
           "needs_reauth": "O {provider} precisa que você entre novamente; os arquivos novos ficam seguros e são copiados quando você entrar."
         },
-        "cloudManage": "Gerenciar integrações"
+        "cloudManage": "Gerenciar integrações",
+        "policyUrl": "Link da sua política de privacidade",
+        "policyUrlHelp": "Aparece ao lado da caixa. Você é o controlador desses dados, então aponte para o seu próprio aviso (https).",
+        "policyUrlPlaceholder": "https://seuestudio.com/privacidade",
+        "policyMissing": "Sem link, os convidados são levados ao aviso geral da Immersia 360. Adicione o seu para que saibam como você usa os dados deles.",
+        "consentPreview": "O que os convidados vão marcar",
+        "consentPreviewHelp": "A caixa começa desmarcada e “Pular” sempre aparece ao lado do botão de enviar.",
+        "viewGuests": "Ver os contatos coletados"
       },
       "kiosk": {
         "title": "Quiosque",
@@ -457,8 +487,8 @@
       "volume": "Volume"
     },
     "devices": {
-      "title": "Dispositivos",
-      "subtitle": "Cada notebook, tablet e celular que roda uma cabine nesta conta. Sem limite.",
+      "title": "Dispositivos e equipe",
+      "subtitle": "Cada notebook, tablet e celular que roda uma cabine nesta conta (sem limite) e as pessoas que trabalham com você.",
       "thisBrowser": "Usar este navegador como cabine",
       "thisBrowserBody": "Registre-o para rodar cabines aqui. Ele continua enviando arquivos durante todo o evento, e você pode revogá-lo quando quiser.",
       "register": "Registrar dispositivo",
@@ -490,6 +520,11 @@
         "storage": "Registrado, mas este navegador bloqueia o armazenamento e não vai lembrar dele. Permita os dados do site e registre de novo.",
         "rename": "Não foi possível renomear o dispositivo.",
         "revoke": "Não foi possível revogar o dispositivo."
+      },
+      "tabs": {
+        "label": "Seções de dispositivos e equipe",
+        "devices": "Dispositivos",
+        "team": "Equipe"
       }
     },
     "assets": {
@@ -600,6 +635,130 @@
         "delete": "Não foi possível excluir o recurso."
       }
     },
+    "templates": {
+      "title": "Biblioteca de modelos",
+      "subtitle": "Layouts de fotos e sobreposições 360 prontos para cada ocasião. Veja a prévia, use em um evento e deixe com a sua cara no editor.",
+      "grid": "Modelos",
+      "filters": {
+        "label": "Filtrar modelos",
+        "occasion": "Ocasião",
+        "size": "Tamanho",
+        "search": "Buscar modelos",
+        "searchPlaceholder": "Buscar por nome",
+        "all": "Todos",
+        "allSizes": "Todos os tamanhos",
+        "clear": "Limpar filtros"
+      },
+      "count": "{count, plural, one {# modelo} other {# modelos}}",
+      "mine": "Meu",
+      "empty": {
+        "title": "Nenhum modelo encontrado",
+        "body": "Tente outra ocasião ou outro tamanho, ou limpe os filtros."
+      },
+      "categories": {
+        "wedding": "Casamento",
+        "birthday": "Aniversário",
+        "graduation": "Formatura",
+        "baby-shower": "Chá de bebê",
+        "christmas": "Natal",
+        "halloween": "Halloween",
+        "quinceanera": "Debutante",
+        "corporate": "Corporativo"
+      },
+      "styles": {
+        "blush": "Romance rosé",
+        "ivory-gold": "Marfim e dourado",
+        "garden-script": "Jardim caligráfico",
+        "midnight": "Meia-noite",
+        "confetti-pop": "Confete pop",
+        "party-bold": "Festa ousada",
+        "sweet-pastel": "Pastel doce",
+        "neon-night": "Noite neon",
+        "classic-cap": "Capelo clássico",
+        "modern-class": "Turma moderna",
+        "honors": "Mérito",
+        "varsity": "Estilo universitário",
+        "little-blue": "Azul bebê",
+        "little-pink": "Rosa bebê",
+        "sunny-side": "Dia ensolarado",
+        "woodland": "Floresta",
+        "classic-xmas": "Natal clássico",
+        "snowy-night": "Noite de neve",
+        "gold-evergreen": "Dourado e pinheiro",
+        "cozy-cabin": "Cabana aconchegante",
+        "spooky-night": "Noite assombrada",
+        "pumpkin-patch": "Abóboras",
+        "friendly-ghost": "Fantasminha",
+        "gothic": "Gótico",
+        "rose-gold": "Ouro rosé",
+        "royal-purple": "Roxo real",
+        "fiesta": "Festa",
+        "teal-tiara": "Tiara turquesa",
+        "clean-slate": "Página em branco",
+        "executive-navy": "Azul executivo",
+        "warm-neutral": "Neutro quente",
+        "launch-day": "Dia de lançamento"
+      },
+      "sizes": {
+        "2x6": "Tira 2×6 in",
+        "4x4": "4×4 in",
+        "4x6": "4×6 in",
+        "6x4": "6×4 in",
+        "5x7": "5×7 in",
+        "story": "Story 9:16"
+      },
+      "aspects": {
+        "9:16": "Sobreposição 9:16",
+        "1:1": "Sobreposição 1:1",
+        "16:9": "Sobreposição 16:9"
+      },
+      "layoutDescription": "{size} · {count, plural, one {# foto} other {# fotos}}",
+      "templateName": "{category} · {style} · {layout}",
+      "samples": {
+        "wedding": "Ana e Leo",
+        "birthday": "Aniversário da Mia",
+        "graduation": "Sofia Rivera",
+        "baby-shower": "Bebê Lucas",
+        "christmas": "Festa de Natal",
+        "halloween": "Noite de Halloween",
+        "quinceanera": "15 anos da Sofia",
+        "corporate": "Festa de lançamento"
+      },
+      "preview": {
+        "label": "Prévia de {name}",
+        "builtIn": "Da biblioteca",
+        "mine": "Salvo pela sua equipe",
+        "photos": "{count, plural, one {# espaço para foto} other {# espaços para fotos}}",
+        "overlayNote": "Desenhada sobre o vídeo; o resto do quadro fica livre.",
+        "qrNote": "As impressões levam o QR code do convidado com 18 mm ou mais.",
+        "storyNote": "Feito para telas, por isso não leva QR code.",
+        "use": "Usar em um evento…",
+        "save": "Salvar nos meus modelos"
+      },
+      "use": {
+        "body": "Ele substitui o design atual do evento. Depois você pode editá-lo.",
+        "pick": "Evento",
+        "noneLayout": "Nenhum dos seus eventos usa a cabine de fotos ainda. Crie um para usar um layout de impressão.",
+        "noneOverlay": "Nenhum dos seus eventos usa a cabine 360 ainda. Crie um para usar uma sobreposição.",
+        "createEvent": "Criar um evento",
+        "fits": "{size} · combina com este modelo",
+        "fitted": "{size} · o design é ajustado a este tamanho",
+        "sibling": "{size} · é usada a versão do mesmo estilo para este tamanho",
+        "shotsNote": "Atenção: este layout tem {layout, plural, one {# espaço para foto} other {# espaços para fotos}}, mas o evento tira {event, plural, one {# foto} other {# fotos}}.",
+        "apply": "Usar este design",
+        "failed": "Não foi possível usar esse design. Tente de novo.",
+        "done": "“{event}” agora usa este design.",
+        "openBranding": "Abrir Marca"
+      },
+      "save": {
+        "name": "Nome do modelo",
+        "save": "Salvar modelo",
+        "saved": "Salvo como “{name}”.",
+        "failed": "Não foi possível salvar o modelo. Tente de novo."
+      },
+      "cancel": "Cancelar",
+      "close": "Fechar"
+    },
     "editor": {
       "titleLayout": "Editor de layout",
       "titleOverlay": "Editor de sobreposição",
@@ -620,7 +779,8 @@
         "image": "Adicionar uma imagem",
         "rect": "Adicionar um retângulo",
         "ellipse": "Adicionar uma elipse",
-        "qr": "Adicionar o QR code do convidado"
+        "qr": "Adicionar o QR code do convidado",
+        "ornament": "Adicionar uma decoração"
       },
       "status": {
         "saved": "Todas as alterações salvas",
@@ -658,14 +818,16 @@
         "image": "Imagem",
         "text": "Texto",
         "shape": "Forma",
-        "qr": "QR code"
+        "qr": "QR code",
+        "ornament": "Decoração"
       },
       "sections": {
         "text": "Texto",
         "photo": "Foto",
         "image": "Imagem",
         "shape": "Forma",
-        "qr": "QR code"
+        "qr": "QR code",
+        "ornament": "Decoração"
       },
       "actions": {
         "duplicate": "Duplicar (Ctrl+D)",
@@ -739,7 +901,8 @@
         "qrDarkOpacity": "Opacidade do código",
         "qrLight": "Fundo",
         "qrLightOpacity": "Opacidade do fundo",
-        "showCode": "Mostrar o código curto"
+        "showCode": "Mostrar o código curto",
+        "ornament": "Forma"
       },
       "weights": {
         "100": "Fina",
@@ -806,7 +969,50 @@
         "delete": "Excluir {name}",
         "applyTitle": "Usar “{name}”?",
         "applyBody": "Ele substitui o design atual. Você pode desfazer.",
-        "apply": "Usar este design"
+        "apply": "Usar este design",
+        "library": "Biblioteca",
+        "filterLabel": "Ocasião",
+        "allCategories": "Todos",
+        "fitsPage": "Do mesmo tamanho desta página",
+        "otherSizes": "Outros tamanhos (ajustados ao usar)",
+        "showMore": "Mostrar mais",
+        "browse": "Explorar toda a biblioteca"
+      },
+      "ornaments": {
+        "title": "Decorações",
+        "names": {
+          "heart": "Coração",
+          "hearts": "Corações",
+          "star": "Estrela",
+          "sparkle": "Brilho",
+          "burst": "Explosão",
+          "rings": "Alianças",
+          "laurel": "Louros",
+          "leaf": "Folha",
+          "flower": "Flor",
+          "balloon": "Balão",
+          "balloons": "Balões",
+          "confetti": "Confete",
+          "crown": "Coroa",
+          "grad-cap": "Capelo",
+          "cake": "Bolo",
+          "gift": "Presente",
+          "champagne": "Brinde",
+          "snowflake": "Floco de neve",
+          "tree": "Árvore",
+          "bauble": "Bola de Natal",
+          "pumpkin": "Abóbora",
+          "bat": "Morcego",
+          "ghost": "Fantasma",
+          "moon": "Lua",
+          "rattle": "Chocalho",
+          "bottle": "Mamadeira",
+          "camera": "Câmera",
+          "divider": "Divisor",
+          "corner": "Canto",
+          "frame": "Moldura",
+          "wave": "Onda"
+        }
       }
     },
     "branding": {
@@ -872,6 +1078,7 @@
         "removeOverlay": "Remover a sobreposição",
         "chooserTitle": "Escolher um design",
         "chooserNote": "O design escolhido substitui o atual do evento e pode ser editado como qualquer outro.",
+        "browseLibrary": "Explorar a biblioteca de modelos",
         "applyFailed": "Não foi possível usar esse design. Tente de novo.",
         "viewerTitle": "Pré-visualização",
         "noSaved": "Ainda não há modelos salvos. Salve um pelo editor.",
@@ -1206,6 +1413,219 @@
         "png": "Baixar PNG",
         "failed": "Não foi possível criar o arquivo. Tente novamente."
       }
+    },
+    "team": {
+      "title": "Equipe",
+      "members": {
+        "title": "Membros",
+        "subtitle": "Todas as pessoas que podem entrar em {organization}.",
+        "subtitleReadOnly": "Todas as pessoas que podem entrar em {organization}. Só os proprietários podem alterar a equipe.",
+        "you": "Você",
+        "joined": "Entrou em {date}",
+        "roleFor": "Função de {name}",
+        "remove": "Remover",
+        "removeLabel": "Remover {name}",
+        "leave": "Sair da organização",
+        "soleOwner": "Você é o único proprietário. Torne outra pessoa proprietária antes de sair.",
+        "onlyOrganization": "Esta é a sua única organização, então você não pode sair dela.",
+        "roleChanged": "{name} agora é {role}.",
+        "removed": "Você removeu {name} da equipe."
+      },
+      "roleHelp": {
+        "owner": "Controle total: a equipe, os dispositivos, os eventos, as conexões com a nuvem e tudo o que um operador faz.",
+        "operator": "Roda as cabines e gerencia eventos, dispositivos e recursos. Não pode alterar a equipe nem conectar nuvens.",
+        "viewer": "Somente leitura: vê eventos, galerias e dispositivos e pode exportar galerias. Não pode alterar nada."
+      },
+      "invite": {
+        "title": "Convidar um membro",
+        "subtitle": "A pessoa recebe um e-mail com um link que vale por 7 dias.",
+        "email": "Endereço de e-mail",
+        "emailPlaceholder": "assistente@estudio.com",
+        "role": "Função",
+        "send": "Enviar convite",
+        "sending": "Enviando…",
+        "sent": "Convite enviado para {email}."
+      },
+      "pending": {
+        "title": "Convites pendentes",
+        "subtitle": "Pessoas que você convidou e que ainda não entraram.",
+        "empty": "Nenhum convite aguardando.",
+        "invitedBy": "Convidado por {name}",
+        "expires": "Expira {when}",
+        "expired": "Expirado",
+        "resend": "Reenviar",
+        "resendLabel": "Reenviar o convite para {email}",
+        "revoke": "Revogar",
+        "revokeLabel": "Revogar o convite para {email}",
+        "resent": "Convite reenviado para {email}.",
+        "revoked": "Convite para {email} revogado."
+      },
+      "confirm": {
+        "removeTitle": "Remover {name}?",
+        "removeBody": "A pessoa perde o acesso a {organization} na hora. Os eventos e arquivos que ela criou continuam.",
+        "remove": "Remover membro",
+        "leaveTitle": "Sair de {organization}?",
+        "leaveBody": "Você perde o acesso aos eventos, dispositivos e arquivos desta organização. Precisaria de um novo convite para voltar.",
+        "leave": "Sair da organização",
+        "demoteTitle": "Deixar de ser proprietário?",
+        "demoteBody": "Você passará a ser {role} e não poderá gerenciar a equipe nem as conexões com a nuvem. Outro proprietário teria que desfazer isso.",
+        "demote": "Alterar minha função",
+        "cancel": "Cancelar"
+      },
+      "errors": {
+        "forbidden": "Só os proprietários podem alterar a equipe.",
+        "invalid_email": "Informe um endereço de e-mail válido.",
+        "invalid_role": "Escolha uma das funções da lista.",
+        "last_owner": "Uma organização sempre precisa de pelo menos um proprietário. Torne outra pessoa proprietária primeiro.",
+        "only_organization": "Isso deixaria esta pessoa sem nenhuma organização.",
+        "already_member": "Essa pessoa já faz parte da equipe.",
+        "invitation_limit": "Há convites pendentes demais. Revogue alguns primeiro.",
+        "membership_limit": "Esta organização atingiu o limite de membros.",
+        "rate_limited": "Você enviou muitos convites. Aguarde um pouco antes de enviar mais.",
+        "not_found": "Essa pessoa ou convite não existe mais. Recarregue a página e tente novamente.",
+        "failed": "Algo deu errado. Tente novamente."
+      }
+    },
+    "guests": {
+      "title": "Convidados",
+      "subtitle": "Pessoas que deixaram seus dados nas páginas de convidados deste evento. Você é o controlador desses dados: use-os só como elas concordaram e exclua quando pedirem.",
+      "stats": {
+        "contacts": "Contatos",
+        "withName": "Com nome",
+        "form": "Formulário",
+        "on": "Ativado",
+        "off": "Desativado"
+      },
+      "formOff": "O formulário está desativado, então nenhum contato novo é coletado.",
+      "formOffLink": "Ative em Configuração do evento",
+      "viewerNotice": "Só proprietários e operadores podem ver os dados dos convidados. Você vê quantos são.",
+      "searchLabel": "Buscar por nome ou e-mail",
+      "searchPlaceholder": "Nome ou e-mail",
+      "search": "Buscar",
+      "clear": "Limpar busca",
+      "columns": {
+        "name": "Nome",
+        "email": "E-mail",
+        "consent": "Consentimento dado",
+        "where": "Onde"
+      },
+      "noName": "Sem nome",
+      "gallery": "Galeria do evento",
+      "session": "Sessão {code}",
+      "openSession": "Abrir a sessão {code}",
+      "consentWording": "Texto do consentimento",
+      "consentLanguage": "Idioma",
+      "consentPolicy": "Política de privacidade exibida",
+      "consentGeneral": "O aviso geral da Immersia 360",
+      "delete": "Excluir",
+      "deleteLabel": "Excluir {email}",
+      "deleteTitle": "Excluir este contato?",
+      "deleteBody": "{email} é removido de vez. As fotos e vídeos dessa pessoa não são afetados.",
+      "deleteConfirm": "Excluir contato",
+      "cancel": "Cancelar",
+      "deleteAll": "Excluir todos os contatos",
+      "deleteAllTitle": "{count, plural, one {Excluir este contato?} other {Excluir os # contatos?}}",
+      "deleteAllBody": "Todos os contatos coletados para este evento são removidos de vez. As fotos e vídeos dos convidados não são afetados. A exclusão fica registrada no log de auditoria.",
+      "deleteAllConfirm": "Excluir todos",
+      "export": "Exportar CSV",
+      "exportHelp": "Abre no Excel com os acentos intactos. Células que começam com = + - ou @ são neutralizadas.",
+      "empty": "Ainda não há contatos",
+      "emptyBody": "Quando um convidado preencher o formulário, ele aparece aqui com o consentimento que deu.",
+      "noMatch": "Nenhum contato corresponde a “{q}”.",
+      "showing": "{count, plural, one {# contato} other {# contatos}}",
+      "pageOf": "Página {page} de {pages}",
+      "previous": "Anterior",
+      "next": "Próxima",
+      "requests": "Alguém pediu que você exclua os dados dele?",
+      "requestsLink": "Encontre a pessoa em todos os seus eventos",
+      "deleted": "Contato excluído.",
+      "allDeleted": "{count, plural, one {# contato excluído.} other {# contatos excluídos.}}",
+      "errors": {
+        "delete": "Não foi possível excluir. Tente de novo.",
+        "forbidden": "Você não tem permissão para fazer isso."
+      }
+    },
+    "settings": {
+      "title": "Ajustes",
+      "subtitle": "Sua organização, seus dados e os pedidos de privacidade dos convidados.",
+      "organization": {
+        "title": "Organização",
+        "name": "Nome",
+        "role": "Sua função"
+      },
+      "requests": {
+        "title": "Pedidos de privacidade de convidados",
+        "subtitle": "Um convidado pediu que você exclua os dados dele? Encontre tudo o que você guarda com o e-mail dele, em todos os seus eventos.",
+        "emailLabel": "E-mail do convidado",
+        "emailPlaceholder": "convidado@exemplo.com",
+        "find": "Buscar",
+        "none": "Nada encontrado com {email}.",
+        "found": "{contacts, plural, one {# contato} other {# contatos}} com {email}, e {sessions, plural, =0 {nenhuma sessão com arquivos} one {# sessão com arquivos} other {# sessões com arquivos}}.",
+        "withSessions": "Excluir também as fotos e vídeos: os arquivos são apagados, saem da galeria e do Live Display, e os links passam a dizer “excluído a pedido do convidado”.",
+        "deleteButton": "Excluir os dados",
+        "confirmTitle": "Excluir tudo de {email}?",
+        "confirmBody": "Os contatos são removidos de todos os eventos de vez. A exclusão fica registrada no log de auditoria, sem o e-mail.",
+        "confirmBodySessions": "Os contatos são removidos de todos os eventos e as fotos e vídeos também são excluídos. Quem mais deixou dados nas mesmas sessões perde esses contatos também. Não dá para desfazer.",
+        "confirm": "Excluir",
+        "cancel": "Cancelar",
+        "done": "{contacts, plural, one {# contato} other {# contatos}} e {sessions, plural, =0 {nenhuma sessão} one {# sessão} other {# sessões}} excluídos.",
+        "forbidden": "Só proprietários e operadores podem tratar pedidos de privacidade.",
+        "errors": {
+          "invalid": "Digite um e-mail válido.",
+          "tooMany": "Muitas buscas. Aguarde alguns minutos e tente de novo.",
+          "failed": "Algo deu errado. Tente de novo."
+        }
+      },
+      "export": {
+        "title": "Exportar meus dados",
+        "body": "Um arquivo JSON com sua organização, membros, eventos e todas as configurações, modelos de design, dados dos arquivos da biblioteca, dispositivos e conexões de nuvem (nunca os segredos) e cada contato de convidado com o consentimento. Fotos e vídeos não estão incluídos.",
+        "button": "Baixar JSON",
+        "ownerOnly": "Só o proprietário pode exportar os dados da organização."
+      },
+      "delete": {
+        "title": "Excluir organização",
+        "body": "Exclui permanentemente {name}: todos os eventos, sessões, fotos e vídeos hospedados, contatos de convidados, dispositivos e as conexões com Google Drive e Dropbox, cujo acesso é revogado. Todos os membros perdem o acesso. Não dá para desfazer, então exporte seus dados antes se precisar deles.",
+        "button": "Excluir organização…",
+        "ownerOnly": "Só o proprietário pode excluir a organização.",
+        "dialogTitle": "Excluir {name}?",
+        "dialogBody": "Tudo o que está descrito acima é excluído de vez. Os arquivos são removidos do armazenamento em segundo plano, o que pode levar um pouco de tempo.",
+        "typeLabel": "Digite {phrase} para confirmar",
+        "confirm": "Excluir tudo",
+        "cancel": "Cancelar",
+        "errors": {
+          "mismatch": "Não confere.",
+          "failed": "Não foi possível excluir a organização. Tente de novo."
+        }
+      }
+    },
+    "reports": {
+      "title": "Denúncias",
+      "subtitle": "Os convidados podem denunciar qualquer coisa que vejam dos seus eventos. Você pode ocultar um item na hora; a Immersia analisa cada denúncia em até 24 horas.",
+      "emptyTitle": "Nenhuma denúncia",
+      "emptyBody": "Nada foi denunciado nos seus eventos.",
+      "reasons": {
+        "not_me": "Alguém não concordou em compartilhar",
+        "inappropriate": "Impróprio",
+        "illegal": "Pode ser ilegal",
+        "privacy": "Questão de privacidade",
+        "other": "Outro"
+      },
+      "status": {
+        "open": "Aguardando análise",
+        "escalated": "Escalada",
+        "actioned": "Removida",
+        "dismissed": "Descartada"
+      },
+      "stateHidden": "Oculto por você",
+      "stateRemoved": "Removido pela Immersia",
+      "capture": "Captura",
+      "open": "Abrir a página",
+      "hide": "Ocultar agora",
+      "restore": "Restaurar",
+      "hiddenDone": "Oculto. Já saiu da página de download, da galeria e das telas.",
+      "restoredDone": "Restaurado. Os convidados podem abri-lo de novo.",
+      "takenDown": "A Immersia removeu este item, então ele não pode ser restaurado.",
+      "failed": "Não funcionou. Tente de novo."
     }
   },
   "booth": {
@@ -1299,6 +1719,12 @@
       "backend": {
         "opfs": "Salvo no armazenamento do dispositivo",
         "idb": "Salvo no armazenamento do navegador"
+      },
+      "lens": {
+        "wide": "grande-angular",
+        "ultrawide": "ultra-grande-angular",
+        "telephoto": "teleobjetiva",
+        "front": "frontal"
       }
     },
     "takeStatus": {
@@ -1520,7 +1946,44 @@
     "endedTitle": "Este evento terminou",
     "endedBody": "As fotos e vídeos foram removidos. O que você baixou continua no seu aparelho.",
     "madeWith": "Feito com Immersia 360",
-    "endedContact": "Dúvidas? Fale com {contact}"
+    "endedContact": "Dúvidas? Fale com {contact}",
+    "erasedTitle": "Seus arquivos foram excluídos",
+    "erasedBody": "Como você pediu, esta página e tudo o que havia nela foram excluídos. O que você baixou antes continua no seu aparelho.",
+    "form": {
+      "title": "Antes de baixar",
+      "intro": "{operator} organiza este evento e gostaria de manter contato. É opcional: se você pular, recebe seus arquivos do mesmo jeito.",
+      "name": "Nome",
+      "nameOptional": "Nome (opcional)",
+      "email": "E-mail",
+      "consent": "Concordo que {operator} guarde meu nome e meu e-mail e entre em contato comigo sobre {event}.",
+      "policy": "Ler o aviso de privacidade",
+      "generalNotice": "Como a Immersia 360 trata seus dados",
+      "submit": "Enviar meus dados",
+      "skip": "Pular: só meus arquivos",
+      "note": "Seus arquivos são seus de qualquer forma. Pular não muda nada.",
+      "sent": "Obrigado. Seus dados foram enviados para {operator}.",
+      "errors": {
+        "name": "Digite seu nome.",
+        "email": "Digite um e-mail válido.",
+        "consent": "Marque a caixa para compartilhar seus dados, ou pule.",
+        "stale": "O texto mudou enquanto você preenchia. Leia de novo e marque a caixa se concordar.",
+        "tooMany": "Muitas tentativas. Aguarde alguns minutos e tente de novo, ou pule.",
+        "failed": "Não foi possível enviar seus dados. Tente de novo, ou pule."
+      }
+    },
+    "erase": {
+      "open": "Excluir minhas fotos e vídeos",
+      "title": "Excluir tudo desta sessão?",
+      "body": "Isso exclui permanentemente seus arquivos desta página, da galeria do evento e de qualquer telão do evento, e apaga os dados que você compartilhou aqui. Não dá para desfazer. As cópias que você já baixou continuam no seu aparelho. As cópias que o organizador guardou em outro lugar são dele para remover, então fale com ele sobre elas.",
+      "confirm": "Sim, excluir meus arquivos",
+      "tooMany": "Muitas tentativas. Aguarde alguns minutos e tente de novo.",
+      "failed": "Não foi possível excluir seus arquivos. Tente de novo em instantes."
+    },
+    "report": "Denunciar este conteúdo",
+    "removedTitle": "Este conteúdo foi removido",
+    "removedBody": "As fotos e os vídeos desta página não estão mais disponíveis.",
+    "removedLegalTitle": "Indisponível por motivos legais",
+    "removedLegalBody": "Este conteúdo foi removido porque pode ser ilegal."
   },
   "code": {
     "metaTitle": "Encontre seus arquivos",
@@ -1578,7 +2041,8 @@
         "tooMany": "Muitas tentativas. Aguarde alguns minutos e tente de novo.",
         "failed": "Não foi possível verificar a senha. Confira a conexão e tente de novo."
       }
-    }
+    },
+    "report": "Denunciar algo nesta galeria"
   },
   "zip": {
     "progress": "{files, plural, one {# arquivo} other {# arquivos}} · {size}",
@@ -1701,6 +2165,226 @@
       "vhs": "Fita VHS",
       "echo-trail": "Rastro de eco",
       "clones": "Clones"
+    }
+  },
+  "invite": {
+    "metaTitle": "Convite",
+    "eyebrow": "Convite",
+    "readyTitle": "Entre em {organization}",
+    "readyBody": "{inviter} convidou você para {organization} como {role}.",
+    "signedInAs": "Você entrou como {email}.",
+    "accept": "Aceitar convite",
+    "accepting": "Entrando…",
+    "decline": "Recusar",
+    "declining": "Recusando…",
+    "openStudio": "Ir para o meu estúdio",
+    "wrongAccount": {
+      "title": "Este convite é para outra conta",
+      "body": "Ele foi enviado para {invited}, mas você entrou como {current}. Saia e entre de novo com o endereço convidado para aceitá-lo.",
+      "signOut": "Sair",
+      "signingOut": "Saindo…"
+    },
+    "expired": {
+      "title": "Este convite expirou",
+      "body": "Os convites valem por 7 dias. Peça a quem convidou você que envie um novo."
+    },
+    "cancelled": {
+      "title": "Este convite foi cancelado",
+      "body": "Quem convidou você o retirou. Se ainda precisar de acesso, peça que envie um novo."
+    },
+    "declined": {
+      "title": "Você recusou este convite",
+      "body": "Se foi um engano, peça a quem convidou você que envie um novo."
+    },
+    "used": {
+      "title": "Este convite já foi usado",
+      "body": "Ele já foi aceito e não pode ser usado de novo. Se precisar de acesso, peça um novo convite."
+    },
+    "notFound": {
+      "title": "Não encontramos este convite",
+      "body": "O link pode estar incompleto. Confira o e-mail que você recebeu ou peça um novo convite."
+    },
+    "alreadyMember": {
+      "title": "Você já faz parte desta equipe",
+      "body": "Você é membro de {organization}, então não há nada a aceitar."
+    },
+    "errors": {
+      "failed": "Algo deu errado. Tente novamente.",
+      "gone": "Este convite não pode mais ser aceito. Recarregue a página para ver o motivo."
+    }
+  },
+  "legal": {
+    "updated": "Última atualização: {date}",
+    "privacy": {
+      "metaTitle": "Aviso de privacidade",
+      "title": "Aviso de privacidade",
+      "lede": "O que a Immersia 360 guarda quando você usa uma cabine de fotos ou de vídeo 360, por quê, por quanto tempo, quem mais trata os dados e como exercer seus direitos.",
+      "sections": {
+        "roles": {
+          "title": "Quem é responsável pelos seus dados",
+          "p1": "Há duas partes envolvidas, com papéis diferentes.",
+          "operator": "O operador do evento (o estúdio, a empresa ou a pessoa que cuida da cabine) decide por que e como os dados que um convidado digita no formulário opcional são usados. Para esses dados, o operador é o controlador e a Immersia 360 é a operadora dele.",
+          "immersia": "A Immersia 360 hospeda e entrega as fotos e vídeos que a cabine gera, em nome do operador. Ela é a controladora das contas de operador (e-mail de acesso, nome, organização, dispositivos) e dos registros de segurança que mantém para operar o serviço com segurança."
+        },
+        "collected": {
+          "title": "O que guardamos",
+          "files": "Seus arquivos: as fotos, vídeos, GIFs e tiras feitos na cabine, mais imagens de pré-visualização. Ficam guardados em privado e são entregues por um link.",
+          "link": "Um link aleatório e um código curto que abrem seus arquivos. Quem tem o link pode vê-los, então compartilhe com cuidado.",
+          "form": "O formulário de convidados, só se o operador o ativou e você decide preenchê-lo: seu nome (opcional, a menos que o operador exija), seu e-mail, o texto exato do consentimento que você viu, o idioma dele, o momento em que concordou e o link da política de privacidade do operador.",
+          "email": "O e-mail que você digita na cabine para receber seu link é usado para enviar essa única mensagem. A Immersia 360 não o guarda.",
+          "technical": "A contagem de downloads por arquivo e seu endereço IP por alguns minutos na memória, para limitar abusos. Nenhum dos dois é ligado ao seu nome nem guardado com seus arquivos."
+        },
+        "why": {
+          "title": "Para que usamos",
+          "deliver": "Para entregar os arquivos que você fez. Entregá-los é o objetivo do serviço, com base em legítimo interesse compartilhado por você, pelo operador e por nós.",
+          "form": "Para repassar seus dados ao operador: só com o seu consentimento, dado ao marcar uma caixa que começa desmarcada. Pular o formulário não custa nada e nunca afeta seus arquivos. Você pode retirar o consentimento a qualquer momento.",
+          "security": "Para manter o serviço seguro e evitar abusos: legítimo interesse.",
+          "accounts": "Para operar as contas de operador: prestar o serviço que o operador pediu."
+        },
+        "noTrackers": {
+          "title": "Sem anúncios, sem rastreadores",
+          "p1": "As páginas de convidados não mostram anúncios nem carregam análise, pixels, widgets sociais ou fontes de terceiros. Contamos visitas e downloads com nossa própria análise, que não identifica ninguém.",
+          "p2": "Usamos só os cookies de que o serviço precisa para funcionar: seu idioma, uma anotação de que você pulou ou preencheu o formulário para não perguntar de novo, e um passe de curta duração para galeria protegida por senha. Nenhum deles rastreia você."
+        },
+        "retention": {
+          "title": "Por quanto tempo guardamos",
+          "files": "Os arquivos são excluídos automaticamente quando termina a retenção do evento: 7, 30 ou 90 dias após o envio, conforme o operador escolheu (30 por padrão).",
+          "erase": "Você pode excluir os seus antes, a qualquer momento, com “Excluir minhas fotos e vídeos” na sua página. Isso apaga os arquivos, tira-os da galeria do evento e de qualquer telão do evento, e exclui os dados que você deu nessa página. Seu link passa então a dizer que os arquivos foram excluídos a seu pedido.",
+          "form": "Os dados do formulário ficam com o operador até que ele os exclua ou você peça.",
+          "backups": "Os backups do banco de dados mantidos por nosso provedor podem guardar registros excluídos por pouco tempo, até serem sobrescritos."
+        },
+        "processors": {
+          "title": "Quem mais trata dados",
+          "p1": "Estes provedores tratam dados por nossa conta, só para prestar o serviço deles:",
+          "vercel": "Vercel: hospedagem e entrega do aplicativo.",
+          "neon": "Neon: o banco de dados.",
+          "cloudflare": "Cloudflare R2 e Workers: armazenamento dos arquivos dos convidados e o relé que atualiza os telões do evento (leva identificadores, não arquivos).",
+          "resend": "Resend: envio de e-mails de acesso e de links para convidados.",
+          "upstash": "Upstash: contadores de curta duração que limitam abusos.",
+          "fly": "Fly.io: renderização na nuvem quando um aparelho não consegue fazer o vídeo sozinho.",
+          "cloud": "Google Drive e Dropbox: só se o operador conectar a própria conta. Uma cópia dos arquivos vai então para essa conta, que está sob controle do operador, não nosso.",
+          "p2": "Alguns provedores ficam fora do seu país. Quando a lei exige, usamos decisões de adequação ou cláusulas contratuais padrão."
+        },
+        "rights": {
+          "title": "Seus direitos e como exercê-los",
+          "p1": "Pelo GDPR e pela Lei de Proteção de Dados da Nigéria de 2023 (NDPA), você pode pedir acesso aos seus dados, correção, exclusão, limitação, opor-se, recebê-los em formato portável e retirar o consentimento a qualquer momento. Você pode reclamar à sua autoridade de proteção de dados; na Nigéria, a Nigeria Data Protection Commission.",
+          "files": "Fotos e vídeos: use “Excluir minhas fotos e vídeos” na sua página. É imediato e não exige conta.",
+          "form": "Dados que você deu a um operador: peça ao operador, que decide o que fazer com eles. Os operadores têm uma ferramenta que encontra e exclui tudo o que guardam com um e-mail. Se não conseguir falar com ele, escreva para {email} e repassaremos seu pedido ou agiremos em nome dele.",
+          "other": "Qualquer outra coisa: escreva para {email}. Respondemos sem demora indevida e em até um mês."
+        },
+        "operators": {
+          "title": "Para operadores",
+          "p1": "Se você faz eventos com a Immersia 360, você é o controlador dos dados do formulário de convidados. Precisa de uma base legal, do seu próprio aviso de privacidade (o formulário aponta para o que você informar na Configuração do evento) e de um jeito de atender os pedidos dos convidados.",
+          "p2": "Damos as ferramentas: uma tela de Convidados por evento, com consulta e exportação CSV só para proprietários e operadores; exclusão de um contato, de todos ou de tudo o que há com um e-mail; exportação de todos os seus dados e exclusão da organização inteira em Ajustes. As exclusões ficam num log de auditoria que não contém os dados pessoais.",
+          "p3": "Confira as regras para gravar pessoas nos eventos em que você trabalha, inclusive sinalização, e as de crianças: a Immersia 360 não é voltada a crianças, e obter o consentimento de pais ou responsáveis quando a lei exigir é responsabilidade sua."
+        },
+        "security": {
+          "title": "Segurança",
+          "p1": "O tráfego é criptografado. Os links de convidados são valores aleatórios de 128 bits, as páginas de convidados não são indexadas por buscadores, os arquivos são privados e servidos por endereços assinados de curta duração, e os tokens que conectam uma conta de nuvem são criptografados em repouso."
+        },
+        "changes": {
+          "title": "Mudanças",
+          "p1": "Quando nossas práticas mudarem, atualizaremos este aviso e a data dele."
+        },
+        "contact": {
+          "title": "Contato",
+          "p1": "Dúvidas ou pedidos sobre este aviso: {email}."
+        }
+      }
+    },
+    "terms": {
+      "metaTitle": "Termos de uso",
+      "title": "Termos de uso",
+      "lede": "As regras para usar a Immersia 360, uma cabine de fotos e vídeo 360 gratuita que funciona no navegador.",
+      "sections": {
+        "agreement": {
+          "title": "Estes termos",
+          "p1": "Estes termos valem quando você usa a Immersia 360, seja para fazer eventos (operador) ou para abrir um link de uma cabine (convidado). Ao usar o serviço, você concorda com eles. Se usa para um negócio, confirma que pode vinculá-lo."
+        },
+        "service": {
+          "title": "O serviço",
+          "p1": "A Immersia 360 é gratuita, oferecida no estado em que está e conforme a disponibilidade. Podemos alterar, limitar ou encerrar recursos, com aviso razoável quando possível. Pode haver interrupções ou erros, então guarde cópias próprias do que for importante."
+        },
+        "operators": {
+          "title": "Se você faz eventos",
+          "p1": "Você é responsável por como usa a cabine e pelas pessoas que grava:",
+          "i1": "Avise os convidados de que estão sendo gravados, obtenha as permissões que a lei exigir e respeite os direitos de crianças.",
+          "i2": "Você é o controlador dos dados que coleta com o formulário de convidados: tenha uma base legal, dê aos convidados um aviso de privacidade, atenda os pedidos deles e exclua o que não precisar mais.",
+          "i3": "Mantenha sua conta e seus dispositivos seguros. O que acontecer com seu login ou com os tokens dos dispositivos é por sua conta.",
+          "i4": "Grave e compartilhe apenas o que você tem direito de gravar e compartilhar."
+        },
+        "acceptable": {
+          "title": "Uso aceitável",
+          "p1": "Não use a Immersia 360 para:",
+          "i1": "guardar ou compartilhar algo ilegal, abusivo, de ódio ou nocivo, sobretudo qualquer conteúdo sexual envolvendo menores, que denunciamos às autoridades;",
+          "i2": "gravar ou publicar pessoas contra a vontade delas;",
+          "i3": "violar, sobrecarregar, extrair em massa ou contornar os limites do serviço, nem para espalhar malware.",
+          "p2": "Podemos remover conteúdo ou suspender o acesso para proteger pessoas ou o serviço."
+        },
+        "content": {
+          "title": "Seu conteúdo",
+          "p1": "Você continua dono das suas fotos e vídeos. Você permite que a Immersia 360 os armazene, processe e entregue, e os mostre a quem tem o link, apenas para prestar o serviço. Os arquivos são excluídos automaticamente quando termina a retenção do evento, ou antes se você ou o convidado os excluírem. Não vendemos seu conteúdo nem o usamos para publicidade."
+        },
+        "guests": {
+          "title": "Se você é convidado",
+          "p1": "Seu link é privado, mas qualquer pessoa que o tenha pode abrir e baixar seus arquivos, então compartilhe com cuidado. Você pode excluir seus arquivos a qualquer momento na sua página, e eles são removidos quando termina a retenção do evento. Se algo numa página não deveria estar ali, escreva para {email}."
+        },
+        "privacy": {
+          "title": "Privacidade",
+          "p1": "Como tratamos dados pessoais está explicado no <link>aviso de privacidade</link>."
+        },
+        "liability": {
+          "title": "Garantia e responsabilidade",
+          "p1": "Na medida em que a lei permitir, o serviço é oferecido sem garantias, e a Immersia 360 não responde por perdas indiretas ou consequenciais, nem por eventos, arquivos ou lucros perdidos. Nada aqui limita responsabilidade que a lei não permita limitar, nem seus direitos como consumidor ou titular de dados."
+        },
+        "ending": {
+          "title": "Encerramento",
+          "p1": "Você pode parar de usar o serviço a qualquer momento e excluir sua organização em Ajustes, o que remove seus dados. Podemos suspender ou encerrar o acesso se estes termos forem descumpridos ou para proteger pessoas ou o serviço."
+        },
+        "changes": {
+          "title": "Mudanças",
+          "p1": "Podemos atualizar estes termos; a data acima indica a versão mais recente. Usar o serviço depois de uma mudança significa que você a aceita."
+        },
+        "contact": {
+          "title": "Contato",
+          "p1": "Dúvidas sobre estes termos: {email}."
+        }
+      }
+    }
+  },
+  "report": {
+    "metaTitle": "Denunciar este conteúdo",
+    "title": "Denunciar este conteúdo",
+    "intro": "Conte o que está errado. Uma pessoa lê cada denúncia e age em até 24 horas. Você não precisa de uma conta.",
+    "reasonLabel": "Qual é o problema?",
+    "reasons": {
+      "not_me": "Eu não concordei que isto fosse compartilhado",
+      "inappropriate": "É impróprio ou ofensivo",
+      "illegal": "Pode ser ilegal",
+      "privacy": "Mostra informações privadas ou uma criança",
+      "other": "Outro motivo"
+    },
+    "detailsLabel": "Algo mais que devemos saber (opcional)",
+    "detailsHelp": "Evite incluir dados pessoais que você não quer que a gente leia.",
+    "contactLabel": "Seu e-mail, se quiser uma resposta (opcional)",
+    "contactHelp": "Usado apenas para responder a esta denúncia e depois apagado. Não guardamos seu endereço nem os dados do seu aparelho.",
+    "codeLabel": "Código da foto ou do vídeo",
+    "codeHelp": "Os seis caracteres abaixo dela na galeria, como K7M-2QX.",
+    "codePlaceholder": "K7M-2QX",
+    "honeypot": "Deixe este campo vazio",
+    "submit": "Enviar denúncia",
+    "back": "Voltar",
+    "errors": {
+      "invalid": "Escolha qual é o problema e envie de novo.",
+      "contact": "Esse e-mail não parece válido.",
+      "not_found": "Não encontramos essa foto ou esse vídeo. Confira o código e tente de novo.",
+      "too_many": "Houve denúncias demais daqui hoje. Tente novamente amanhã."
+    },
+    "sent": {
+      "title": "Obrigado",
+      "body": "Sua denúncia foi enviada. Alguém vai analisá-la em até 24 horas.",
+      "removedBody": "Esse conteúdo já foi removido. Obrigado por avisar.",
+      "back": "Voltar para a página"
     }
   }
 }

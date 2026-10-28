@@ -8,6 +8,7 @@ import {
   type DeviceStatus,
   type RegisterDeviceInput,
 } from '@immersia/shared';
+import { track } from './analytics';
 import type { Operator } from './session';
 
 const { device } = schema;
@@ -43,6 +44,15 @@ export async function registerDevice(op: Operator, input: RegisterDeviceInput): 
       registeredBy: op.userId,
       lastSeenAt: new Date(),
     });
+  // Devices per operator (success metric). The labels are bounded to what the catalogue accepts.
+  track(
+    {
+      name: 'device_registered',
+      platform: input.platform.trim().slice(0, 40) || 'Unknown',
+      browser: input.browser.trim().slice(0, 40) || 'Unknown',
+    },
+    { organizationId: op.organizationId, deviceId: id },
+  );
   return { id, token };
 }
 

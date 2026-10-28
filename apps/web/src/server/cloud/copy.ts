@@ -1,7 +1,23 @@
 import 'server-only';
-import { and, asc, eq, gt, inArray, isNotNull, isNull, lte, ne, notExists, notInArray, or, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  eq,
+  gt,
+  inArray,
+  isNotNull,
+  isNull,
+  lte,
+  ne,
+  not,
+  notExists,
+  notInArray,
+  or,
+  sql,
+} from 'drizzle-orm';
 import { db, schema, type Transaction } from '@immersia/db';
 import { uuidv7 } from '@immersia/shared';
+import { recordNow } from '../analytics';
 import { DEFAULT_CLOUD_FOLDER, cloudFilename, eventFolderName } from '../filenames';
 import { isMissingObject, objectStream } from '../storage';
 import { cloudProvider } from './config';
@@ -33,6 +49,9 @@ const { event, captureSession, output, uploadObject, integration } = schema;
  */
 const cloudOf = sql<CloudProviderId | 'none' | null>`(${event.shareSettings}->>'cloud')`;
 
+/** The platform took the session down (policy or legal): never copied on to the operator's cloud. */
+const platformRemoved = sql<boolean>`(${captureSession.removedAt} is not null and ${captureSession.removal} in ('policy', 'legal'))`;
+
 const isProvider = (v: unknown): v is CloudProviderId => (CLOUD_PROVIDERS as readonly unknown[]).includes(v);
 
 // ---------------------------------------------------------------------------------------------
@@ -50,13 +69,15 @@ export async function enqueueCloudCopies(outputId: string): Promise<number> {
       uploadedAt: output.uploadedAt,
       organizationId: event.organizationId,
       expiredAt: captureSession.expiredAt,
+      takenDown: platformRemoved,
     })
     .from(output)
     .innerJoin(captureSession, eq(captureSession.id, output.sessionId))
     .innerJoin(event, eq(event.id, captureSession.eventId))
     .where(eq(output.id, outputId))
     .limit(1);
-  if (!row?.uploadedAt || row.expiredAt || !isProvider(row.target)) return 0;
+  // A session the platform took down is not copied on: its files are deleted or quarantined.
+  if (!row?.uploadedAt || row.expiredAt || row.takenDown || !isProvider(row.target)) return 0;
   const target = row.target;
   const [linked] = await db()
     .select({ status: integration.status })
@@ -70,6 +91,28 @@ export async function enqueueCloudCopies(outputId: string): Promise<number> {
     .onConflictDoNothing()
     .returning({ id: uploadObject.id });
   return inserted.length;
+}
+
+/**
+ * A session stopped being served (erased by its guest, taken down by the platform): the copies of its
+ * files to the operator's Drive or Dropbox that have not happened do not happen. Copies already made
+ * are the operator's own and are never touched. Run inside the transaction that ends the session.
+ */
+export async function cancelPendingCopies(tx: Transaction, sessionId: string): Promise<number> {
+  const cancelled = await tx
+    .delete(uploadObject)
+    .where(
+      and(
+        inArray(uploadObject.target, ['drive', 'dropbox']),
+        ne(uploadObject.status, 'done'),
+        inArray(
+          uploadObject.outputId,
+          tx.select({ id: output.id }).from(output).where(eq(output.sessionId, sessionId)),
+        ),
+      ),
+    )
+    .returning({ id: uploadObject.id });
+  return cancelled.length;
 }
 
 /**
@@ -96,6 +139,7 @@ export async function enqueueMissingCopies(
         and(
           isNotNull(output.uploadedAt),
           isNull(captureSession.expiredAt),
+          not(platformRemoved),
           gt(captureSession.expiresAt, new Date()),
           ne(integration.status, 'revoked'),
           scope.organizationId ? eq(event.organizationId, scope.organizationId) : undefined,
@@ -136,6 +180,7 @@ interface ClaimedCopy {
   attempts: number;
   outputId: string;
   objectKey: string | null;
+  bytes: number | null;
   mime: string;
   kind: string;
   uploadedAt: Date | null;
@@ -168,6 +213,7 @@ async function claimNext(skip: string[]): Promise<ClaimedCopy | null> {
         attempts: uploadObject.attempts,
         outputId: output.id,
         objectKey: output.objectKey,
+        bytes: output.bytes,
         mime: output.mime,
         kind: output.kind,
         uploadedAt: output.uploadedAt,
@@ -319,6 +365,12 @@ async function processOne(job: ClaimedCopy, run: Run): Promise<void> {
       .where(and(eq(uploadObject.id, job.id), eq(uploadObject.status, 'uploading')));
     run.stats.done++;
     if (reused) run.stats.reused++;
+    // Reliability (success metric): a copy to the operator's own cloud, and how many tries it took.
+    else
+      await recordNow(
+        { name: 'upload_completed', target: job.target, bytes: job.bytes ?? 0, retries: Math.max(0, job.attempts - 1) },
+        { organizationId: job.organizationId, eventId: job.eventId },
+      );
   } catch (err) {
     const decision = decideFailure(err, job.attempts, new Date());
     // Only our own error messages are logged (they carry no tokens or provider payloads); anything

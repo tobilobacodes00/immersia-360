@@ -19,6 +19,7 @@
     "uqr": "catalog:"
   },
   "devDependencies": {
+    "@immersia/fonts": "workspace:*",
     "@vitest/browser": "catalog:",
     "@vitest/browser-playwright": "catalog:",
     "playwright": "catalog:",
