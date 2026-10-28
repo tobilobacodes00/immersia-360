@@ -85,8 +85,11 @@ export interface PreviewInfo {
 }
 
 export interface StartRecordingOptions {
-  /** Names the file (`<id>.mov` / `<id>.mp4`), so a crash leaves it findable by take id. */
-  id: string;
+  /**
+   * Names the file, so a crash leaves it findable by take id. The booth passes its take's id; without one the
+   * plugin makes one up (it is in the result).
+   */
+  id?: string;
 }
 
 export interface RecordingResult {
@@ -175,7 +178,7 @@ export interface HighSpeedPlugin {
   stopMotionSampling(): Promise<void>;
 
   /** Resolves once the first frame is being written. */
-  startRecording(options: StartRecordingOptions): Promise<{ id: string }>;
+  startRecording(options?: StartRecordingOptions): Promise<{ id: string }>;
   /**
    * Finish the movie. Also resolves (with `interrupted: true`) when an interruption already ended it,
    * so the web layer can always collect what was recorded.

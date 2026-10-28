@@ -122,10 +122,9 @@ public class HighSpeedPlugin: CAPPlugin, CAPBridgedPlugin {
     // MARK: - Recording
 
     @objc func startRecording(_ call: CAPPluginCall) {
-        guard let id = call.getString("id"), !id.isEmpty else {
-            call.reject("A recording needs an id.", "unsupported")
-            return
-        }
+        // The booth names the file after its take; without a name the plugin makes one up.
+        let requested = call.getString("id") ?? ""
+        let id = requested.isEmpty ? UUID().uuidString.lowercased() : requested
         DispatchQueue.main.async {
             self.controller.startRecording(id: id, interface: HighSpeedOrientation.currentInterface()) { result in
                 switch result {

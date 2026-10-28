@@ -107,16 +107,17 @@ enum HighSpeedFormats {
         return values
     }
 
-    /// The format to record `width`x`height` at `fps` with: the closest picture size among the formats that
-    /// reach `fps`, then the wider field of view, then the higher top frame rate. Nil when none reaches it.
+    /// The format to record `width`x`height` at `fps` with: among the formats whose frame rate range reaches
+    /// `fps`, the one closest in picture size, then the one with the highest top frame rate, then the wider
+    /// field of view. Nil when no format reaches `fps`.
     static func choose(device: AVCaptureDevice, width: Int, height: Int, fps: Int) -> HighSpeedFormatOption? {
         let wanted = Double(width * height)
         let candidates = options(for: device).filter { supports($0.format.videoSupportedFrameRateRanges, fps: Double(fps)) }
         func rank(_ option: HighSpeedFormatOption) -> (Double, Double, Double) {
             return (
                 abs(Double(option.width * option.height) - wanted),
-                -Double(option.format.videoFieldOfView),
-                -option.maxFps
+                -option.maxFps,
+                -Double(option.format.videoFieldOfView)
             )
         }
         return candidates.min { rank($0) < rank($1) }

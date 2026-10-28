@@ -9,6 +9,7 @@ import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
 import com.getcapacitor.annotation.Permission
 import com.getcapacitor.annotation.PermissionCallback
+import java.util.UUID
 
 /**
  * The `HighSpeed` Capacitor plugin on Android (CAP-14): the JavaScript API in src/definitions.ts, backed by
@@ -130,11 +131,9 @@ class HighSpeedPlugin : Plugin() {
 
     @PluginMethod
     fun startRecording(call: PluginCall) {
-        val id = call.getString("id")
-        if (id.isNullOrEmpty()) {
-            call.reject("A recording needs an id.", HighSpeedException.UNSUPPORTED)
-            return
-        }
+        // The booth names the file after its take; without a name the plugin makes one up.
+        val requested = call.getString("id")
+        val id = if (requested.isNullOrEmpty()) UUID.randomUUID().toString() else requested
         onMain {
             camera().startRecording(id, { call.resolve(JSObject().put("id", id)) }, { reject(call, it) })
         }
