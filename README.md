@@ -21,14 +21,36 @@ These arrive in later milestones: `apps/realtime` (Durable Objects hub), `apps/r
 render fallback), `packages/render-engine`, `packages/effects`, `packages/layout`, `packages/capture`,
 `packages/offline`.
 
-## Working on it
+## Running it on your machine
+
+Needs Node 22+, pnpm and Docker (for Postgres and an S3-compatible store; Neon and R2 take their
+place in production).
 
 ```sh
 corepack enable
 pnpm install
-cp .env.example apps/web/.env.local   # fill in what you need
-pnpm --filter @immersia/web dev
+docker compose up -d                        # Postgres on 5432, file storage on 9090
+cp .env.local.example apps/web/.env.local    # dev-only secrets, already filled in
+pnpm --filter @immersia/db db:migrate        # create the tables
+pnpm --filter @immersia/web dev              # http://localhost:3000
 ```
+
+Sign in at `/sign-in`: with no mail server configured the magic link is printed in the terminal
+running `dev`, after `[dev-mailbox]`. Open it to land in the studio, then make an event and open its
+booth. A laptop camera is enough; the booth also has a simulated camera for when there is none.
+
+`docker compose down` stops the containers and keeps the data; `down -v` throws it away. To run the
+hourly sweep (expiry, cloud copies, cleanup) by hand:
+
+```sh
+curl -H "authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/expire
+```
+
+Email, Google sign-in, Drive and Dropbox, the Live Display hub, Upstash rate limits and the server
+render worker are all optional: without their keys the app runs and the screens that need one say so.
+`.env.example` lists every variable.
+
+## Working on it
 
 Verification runs in CI: lint, types, unit tests, Playwright on Chrome and WebKit, and axe accessibility
 checks. Every PR also gets a Vercel preview with its own Neon database branch.
