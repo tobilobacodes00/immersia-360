@@ -1,0 +1,134 @@
+name: Companion app
+
+# CAP-14: the Capacitor companion (apps/companion) and its native high-speed recorder
+# (packages/capacitor-high-speed). Builds the Android debug APK and the iOS app for the simulator, unsigned,
+# so a change to the Swift or Kotlin is compiled before anyone puts a phone in front of it. The web side
+# (types, lint, unit tests of the plugin, the capture code and the companion's config) runs in ci.yml.
+
+on:
+  pull_request:
+    paths:
+      - 'apps/companion/**'
+      - 'packages/capacitor-high-speed/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/companion.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/companion/**'
+      - 'packages/capacitor-high-speed/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/companion.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: companion-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # The companion loads a deployed booth; building does not contact it, so any https origin will do here.
+  COMPANION_SERVER_URL: https://booth.example.com/studio
+
+jobs:
+  android:
+    name: Android debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          # Corepack provides pnpm in the next step; the built-in cache would look for it too early.
+          package-manager-cache: false
+      - run: corepack enable
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      # Caches ~/.gradle (wrapper, dependencies, build cache) between runs.
+      - uses: gradle/actions/setup-gradle@v5
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+      - name: Sync the Android project with the plugin and the config
+        run: pnpm --filter @immersia/companion run sync android
+      - name: Build the debug APK
+        working-directory: apps/companion/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
+      - uses: actions/upload-artifact@v5
+        with:
+          name: immersia-companion-android-debug
+          path: apps/companion/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7
+
+  ios:
+    name: iOS app for the simulator
+    # Free minutes: the repository is public.
+    runs-on: macos-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - run: corepack enable
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
+      - run: pnpm install --frozen-lockfile
+      - name: Sync the iOS project with the plugin and the config
+        run: pnpm --filter @immersia/companion run sync ios
+      # The project uses Swift Package Manager (Capacitor 8's default), so there is no Pods directory to
+      # cache: the packages (Capacitor itself, from capacitor-swift-pm) are cloned into one folder, which is.
+      - name: Cache Swift packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/spm-sources
+            ~/Library/Caches/org.swift.swiftpm
+          key: spm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'packages/capacitor-high-speed/Package.swift') }}
+          restore-keys: spm-${{ runner.os }}-
+      - name: Resolve Swift packages
+        working-directory: apps/companion/ios/App
+        run: xcodebuild -resolvePackageDependencies -project App.xcodeproj -scheme App -clonedSourcePackagesDirPath ~/spm-sources
+      - name: Build for the simulator, unsigned
+        working-directory: apps/companion/ios/App
+        run: |
+          xcodebuild build \
+            -project App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            -clonedSourcePackagesDirPath ~/spm-sources \
+            CODE_SIGNING_ALLOWED=NO
+      - name: Zip the simulator app
+        run: ditto -c -k --keepParent apps/companion/ios/App/build/Build/Products/Debug-iphonesimulator/App.app Immersia360-simulator.zip
+      - uses: actions/upload-artifact@v5
+        with:
+          name: immersia-companion-ios-simulator
+          path: Immersia360-simulator.zip
+          retention-days: 7
