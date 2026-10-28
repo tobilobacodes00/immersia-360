@@ -4,6 +4,7 @@ import { db, schema } from '@immersia/db';
 import { track } from './analytics';
 import { audit } from './audit';
 import { erasurePlan, purgeStage } from './erasure-core';
+import { withdrawHighlightsWith } from './highlights';
 import { removeSessionItem } from './live';
 import { deleteObjects } from './storage';
 
@@ -102,6 +103,13 @@ export async function eraseSession(
     await deleteObjects(done.keys).catch((err: unknown) =>
       console.error('[erasure] file delete failed, the sweep will retry', err instanceof Error ? err.message : err),
     );
+  // A highlight reel with the guest's footage in it goes too (LIV-14); the sweep finishes it if a file would not delete.
+  await withdrawHighlightsWith(done.sessionId).catch((err: unknown) =>
+    console.error(
+      '[erasure] highlight reel withdrawal failed, the sweep will retry',
+      err instanceof Error ? err.message : err,
+    ),
+  );
   if (done.onScreen) await removeSessionItem(done.eventId, done.sessionId);
   track({ name: 'guest_data_erased', by: eraser.by }, { eventId: done.eventId });
   return { result: 'erased', sessionId: done.sessionId, contacts: done.contacts, outputs: done.outputs };

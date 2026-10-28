@@ -1338,6 +1338,8 @@
       "copy": "Copiar",
       "copied": "Copiado",
       "openLink": "Abrir",
+      "nfc": "Tag NFC ou pulseira",
+      "nfcHelp": "Grave o link da galeria em uma tag ou pulseira e os convidados abrem a galeria encostando o celular.",
       "password": "Senha",
       "passwordHelp": "Opcional. Quem tem o link precisa dela uma vez por navegador. Capturas ocultas e convidados que pediram para não aparecer no telão nunca aparecem aqui.",
       "locked": "Protegida",
@@ -1354,6 +1356,95 @@
       "export": "Todos os arquivos",
       "exportHelp": "Todos os arquivos do evento em qualidade total num único ZIP, incluindo as capturas ocultas, salvos pelo seu navegador direto do armazenamento.",
       "exportButton": "Baixar todos os arquivos (ZIP)"
+    },
+    "nfc": {
+      "intro": "Abrir com um toque: grave este link em uma tag, adesivo ou pulseira NFC. É o link da galeria marcado como rota NFC, então suas análises mostram quantos convidados chegaram encostando o celular.",
+      "linkLabel": "Link NFC",
+      "copy": "Copiar link NFC",
+      "copied": "Copiado",
+      "write": "Gravar em tag NFC",
+      "cancel": "Cancelar",
+      "waiting": "Encoste a tag na parte de trás deste celular e mantenha-a ali até esta mensagem mudar.",
+      "written": "Pronto. Encoste outro celular na tag para conferir se ela abre a galeria.",
+      "unsupported": "Não é possível gravar tags por este navegador: o Web NFC só funciona no Chrome em um celular Android. Copie o link acima e grave com qualquer app de gravação NFC em um celular (por exemplo NFC Tools ou NXP TagWriter), como registro de URL.",
+      "insecure": "O Web NFC só funciona em páginas seguras (https). Abra o estúdio por https para gravar tags daqui, ou copie o link acima e use um app de gravação NFC.",
+      "failures": {
+        "denied": "O navegador bloqueou o NFC. Permita para este site nas configurações do navegador e tente de novo.",
+        "unavailable": "O NFC está desligado neste celular, ou ele não tem. Ative o NFC nas configurações do celular e tente de novo.",
+        "unreadable": "Não foi possível gravar nesta tag. Ela pode estar bloqueada ou não ser uma tag para links. Tente outra.",
+        "lost": "A tag se afastou antes de ser gravada. Mantenha-a parada junto ao celular e tente de novo.",
+        "failed": "Não foi possível gravar a tag. Tente de novo."
+      },
+      "tips": {
+        "title": "Dicas sobre tags e pulseiras",
+        "tags": "Compre tags ou pulseiras NTAG213, NTAG215 ou NTAG216: guardam um link com folga e funcionam em iPhone e em Android.",
+        "record": "Grave um registro de URL (link da web), não texto simples. A maioria dos apps NFC chama de “URL” ou “Link”.",
+        "test": "Teste cada tag com um celular antes do evento. O iPhone lê perto da borda superior; a maioria dos Android, perto da câmera.",
+        "metal": "Metal bloqueia o sinal: cole as tags em plástico, madeira ou papel, ou compre tags feitas para superfícies metálicas.",
+        "lock": "Não bloqueie uma tag antes de testá-la. Uma tag bloqueada não pode ser regravada."
+      }
+    },
+    "highlightReel": {
+      "title": "Vídeo de melhores momentos",
+      "subtitle": "Uma montagem das suas melhores capturas, criada neste navegador com o que está na galeria do cliente.",
+      "empty": "Ainda não há nada na galeria do cliente. Quando houver capturas de convidados, você poderá criar um vídeo com elas.",
+      "options": {
+        "length": "Duração",
+        "lengthSeconds": "{seconds} s",
+        "quality": "Qualidade",
+        "qualityHelp": "720p baixa menos e é criado mais rápido; 1080p fica melhor em uma tela grande.",
+        "format": "Formato",
+        "transitions": "Cortes",
+        "beat": "No ritmo",
+        "fade": "Fusão",
+        "transitionsHelp": "No ritmo segue a música do evento; sem música, corta em um passo constante."
+      },
+      "music": {
+        "with": "A música do evento toca sob o vídeo e os cortes seguem o ritmo dela.",
+        "without": "Este evento não tem música, então o vídeo ficará sem som. Adicione uma faixa em Configuração para trilhar o vídeo."
+      },
+      "build": "Criar vídeo de melhores momentos",
+      "cancel": "Cancelar",
+      "progress": {
+        "label": "Criando o vídeo",
+        "downloading": "Baixando capturas ({done} de {total})",
+        "analysing": "Ouvindo a música e planejando os cortes",
+        "rendering": "Renderizando o vídeo",
+        "finishing": "Finalizando"
+      },
+      "summary": "{duration} · {clips, plural, one {# captura} other {# capturas}} · {size}",
+      "ready": {
+        "title": "Seu vídeo está pronto",
+        "beatSynced": "Os cortes caem no ritmo.",
+        "preview": "Pré-visualização do vídeo de melhores momentos",
+        "download": "Baixar MP4",
+        "publish": "Mostrar na galeria do cliente",
+        "uploading": "Enviando {percent}",
+        "again": "Criar outro",
+        "published": "Já está na galeria do cliente."
+      },
+      "published": {
+        "title": "Na galeria do cliente",
+        "hidden": "Não está aparecendo",
+        "when": "Publicado em {date}",
+        "withheld": "{count, plural, one {# captura incluída foi ocultada} other {# capturas incluídas foram ocultadas}} ou tiradas da tela, então o vídeo não aparece para os convidados. Crie um novo.",
+        "preview": "O vídeo de melhores momentos publicado",
+        "remove": "Tirar da galeria",
+        "removed": "O vídeo foi tirado da galeria do cliente."
+      },
+      "card": {
+        "subtitle": "Melhores momentos",
+        "hint": "Escaneie para ver todas as fotos e vídeos"
+      },
+      "errors": {
+        "nothing": "Nenhuma captura da galeria pôde ser usada. Confira se a galeria tem vídeos ou tiras de fotos e tente de novo.",
+        "download": "Não foi possível baixar uma captura. Verifique sua conexão e tente de novo.",
+        "unsupported": "Este navegador não consegue criar o vídeo. Use o Chrome ou o Edge em um computador.",
+        "failed": "Não foi possível criar o vídeo. Tente de novo, ou escolha uma duração menor ou 720p.",
+        "publish": "Não foi possível enviar o vídeo. Tente de novo.",
+        "withheld": "Uma captura do vídeo foi ocultada depois do planejamento. Crie o vídeo de novo.",
+        "remove": "Não foi possível tirar o vídeo. Tente de novo."
+      }
     },
     "signage": {
       "title": "Cartazes com QR",
@@ -1388,6 +1479,10 @@
         "label": "Link da galeria",
         "copy": "Copiar link",
         "copied": "Copiado"
+      },
+      "nfc": {
+        "title": "Tag NFC",
+        "subtitle": "Abrir com um toque além de escanear: grave o link da galeria em uma tag ou pulseira."
       },
       "preview": {
         "title": "Pré-visualização",
@@ -1985,6 +2080,11 @@
     "open": "Abrir a captura {code}",
     "older": "Anteriores",
     "newest": "Voltar para as mais recentes",
+    "highlight": {
+      "title": "Melhores momentos",
+      "player": "Vídeo de melhores momentos do evento",
+      "download": "Baixar o vídeo"
+    },
     "lock": {
       "body": "Esta galeria é protegida.",
       "label": "Senha",

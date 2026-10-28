@@ -4,14 +4,17 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { AlertTriangle } from 'lucide-react';
 import { Stat, buttonClass } from '@immersia/ui';
 import { formatBytes } from '@/lib/format';
-import { galleryUrl } from '@immersia/shared';
+import { galleryUrl, outputSettingsSchema } from '@immersia/shared';
+import { roleCan } from '@/lib/permissions';
 import { eventCloudAlert } from '@/server/cloud/integrations';
 import { appOrigin } from '@/server/env';
 import { eventStats, getEvent, guestFilesSummary } from '@/server/events';
 import { galleryStats } from '@/server/gallery';
+import { highlightSummary } from '@/server/highlights';
 import { requireOperator } from '@/server/session';
 import { ExtendGuestFiles } from './ExtendGuestFiles';
 import { GalleryCard } from './GalleryCard';
+import { HighlightReel } from './HighlightReel';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const op = await requireOperator();
@@ -23,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function EventDashboardPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const op = await requireOperator({ event: ['read'] });
-  const [t, ti, locale, s, files, event, gallery, cloud] = await Promise.all([
+  const [t, ti, locale, s, files, event, gallery, cloud, reel] = await Promise.all([
     getTranslations('studio.dashboard'),
     getTranslations('studio.integrations'),
     getLocale(),
@@ -32,9 +35,11 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
     getEvent(op.organizationId, id),
     galleryStats(id),
     eventCloudAlert(op.organizationId, id),
+    highlightSummary(op.organizationId, id),
   ]);
   const n = (v: number) => v.toLocaleString(locale);
   const cloudName = cloud ? ti(`providers.${cloud.provider}`) : '';
+  const video = event ? outputSettingsSchema.parse(event.outputSettings).video360 : null;
   return (
     <div className="space-y-6">
       {cloud && (
@@ -123,6 +128,17 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
           url={galleryUrl(appOrigin(), event.gallerySlug, 'direct')}
           items={gallery.items}
           locked={event.galleryPasswordHash !== null}
+        />
+      )}
+      {event && video && roleCan(op.role, { event: ['update'] }) && (
+        <HighlightReel
+          eventId={id}
+          eventName={event.name}
+          eventDate={event.date}
+          aspect={video.aspect}
+          items={gallery.items}
+          hasMusic={video.music !== null}
+          existing={reel}
         />
       )}
     </div>

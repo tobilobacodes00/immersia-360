@@ -4,6 +4,7 @@ import { enqueueMissingCopies, processCloudCopies } from '@/server/cloud/copy';
 import { verifyConnections } from '@/server/cloud/integrations';
 import { env } from '@/server/env';
 import { purgeErasedSessions } from '@/server/erasure';
+import { sweepHighlights } from '@/server/highlights';
 import { runOrganizationDeletions } from '@/server/privacy';
 import { expireSessions } from '@/server/share';
 
@@ -32,7 +33,16 @@ export async function GET(request: Request) {
   // Privacy: finish what erasures and organization deletions started (files a late upload left, rows).
   const erased = await purgeErasedSessions().catch(failure('erasure'));
   const deletions = await runOrganizationDeletions(60_000).catch(failure('deletion'));
-  return NextResponse.json({ ...result, assets, erased, deletions, cloud: { queued, copies, connections } });
+  // LIV-14: a highlight reel does not outlive the footage in it.
+  const highlights = await sweepHighlights().catch(failure('highlights'));
+  return NextResponse.json({
+    ...result,
+    assets,
+    erased,
+    deletions,
+    highlights,
+    cloud: { queued, copies, connections },
+  });
 }
 
 /** A broken cloud queue must not stop the expiry sweep: report it and carry on. */

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations } from 'next-intl/server';
-import { Search } from 'lucide-react';
+import { Download, Search } from 'lucide-react';
 import {
   formatShortCode,
   guestFormCookie,
@@ -19,6 +19,7 @@ import { ZipDownload } from '@/components/zip/ZipDownload';
 import { track } from '@/server/analytics';
 import { galleryCookie, galleryEvent, galleryItems, validGalleryPass } from '@/server/gallery';
 import { guestConsent } from '@/server/guest-form';
+import { galleryHighlight } from '@/server/highlights';
 import { GalleryLock } from './GalleryLock';
 
 /**
@@ -74,6 +75,8 @@ export default async function GalleryPage({ params, searchParams }: Props) {
   const code = sp.code?.trim() || null;
   const { items, next } = await galleryItems(ev.id, { booth, code, cursor: sp.cursor ?? null });
   if (!sp.cursor) track({ name: 'gallery_viewed', route }, { eventId: ev.id, organizationId: ev.organizationId });
+  // LIV-14: the operator's highlight reel opens the first page of the gallery, not a search or a later page.
+  const highlight = !sp.cursor && !code ? await galleryHighlight(ev.id, ev.name) : null;
 
   // Every link keeps how the guest got here (DL-13) and the current filters.
   const href = (patch: Record<string, string | null>) => {
@@ -132,6 +135,40 @@ export default async function GalleryPage({ params, searchParams }: Props) {
             policyUrl={consent.policyUrl}
             fingerprint={consent.fingerprint}
           />
+        )}
+
+        {highlight && (
+          <section aria-labelledby="highlight-heading" className="mt-8">
+            <h2 id="highlight-heading" className="text-lg font-semibold">
+              {t('highlight.title')}
+            </h2>
+            <div
+              className={cx(
+                'mt-3 w-full overflow-hidden rounded-[1.25rem] bg-black',
+                highlight.width >= highlight.height ? 'max-w-3xl' : 'max-w-[26rem]',
+              )}
+              style={{ aspectRatio: `${highlight.width} / ${highlight.height}` }}
+            >
+              <video
+                className="size-full object-contain"
+                src={highlight.url}
+                poster={highlight.poster ?? undefined}
+                controls
+                playsInline
+                preload="metadata"
+                aria-label={t('highlight.player')}
+              />
+            </div>
+            {/* SHR-6: like the other downloads, it waits for the guest form to be sent or skipped. */}
+            {!consent && (
+              <a
+                href={highlight.downloadUrl}
+                className="focus-ring mt-3 inline-flex min-h-11 items-center gap-2 rounded-full border border-g-ink/20 px-5 font-semibold"
+              >
+                <Download className="size-4" aria-hidden /> {t('highlight.download')}
+              </a>
+            )}
+          </section>
         )}
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4">

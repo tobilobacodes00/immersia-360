@@ -1338,6 +1338,8 @@
       "copy": "Copiar",
       "copied": "Copiado",
       "openLink": "Abrir",
+      "nfc": "Etiqueta NFC o pulsera",
+      "nfcHelp": "Escribe el enlace de la galería en una etiqueta o pulsera y los invitados abrirán la galería al acercarle el teléfono.",
       "password": "Contraseña",
       "passwordHelp": "Opcional. Quien tenga el enlace la necesita una vez por navegador. Las capturas ocultas y los invitados que pidieron no salir en pantalla nunca aparecen aquí.",
       "locked": "Protegida",
@@ -1354,6 +1356,95 @@
       "export": "Todos los archivos",
       "exportHelp": "Todos los archivos en calidad completa del evento en un solo ZIP, incluidas las capturas ocultas, guardados por tu navegador directamente desde el almacenamiento.",
       "exportButton": "Descargar todos los archivos (ZIP)"
+    },
+    "nfc": {
+      "intro": "Para abrir con un toque: escribe este enlace en una etiqueta, un sticker o una pulsera NFC. Es el enlace de la galería marcado como ruta NFC, así que tus analíticas muestran cuántos invitados llegaron acercando el teléfono.",
+      "linkLabel": "Enlace NFC",
+      "copy": "Copiar enlace NFC",
+      "copied": "Copiado",
+      "write": "Escribir en etiqueta NFC",
+      "cancel": "Cancelar",
+      "waiting": "Apoya la etiqueta en la parte trasera de este teléfono y no la muevas hasta que cambie este mensaje.",
+      "written": "Listo. Acerca otro teléfono a la etiqueta para comprobar que abre la galería.",
+      "unsupported": "Desde este navegador no se pueden escribir etiquetas: Web NFC solo funciona en Chrome en un teléfono Android. Copia el enlace de arriba y escríbelo con cualquier app que escriba NFC en un teléfono (por ejemplo NFC Tools o NXP TagWriter), como un registro de URL.",
+      "insecure": "Web NFC solo funciona en páginas seguras (https). Abre el estudio por https para escribir etiquetas desde aquí, o copia el enlace de arriba y usa una app que escriba NFC.",
+      "failures": {
+        "denied": "El navegador bloqueó el NFC. Permítelo para este sitio en los ajustes del navegador e inténtalo de nuevo.",
+        "unavailable": "El NFC está desactivado en este teléfono, o no lo tiene. Actívalo en los ajustes del teléfono e inténtalo de nuevo.",
+        "unreadable": "No se pudo escribir en esta etiqueta. Puede estar bloqueada o no ser una etiqueta para enlaces. Prueba con otra.",
+        "lost": "La etiqueta se alejó antes de que se escribiera. Mantenla quieta contra el teléfono e inténtalo de nuevo.",
+        "failed": "No se pudo escribir la etiqueta. Inténtalo de nuevo."
+      },
+      "tips": {
+        "title": "Consejos para etiquetas y pulseras",
+        "tags": "Compra etiquetas o pulseras NTAG213, NTAG215 o NTAG216: guardan un enlace de sobra y funcionan con iPhone y con Android.",
+        "record": "Escribe un registro de URL (enlace web), no texto simple. La mayoría de las apps NFC lo llaman «URL» o «Enlace».",
+        "test": "Prueba cada etiqueta con un teléfono antes del evento. Los iPhone leen cerca del borde superior; la mayoría de los Android, cerca de la cámara.",
+        "metal": "El metal bloquea la señal: pega las etiquetas sobre plástico, madera o papel, o compra etiquetas hechas para superficies metálicas.",
+        "lock": "No bloquees una etiqueta hasta haberla probado. Una etiqueta bloqueada no se puede volver a escribir."
+      }
+    },
+    "highlightReel": {
+      "title": "Video de momentos destacados",
+      "subtitle": "Un montaje de tus mejores capturas, creado en este navegador con lo que hay en la galería del cliente.",
+      "empty": "Todavía no hay nada en la galería del cliente. Cuando haya capturas de invitados, podrás crear un video con ellas.",
+      "options": {
+        "length": "Duración",
+        "lengthSeconds": "{seconds} s",
+        "quality": "Calidad",
+        "qualityHelp": "720p descarga menos y se crea más rápido; 1080p se ve mejor en una pantalla grande.",
+        "format": "Formato",
+        "transitions": "Cortes",
+        "beat": "Al ritmo",
+        "fade": "Fundido",
+        "transitionsHelp": "Al ritmo sigue la música del evento; sin música, corta a un paso constante."
+      },
+      "music": {
+        "with": "La música del evento suena bajo el video y los cortes siguen su ritmo.",
+        "without": "Este evento no tiene música, así que el video no llevará sonido. Añade una pista en Configuración para ponerle música."
+      },
+      "build": "Crear video de momentos destacados",
+      "cancel": "Cancelar",
+      "progress": {
+        "label": "Creando el video",
+        "downloading": "Descargando capturas ({done} de {total})",
+        "analysing": "Escuchando la música y planificando los cortes",
+        "rendering": "Renderizando el video",
+        "finishing": "Terminando"
+      },
+      "summary": "{duration} · {clips, plural, one {# captura} other {# capturas}} · {size}",
+      "ready": {
+        "title": "Tu video está listo",
+        "beatSynced": "Los cortes caen en el ritmo.",
+        "preview": "Vista previa del video de momentos destacados",
+        "download": "Descargar MP4",
+        "publish": "Mostrar en la galería del cliente",
+        "uploading": "Subiendo {percent}",
+        "again": "Crear otro",
+        "published": "Ya está en la galería del cliente."
+      },
+      "published": {
+        "title": "En la galería del cliente",
+        "hidden": "No se muestra",
+        "when": "Publicado el {date}",
+        "withheld": "{count, plural, one {# captura incluida se ocultó} other {# capturas incluidas se ocultaron}} o se quitaron de pantalla, así que el video no se muestra a los invitados. Crea uno nuevo.",
+        "preview": "El video de momentos destacados publicado",
+        "remove": "Quitar de la galería",
+        "removed": "El video se quitó de la galería del cliente."
+      },
+      "card": {
+        "subtitle": "Momentos destacados",
+        "hint": "Escanea para ver todas las fotos y videos"
+      },
+      "errors": {
+        "nothing": "No se pudo usar ninguna captura de la galería. Comprueba que la galería tenga videos o tiras de fotos e inténtalo de nuevo.",
+        "download": "No se pudo descargar una captura. Revisa tu conexión e inténtalo de nuevo.",
+        "unsupported": "Este navegador no puede crear el video. Usa Chrome o Edge en una computadora.",
+        "failed": "No se pudo crear el video. Inténtalo de nuevo, o elige una duración menor o 720p.",
+        "publish": "No se pudo subir el video. Inténtalo de nuevo.",
+        "withheld": "Una captura del video se ocultó después de planificarlo. Vuelve a crearlo.",
+        "remove": "No se pudo quitar el video. Inténtalo de nuevo."
+      }
     },
     "signage": {
       "title": "Carteles con QR",
@@ -1388,6 +1479,10 @@
         "label": "Enlace de la galería",
         "copy": "Copiar enlace",
         "copied": "Copiado"
+      },
+      "nfc": {
+        "title": "Etiqueta NFC",
+        "subtitle": "Abrir con un toque además de escanear: escribe el enlace de la galería en una etiqueta o pulsera."
       },
       "preview": {
         "title": "Vista previa",
@@ -1985,6 +2080,11 @@
     "open": "Abrir la captura {code}",
     "older": "Anteriores",
     "newest": "Volver a lo más reciente",
+    "highlight": {
+      "title": "Momentos destacados",
+      "player": "Video de momentos destacados del evento",
+      "download": "Descargar el video"
+    },
     "lock": {
       "body": "Esta galería está protegida.",
       "label": "Contraseña",

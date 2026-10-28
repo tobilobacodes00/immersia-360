@@ -18,6 +18,7 @@ import { EraseSession } from '@/components/guest/EraseSession';
 import { GuestFooter } from '@/components/guest/GuestFooter';
 import { GuestForm } from '@/components/guest/GuestForm';
 import { track } from '@/server/analytics';
+import { countSessionView } from '@/server/engagement';
 import { guestConsent } from '@/server/guest-form';
 import { sharePage, type ShareFile } from '@/server/share';
 import { contactHref } from '@/server/share-state';
@@ -79,6 +80,8 @@ export default async function SharePage({ params, searchParams }: Props) {
     );
 
   track({ name: 'share_page_viewed', output_kind: 'session', route }, { eventId: page.event.id });
+  // LIV-14: what the highlight reel ranks by (and how often the display's QR was the way in).
+  countSessionView(linkId, route);
 
   const ready = page.files.filter((f) => f.viewUrl);
   const pending = page.files.length - ready.length;
