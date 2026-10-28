@@ -1,0 +1,30 @@
+# Fly.io config for the server render worker (see README.md).
+#
+# A scale-to-zero worker: no inbound traffic, so no [http_service]. The web app starts the machine through
+# the Fly Machines API when a job is queued (FLY_API_TOKEN, FLY_APP on the web app), the worker polls the
+# queue, renders, and exits after RENDER_IDLE_EXIT_MINUTES with nothing to do; the machine then stops and
+# costs nothing until the next job. Exit code 0 (idle) is not restarted; a crash (non-zero) is.
+#
+#   fly apps create immersia-render-worker
+#   fly secrets set -a immersia-render-worker RENDER_API_URL=https://your-app RENDER_WORKER_SECRET=...
+#   fly deploy --config apps/render-worker/fly.toml --dockerfile apps/render-worker/Dockerfile --ha=false
+#
+# (Run from the repository root: the image bundles packages from the monorepo, so the build context is the
+# whole repository, and --dockerfile is relative to where you run the command.)
+#   fly tokens create deploy -a immersia-render-worker      # the web app's FLY_API_TOKEN
+app = 'immersia-render-worker'
+primary_region = 'iad'
+
+[env]
+  RENDER_IDLE_EXIT_MINUTES = '5'
+  RENDER_POLL_MS = '5000'
+
+[[restart]]
+  policy = 'on-failure'
+  max_retries = 5
+
+# Software WebGL (SwiftShader) and the H.264 encoder are CPU work: dedicated cores render several times
+# faster than shared ones. One machine serves the whole queue; scale count for parallel renders.
+[[vm]]
+  size = 'performance-4x'
+  memory = '8gb'
