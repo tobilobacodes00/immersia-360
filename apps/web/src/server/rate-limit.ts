@@ -60,6 +60,15 @@ export const LIMITS = {
   serverRenderPerDevice: { limit: 240, windowS: 3600 },
   /** A booth tells the server which rung of the render ladder worked (the device's record). */
   renderPathPerDevice: { limit: 600, windowS: 3600 },
+  /** HLP-1: the setup check's test QR and upload test (a presigned URL and a small object each). */
+  setupCheckPerDevice: { limit: 30, windowS: 3600 },
+  /** HLP-1: the booth asks every ~2 s while the test QR is on screen (at most its 10 minutes). */
+  setupCheckPollPerDevice: { limit: 400, windowS: 600 },
+  /** HLP-1: a phone opening the test QR. */
+  setupCheckScanPerIp: { limit: 30, windowS: 600 },
+  /** HLP-2: the help centre's contact form is public, so it can't be turned into a mailer. */
+  supportPerIp: { limit: 5, windowS: 3600 },
+  supportPerEmail: { limit: 3, windowS: 3600 },
   /** POST /api/t: batches per booth, display or operator (a booth flushes every ~10 s while busy)… */
   analyticsIngest: { limit: 120, windowS: 60 },
   /** …and per address, so one network full of booths is not throttled by a single bad actor's key. */

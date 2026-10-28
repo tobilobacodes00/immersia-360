@@ -40,6 +40,12 @@ const serwist = new Serwist({
       matcher: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/api/live/'),
       handler: new NetworkOnly(),
     },
+    // The status page (HLP-4) is only worth anything live: never a cached "all systems operational".
+    // Offline, it falls back to the offline page, which is the honest answer.
+    {
+      matcher: ({ url, sameOrigin }) => sameOrigin && (url.pathname === '/status' || url.pathname === '/api/status'),
+      handler: new NetworkOnly(),
+    },
     // The PHO-9 font library: a booth must draw its event's fonts offline, and the default font rule
     // keeps only a handful of files.
     {

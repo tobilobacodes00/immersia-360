@@ -7,6 +7,8 @@ import { GradePreview } from '@immersia/render-engine/preview';
 import type { Background, BoothMode } from '@immersia/shared';
 import { Card, ColorField, Field, Segmented } from '@immersia/ui';
 import { patchMediaAction } from '@/app/studio/design-actions';
+import { HelpLink } from '@/components/HelpLink';
+import { HELP_TARGETS } from '@/lib/help-links';
 import { sampleMask, sampleScene } from '@/lib/sample-image';
 import type { AssetView } from '@/server/assets';
 import { useAutosave } from '../setup/use-autosave';
@@ -207,6 +209,7 @@ export function BackgroundCard({
   remember: (a: AssetView) => void;
 }) {
   const t = useTranslations('studio.branding.background');
+  const th = useTranslations('help.links');
   const [value, setValue] = useState(initial);
   const video = booths.includes('video360');
   const photo = booths.includes('photo');
@@ -219,7 +222,11 @@ export function BackgroundCard({
   });
 
   return (
-    <Card title={t('title')} subtitle={t('subtitle')}>
+    <Card
+      title={t('title')}
+      subtitle={t('subtitle')}
+      action={<HelpLink {...HELP_TARGETS.background} label={th('looks')} />}
+    >
       <fieldset disabled={readOnly} className="min-w-0 divide-y divide-line">
         {video && (
           <BoothBackground

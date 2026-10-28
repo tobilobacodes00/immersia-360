@@ -5,7 +5,9 @@ import { useTranslations } from 'next-intl';
 import { Check, Copy, ExternalLink, Lock, LockOpen } from 'lucide-react';
 import { Button, Card, Field, Pill, TextInput } from '@immersia/ui';
 import { NfcWrite } from '@/components/nfc/NfcWrite';
+import { HelpLink } from '@/components/HelpLink';
 import { ZipDownload } from '@/components/zip/ZipDownload';
+import { HELP_ARTICLES } from '@/lib/help-links';
 import { setGalleryPasswordAction } from '../../gallery-actions';
 import { useCan } from '../../operator-context';
 
@@ -27,6 +29,7 @@ export function GalleryCard({
   locked: boolean;
 }) {
   const t = useTranslations('studio.galleryCard');
+  const th = useTranslations('help.links');
   const canUpdate = useCan({ event: ['update'] });
   const canExport = useCan({ gallery: ['export'] });
   const [copied, setCopied] = useState(false);
@@ -46,7 +49,11 @@ export function GalleryCard({
     });
 
   return (
-    <Card title={t('title')} subtitle={t('subtitle', { count: items })}>
+    <Card
+      title={t('title')}
+      subtitle={t('subtitle', { count: items })}
+      action={<HelpLink slug={HELP_ARTICLES.gallery} label={th('gallery')} />}
+    >
       <Field label={t('link')} stack>
         <div className="flex flex-wrap items-center gap-2">
           <code className="min-w-0 flex-1 truncate rounded-lg bg-sunken px-3 py-2 text-[13px]">{url}</code>

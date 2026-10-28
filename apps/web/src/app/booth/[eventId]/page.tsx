@@ -67,6 +67,8 @@ export default async function BoothPage({
     attract: { headline: branding.attract.headline, cta: branding.attract.cta },
     kioskPinHash: event.kioskPinHash,
     liveDisplay: event.liveDisplayEnabled,
+    /** HLP-1: the setup check for the booth being opened. */
+    checkHref: `/booth/${event.id}/check${mode === event.mode ? '' : `?booth=${mode}`}`,
   };
   if (mode === 'photo')
     return (

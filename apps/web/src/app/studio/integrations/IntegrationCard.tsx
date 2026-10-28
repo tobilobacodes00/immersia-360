@@ -4,6 +4,8 @@ import { useState, useTransition, type ReactNode } from 'react';
 import { useTranslations, type Messages } from 'next-intl';
 import { AlertTriangle, ExternalLink, HardDrive, Package } from 'lucide-react';
 import { Button, Modal, Pill, TextInput, buttonClass, type PillTone } from '@immersia/ui';
+import { HelpLink } from '@/components/HelpLink';
+import { cloudErrorHelp, HELP_ARTICLES } from '@/lib/help-links';
 import type { CopyErrorKey } from '@/server/cloud/copy-core';
 import type { CloudProviderId, IntegrationState } from '@/server/cloud/types';
 import { chooseFolderAction, disconnectIntegrationAction, retryCopiesAction } from '../integration-actions';
@@ -60,6 +62,7 @@ function Notice({ title, children, action }: { title: string; children: ReactNod
 
 export function IntegrationCard({ view, canManage }: { view: ProviderCardView; canManage: boolean }) {
   const t = useTranslations('studio.integrations');
+  const th = useTranslations('help.links');
   const [pending, start] = useTransition();
   const [error, setError] = useState<ActionErrorKey | null>(null);
   const [confirming, setConfirming] = useState(false);
@@ -93,6 +96,14 @@ export function IntegrationCard({ view, canManage }: { view: ProviderCardView; c
             {provider}
           </h2>
           <p className="mt-1 text-[13px] leading-relaxed text-muted">{t(`about.${view.id}`)}</p>
+          {/* A server that isn't set up for this cloud has nothing to connect, so nothing to explain yet. */}
+          {view.state !== 'unavailable' && (
+            <HelpLink
+              slug={view.id === 'drive' ? HELP_ARTICLES.googleDrive : HELP_ARTICLES.dropbox}
+              label={th('cloud')}
+              className="mt-2"
+            />
+          )}
         </div>
         <Pill tone={TONE[view.state]} dot={view.state === 'connected'}>
           {t(`status.${STATUS_KEY[view.state]}`)}
@@ -115,6 +126,7 @@ export function IntegrationCard({ view, canManage }: { view: ProviderCardView; c
           <Notice title={t('reauth.title', { provider })} action={canManage ? reconnect : undefined}>
             <p>{t('reauth.body', { provider })}</p>
             {view.waiting > 0 && <p className="mt-1">{t('reauth.waiting', { count: view.waiting })}</p>}
+            <HelpLink {...cloudErrorHelp('reauth_required')} label={th('cloudErrors')} className="mt-1.5" />
           </Notice>
         )}
 
@@ -139,6 +151,7 @@ export function IntegrationCard({ view, canManage }: { view: ProviderCardView; c
                 }
               >
                 <p>{t(`copyErrors.${view.failedKey}`, { provider })}</p>
+                <HelpLink {...cloudErrorHelp(view.failedKey)} label={th('cloudErrors')} className="mt-1.5" />
               </Notice>
             )}
 

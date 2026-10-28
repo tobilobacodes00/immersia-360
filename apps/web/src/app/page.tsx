@@ -7,6 +7,7 @@ import { LanguagePicker } from '@/components/LanguagePicker';
 export default async function HomePage() {
   const t = await getTranslations('home');
   const tc = await getTranslations('common');
+  const th = await getTranslations('help.shell');
   const points = [
     { icon: InfinityIcon, title: t('points.freeTitle'), body: t('points.freeBody') },
     { icon: WifiOff, title: t('points.offlineTitle'), body: t('points.offlineBody') },
@@ -60,12 +61,18 @@ export default async function HomePage() {
           ))}
         </ul>
       </main>
-      <footer className="mx-auto flex max-w-6xl gap-x-2 px-4 pb-10 sm:px-8">
+      <footer className="mx-auto flex max-w-6xl flex-wrap gap-x-2 px-4 pb-10 sm:px-8">
         <Link href="/privacy" className="focus-ring rounded px-2 py-2 text-sm font-medium text-muted hover:text-fg">
           {tc('privacy')}
         </Link>
         <Link href="/terms" className="focus-ring rounded px-2 py-2 text-sm font-medium text-muted hover:text-fg">
           {tc('terms')}
+        </Link>
+        <Link href="/help" className="focus-ring rounded px-2 py-2 text-sm font-medium text-muted hover:text-fg">
+          {th('help')}
+        </Link>
+        <Link href="/status" className="focus-ring rounded px-2 py-2 text-sm font-medium text-muted hover:text-fg">
+          {th('status')}
         </Link>
       </footer>
     </div>

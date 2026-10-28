@@ -5,11 +5,14 @@ import { useTranslations } from 'next-intl';
 import { Lock, LockOpen } from 'lucide-react';
 import { KIOSK_PIN } from '@immersia/shared/kiosk';
 import { Button, Card, Field, Pill } from '@immersia/ui';
+import { HelpLink } from '@/components/HelpLink';
+import { HELP_TARGETS } from '@/lib/help-links';
 import { setKioskPinAction } from '../../../actions';
 
 /** KIO-1: the PIN that locks the booth screen. Only its hash leaves this form. */
 export function KioskSettings({ eventId, pinSet, readOnly }: { eventId: string; pinSet: boolean; readOnly: boolean }) {
   const t = useTranslations('studio.setup.kiosk');
+  const th = useTranslations('help.links');
   const [pin, setPin] = useState('');
   const [on, setOn] = useState(pinSet);
   const [message, setMessage] = useState<{ tone: 'ok' | 'bad'; text: string } | null>(null);
@@ -26,7 +29,12 @@ export function KioskSettings({ eventId, pinSet, readOnly }: { eventId: string; 
     });
 
   return (
-    <Card id="kiosk" title={t('title')} subtitle={t('subtitle')}>
+    <Card
+      id="kiosk"
+      title={t('title')}
+      subtitle={t('subtitle')}
+      action={<HelpLink {...HELP_TARGETS.kioskLock} label={th('kiosk')} />}
+    >
       <div className="space-y-4">
         <Pill tone={on ? 'ok' : 'neutral'}>
           {on ? <Lock className="size-3.5" aria-hidden /> : <LockOpen className="size-3.5" aria-hidden />}

@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   CalendarDays,
+  CircleHelp,
   Cloud,
   Flag,
   FolderOpen,
@@ -30,7 +31,7 @@ import { OperatorProvider } from './operator-context';
 
 interface NavItem {
   href: Route;
-  key: 'home' | 'events' | 'assets' | 'templates' | 'devices' | 'integrations' | 'reports' | 'settings';
+  key: 'home' | 'events' | 'assets' | 'templates' | 'devices' | 'integrations' | 'reports' | 'settings' | 'help';
   icon: LucideIcon;
   match: (path: string) => boolean;
 }
@@ -75,6 +76,7 @@ const NAV: { group: 'overview' | 'prepare' | 'system'; items: NavItem[] }[] = [
         icon: Settings,
         match: (p) => p.startsWith('/studio/settings'),
       },
+      { href: '/studio/help', key: 'help', icon: CircleHelp, match: (p) => p.startsWith('/studio/help') },
     ],
   },
 ];

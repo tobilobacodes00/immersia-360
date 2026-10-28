@@ -69,6 +69,22 @@ function storage() {
 
 export const storageConfigured = () => config() !== null;
 
+/**
+ * The status page's probe (HLP-4): can this server talk to the bucket with its credentials? Asking for
+ * a key that doesn't exist answers 404 from a healthy bucket; anything else (refused, bad credentials,
+ * unreachable) is a failure. Writes nothing.
+ */
+export async function storageReachable(): Promise<boolean> {
+  const { s3, bucket } = storage();
+  try {
+    await s3.send(new HeadObjectCommand({ Bucket: bucket, Key: 'status/probe' }));
+    return true;
+  } catch (err) {
+    if (isMissingObject(err)) return true;
+    throw err;
+  }
+}
+
 /** A presigned single-part PUT. The exact length and type are signed, so the booth can't upload more. */
 export async function presignUpload(key: string, contentType: string, bytes: number, expiresIn = 3600) {
   const { s3, bucket } = storage();

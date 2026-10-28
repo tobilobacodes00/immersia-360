@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import Link from 'next/link';
+import type { Route } from 'next';
 import { useLocale, useTranslations } from 'next-intl';
 import { AnimatePresence, motion } from 'motion/react';
 import { Sun, X } from 'lucide-react';
@@ -13,7 +15,7 @@ import {
   type Lens,
 } from '@immersia/capture';
 import type { LocalTake } from '@immersia/offline';
-import { Field, IconButton, Segmented, Slider, Toggle, cx, softSpring } from '@immersia/ui';
+import { Field, IconButton, Segmented, Slider, Toggle, buttonClass, cx, softSpring } from '@immersia/ui';
 import { formatBytes, formatRelative } from '@/lib/format';
 import { zoomUnit, type ActiveCamera } from './active-camera';
 import { FILL_LEVELS, FILL_TINTS, fillLightOf, switchCamera, type CameraChoice } from './camera-choice';
@@ -27,6 +29,7 @@ export function SettingsDrawer({
   onChoice,
   camera,
   cameraBusy,
+  checkHref,
   capture360,
   highSpeed,
 }: {
@@ -39,6 +42,8 @@ export function SettingsDrawer({
   camera: ActiveCamera | null;
   /** A guest is using the booth: the camera is left exactly as it is (no reopen, zoom or torch). */
   cameraBusy: boolean;
+  /** HLP-1: where the setup check for this booth lives. */
+  checkHref?: string;
   /** The 360 booth's motion trigger, video import and takes; the photo booth has none of these. */
   capture360?: Capture360Props;
   /**
@@ -283,6 +288,13 @@ export function SettingsDrawer({
                 <Toggle checked={choice.mirror} onChange={(mirror) => onChoice({ mirror })} label={t('mirror')} />
               </Field>
               {capture360 && <Capture360 {...capture360} />}
+              {checkHref && (
+                <Field label={t('setupCheck')} help={t('setupCheckHelp')}>
+                  <Link href={checkHref as Route} className={buttonClass({ size: 'sm' })}>
+                    {t('setupCheckRun')}
+                  </Link>
+                </Field>
+              )}
             </div>
           </motion.aside>
         </motion.div>

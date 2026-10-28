@@ -14,6 +14,8 @@ import {
 } from '@immersia/effects';
 import type { BoothMode } from '@immersia/shared';
 import { Card, Field, Segmented, Slider, Toggle, cx, useRadioGroup } from '@immersia/ui';
+import { HelpLink } from '@/components/HelpLink';
+import { HELP_ARTICLES } from '@/lib/help-links';
 import { mountPreview } from '@/lib/grade-canvas';
 import { sampleScene } from '@/lib/sample-image';
 import { SaveIndicator } from '../setup/EventSetup';
@@ -247,6 +249,7 @@ export function LooksCard({
   status: SaveStatus;
 }) {
   const t = useTranslations('studio.branding.looks');
+  const th = useTranslations('help.links');
   const names = useTranslations('effects');
   const looks = LOOKS.map((l) => ({ id: l.id, name: names(`looks.${l.id as LookKey}`) }));
   const photoEffects = PHOTO_EFFECTS.map((e) => ({ id: e.id, name: names(`photo.${e.id as PhotoEffectKey}`) }));
@@ -266,7 +269,16 @@ export function LooksCard({
     onChange({ effects: value.effects.map((e) => (e.id === id ? { ...e, ...patch } : e)) });
 
   return (
-    <Card title={t('title')} subtitle={t('subtitle')} action={<SaveIndicator statuses={[status]} />}>
+    <Card
+      title={t('title')}
+      subtitle={t('subtitle')}
+      action={
+        <div className="flex flex-wrap items-center gap-3">
+          <HelpLink slug={HELP_ARTICLES.looks} label={th('looks')} />
+          <SaveIndicator statuses={[status]} />
+        </div>
+      }
+    >
       <fieldset disabled={readOnly} className="min-w-0 divide-y divide-line">
         {video && (
           <Field label={t(photo ? 'videoLook' : 'look')} help={t('lookHelp')} stack>

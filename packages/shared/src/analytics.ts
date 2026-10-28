@@ -57,6 +57,9 @@ export const analyticsEventSchema = z.discriminatedUnion('name', [
   z.object({ name: z.literal('event_created'), mode, from_duplicate: z.boolean() }),
   // device readiness
   z.object({ name: z.literal('setup_check_completed'), render_speed_ms: millis, camera_fps: fps, browser: label() }),
+  // HLP-1: a phone opened the setup check's test QR. `nonce` (a random machine code) ties the scan to
+  // the one booth waiting for it. It is how the booth learns of the scan, not a measurement.
+  z.object({ name: z.literal('setup_qr_scanned'), nonce: code }),
   // usage
   z.object({
     name: z.literal('take_recorded'),
@@ -163,6 +166,8 @@ export type ClientSource = Exclude<AnalyticsSource, 'server'>;
 export const EVENT_SOURCES = {
   event_created: ['server'],
   setup_check_completed: ['device', 'studio'],
+  /** Opened by a phone with the signed token in the URL: only our own page records it. */
+  setup_qr_scanned: ['server'],
   take_recorded: ['device'],
   render_completed: ['device'],
   render_failed: ['device'],

@@ -5,7 +5,7 @@
  * revoking it cuts it off immediately.
  */
 import { z } from 'zod';
-import { deviceCapabilitiesSchema } from './event';
+import { SETUP_CHECK_STATUSES, SETUP_CHECK_STEPS, deviceCapabilitiesSchema } from './event';
 
 export const DEVICE_TOKEN_BYTES = 32;
 export const DEVICE_AUTH_SCHEME = 'Device';
@@ -27,6 +27,28 @@ export const deviceStatusSchema = z.object({
   at: z.iso.datetime(),
 });
 export type DeviceStatus = z.infer<typeof deviceStatusSchema>;
+
+/**
+ * HLP-1: what the setup check sends when it finishes. `renderSpeedMs` is the measured speed
+ * extrapolated to the PRD's reference clip (15 s of 1080p), so devices compare on one scale.
+ */
+export const setupCheckReportSchema = z.object({
+  eventId: z.uuid().nullable(),
+  renderSpeedMs: z.number().int().min(0).max(86_400_000).nullable(),
+  cameraFps: z.number().min(0).max(1000),
+  /** What the camera delivered, e.g. "1920x1080". */
+  cameraResolution: z
+    .string()
+    .regex(/^\d{2,5}x\d{2,5}$/)
+    .nullable(),
+  renderPath: z.enum(['local', 'wasm', 'server']),
+  browser: z.string().max(60),
+  results: z.array(z.object({ step: z.enum(SETUP_CHECK_STEPS), status: z.enum(SETUP_CHECK_STATUSES) })).max(10),
+});
+export type SetupCheckReport = z.infer<typeof setupCheckReportSchema>;
+
+/** The test QR is short-lived: an abandoned check leaves nothing behind. */
+export const SETUP_CHECK_QR_TTL_S = 10 * 60;
 
 /** Rough platform/browser labels from a user agent, for the device list only (never for logic). */
 export function describeUserAgent(ua: string): { platform: string; browser: string } {

@@ -31,6 +31,8 @@ import {
 import { updateSectionAction } from '@/app/studio/actions';
 import { patchMediaAction } from '@/app/studio/design-actions';
 import { AudioEditor, type MusicEdit } from '@/components/audio-editor/AudioEditor';
+import { HelpLink } from '@/components/HelpLink';
+import { HELP_ARTICLES, HELP_TARGETS } from '@/lib/help-links';
 import type { AssetView } from '@/server/assets';
 import type { TemplateSummary } from '@/server/templates';
 import { SaveIndicator } from '../setup/EventSetup';
@@ -75,6 +77,7 @@ export interface BrandingEditorProps {
 /** Screen 5: how the event looks (theme, logo, attract screen, dynamic fields) and its media. */
 export function BrandingEditor(p: BrandingEditorProps) {
   const t = useTranslations('studio.branding');
+  const th = useTranslations('help.links');
   const router = useRouter();
   const [branding, setBranding] = useState(p.branding);
   const [views, setViews] = useState(() => new Map(p.assets.map((a) => [a.id, a])));
@@ -305,7 +308,11 @@ export function BrandingEditor(p: BrandingEditorProps) {
         />
       </Card>
 
-      <Card title={t('fields.title')} subtitle={t('fields.subtitle')}>
+      <Card
+        title={t('fields.title')}
+        subtitle={t('fields.subtitle')}
+        action={<HelpLink {...HELP_TARGETS.dynamicFields} label={th('templates')} />}
+      >
         {(['hashtag', 'custom1', 'custom2', 'custom3'] as const).map((k) => (
           <Field key={k} label={t(`fields.${k}`)} help={t('fields.token', { token: `{${k}}` })} htmlFor={`field-${k}`}>
             <TextInput
@@ -323,6 +330,7 @@ export function BrandingEditor(p: BrandingEditorProps) {
           key={d.kind}
           title={t(d.kind === 'layout' ? 'design.layoutTitle' : 'design.overlayTitle')}
           subtitle={t(d.kind === 'layout' ? 'design.layoutSubtitle' : 'design.overlaySubtitle')}
+          action={<HelpLink slug={HELP_ARTICLES.templates} label={th('templates')} />}
         >
           <DesignCard
             eventId={p.eventId}

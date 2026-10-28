@@ -57,6 +57,7 @@ import { CountdownDisc, GuestButton, GuestScreen, Headline, fade } from '@immers
 import { readDeviceIdentity, type DeviceIdentity } from '@/lib/device-identity';
 import { useCaptureKeys, useHeartbeat, useHeld, useLiveQuery, useOnline, useWakeLock } from './booth-hooks';
 import { importVideoFiles } from './import-originals';
+import { CameraErrorHelp, StatusHelp } from './BoothHelp';
 import { Gallery } from './Gallery';
 import { RegisterDevice } from './RegisterDevice';
 import { KioskLockLayer, useKioskLock } from './KioskLock';
@@ -76,6 +77,8 @@ import { useOpenGuard } from './open-guard';
 import { useCameraChoice } from './use-camera-choice';
 import { abandonTake, chunkWriter, finishTake, openTake } from './take-flow';
 import { useNativeHfr } from './use-native-hfr';
+import { SetupCheckPrompt } from './SetupCheckPrompt';
+import { useSetupCheckPrompt } from './use-setup-check-prompt';
 
 export interface BoothEvent {
   id: string;
@@ -98,6 +101,8 @@ export interface BoothEvent {
     /** The server runs in E2E test mode: tests may fail render rungs on purpose. Never true in production. */
     testHooks: boolean;
   };
+  /** HLP-1: the setup check for this booth. */
+  checkHref: string;
 }
 
 type Phase =
@@ -183,6 +188,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
     phase.kind === 'saved';
   const renderPaused = useHeld(capturing, RENDER_RESUME_MS);
   const kiosk = useKioskLock(event.kioskPinHash);
+  const setupCheck = useSetupCheckPrompt(identity?.id ?? null);
   const track = useBoothAnalytics({ eventId: event.id, mode: 'video360', token: identity?.token ?? null });
   const uploads = useUploadQueue({
     eventId: event.id,
@@ -642,20 +648,30 @@ export function Booth360({ event }: { event: BoothEvent }) {
           </Link>
         )}
         <div className="flex flex-wrap items-center justify-end gap-2" role="status" aria-live="polite">
+          {/* The "?" beside a pill is for the operator: never while the kiosk is PIN-locked. */}
           {!online && (
-            <Pill tone="warn" className="text-[0.8rem]">
-              <WifiOff className="size-3.5" aria-hidden /> {t('offline')}
-            </Pill>
+            <>
+              <Pill tone="warn" className="text-[0.8rem]">
+                <WifiOff className="size-3.5" aria-hidden /> {t('offline')}
+              </Pill>
+              {!kiosk.locked && <StatusHelp kind="offline" />}
+            </>
           )}
           {lowStorage && (
-            <Pill tone="bad" className="text-[0.8rem]">
-              <HardDrive className="size-3.5" aria-hidden /> {t('lowStorage')}
-            </Pill>
+            <>
+              <Pill tone="bad" className="text-[0.8rem]">
+                <HardDrive className="size-3.5" aria-hidden /> {t('lowStorage')}
+              </Pill>
+              {!kiosk.locked && <StatusHelp kind="storage" />}
+            </>
           )}
           {backgroundUnavailable && !kiosk.locked && (
-            <Pill tone="warn" className="text-[0.8rem]">
-              {t('backgroundUnavailable')}
-            </Pill>
+            <>
+              <Pill tone="warn" className="text-[0.8rem]">
+                {t('backgroundUnavailable')}
+              </Pill>
+              <StatusHelp kind="background" />
+            </>
           )}
           {motionActive && live && (
             <Pill tone="info" dot className="text-[0.8rem]">
@@ -677,6 +693,13 @@ export function Booth360({ event }: { event: BoothEvent }) {
                     : t('uploads.offline', { count: uploads.status.waiting })}
             </Pill>
           )}
+          {/* One "?" for the connection and the uploads: the offline pill already has it when offline. */}
+          {!kiosk.locked &&
+            (uploads.status.revoked ? (
+              <StatusHelp kind="revoked" />
+            ) : (
+              online && (uploads.status.failed > 0 || uploads.status.waiting > 0) && <StatusHelp kind="offline" />
+            ))}
           {!kiosk.locked && (
             <>
               <button
@@ -752,6 +775,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
               >
                 {t('startBooth')}
               </GuestButton>
+              {setupCheck.due && <SetupCheckPrompt href={event.checkHref} onSkip={setupCheck.skip} />}
             </div>
           </GuestScreen>
         )}
@@ -869,6 +893,8 @@ export function Booth360({ event }: { event: BoothEvent }) {
             <div className="card max-w-md p-6 text-fg" role="alert">
               <h2 className="text-lg font-semibold">{t('errors.title')}</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted">{t(`errors.${errorKey(phase.code)}`)}</p>
+              {/* The steps for this very error, for the operator; a guest-facing kiosk shows none. */}
+              {!kiosk.locked && <CameraErrorHelp code={phase.code} className="mt-3" />}
               <div className="mt-5 flex gap-2">
                 <button
                   type="button"
@@ -928,6 +954,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
         highSpeed={
           native ? { available: native.capabilities.available, lenses: native.capabilities.lenses } : undefined
         }
+        checkHref={event.checkHref}
         capture360={{
           motion: { enabled: motionOn, threshold },
           motionSupported: activeCamera?.motion ?? true,
