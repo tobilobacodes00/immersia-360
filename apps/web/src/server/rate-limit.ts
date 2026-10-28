@@ -29,6 +29,15 @@ export const LIMITS = {
   displayPairPerIp: { limit: 20, windowS: 600 },
   /** SHR-5: gallery passwords are short; slow guessing right down. */
   galleryUnlockPerIp: { limit: 10, windowS: 600 },
+  /**
+   * Server renders (apps/render-worker): a presigned upload and a queued job per request. The money
+   * limits are per event and organization, in the database (render-jobs-core.ts); these only bound
+   * how fast one device can hammer the endpoints.
+   */
+  serverFilesPerDevice: { limit: 180, windowS: 3600 },
+  serverRenderPerDevice: { limit: 240, windowS: 3600 },
+  /** A booth tells the server how each render went (analytics, its remembered render path). */
+  renderReportPerDevice: { limit: 1200, windowS: 3600 },
 } satisfies Record<string, Limit>;
 
 type Name = keyof typeof LIMITS;

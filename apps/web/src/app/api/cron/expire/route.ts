@@ -3,6 +3,7 @@ import { purgeAssets } from '@/server/assets';
 import { enqueueMissingCopies, processCloudCopies } from '@/server/cloud/copy';
 import { verifyConnections } from '@/server/cloud/integrations';
 import { env } from '@/server/env';
+import { sweepServerRenders } from '@/server/render-jobs';
 import { expireSessions } from '@/server/share';
 
 // Copies stream large files: give the sweep the longest run the platform allows.
@@ -25,13 +26,15 @@ export async function GET(request: Request) {
   const queued = await enqueueMissingCopies().catch(failure('queue'));
   const copies = await processCloudCopies(50, 150_000).catch(failure('copy'));
   const connections = await verifyConnections().catch(failure('verify'));
+  // Server renders: remove abandoned working files, and wake the worker if work is waiting.
+  const renders = await sweepServerRenders().catch(failure('renders'));
   const result = await expireSessions();
   const assets = await purgeAssets();
-  return NextResponse.json({ ...result, assets, cloud: { queued, copies, connections } });
+  return NextResponse.json({ ...result, assets, cloud: { queued, copies, connections }, renders });
 }
 
 /** A broken cloud queue must not stop the expiry sweep: report it and carry on. */
 const failure = (stage: string) => (err: unknown) => {
-  console.error('[cron] cloud copies', stage, err instanceof Error ? err.name : err);
+  console.error('[cron]', stage, err instanceof Error ? err.name : err);
   return { error: stage };
 };

@@ -236,16 +236,27 @@ export async function completeUpload(device: DeviceRow, outputId: string): Promi
   if (!row?.key) return 'not_found';
   const size = await objectSize(row.key);
   if (size === null || (row.bytes !== null && size !== row.bytes)) return 'incomplete';
+  await markOutputUploaded(outputId, row.sessionId);
+  return 'ok';
+}
+
+/**
+ * An output's file is in storage at its declared size: record it, make the session live, and start
+ * the follow-ups (Live Display, the copy to the operator's cloud). Shared by the booth's uploads and
+ * the server render worker's, so a finished server render lands exactly where a booth's does.
+ * Call it inside a request (the follow-ups run after the response).
+ */
+export async function markOutputUploaded(outputId: string, sessionId: string): Promise<void> {
   await db().transaction(async (tx) => {
     await tx.update(output).set({ uploadedAt: new Date() }).where(eq(output.id, outputId));
     await tx
       .update(captureSession)
       .set({ status: 'live' })
-      .where(and(eq(captureSession.id, row.sessionId), eq(captureSession.status, 'pending')));
+      .where(and(eq(captureSession.id, sessionId), eq(captureSession.status, 'pending')));
   });
   // LIV-2: the session may be ready for the Live Display now. After the response, so the booth's
   // upload queue moves on at once.
-  after(() => refreshSessionItem(row.sessionId, appOrigin()));
+  after(() => refreshSessionItem(sessionId, appOrigin()));
   // SHR-7: when the event copies to the operator's own cloud, queue this file and start copying. Also
   // after the response, and from the cron sweep as well, so a failure here only delays the copy.
   after(() =>
@@ -253,7 +264,6 @@ export async function completeUpload(device: DeviceRow, outputId: string): Promi
       .then(() => processCloudCopies(5))
       .catch((err: unknown) => console.error('[cloud-copy] could not start', err instanceof Error ? err.name : err)),
   );
-  return 'ok';
 }
 
 /**

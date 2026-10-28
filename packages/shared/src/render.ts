@@ -228,6 +228,16 @@ export const renderReportSchema = z.discriminatedUnion('outcome', [
 ]);
 export type RenderReport = z.infer<typeof renderReportSchema>;
 
+/** What a booth sends after a render: how it went, and the rung that worked (to remember for the device). */
+export const renderReportRequestSchema = z
+  .object({
+    report: renderReportSchema,
+    remember: renderPathSchema.optional(),
+    eventId: z.uuid().optional(),
+  })
+  .strict();
+export type RenderReportRequest = z.infer<typeof renderReportRequestSchema>;
+
 // ---------------------------------------------------------------------------------------------
 // Worker ↔ server (authenticated by RENDER_WORKER_SECRET)
 
