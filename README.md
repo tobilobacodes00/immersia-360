@@ -9,13 +9,15 @@ with one cobalt accent.
 
 ## Layout
 
-| Path              | What it is                                                                                                    |
-| ----------------- | ------------------------------------------------------------------------------------------------------------- |
-| `apps/web`        | Next.js 16 app: operator console, booth, kiosk, Live Display, guest pages, API                                |
-| `packages/ui`     | Design system ported from Immersia Booth (tokens, kit, guest components)                                      |
-| `packages/shared` | IDs and short codes, the token language, event and template schemas, colour/contrast, routes, analytics types |
-| `packages/db`     | Drizzle schema and migrations (Neon Postgres)                                                                 |
-| `packages/i18n`   | English, Spanish and Portuguese message catalogues                                                            |
+| Path                            | What it is                                                                                                       |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `apps/web`                      | Next.js 16 app: operator console, booth, kiosk, Live Display, guest pages, API                                   |
+| `packages/ui`                   | Design system ported from Immersia Booth (tokens, kit, guest components)                                         |
+| `packages/shared`               | IDs and short codes, the token language, event and template schemas, colour/contrast, routes, analytics types    |
+| `packages/db`                   | Drizzle schema and migrations (Neon Postgres)                                                                    |
+| `packages/i18n`                 | English, Spanish and Portuguese message catalogues                                                               |
+| `apps/companion`                | iOS and Android companion app (Capacitor): the booth plus a native 120-240 fps recorder (CAP-14), see its README |
+| `packages/capacitor-high-speed` | The native recorder plugin of the companion (AVFoundation, CameraX)                                              |
 
 These arrive in later milestones: `apps/realtime` (Durable Objects hub), `apps/render-worker` (server
 render fallback), `packages/render-engine`, `packages/effects`, `packages/layout`, `packages/capture`,
