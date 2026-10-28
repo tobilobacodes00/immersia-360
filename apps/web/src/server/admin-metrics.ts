@@ -93,9 +93,10 @@ export interface AdminMetrics {
   };
 }
 
-type Rows<T> = T[];
-const rows = async <T extends Record<string, unknown>>(query: SQL): Promise<Rows<T>> =>
-  (await db().execute<T>(query)).rows;
+// The driver widens the row type to its own QueryResultRow shape; let it, and read the columns back
+// as the caller declared them.
+const rows = async <T extends Record<string, unknown>>(query: SQL): Promise<T[]> =>
+  (await db().execute<T>(query)).rows as T[];
 const num = (v: unknown): number | null => (v === null || v === undefined ? null : Number(v));
 
 /** Weekly points for the window's weeks: the value and sample per week, `null` where nothing happened. */

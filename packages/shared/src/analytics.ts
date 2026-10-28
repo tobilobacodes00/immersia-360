@@ -30,7 +30,7 @@ const code = z
   .trim()
   .min(1)
   .max(60)
-  .regex(/^[A-Za-z0-9_.:\-]+$/);
+  .regex(/^[A-Za-z0-9_.:-]+$/);
 const seconds = z.number().min(0).max(86_400);
 const millis = z.number().min(0).max(3_600_000);
 const bytes = z

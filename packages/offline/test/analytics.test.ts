@@ -86,7 +86,8 @@ describe('the analytics outbox', () => {
   it('sends at most one batch worth at a time, oldest first', async () => {
     for (let i = 0; i < INGEST_MAX_EVENTS + 5; i++) await enqueueAnalytics(db, 'device', qr(i), { now: 1000 + i });
     const s = sender({ kind: 'ok' });
-    await flushAnalytics(db, 'device', s.send);
+    // The same clock the events were stamped with, or the prune would read them as days old.
+    await flushAnalytics(db, 'device', s.send, { now: () => 2000 });
     expect(s.batches[0]!.events).toHaveLength(INGEST_MAX_EVENTS);
     expect(s.batches[0]!.events[0]!.at).toBe(1000);
     expect(await db.analytics.count()).toBe(5);
@@ -95,7 +96,7 @@ describe('the analytics outbox', () => {
   it('halves a batch the server finds too large, and drops a single event that is too large on its own', async () => {
     for (let i = 0; i < 4; i++) await enqueueAnalytics(db, 'device', qr(i), { now: 1000 + i });
     const s = sender({ kind: 'too_large' }, { kind: 'ok' });
-    expect(await flushAnalytics(db, 'device', s.send)).toBe('sent');
+    expect(await flushAnalytics(db, 'device', s.send, { now: () => 2000 })).toBe('sent');
     expect(s.batches.map((b) => b.events.length)).toEqual([4, 2]);
     expect(await db.analytics.count()).toBe(2);
 
