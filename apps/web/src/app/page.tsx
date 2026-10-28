@@ -60,6 +60,14 @@ export default async function HomePage() {
           ))}
         </ul>
       </main>
+      <footer className="mx-auto flex max-w-6xl gap-x-2 px-4 pb-10 sm:px-8">
+        <Link href="/privacy" className="focus-ring rounded px-2 py-2 text-sm font-medium text-muted hover:text-fg">
+          {tc('privacy')}
+        </Link>
+        <Link href="/terms" className="focus-ring rounded px-2 py-2 text-sm font-medium text-muted hover:text-fg">
+          {tc('terms')}
+        </Link>
+      </footer>
     </div>
   );
 }

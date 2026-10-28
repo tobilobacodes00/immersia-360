@@ -8,7 +8,7 @@ import { listLenses, type Lens } from '@immersia/capture';
 import type { LocalTake } from '@immersia/offline';
 import { Field, IconButton, Segmented, Slider, Toggle, cx, softSpring } from '@immersia/ui';
 import { formatBytes, formatRelative } from '@/lib/format';
-import type { ActiveCamera } from './active-camera';
+import { zoomUnit, type ActiveCamera } from './active-camera';
 import { FILL_LEVELS, FILL_TINTS, fillLightOf, switchCamera, type CameraChoice } from './camera-choice';
 import { DEFAULT_CAMERA, LensPicker, SIMULATOR } from './LensPicker';
 import { TakeBadges } from './TakeBadges';
@@ -44,6 +44,15 @@ export function SettingsDrawer({
   useEffect(() => {
     closeRef.current = onClose;
   });
+
+  // A modal dialog takes focus when it opens and gives it back where it came from when it closes.
+  const panel = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const before = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    panel.current?.focus({ preventScroll: true });
+    return () => before?.focus({ preventScroll: true });
+  }, [open]);
 
   // Names and ids arrive with camera permission, so list again whenever a camera opens; and when a
   // camera is plugged in or removed.
@@ -108,6 +117,8 @@ export function SettingsDrawer({
         >
           <div className="absolute inset-0 bg-[#111110]/30" onClick={onClose} />
           <motion.aside
+            ref={panel}
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-label={t('title')}
@@ -115,7 +126,7 @@ export function SettingsDrawer({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={softSpring}
-            className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-bg text-fg shadow-pop"
+            className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-bg text-fg shadow-pop outline-none"
             style={{ fontSize: 15 }}
           >
             <header className="flex items-center justify-between border-b border-line px-6 py-4">
@@ -165,7 +176,7 @@ export function SettingsDrawer({
                       min={range.min}
                       max={range.max}
                       step={range.step}
-                      unit="×"
+                      unit={zoomUnit(range)}
                       onChange={(z) => {
                         // The camera takes the newest of a drag's many values; the choice is saved as it goes.
                         void camera.zoom.set(z);

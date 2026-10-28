@@ -13,6 +13,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: 'invalid' }, { status: 400 });
   const result = await completeUpload(device, id);
+  // 410: the session was deleted by the guest; the booth stops uploading it.
+  if (result === 'erased') return NextResponse.json({ error: 'session_erased' }, { status: 410 });
   const status = result === 'ok' ? 200 : result === 'not_found' ? 404 : 409;
   return NextResponse.json({ result }, { status });
 }

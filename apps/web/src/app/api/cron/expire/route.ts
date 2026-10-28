@@ -3,6 +3,8 @@ import { purgeAssets } from '@/server/assets';
 import { enqueueMissingCopies, processCloudCopies } from '@/server/cloud/copy';
 import { verifyConnections } from '@/server/cloud/integrations';
 import { env } from '@/server/env';
+import { purgeErasedSessions } from '@/server/erasure';
+import { runOrganizationDeletions } from '@/server/privacy';
 import { sweepServerRenders } from '@/server/render-jobs';
 import { expireSessions } from '@/server/share';
 
@@ -30,11 +32,21 @@ export async function GET(request: Request) {
   const renders = await sweepServerRenders().catch(failure('renders'));
   const result = await expireSessions();
   const assets = await purgeAssets();
-  return NextResponse.json({ ...result, assets, cloud: { queued, copies, connections }, renders });
+  // Privacy: finish what erasures and organization deletions started (files a late upload left, rows).
+  const erased = await purgeErasedSessions().catch(failure('erasure'));
+  const deletions = await runOrganizationDeletions(60_000).catch(failure('deletion'));
+  return NextResponse.json({
+    ...result,
+    assets,
+    erased,
+    deletions,
+    cloud: { queued, copies, connections },
+    renders,
+  });
 }
 
 /** A broken cloud queue must not stop the expiry sweep: report it and carry on. */
 const failure = (stage: string) => (err: unknown) => {
-  console.error('[cron]', stage, err instanceof Error ? err.name : err);
+  console.error('[cron] sweep stage failed:', stage, err instanceof Error ? err.name : err);
   return { error: stage };
 };

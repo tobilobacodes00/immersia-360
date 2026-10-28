@@ -9,6 +9,8 @@ import {
   PRINT_SIZES,
   QUALITY_PRESETS,
   RESOLUTIONS,
+  buildConsentText,
+  isSafePolicyUrl,
   outputSettingsSchema,
   shareSettingsSchema,
   type OutputSettings,
@@ -139,9 +141,12 @@ export function EventSetup({
   output: initialOutput,
   share: initialShare,
   cloud: cloudStates,
+  operatorName,
 }: {
   id: string;
   readOnly: boolean;
+  /** The organization's name: the controller named in the guest form's consent sentence. */
+  operatorName: string;
   basics: Basics;
   output: OutputSettings;
   share: ShareSettings;
@@ -157,6 +162,14 @@ export function EventSetup({
   const hydrated = useHydrated();
 
   const ti = useTranslations('studio.setup.issues');
+  const tf = useTranslations('share.form');
+  // SHR-6: the exact sentence guests will tick, and a bad policy link caught before it is saved.
+  const consentPreview = buildConsentText(
+    tf('consent', { operator: operatorName, event: basics.name.trim() || '…' }),
+    share.guestForm.consentText,
+  );
+  const policy = share.guestForm.policyUrl.trim();
+  const policyInvalid = policy !== '' && !isSafePolicyUrl(policy);
   const outputIssues = useMemo(() => {
     const r = outputSettingsSchema.safeParse(output);
     if (r.success) return [];
@@ -593,15 +606,50 @@ export function EventSetup({
               checked={share.guestForm.requireName}
               onChange={(requireName) => setShare((s) => ({ ...s, guestForm: { ...s.guestForm, requireName } }))}
             />
-            <Field label={t('sharing.consent')} help={t('sharing.consentHelp')} stack>
+            <Field label={t('sharing.policyUrl')} help={t('sharing.policyUrlHelp')} htmlFor="setup-policy-url" stack>
               <TextInput
+                id="setup-policy-url"
+                type="url"
+                value={share.guestForm.policyUrl}
+                placeholder={t('sharing.policyUrlPlaceholder')}
+                onChange={(policyUrl) =>
+                  setShare((s) => ({ ...s, guestForm: { ...s.guestForm, policyUrl: policyUrl.slice(0, 500) } }))
+                }
+                autoComplete="off"
+              />
+              {policyInvalid ? (
+                <p role="alert" className="mt-2 text-[13px] text-bad">
+                  {ti('policy_url_invalid')}
+                </p>
+              ) : (
+                !share.guestForm.policyUrl.trim() && (
+                  <p className="mt-2 text-[13px] leading-relaxed text-warn">{t('sharing.policyMissing')}</p>
+                )
+              )}
+            </Field>
+            <Field label={t('sharing.consent')} help={t('sharing.consentHelp')} htmlFor="setup-consent" stack>
+              <TextInput
+                id="setup-consent"
                 value={share.guestForm.consentText}
                 onChange={(consentText) =>
                   setShare((s) => ({ ...s, guestForm: { ...s.guestForm, consentText: consentText.slice(0, 500) } }))
                 }
-                ariaLabel={t('sharing.consent')}
               />
             </Field>
+            <div className="py-3.5">
+              <div className="text-sm font-medium">{t('sharing.consentPreview')}</div>
+              <p className="mt-2 rounded-[10px] border border-line bg-sunken px-3 py-2.5 text-[13px] leading-relaxed">
+                <span aria-hidden>☐ </span>
+                {consentPreview}
+              </p>
+              <p className="mt-1.5 text-[13px] leading-relaxed text-faint">{t('sharing.consentPreviewHelp')}</p>
+              <Link
+                href={`/studio/events/${id}/guests`}
+                className="focus-ring mt-2 inline-block rounded text-[13px] font-medium text-accent hover:underline"
+              >
+                {t('sharing.viewGuests')}
+              </Link>
+            </div>
           </>
         )}
       </Section>

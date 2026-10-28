@@ -3,15 +3,33 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations, type Messages } from 'next-intl';
 import { Check } from 'lucide-react';
-import { EFFECTS, LOOKS, PHOTO_EFFECTS, StillRunner, type ColorMode } from '@immersia/effects';
-import { GradePreview } from '@immersia/render-engine/preview';
+import {
+  EFFECTS,
+  LOOKS,
+  PHOTO_EFFECTS,
+  StillRunner,
+  type ColorMode,
+  type StillEncodeOptions,
+  type StillSource,
+} from '@immersia/effects';
 import type { BoothMode } from '@immersia/shared';
-import { Card, Field, Segmented, Slider, Toggle, cx } from '@immersia/ui';
-import { patchMediaAction } from '@/app/studio/design-actions';
+import { Card, Field, Segmented, Slider, Toggle, cx, useRadioGroup } from '@immersia/ui';
+import { mountPreview } from '@/lib/grade-canvas';
 import { sampleScene } from '@/lib/sample-image';
-import { useAutosave } from '../setup/use-autosave';
+import { SaveIndicator } from '../setup/EventSetup';
+import type { SaveStatus } from '../setup/use-autosave';
 
 type Effect = { id: string; intensity: number; colorMode?: ColorMode };
+
+/** What the card edits; the branding screen keeps it, saves it and shows the save status. */
+export interface LooksValue {
+  filterId: string | null;
+  effects: Effect[];
+  beatSync: boolean;
+  photoFilterId: string | null;
+  photoEffectId: string | null;
+}
+
 /** Every look and effect id has a name in each catalogue (checked by effect-names.test.ts). */
 type LookKey = keyof Messages['effects']['looks'];
 type PhotoEffectKey = keyof Messages['effects']['photo'];
@@ -19,51 +37,55 @@ type VideoEffectKey = keyof Messages['effects']['video'];
 const MAX_EFFECTS = 8;
 const THUMB = { width: 120, height: 150 };
 
-/** Thumbnails of every look and photo effect on the sample scene, rendered once with the real shaders. */
-function useThumbnails() {
+/**
+ * Thumbnails of the looks and photo effects on the sample scene, rendered with the real shaders; only the
+ * groups the event's booths show are made. Stops as soon as the card goes away: no more renders, and no
+ * object URL is created after that.
+ */
+function useThumbnails({ looks: wantLooks, photo: wantPhoto }: { looks: boolean; photo: boolean }) {
   const [thumbs, setThumbs] = useState<Map<string, string>>(() => new Map());
   useEffect(() => {
+    if (!wantLooks && !wantPhoto) return;
     let live = true;
     const urls: string[] = [];
     void (async () => {
-      const scene = sampleScene(THUMB.width * 2, THUMB.height * 2);
       const runner = new StillRunner();
       const out = new Map<string, string>();
+      const size = { width: THUMB.width * 2, height: THUMB.height * 2 };
+      /** Render one thumbnail; false when the card went away meanwhile. */
+      const add = async (key: string, scene: StillSource, opts: StillEncodeOptions) => {
+        const blob = await runner.toBlob(scene, { ...opts, ...size });
+        if (!live) return false;
+        const url = URL.createObjectURL(blob);
+        urls.push(url);
+        out.set(key, url);
+        return true;
+      };
       try {
-        for (const look of LOOKS) {
-          const blob = await runner.toBlob(scene, {
-            look,
-            lookIntensity: 1,
-            width: THUMB.width * 2,
-            height: THUMB.height * 2,
-          });
-          const url = URL.createObjectURL(blob);
-          urls.push(url);
-          out.set(`look:${look.id}`, url);
+        const scene = sampleScene(size.width, size.height);
+        if (wantLooks) {
+          for (const look of LOOKS) {
+            if (!live || !(await add(`look:${look.id}`, scene, { look, lookIntensity: 1 }))) break;
+          }
+          if (live) setThumbs(new Map(out));
         }
-        for (const effect of PHOTO_EFFECTS) {
-          const blob = await runner.toBlob(scene, {
-            effect,
-            effectIntensity: 1,
-            width: THUMB.width * 2,
-            height: THUMB.height * 2,
-          });
-          const url = URL.createObjectURL(blob);
-          urls.push(url);
-          out.set(`photo:${effect.id}`, url);
+        if (wantPhoto) {
+          for (const effect of PHOTO_EFFECTS) {
+            if (!live || !(await add(`photo:${effect.id}`, scene, { effect, effectIntensity: 1 }))) break;
+          }
+          if (live) setThumbs(new Map(out));
         }
       } catch {
         // No WebGL2 here: the pickers still work, with names instead of pictures.
       } finally {
         runner.dispose();
       }
-      if (live) setThumbs(out);
     })();
     return () => {
       live = false;
       urls.forEach((u) => URL.revokeObjectURL(u));
     };
-  }, []);
+  }, [wantLooks, wantPhoto]);
   return thumbs;
 }
 
@@ -83,8 +105,14 @@ function Picker({
   disabled: boolean;
 }) {
   const current = value ?? 'none';
+  const radios = useRadioGroup({
+    values: items.map((item) => item.id),
+    value: current,
+    onChange: (id) => onChange(id === 'none' ? null : id),
+    isDisabled: () => disabled,
+  });
   return (
-    <div role="radiogroup" aria-label={label} className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-7">
+    <div {...radios.group} aria-label={label} className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-7">
       {items.map((item) => {
         const selected = item.id === current;
         const src = thumb(item.id);
@@ -92,13 +120,13 @@ function Picker({
           <button
             key={item.id}
             type="button"
-            role="radio"
-            aria-checked={selected}
+            {...radios.item(item.id)}
             disabled={disabled}
-            onClick={() => onChange(item.id === 'none' ? null : item.id)}
             className={cx(
+              // The selection is the border, the tint and the check mark; a ring here would replace the
+              // keyboard focus ring (both are box-shadows, and a utility beats the component layer).
               'focus-ring group relative flex flex-col overflow-hidden rounded-xl border text-left transition-colors',
-              selected ? 'border-accent ring-2 ring-accent-soft' : 'border-line hover:border-line-strong',
+              selected ? 'border-accent bg-accent-soft' : 'border-line hover:border-line-strong',
             )}
           >
             <span className="block aspect-[4/5] bg-sunken">
@@ -108,7 +136,7 @@ function Picker({
               )}
             </span>
             <span className="flex items-center justify-between gap-1 px-2 py-1.5 text-[12px]">
-              <span className="truncate">{item.name}</span>
+              <span className={cx('truncate', selected && 'font-semibold')}>{item.name}</span>
               {selected && <Check className="size-3.5 shrink-0 text-accent" aria-hidden />}
             </span>
           </button>
@@ -120,8 +148,9 @@ function Picker({
 
 /** The 360 effects, animated on the sample scene with a 120 BPM pulse: exactly what the render does. */
 function EffectsPreview({ look, effects, label }: { look: string | null; effects: Effect[]; label: string }) {
-  const ref = useRef<HTMLCanvasElement>(null);
-  const preview = useRef<GradePreview | null>(null);
+  const t = useTranslations('studio.branding.looks');
+  const host = useRef<HTMLDivElement>(null);
+  const [unavailable, setUnavailable] = useState(false);
   const settings = useMemo(
     () => ({
       look: look ? { id: look, intensity: 1 } : null,
@@ -130,70 +159,103 @@ function EffectsPreview({ look, effects, label }: { look: string | null; effects
     }),
     [look, effects],
   );
+  const latest = useRef(settings);
   useEffect(() => {
-    const canvas = ref.current;
-    if (!canvas) return;
-    try {
-      preview.current = new GradePreview(canvas, 240, 300);
-    } catch {
-      preview.current = null;
-    }
-    return () => {
-      preview.current?.dispose();
-      preview.current = null;
-    };
-  }, []);
+    latest.current = settings;
+  });
+
+  // One loop for the card's life. Everything that can fail (no WebGL2, no OffscreenCanvas, a shader this
+  // GPU rejects) happens in its frames and ends in "unavailable": a preview must never take the page down,
+  // and the choice itself is still saved.
   useEffect(() => {
-    const p = preview.current;
-    if (!p) return;
-    p.configure(settings);
-    const scene = sampleScene(240, 300);
+    const el = host.current;
+    if (!el) return;
     const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const start = performance.now();
+    let mounted: ReturnType<typeof mountPreview> = null;
+    let scene: ReturnType<typeof sampleScene> | null = null;
+    let applied: typeof settings | null = null;
     let raf = 0;
+    let dead = false;
+    const fail = (err?: unknown) => {
+      if (err) console.warn('[looks] preview unavailable', err);
+      dead = true;
+      mounted?.destroy();
+      mounted = null;
+      setUnavailable(true);
+    };
     const frame = (now: number) => {
-      const t = (now - start) / 1000;
-      const phase = (t / 0.5) % 1;
-      p.draw(scene, { time: t % 8, duration: 8, beat: phase, pulse: Math.exp(-4 * phase) });
-      if (!still) raf = requestAnimationFrame(frame);
+      if (dead) return;
+      try {
+        if (!mounted) {
+          mounted = mountPreview(el, 240, 300);
+          if (!mounted) return fail();
+          scene = sampleScene(240, 300);
+        }
+        const changed = applied !== latest.current;
+        if (changed) {
+          applied = latest.current;
+          mounted.preview.configure(applied);
+        }
+        // Reduced motion: one still frame per change of settings, not a loop of drawing.
+        if (!still || changed) {
+          const t = (now - start) / 1000;
+          const phase = (t / 0.5) % 1;
+          mounted.preview.draw(scene!, { time: t % 8, duration: 8, beat: phase, pulse: Math.exp(-4 * phase) });
+        }
+      } catch (err) {
+        return fail(err);
+      }
+      raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(raf);
-  }, [settings]);
-  return <canvas ref={ref} role="img" aria-label={label} className="h-[300px] w-[240px] rounded-xl bg-sunken" />;
+    return () => {
+      dead = true;
+      cancelAnimationFrame(raf);
+      mounted?.destroy();
+      mounted = null;
+    };
+  }, []);
+
+  return (
+    <div className="relative h-[300px] w-[240px] shrink-0">
+      <div ref={host} role="img" aria-label={label} className="size-full overflow-hidden rounded-xl bg-sunken" />
+      {unavailable && (
+        <p className="absolute inset-0 grid place-items-center p-4 text-center text-[13px] leading-relaxed text-muted">
+          {t('previewUnavailable')}
+        </p>
+      )}
+    </div>
+  );
 }
 
 /** Screen 5, "filter, effects with colour modes" (VID-7, VID-11, VID-12, PHO-10). */
 export function LooksCard({
-  eventId,
   booths,
   readOnly,
   hasMusic,
-  initial,
+  value,
+  onChange,
+  status,
 }: {
-  eventId: string;
   booths: BoothMode[];
   readOnly: boolean;
   hasMusic: boolean;
-  initial: {
-    filterId: string | null;
-    effects: Effect[];
-    beatSync: boolean;
-    photoFilterId: string | null;
-    photoEffectId: string | null;
-  };
+  value: LooksValue;
+  onChange: (patch: Partial<LooksValue>) => void;
+  /** The state of saving `value` (the branding screen owns the autosave). */
+  status: SaveStatus;
 }) {
   const t = useTranslations('studio.branding.looks');
   const names = useTranslations('effects');
   const looks = LOOKS.map((l) => ({ id: l.id, name: names(`looks.${l.id as LookKey}`) }));
   const photoEffects = PHOTO_EFFECTS.map((e) => ({ id: e.id, name: names(`photo.${e.id as PhotoEffectKey}`) }));
   const effectName = (id: string) => names(`video.${id as VideoEffectKey}`);
-  const thumbs = useThumbnails();
-  const [value, setValue] = useState(initial);
-  useAutosave(value, async (v) => (await patchMediaAction(eventId, v)).ok);
-  const set = (patch: Partial<typeof value>) => setValue((v) => ({ ...v, ...patch }));
+  const video = booths.includes('video360');
+  const photo = booths.includes('photo');
+  const thumbs = useThumbnails({ looks: video || photo, photo });
   const toggleEffect = (id: string) =>
-    set({
+    onChange({
       effects: value.effects.some((e) => e.id === id)
         ? value.effects.filter((e) => e.id !== id)
         : value.effects.length >= MAX_EFFECTS
@@ -201,12 +263,10 @@ export function LooksCard({
           : [...value.effects, { id, intensity: EFFECTS.find((d) => d.id === id)?.defaultIntensity ?? 1 }],
     });
   const setEffect = (id: string, patch: Partial<Effect>) =>
-    set({ effects: value.effects.map((e) => (e.id === id ? { ...e, ...patch } : e)) });
+    onChange({ effects: value.effects.map((e) => (e.id === id ? { ...e, ...patch } : e)) });
 
-  const video = booths.includes('video360');
-  const photo = booths.includes('photo');
   return (
-    <Card title={t('title')} subtitle={t('subtitle')}>
+    <Card title={t('title')} subtitle={t('subtitle')} action={<SaveIndicator statuses={[status]} />}>
       <fieldset disabled={readOnly} className="min-w-0 divide-y divide-line">
         {video && (
           <Field label={t(photo ? 'videoLook' : 'look')} help={t('lookHelp')} stack>
@@ -214,7 +274,7 @@ export function LooksCard({
               label={t(photo ? 'videoLook' : 'look')}
               items={looks}
               value={value.filterId}
-              onChange={(filterId) => set({ filterId })}
+              onChange={(filterId) => onChange({ filterId })}
               thumb={(id) => thumbs.get(`look:${id}`)}
               disabled={readOnly}
             />
@@ -284,7 +344,7 @@ export function LooksCard({
               checked={value.beatSync && hasMusic}
               disabled={!hasMusic}
               label={t('beatSync')}
-              onChange={(beatSync) => set({ beatSync })}
+              onChange={(beatSync) => onChange({ beatSync })}
             />
           </Field>
         )}
@@ -294,7 +354,7 @@ export function LooksCard({
               label={t(video ? 'photoLook' : 'look')}
               items={looks}
               value={value.photoFilterId}
-              onChange={(photoFilterId) => set({ photoFilterId })}
+              onChange={(photoFilterId) => onChange({ photoFilterId })}
               thumb={(id) => thumbs.get(`look:${id}`)}
               disabled={readOnly}
             />
@@ -306,7 +366,7 @@ export function LooksCard({
               label={t('photoEffect')}
               items={photoEffects}
               value={value.photoEffectId}
-              onChange={(photoEffectId) => set({ photoEffectId })}
+              onChange={(photoEffectId) => onChange({ photoEffectId })}
               thumb={(id) => thumbs.get(`photo:${id}`)}
               disabled={readOnly}
             />

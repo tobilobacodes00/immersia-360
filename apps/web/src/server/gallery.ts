@@ -8,6 +8,7 @@ import {
   outputSettingsSchema,
   shareSettingsSchema,
   type BoothMode,
+  type GuestFormSettings,
 } from '@immersia/shared';
 import { env } from './env';
 import { pickMedia, sessionBooth } from './live';
@@ -33,12 +34,22 @@ export interface GalleryEvent {
   booths: BoothMode[];
   contact: string;
   passwordHash: string | null;
+  /** SHR-6: the business running the event, and the optional guest form shown before "Download all". */
+  operator: string;
+  guestForm: GuestFormSettings;
 }
 
 export async function galleryEvent(slug: string): Promise<GalleryEvent | null> {
   if (!/^[A-Za-z0-9_-]{8,40}$/.test(slug)) return null;
-  const [ev] = await db().select().from(event).where(eq(event.gallerySlug, slug)).limit(1);
-  if (!ev) return null;
+  const [found] = await db()
+    .select({ ev: event, operator: schema.organization.name })
+    .from(event)
+    .innerJoin(schema.organization, eq(schema.organization.id, event.organizationId))
+    .where(eq(event.gallerySlug, slug))
+    .limit(1);
+  if (!found) return null;
+  const { ev, operator } = found;
+  const share = shareSettingsSchema.parse(ev.shareSettings);
   const branding = brandingSchema.parse(ev.branding);
   let logoUrl: string | null = null;
   if (branding.logoAssetId) {
@@ -66,8 +77,10 @@ export async function galleryEvent(slug: string): Promise<GalleryEvent | null> {
     hashtag: branding.hashtag,
     logoUrl,
     booths: eventBooths(ev.mode, outputSettingsSchema.parse(ev.outputSettings)),
-    contact: shareSettingsSchema.parse(ev.shareSettings).contact,
+    contact: share.contact,
     passwordHash: ev.galleryPasswordHash,
+    operator,
+    guestForm: share.guestForm,
   };
 }
 

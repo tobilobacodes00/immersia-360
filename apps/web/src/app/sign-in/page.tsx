@@ -1,4 +1,5 @@
 import type { Metadata, Route } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { BrandMark } from '@immersia/ui';
@@ -22,7 +23,7 @@ export default async function SignInPage({
   const { next, error } = await searchParams;
   const destination = safeNext(next);
   if (await getSession()) redirect(destination as Route);
-  const t = await getTranslations('signIn');
+  const [t, tc] = await Promise.all([getTranslations('signIn'), getTranslations('common')]);
   return (
     <div className="flex min-h-dvh flex-col">
       <main className="grid flex-1 place-items-center px-4 py-12">
@@ -30,6 +31,9 @@ export default async function SignInPage({
           <BrandMark size={40} className="mb-8" />
           <h1 className="text-[30px] leading-[1.05] font-bold tracking-[-0.03em]">{t('title')}</h1>
           <p className="mt-3 text-[15px] leading-relaxed text-muted">{t('subtitle')}</p>
+          {destination.startsWith('/invite/') && (
+            <p className="mt-3 rounded-xl bg-sunken p-4 text-[13px] leading-relaxed text-muted">{t('inviteHint')}</p>
+          )}
           <SignInForm
             destination={destination}
             google={googleEnabled()}
@@ -37,8 +41,14 @@ export default async function SignInPage({
           />
         </div>
       </main>
-      <footer className="flex items-center justify-center gap-3 px-4 py-6">
+      <footer className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-4 py-6">
         <LanguagePicker className="w-40" />
+        <Link href="/privacy" className="focus-ring rounded px-2 py-2 text-sm font-medium text-muted hover:text-fg">
+          {tc('privacy')}
+        </Link>
+        <Link href="/terms" className="focus-ring rounded px-2 py-2 text-sm font-medium text-muted hover:text-fg">
+          {tc('terms')}
+        </Link>
       </footer>
     </div>
   );

@@ -14,6 +14,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));
   if (!/^[0-9a-f-]{36}$/i.test(id) || !parsed.success) return NextResponse.json({ error: 'invalid' }, { status: 400 });
   const result = await emailSessionLink(device, id, parsed.data.email, localeFromRequest(request.headers));
+  if (result === 'erased') return NextResponse.json({ error: 'session_erased' }, { status: 410 });
   const status = result === 'sent' ? 200 : result === 'not_found' ? 404 : 429;
   return NextResponse.json({ result }, { status });
 }

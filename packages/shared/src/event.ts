@@ -4,6 +4,7 @@
  * Ranges are the PRD's own (CAP-5 spin length, VID-1 slow-motion speed, SHR-8 expiry, …).
  */
 import { z } from 'zod';
+import { guestFormSettingsSchema } from './guest-form';
 import { DEFAULT_THEME } from './theme';
 
 const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/);
@@ -50,6 +51,17 @@ export const slowMotionSchema = z
   })
   .refine((s) => s.endS > s.startS, 'slow_motion_end_before_start');
 
+/**
+ * CAP-10: what replaces the background behind guests, found on the device with person segmentation.
+ * Exactly one of an uploaded picture or video (an asset of type `background`; photos take pictures only,
+ * which the server checks), a flat colour, or a blurred copy of the camera's own picture. Null is off.
+ */
+export const backgroundSchema = z
+  .union([z.strictObject({ assetId: uuid }), z.strictObject({ color: hex }), z.strictObject({ blur: z.literal(true) })])
+  .nullable();
+
+export type Background = z.infer<typeof backgroundSchema>;
+
 export const video360Schema = z
   .object({
     resolution: z.enum(RESOLUTIONS).default('1080p'),
@@ -63,6 +75,8 @@ export const video360Schema = z
     filterId: z.string().nullable().default(null),
     effects: z.array(effectSchema).max(8).default([]),
     beatSync: z.boolean().default(false),
+    /** CAP-10: the 360 booth's background (a picture or video, a colour, a blur) or null. */
+    background: backgroundSchema.default(null),
     overlayTemplateId: uuid.nullable().default(null),
     introAssetId: uuid.nullable().default(null),
     outroAssetId: uuid.nullable().default(null),
@@ -85,6 +99,8 @@ export const photoSchema = z.object({
   /** VID-11 looks apply to photos too; PHO-10 adds one photo effect per event. */
   filterId: z.string().nullable().default(null),
   effectId: z.string().nullable().default(null),
+  /** CAP-10: the photo booth's background (a picture, a colour, a blur) or null. Never a video. */
+  background: backgroundSchema.default(null),
   /** PHO-2: extra outputs per session. */
   outputs: z
     .object({ gif: z.boolean(), boomerang: z.boolean(), shortVideo: z.boolean() })
@@ -137,9 +153,7 @@ export const shareSettingsSchema = z.object({
   sms: z.boolean().default(true),
   whatsapp: z.boolean().default(true),
   /** SHR-6: optional guest data capture before download. */
-  guestForm: z
-    .object({ enabled: z.boolean(), requireName: z.boolean(), consentText: z.string().max(500) })
-    .default({ enabled: false, requireName: false, consentText: '' }),
+  guestForm: guestFormSettingsSchema.default(() => guestFormSettingsSchema.parse({})),
   /** DL-3: corner QR on printed strips. */
   stripQr: z.boolean().default(true),
   /** DL-4: 2 s QR end card on videos. */

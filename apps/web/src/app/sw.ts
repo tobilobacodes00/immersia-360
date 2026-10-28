@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 import { defaultCache } from '@serwist/turbopack/worker';
 import {
+  CacheFirst,
   ExpirationPlugin,
   NetworkOnly,
   Serwist,
@@ -42,6 +43,17 @@ const serwist = new Serwist({
       handler: new StaleWhileRevalidate({
         cacheName: 'font-library',
         plugins: [new ExpirationPlugin({ maxEntries: 600, maxAgeSeconds: 365 * 24 * 60 * 60 })],
+      }),
+    },
+    // CAP-10: the segmentation model and WebAssembly runtime (public/mediapipe/, ~35 MB across the variants,
+    // fetched only where a background is set). Cached on first use and then served from the cache for good:
+    // the files never change within a deploy, and the loader scripts must stay paired with their .wasm, so the
+    // cache is named for the pinned @mediapipe/tasks-vision version (pnpm-workspace.yaml; a test keeps them equal).
+    {
+      matcher: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/mediapipe/'),
+      handler: new CacheFirst({
+        cacheName: 'mediapipe-1.0.1',
+        plugins: [new ExpirationPlugin({ maxEntries: 12, maxAgeSeconds: 365 * 24 * 60 * 60 })],
       }),
     },
     ...defaultCache,

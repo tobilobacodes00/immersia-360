@@ -5,6 +5,7 @@ import type { Template } from '@immersia/layout';
 import { outputSize } from '@immersia/render-engine';
 import { eventTokens, overlayCanvasFor, sessionUrl, type EventTheme, type Video360Settings } from '@immersia/shared';
 import type { AssetView } from '@/server/assets';
+import { loadRenderBackground } from './background-source';
 import { boothDb, sessionForTake } from '@immersia/offline';
 import { cachedAsset, fillAssets } from './event-assets';
 import { END_CARD_SECONDS, loadCard, renderEndCard, renderOverlay } from './media';
@@ -30,6 +31,7 @@ export interface EventMedia {
  */
 export function useEventMedia(event: EventMedia, video: Video360Settings): RenderAssets {
   const { overlay: design, assets, name, date, branding, endCard } = event;
+  const background = video.background;
   const byId = useMemo(() => new Map(assets.map((a) => [a.id, a])), [assets]);
   const size = useMemo(() => outputSize(video.resolution, video.aspect), [video.resolution, video.aspect]);
 
@@ -64,6 +66,7 @@ export function useEventMedia(event: EventMedia, video: Video360Settings): Rende
             return cachedAsset(music.assetId);
           }
         : undefined,
+      background: background ? () => loadRenderBackground(background, assets) : undefined,
       intro: card(video.introAssetId),
       outro: card(video.outroAssetId),
       endCard: endCard
@@ -94,6 +97,7 @@ export function useEventMedia(event: EventMedia, video: Video360Settings): Rende
     endCard,
     video.aspect,
     video.music,
+    background,
     video.cardSeconds,
     video.introAssetId,
     video.outroAssetId,

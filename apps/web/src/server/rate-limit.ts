@@ -30,6 +30,26 @@ export const LIMITS = {
   /** SHR-5: gallery passwords are short; slow guessing right down. */
   galleryUnlockPerIp: { limit: 10, windowS: 600 },
   /**
+   * ACC-3: an invitation is an email to someone who never asked for it, and every signed-in user
+   * owns an organization, so the invite form must not become a mailer. Each email sent (new or
+   * re-sent) counts against the inviter, the address it goes to, and the network it came from.
+   */
+  inviteSendPerUser: { limit: 30, windowS: 3600 },
+  inviteSendPerRecipient: { limit: 5, windowS: 86_400 },
+  inviteSendPerIp: { limit: 60, windowS: 3600 },
+  /** Re-sending one invitation: a nudge, not a loop. */
+  inviteResendPerInvitation: { limit: 3, windowS: 3600 },
+  /** SHR-6: the guest form is a public write endpoint: bound it per visitor, per session and per event. */
+  guestFormPerIp: { limit: 20, windowS: 600 },
+  guestFormPerTarget: { limit: 10, windowS: 3600 },
+  guestFormPerEvent: { limit: 600, windowS: 3600 },
+  /** Erasing a session needs only its link: keep a leaked or guessed link from being hammered. */
+  eraseSessionPerIp: { limit: 10, windowS: 600 },
+  eraseSessionPerLink: { limit: 5, windowS: 600 },
+  /** Operators: exports and the by-email privacy search are heavy or sensitive, so they are bounded too. */
+  privacyExportPerOrg: { limit: 12, windowS: 3600 },
+  privacyLookupPerOrg: { limit: 60, windowS: 600 },
+  /**
    * Server renders (apps/render-worker): a presigned upload and a queued job per request. The money
    * limits are per event and organization, in the database (render-jobs-core.ts); these only bound
    * how fast one device can hammer the endpoints.
