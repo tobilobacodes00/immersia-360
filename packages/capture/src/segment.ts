@@ -112,7 +112,7 @@ interface Scratch {
  * compiles for workers, where there is no DOM.
  */
 function scratchCanvas(width: number, height: number): Scratch {
-  let canvas: OffscreenCanvas | null = null;
+  let canvas: OffscreenCanvas | null;
   if (typeof OffscreenCanvas !== 'undefined') canvas = new OffscreenCanvas(width, height);
   else {
     const doc = (globalThis as unknown as { document?: { createElement(tag: 'canvas'): unknown } }).document;
