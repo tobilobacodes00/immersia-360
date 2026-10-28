@@ -48,6 +48,13 @@ catalog:
   dexie: 4.4.6
   # On-device person segmentation for background replacement (CAP-10), Apache-2.0
   '@mediapipe/tasks-vision': 1.0.1
+  # Native capture companion (CAP-14): Capacitor 8.5.3, the latest 8.x published at least two weeks ago (2026-10-07)
+  '@capacitor/core': 8.5.3
+  '@capacitor/cli': 8.5.3
+  '@capacitor/android': 8.5.3
+  '@capacitor/ios': 8.5.3
+  # Renders the companion's app icons from the PWA icon's vector mark (apps/companion/scripts/generate-icons.mjs)
+  sharp: 0.35.5
   # Realtime hub (Cloudflare Worker, apps/realtime)
   wrangler: 4.146.0
   '@cloudflare/workers-types': 5.20261003.1

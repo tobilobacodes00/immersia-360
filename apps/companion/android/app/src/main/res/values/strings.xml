@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Immersia 360</string>
+    <string name="title_activity_main">Immersia 360</string>
+    <string name="package_name">com.immersiavr.booth360</string>
+    <string name="custom_url_scheme">com.immersiavr.booth360</string>
+</resources>

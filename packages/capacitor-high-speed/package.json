@@ -1,0 +1,41 @@
+{
+  "name": "@immersia/capacitor-high-speed",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "description": "Native 120-240 fps recorder for the Immersia companion app (CAP-14): AVFoundation on iOS, CameraX high-speed on Android.",
+  "license": "UNLICENSED",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src",
+    "android/src/main",
+    "android/build.gradle",
+    "ios/Sources",
+    "Package.swift",
+    "ImmersiaCapacitorHighSpeed.podspec"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@capacitor/core": ">=8.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/core": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    },
+    "android": {
+      "src": "android"
+    }
+  }
+}

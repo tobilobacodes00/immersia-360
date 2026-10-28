@@ -5,3 +5,4 @@ export type { ConstrainableTrack } from './track';
 export * from './simulator';
 export * from './recorder';
 export * from './motion';
+export * from './native-hfr';

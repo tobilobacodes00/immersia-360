@@ -30,6 +30,8 @@ const config: NextConfig = {
     '@immersia/layout',
     '@immersia/fonts',
     '@immersia/effects',
+    // The companion's native recorder (CAP-14): loaded with a dynamic import, only inside the companion app.
+    '@immersia/capacitor-high-speed',
   ],
   typedRoutes: true,
   env: {

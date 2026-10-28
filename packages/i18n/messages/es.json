@@ -1679,7 +1679,11 @@
     "saving": "Guardando…",
     "saved": "Guardado. ¡Siguiente invitado!",
     "warnings": {
-      "storage": "Este dispositivo tuvo problemas para guardar la última toma. Se conservó todo hasta el problema. Revisa el almacenamiento libre."
+      "storage": "Este dispositivo tuvo problemas para guardar la última toma. Se conservó todo hasta el problema. Revisa el almacenamiento libre.",
+      "hfrThermal": "Este dispositivo se está calentando. La cámara puede detenerse sola; déjalo enfriar si falla la grabación.",
+      "hfrCall": "Una llamada u otra aplicación interrumpió la cámara. Se conservó la toma hasta ese momento.",
+      "hfrBackground": "La app salió de la pantalla y la cámara se pausó. Se conservó la toma hasta ese momento.",
+      "hfrInterrupted": "La cámara de alta velocidad se detuvo antes de tiempo. Se conservó la toma hasta ese momento."
     },
     "errors": {
       "title": "La cámara no está disponible",
@@ -1690,6 +1694,11 @@
       "insecure": "La cámara solo funciona con una conexión segura (https).",
       "lost": "La cámara se desconectó.",
       "recording_unsupported": "Este navegador no puede grabar video. Usa Chrome, Edge o Safari.",
+      "native_permission": "Se rechazó el acceso a la cámara o al micrófono. Abre los ajustes de esta app en el dispositivo, permite Cámara y Micrófono e inténtalo de nuevo.",
+      "no_high_speed": "Esta cámara no tiene modo de alta velocidad con la tasa de fotogramas elegida. Elige otra cámara o una tasa más baja en la configuración.",
+      "native_audio": "La cámara de alta velocidad de este teléfono no puede grabar sonido. Desactiva el micrófono en la configuración del evento o elige otra cámara.",
+      "native_storage": "Este dispositivo casi no tiene almacenamiento. Libera espacio e inténtalo de nuevo.",
+      "native_failed": "La cámara de alta velocidad dejó de funcionar. Inténtalo de nuevo o elige otra cámara en la configuración.",
       "unknown": "Algo salió mal al iniciar la cámara.",
       "retry": "Intentar de nuevo"
     },
@@ -1718,6 +1727,15 @@
       },
       "cameraBusy": "Los cambios de cámara se pausan mientras un invitado usa la cabina.",
       "delivering": "Entrega {width}×{height} a {fps} fps",
+      "hfr": {
+        "group": "Cámaras de alta velocidad · 120 a 240 fps",
+        "fps": "Tasa de fotogramas",
+        "fpsOption": "{fps} fps",
+        "maxFps": "hasta {fps} fps",
+        "help": "Graba cámara lenta a la velocidad propia de la cámara. Esta vista previa es la imagen sin procesar: el aspecto y el fondo se aplican al renderizar el video.",
+        "unavailable": "Este dispositivo no tiene ninguna cámara que grabe a 120 fps o más. Usa una cámara del navegador.",
+        "noMotion": "El inicio por movimiento no está disponible con esta cámara. Empieza con el botón o el teclado."
+      },
       "mirror": "Reflejar la vista previa",
       "mirrorHelp": "Solo en esta pantalla. Las grabaciones nunca se reflejan.",
       "zoom": "Zoom",

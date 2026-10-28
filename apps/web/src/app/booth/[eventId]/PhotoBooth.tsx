@@ -51,7 +51,7 @@ import { ResultScreen } from './ResultScreen';
 import { SettingsDrawer } from './SettingsDrawer';
 import { describeCamera, reconcileWithCamera, type ActiveCamera } from './active-camera';
 import { localEncoder, warmWasmEncoder } from './device-ladder';
-import { fillLightOf, needsReopen, type CameraChoice } from './camera-choice';
+import { fillLightOf, needsReopen, usableChoice, type CameraChoice } from './camera-choice';
 import { FillLightFrame } from './FillLightFrame';
 import { useOpenGuard } from './open-guard';
 import { useCameraChoice } from './use-camera-choice';
@@ -201,7 +201,10 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
   );
 
   const startCamera = useCallback(
-    async (choice: CameraChoice) => {
+    async (saved: CameraChoice) => {
+      // The photo booth has no use for the companion's native high-speed camera (CAP-14), which the 360
+      // booth may have left as the saved choice: it opens a browser camera.
+      const choice = usableChoice(saved, false);
       // This open supersedes any other in flight (a double tap): only the newest may use its camera.
       const token = openGuard.begin();
       setPhase({ kind: 'starting' });
