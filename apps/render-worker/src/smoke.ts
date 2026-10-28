@@ -1,3 +1,4 @@
+/* eslint-disable no-console -- a command-line program: its output is the log */
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';

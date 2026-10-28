@@ -1,3 +1,4 @@
+/* eslint-disable no-console -- a command-line program: its output is the log */
 import { fileURLToPath } from 'node:url';
 import { createApi } from './api';
 import { ChromeHost } from './chrome';

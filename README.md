@@ -9,17 +9,18 @@ with one cobalt accent.
 
 ## Layout
 
-| Path              | What it is                                                                                                    |
-| ----------------- | ------------------------------------------------------------------------------------------------------------- |
-| `apps/web`        | Next.js 16 app: operator console, booth, kiosk, Live Display, guest pages, API                                |
-| `packages/ui`     | Design system ported from Immersia Booth (tokens, kit, guest components)                                      |
-| `packages/shared` | IDs and short codes, the token language, event and template schemas, colour/contrast, routes, analytics types |
-| `packages/db`     | Drizzle schema and migrations (Neon Postgres)                                                                 |
-| `packages/i18n`   | English, Spanish and Portuguese message catalogues                                                            |
+| Path                     | What it is                                                                                                           |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `apps/web`               | Next.js 16 app: operator console, booth, kiosk, Live Display, guest pages, API                                       |
+| `apps/render-worker`     | Server render fallback (Fly.io, scale to zero): headless Chrome runs the booth's own `render()` — see its README     |
+| `packages/render-engine` | Demux, decode, WebGL2 compositor, encode: the same renderer on the device, in the browser fallback and on the server |
+| `packages/ui`            | Design system ported from Immersia Booth (tokens, kit, guest components)                                             |
+| `packages/shared`        | IDs and short codes, the token language, event and template schemas, colour/contrast, routes, analytics types        |
+| `packages/db`            | Drizzle schema and migrations (Neon Postgres)                                                                        |
+| `packages/i18n`          | English, Spanish and Portuguese message catalogues                                                                   |
 
-These arrive in later milestones: `apps/realtime` (Durable Objects hub), `apps/render-worker` (server
-render fallback), `packages/render-engine`, `packages/effects`, `packages/layout`, `packages/capture`,
-`packages/offline`.
+These arrive in later milestones: `apps/realtime` (Durable Objects hub), `packages/effects`, `packages/layout`,
+`packages/capture`, `packages/offline`.
 
 ## Working on it
 
