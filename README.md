@@ -72,6 +72,29 @@ It is off until the server has a token key and credentials (the Integrations scr
   and the scopes `account_info.read`, `files.metadata.read`, `files.metadata.write`, `files.content.write`.
   `DROPBOX_APP_KEY` / `DROPBOX_APP_SECRET`.
 
+### Analytics, the admin console and reports
+
+Analytics are first-party and anonymous on guest pages: no third-party script, no cookie, no address or user agent
+stored (a browser family at most). Events are defined once, as zod schemas, in `packages/shared/src/analytics.ts`.
+The server records its own (`track()`); booths and Live Displays buffer theirs in the device database and flush
+them to `POST /api/t` in batches with backoff (the studio posts its own); the server corrects each event's time
+for the device's clock error and drops a retried batch's duplicates. A booth also reports `booth_session_started`
+/ `booth_session_ended` and, on an uncaught error, `booth_crashed` (error name and a hash of the code location,
+nothing else). To emit from new code, call `emitDeviceEvent`, `emitDisplayEvent` or `emitStudioEvent` from
+`apps/web/src/lib/analytics-client.ts`, after adding the event to the catalogue and to `EVENT_SOURCES`.
+
+`analytics_event` is partitioned by month. Inserts never fail for want of a partition (a default partition takes
+the rest) and the hourly cron (`/api/cron/expire`) keeps the next months created. To drop old data:
+`DROP TABLE analytics_event_pYYYYMM`.
+
+`/admin` is for platform admins: set `ADMIN_EMAILS` (comma-separated, full addresses). It shows the six success
+metrics against their targets over 30 or 90 days with a weekly trend, capture-to-QR by render path, render
+failures, download success by route, storage per organization against the 50 GB fair-use ceiling, and
+infrastructure cost per active operator from the monthly bill you enter there. `/admin/reports` is the reports
+queue with its 24-hour clock. How reports, takedowns and hash matching work, and what is not covered, is in
+[SECURITY.md](SECURITY.md#abuse-reports-takedown-and-hash-matching). Video hash matching needs a vendor and a
+legal decision: the `MediaScanner` seam exists, and no scanner is connected.
+
 ## Principles
 
 - **Nothing behind payment.** Costs are held down by design: on-device rendering, expiring guest files,

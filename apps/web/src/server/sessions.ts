@@ -8,16 +8,20 @@ import {
   sessionUrl,
   type RegisterSessionInput,
   type RegisterSessionResult,
+  type RemovalBasis,
 } from '@immersia/shared';
 import type { Locale } from '@immersia/i18n';
 import type { DeviceRow } from './devices';
 import { enqueueCloudCopies, processCloudCopies } from './cloud/copy';
 import { sendGuestLinkEmail } from './email';
 import { appOrigin } from './env';
-import { uploadGate } from './erasure-core';
+import { uploadGate, type UploadRefusal } from './erasure-core';
 import { refreshSessionItem } from './live';
+import { mediaScanner, type MediaScanInput } from './media-scanner';
 import { allow } from './rate-limit';
-import { objectKey, objectSize, presignUpload } from './storage';
+import { flagSession } from './reports';
+import { removalOf } from './share-state';
+import { deleteObjects, objectKey, objectSize, presignUpload, quarantineObjects } from './storage';
 
 const { event, captureSession, output, shortCodeReservation, take } = schema;
 
@@ -87,7 +91,7 @@ const EXT: Record<string, string> = {
 export async function registerSession(
   device: DeviceRow,
   input: RegisterSessionInput,
-): Promise<RegisterSessionResult | { error: 'not_found' | 'conflict' | 'erased' }> {
+): Promise<RegisterSessionResult | { error: 'not_found' | 'conflict' | UploadRefusal }> {
   const result = await db().transaction(async (tx) => {
     const [ev] = await tx
       .select()
@@ -100,8 +104,10 @@ export async function registerSession(
     let session = existing;
     if (existing && (existing.linkId !== input.linkId || existing.eventId !== input.eventId))
       return { ok: false as const, error: 'conflict' as const };
-    // The guest deleted this session (privacy): a booth that still holds it must not bring it back.
-    if (existing && uploadGate(existing) === 'erased') return { ok: false as const, error: 'erased' as const };
+    // The guest deleted this session, or the platform took it down: a booth that still holds it must
+    // not bring it back. The answer is final, so the booth stops retrying (see uploadGate).
+    const gate = existing ? uploadGate(existing) : 'ok';
+    if (gate !== 'ok') return { ok: false as const, error: gate };
     if (!existing) {
       let code = input.shortCode;
       if (code) {
@@ -228,20 +234,25 @@ export async function registerSession(
 }
 
 /**
- * Mark an output uploaded once the object really exists at the expected size. Refused for an erased
- * session (the guest deleted it): the file just uploaded is removed again by the erasure sweep.
+ * Mark an output uploaded once the object really exists at the expected size. Refused for a session
+ * the guest erased or the platform took down (see uploadGate): the file the booth just uploaded is
+ * discarded again (an erased session's also by the erasure sweep), never kept or served.
  */
 export async function completeUpload(
   device: DeviceRow,
   outputId: string,
-): Promise<'ok' | 'not_found' | 'incomplete' | 'erased'> {
+): Promise<'ok' | 'not_found' | 'incomplete' | UploadRefusal> {
   const [row] = await db()
     .select({
       id: output.id,
       key: output.objectKey,
       bytes: output.bytes,
+      mime: output.mime,
       sessionId: output.sessionId,
+      eventId: event.id,
       erasedAt: captureSession.erasedAt,
+      removedAt: captureSession.removedAt,
+      removal: captureSession.removal,
     })
     .from(output)
     .innerJoin(captureSession, eq(captureSession.id, output.sessionId))
@@ -249,7 +260,11 @@ export async function completeUpload(
     .where(and(eq(output.id, outputId), eq(event.organizationId, device.organizationId)))
     .limit(1);
   if (!row?.key) return 'not_found';
-  if (uploadGate(row) === 'erased') return 'erased';
+  const gate = uploadGate(row);
+  if (gate !== 'ok') {
+    await discardLateFile(row.key, gate, removalOf(row));
+    return gate;
+  }
   const size = await objectSize(row.key);
   if (size === null || (row.bytes !== null && size !== row.bytes)) return 'incomplete';
   await db().transaction(async (tx) => {
@@ -259,6 +274,18 @@ export async function completeUpload(
       .set({ status: 'live' })
       .where(and(eq(captureSession.id, row.sessionId), eq(captureSession.status, 'pending')));
   });
+  // Abuse: hand the verified file to the media scanner (hash matching against known illegal content).
+  after(() =>
+    scanUpload({
+      outputId,
+      sessionId: row.sessionId,
+      eventId: row.eventId,
+      organizationId: device.organizationId,
+      objectKey: row.key!,
+      mime: row.mime,
+      bytes: size,
+    }),
+  );
   // LIV-2: the session may be ready for the Live Display now. After the response, so the booth's
   // upload queue moves on at once.
   after(() => refreshSessionItem(row.sessionId, appOrigin()));
@@ -273,6 +300,38 @@ export async function completeUpload(
 }
 
 /**
+ * A file that arrived for a session that is no longer accepted is not kept. Illegal content that was
+ * taken down keeps its evidential trail (the file goes to quarantine, as the rest of the session's
+ * did); everything else is deleted. Best effort: the booth's answer does not depend on it, and the
+ * session's retention sweep deletes any output key that is left.
+ */
+async function discardLateFile(key: string, refusal: UploadRefusal, removal: RemovalBasis | null): Promise<void> {
+  try {
+    if (refusal === 'removed' && removal === 'legal') await quarantineObjects([key]);
+    else await deleteObjects([key]);
+  } catch (err) {
+    console.error('[upload] could not discard a refused file', err instanceof Error ? err.name : err);
+  }
+}
+
+/**
+ * Run the configured scanner over a finished upload. The default scanner checks nothing (see
+ * media-scanner.ts: video hash matching needs a vendor and a legal decision); a match takes the
+ * session down as illegal and puts it in the admin queue. A scanner outage never blocks a booth's
+ * upload: it is logged, and the file stays unscanned.
+ */
+async function scanUpload(input: MediaScanInput): Promise<void> {
+  const scanner = mediaScanner();
+  try {
+    const result = await scanner.scan(input);
+    if (result.verdict === 'flagged')
+      await flagSession({ sessionId: input.sessionId, scanner: scanner.name, detail: result.detail });
+  } catch (err) {
+    console.error('[scan] scanner failed', scanner.name, err instanceof Error ? err.name : err);
+  }
+}
+
+/**
  * SHR-2: email a guest their session link. The address is used for this send and not stored
  * (storing guest contacts needs the consent of the guest form, SHR-6).
  */
@@ -281,12 +340,14 @@ export async function emailSessionLink(
   sessionId: string,
   to: string,
   locale: Locale,
-): Promise<'sent' | 'not_found' | 'too_many' | 'erased'> {
+): Promise<'sent' | 'not_found' | 'too_many' | UploadRefusal> {
   const [row] = await db()
     .select({
       linkId: captureSession.linkId,
       expiresAt: captureSession.expiresAt,
       erasedAt: captureSession.erasedAt,
+      removedAt: captureSession.removedAt,
+      removal: captureSession.removal,
       eventName: event.name,
     })
     .from(captureSession)
@@ -294,8 +355,9 @@ export async function emailSessionLink(
     .where(and(eq(captureSession.id, sessionId), eq(event.organizationId, device.organizationId)))
     .limit(1);
   if (!row) return 'not_found';
-  // No link to a page that says "deleted at your request".
-  if (uploadGate(row) === 'erased') return 'erased';
+  // No link to a page that says "deleted at your request" or "removed".
+  const gate = uploadGate(row);
+  if (gate !== 'ok') return gate;
   if (!(await allow('emailPerSession', sessionId)) || !(await allow('emailPerDevice', device.id))) return 'too_many';
   await sendGuestLinkEmail(to, sessionUrl(appOrigin(), row.linkId, 'message'), locale, {
     event: row.eventName,

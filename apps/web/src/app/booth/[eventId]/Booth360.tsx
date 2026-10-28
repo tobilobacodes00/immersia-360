@@ -62,6 +62,7 @@ import { useLiveBackground, useWarmSegmenter } from './background-source';
 import { LookPreview } from './LookPreview';
 import { RenderQueue } from './RenderQueue';
 import { ResultScreen } from './ResultScreen';
+import { useBoothAnalytics } from './use-booth-analytics';
 import { useUploadQueue } from './use-upload-queue';
 import { useEventMedia, type EventMedia } from './use-event-media';
 import { RENDERABLE, useRenderQueue } from './use-render-queue';
@@ -97,8 +98,8 @@ type Phase =
   | { kind: 'recording'; takeId: string; startedAt: number }
   | { kind: 'saving' }
   | { kind: 'saved' }
-  /** Screen 13: the guest's QR and code, straight after the take is saved. */
-  | { kind: 'result'; session: LocalSession }
+  /** Screen 13: the guest's QR and code, straight after the take is saved (`endedAt`: when the take ended, for analytics). */
+  | { kind: 'result'; session: LocalSession; endedAt: number }
   | { kind: 'error'; code: string };
 
 const PENDING: LocalTake['status'][] = [...RENDERABLE, 'rendering'];
@@ -154,7 +155,13 @@ export function Booth360({ event }: { event: BoothEvent }) {
     phase.kind === 'saved';
   const renderPaused = useHeld(capturing, RENDER_RESUME_MS);
   const kiosk = useKioskLock(event.kioskPinHash);
-  const uploads = useUploadQueue({ eventId: event.id, token: identity?.token ?? null, store: storeReady });
+  const track = useBoothAnalytics({ eventId: event.id, mode: 'video360', token: identity?.token ?? null });
+  const uploads = useUploadQueue({
+    eventId: event.id,
+    token: identity?.token ?? null,
+    store: storeReady,
+    onTrack: track,
+  });
   const mediaSpec = useMemo<EventMedia>(
     () => ({
       ...event.media,
@@ -175,6 +182,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
     paused: renderPaused,
     smallerVersion: event.share.smallerVersion,
     onRendered: (take) => uploads.nudge(take.id),
+    onTrack: track,
   });
 
   useWakeLock(phase.kind !== 'idle');
@@ -274,6 +282,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
 
   const finishRecording = useCallback(async () => {
     clearTimeout(stopTimer.current);
+    const endedAt = performance.now();
     const rec = recorder.current;
     const current = phaseRef.current;
     if (!rec || current.kind !== 'recording') return;
@@ -296,10 +305,20 @@ export function Booth360({ event }: { event: BoothEvent }) {
       saved && saved.status !== 'failed'
         ? await mintSession(db, { eventId: event.id, takeIds: [saved.id], capturedAt: saved.capturedAt })
         : null;
-    if (session && event.share.qr) return setPhase({ kind: 'result', session });
+    // Usage (success metrics): what was recorded, and how.
+    if (saved && saved.status !== 'failed' && saved.trigger !== 'import')
+      track({
+        name: 'take_recorded',
+        mode: 'video360',
+        duration_s: Math.min(86_400, saved.durationMs / 1000),
+        fps: saved.fps,
+        resolution: `${saved.width}x${saved.height}`,
+        trigger: saved.trigger,
+      });
+    if (session && event.share.qr) return setPhase({ kind: 'result', session, endedAt });
     setPhase({ kind: 'saved' });
     setTimeout(() => setPhase((p) => (p.kind === 'saved' ? { kind: 'ready' } : p)), SAVED_HOLD_MS);
-  }, [db, t, event.id, event.share.qr]);
+  }, [db, t, event.id, event.share.qr, track]);
 
   const record = useCallback(
     async (source: 'tap' | 'keyboard' | 'motion') => {
@@ -698,6 +717,14 @@ export function Booth360({ event }: { event: BoothEvent }) {
             event={{ name: event.name, font: event.theme.font, share: event.share }}
             onEmail={(email) => queueEmail(db, phase.session.id, email)}
             onDone={backToReady}
+            // The QR is on screen: the capture-to-QR time, from the end of the take.
+            onShown={() =>
+              track({
+                name: 'qr_shown',
+                seconds_since_take: Math.max(0, (performance.now() - phase.endedAt) / 1000),
+                mode: 'video360',
+              })
+            }
             liveDisplay={event.liveDisplay}
             onOptOut={() => optOutOfDisplay(db, phase.session.id).then(() => uploads.nudgeSession(phase.session.id))}
           />

@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page } from '@playwright/test';
+import { randomBytes, randomUUID } from 'node:crypto';
+import { expect, type APIRequestContext, type Locator, type Page } from '@playwright/test';
 
 /** The test-only routes demand this run's secret (see src/server/e2e.ts). */
 export const e2eHeaders = { 'x-e2e-token': process.env.E2E_TOKEN ?? '' };
@@ -71,3 +72,78 @@ export async function settled(locator: Locator) {
     )
     .toBeGreaterThan(0.999);
 }
+
+/** A 1x1 GIF: a real, tiny file for a session's strip, so uploads and downloads have something to carry. */
+const TINY_GIF = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64');
+
+export interface SeededSession {
+  sessionId: string;
+  linkId: string;
+  shortCode: string;
+  outputId: string;
+  deviceId: string;
+  deviceToken: string;
+}
+
+/**
+ * Register this browser as a booth device and give the event one finished guest session (a photo
+ * strip, uploaded and confirmed), through the same API a booth uses. For specs about what happens to
+ * a guest's page, not about capturing it.
+ */
+export async function seedSession(page: Page, request: APIRequestContext, eventId: string): Promise<SeededSession> {
+  await open(page, `/booth/${eventId}`);
+  await page.getByRole('button', { name: 'Register and continue' }).click();
+  await page.waitForFunction(() => localStorage.getItem('immersia.device.v1') !== null);
+  const device = await page.evaluate(
+    () => JSON.parse(localStorage.getItem('immersia.device.v1')!) as { id: string; token: string },
+  );
+  const auth = { authorization: `Device ${device.token}` };
+
+  const sessionId = randomUUID();
+  const linkId = randomBytes(16).toString('base64url');
+  const registered = await request.post('/api/booth/sessions', {
+    headers: auth,
+    data: {
+      id: sessionId,
+      eventId,
+      linkId,
+      shortCode: null,
+      capturedAt: new Date().toISOString(),
+      optedOutOfDisplay: false,
+      takes: [],
+      outputs: [
+        {
+          id: randomUUID(),
+          takeId: null,
+          kind: 'strip',
+          mime: 'image/gif',
+          bytes: TINY_GIF.length,
+          width: 600,
+          height: 1800,
+          durationMs: 0,
+        },
+      ],
+    },
+  });
+  expect(registered.ok(), await registered.text()).toBe(true);
+  const body = (await registered.json()) as {
+    shortCode: string;
+    uploads: { outputId: string; url: string; headers: Record<string, string> }[];
+  };
+  const ticket = body.uploads[0]!;
+  const put = await request.put(ticket.url, { headers: ticket.headers, data: TINY_GIF });
+  expect(put.ok()).toBe(true);
+  const done = await request.post(`/api/booth/outputs/${ticket.outputId}/complete`, { headers: auth, data: {} });
+  expect(done.ok(), await done.text()).toBe(true);
+  return {
+    sessionId,
+    linkId,
+    shortCode: body.shortCode,
+    outputId: ticket.outputId,
+    deviceId: device.id,
+    deviceToken: device.token,
+  };
+}
+
+/** One admin address per browser project (listed in ADMIN_EMAILS in the CI workflow). */
+export const adminEmail = (projectName: string) => `e2e-admin-${projectName}@example.com`;

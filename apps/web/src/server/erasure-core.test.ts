@@ -42,6 +42,22 @@ describe('a booth uploading for an erased session', () => {
   });
 });
 
+describe('a booth uploading for a session the platform took down', () => {
+  it('is refused for a policy or illegal takedown, as final as an erasure', () => {
+    expect(uploadGate({ erasedAt: null, removedAt: t0, removal: 'policy' })).toBe('removed');
+    expect(uploadGate({ erasedAt: null, removedAt: t0, removal: 'legal' })).toBe('removed');
+  });
+
+  it('keeps accepting uploads for a session its operator only hid (reversible, no files touched)', () => {
+    expect(uploadGate({ erasedAt: null, removedAt: t0, removal: 'operator' })).toBe('ok');
+  });
+
+  it('reports a takedown ahead of an erasure, like the guest link does', () => {
+    expect(uploadGate({ erasedAt: t0, removedAt: t0, removal: 'legal' })).toBe('removed');
+    expect(uploadGate({ erasedAt: t0, removedAt: t0, removal: 'operator' })).toBe('erased');
+  });
+});
+
 describe('cleaning up after an erasure', () => {
   it('deletes objects at once and keeps the rows until no signed upload can land', () => {
     expect(purgeStage(t0, t0)).toBe('objects');

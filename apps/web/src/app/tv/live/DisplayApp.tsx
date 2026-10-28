@@ -7,7 +7,9 @@ import { motion, useReducedMotion } from 'motion/react';
 import type { DisplayConfig, DisplayItem } from '@immersia/shared';
 import { DEFAULT_THEME, guestThemeVars } from '@immersia/shared/theme';
 import { cx } from '@immersia/ui';
+import { emitDisplayEvent } from '@/lib/analytics-client';
 import { useLiveFeed } from '@/lib/live-feed';
+import { useAnalyticsFlusher } from '@/lib/use-analytics-flusher';
 import { DISPLAY_FEED_KEY, clearDisplayToken, readDisplayToken } from '../display-token';
 import { Controls, EventBackground } from './chrome';
 import { DisplayProvider, type DisplayView } from './context';
@@ -85,6 +87,22 @@ function Display({ token }: { token: string }) {
   });
 
   const layout = pickLayout(config, playback.current);
+
+  // Live Display analytics: how long each item stayed on screen (a play ends when the next begins,
+  // or the screen closes). Buffered on the device and sent in the background, never on the way of playback.
+  useAnalyticsFlusher('display', token);
+  const playingId = layout === 'idle' || layout === 'counter' ? null : (playback.current?.id ?? null);
+  const playId = playback.playId;
+  const layoutName = config?.layout;
+  useEffect(() => {
+    if (!playingId) return;
+    const startedAt = performance.now();
+    return () => {
+      const seconds = (performance.now() - startedAt) / 1000;
+      if (seconds >= 1)
+        emitDisplayEvent({ name: 'item_displayed', seconds_on_screen: Math.min(seconds, 3600), layout: layoutName });
+    };
+  }, [playingId, playId, layoutName]);
   const view: DisplayView | null = config && {
     config,
     items: playback.items,

@@ -14,7 +14,7 @@ import {
   type GuestFormScope,
   type GuestFormSettings,
 } from '@immersia/shared';
-import { isExpired } from './share-state';
+import { isServed, stateOf } from './share-state';
 
 const { captureSession, event, organization, guestContact } = schema;
 
@@ -64,6 +64,8 @@ export async function formTarget(scope: GuestFormScope, ref: string): Promise<Ta
         expiresAt: captureSession.expiresAt,
         expiredAt: captureSession.expiredAt,
         erasedAt: captureSession.erasedAt,
+        removedAt: captureSession.removedAt,
+        removal: captureSession.removal,
       })
       .from(captureSession)
       .innerJoin(event, eq(event.id, captureSession.eventId))
@@ -71,7 +73,8 @@ export async function formTarget(scope: GuestFormScope, ref: string): Promise<Ta
       .where(eq(captureSession.linkId, ref))
       .limit(1);
     if (!row) return { ok: false, reason: 'not_found' };
-    if (row.erasedAt || isExpired(row)) return { ok: false, reason: 'gone' };
+    // Erased, hidden, taken down or expired: the link answers 410/451 and takes no new contacts.
+    if (!isServed(stateOf({ ...row, ready: 0 }))) return { ok: false, reason: 'gone' };
     return { ok: true, target: { ...row, scope, settings: parse(row.share) } };
   }
   const [row] = await db()

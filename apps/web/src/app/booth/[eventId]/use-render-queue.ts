@@ -16,8 +16,9 @@ import {
   type StillCard,
 } from '@immersia/render-engine';
 import { boothDb, outputsForTake, putOutput, type LocalTake, type TakeStore } from '@immersia/offline';
-import type { Video360Settings } from '@immersia/shared';
+import type { EventFrom, Video360Settings } from '@immersia/shared';
 import { workerUrl } from '@/lib/workers';
+import { boothBrowser } from './use-booth-analytics';
 
 /** Below this the song has no steady beat to follow (ambient, spoken): effects keep their own time. */
 const MIN_BEAT_CONFIDENCE = 0.3;
@@ -70,6 +71,8 @@ export function useRenderQueue(opts: {
   paused?: boolean;
   assets?: RenderAssets;
   onRendered?: (take: LocalTake, outputId: string) => void;
+  /** Analytics: `render_completed` and `render_failed` (path, duration, error code). */
+  onTrack?: (event: EventFrom<'device'>) => void;
 }) {
   const db = boothDb();
   const [current, setCurrent] = useState<RenderState | null>(null);
@@ -213,11 +216,37 @@ export function useRenderQueue(opts: {
         }
         await db.takes.update(take.id, { status: 'rendered', error: undefined, updatedAt: Date.now() });
         optsRef.current.onRendered?.({ ...take, status: 'rendered' }, outputId);
+        // Capture-to-QR time (success metric): how long the render took, and how long after the take
+        // ended the guest's files were ready (queue wait included; not meaningful for imported files).
+        optsRef.current.onTrack?.({
+          name: 'render_completed',
+          render_ms: Math.min(3_600_000, Math.max(0, result.renderMs)),
+          path: 'local',
+          preset: `${video.resolution}-${video.fps}fps-${video.quality}`,
+          effects_count: Math.min(32, video.effects.length),
+          mode: 'video360',
+          ...(take.trigger === 'import'
+            ? {}
+            : {
+                seconds_since_take: Math.min(
+                  86_400,
+                  Math.max(0, (Date.now() - (take.capturedAt + take.durationMs)) / 1000),
+                ),
+              }),
+        });
       } catch (err) {
         const code = err instanceof RenderFailure ? err.code : 'failed';
         // A cancel parks the take as failed so it doesn't restart by itself; Retry re-queues it.
         await db.takes.update(take.id, { status: 'failed', error: code, updatedAt: Date.now() });
         console.warn('[render]', take.id, code, Date.now() - started, 'ms', err);
+        // A cancel is the operator's choice, not a failure.
+        if (code !== 'cancelled')
+          optsRef.current.onTrack?.({
+            name: 'render_failed',
+            error_code: code,
+            path: 'local',
+            browser: boothBrowser(),
+          });
       } finally {
         handle.current = null;
         setCurrent(null);

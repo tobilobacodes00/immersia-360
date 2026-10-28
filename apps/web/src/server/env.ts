@@ -60,6 +60,13 @@ const schema = z.object({
   // Live Display hub (apps/realtime). Without it, screens poll the feed (still within LIV-2's 5 s).
   REALTIME_URL: z.url().optional(),
   REALTIME_SIGNING_SECRET: z.string().min(32).optional(),
+  /**
+   * Platform admins: a comma-separated list of email addresses allowed into /admin (success metrics,
+   * the reports queue). Checked on the server on every admin page and action; everyone else gets a 404.
+   */
+  ADMIN_EMAILS: optional(z.string().max(4000)),
+  /** Where escalated reports are sent for a legal or trust decision. Optional. */
+  TRUST_EMAIL: optional(z.email()),
   /** Enables test-only endpoints (the e2e mailbox). Refused on any Vercel deployment. */
   E2E: z.enum(['0', '1']).default('0'),
   /** Required with E2E=1: test-only routes also demand it as the x-e2e-token header (fail closed). */

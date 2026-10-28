@@ -137,6 +137,13 @@
       "body": "Assista, baixe e compartilhe na sua página. O link funciona até {date}.",
       "action": "Abrir meus arquivos",
       "footer": "Você recebeu isto porque pediu na cabine. Não guardamos seu endereço."
+    },
+    "reportOperator": {
+      "subject": "Um convidado denunciou algo em {event}",
+      "heading": "Uma denúncia sobre {event}",
+      "body": "Um convidado denunciou uma foto ou um vídeo deste evento. Motivo: {reason}. Você pode ocultá-lo na hora; a Immersia analisa cada denúncia em até 24 horas.",
+      "action": "Abrir o evento",
+      "footer": "Você recebeu isto porque é dono(a) deste evento ou o criou."
     }
   },
   "studio": {
@@ -158,7 +165,10 @@
       "closeMenu": "Fechar menu",
       "organization": "Organização",
       "switchFailed": "Não foi possível trocar de organização. Tente novamente.",
-      "settings": "Ajustes"
+      "settings": "Ajustes",
+      "reports": "Denúncias",
+      "reportsOpen": "{count, plural, one {# denúncia aberta} other {# denúncias abertas}}",
+      "admin": "Administração"
     },
     "launcher": {
       "title": "O que vamos montar?",
@@ -278,7 +288,10 @@
       "cloudWaiting": "{count, plural, one {# arquivo em espera.} other {# arquivos em espera.}}",
       "cloudDisconnected": "Este evento é copiado para o {provider}, mas o {provider} não está conectado. Conecte e os arquivos deste evento serão atualizados.",
       "cloudFailed": "{count, plural, one {# arquivo não chegou ao {provider}.} other {# arquivos não chegaram ao {provider}.}}",
-      "cloudFix": "Abrir Integrações"
+      "cloudFix": "Abrir Integrações",
+      "reportsTitle": "Denúncias",
+      "reportsOpen": "{count, plural, one {# denúncia aguarda uma decisão} other {# denúncias aguardam uma decisão}}",
+      "reportsSettled": "Todas as denúncias deste evento já foram resolvidas."
     },
     "setup": {
       "title": "Configuração do evento",
@@ -1584,6 +1597,35 @@
           "failed": "Não foi possível excluir a organização. Tente de novo."
         }
       }
+    },
+    "reports": {
+      "title": "Denúncias",
+      "subtitle": "Os convidados podem denunciar qualquer coisa que vejam dos seus eventos. Você pode ocultar um item na hora; a Immersia analisa cada denúncia em até 24 horas.",
+      "emptyTitle": "Nenhuma denúncia",
+      "emptyBody": "Nada foi denunciado nos seus eventos.",
+      "reasons": {
+        "not_me": "Alguém não concordou em compartilhar",
+        "inappropriate": "Impróprio",
+        "illegal": "Pode ser ilegal",
+        "privacy": "Questão de privacidade",
+        "other": "Outro"
+      },
+      "status": {
+        "open": "Aguardando análise",
+        "escalated": "Escalada",
+        "actioned": "Removida",
+        "dismissed": "Descartada"
+      },
+      "stateHidden": "Oculto por você",
+      "stateRemoved": "Removido pela Immersia",
+      "capture": "Captura",
+      "open": "Abrir a página",
+      "hide": "Ocultar agora",
+      "restore": "Restaurar",
+      "hiddenDone": "Oculto. Já saiu da página de download, da galeria e das telas.",
+      "restoredDone": "Restaurado. Os convidados podem abri-lo de novo.",
+      "takenDown": "A Immersia removeu este item, então ele não pode ser restaurado.",
+      "failed": "Não funcionou. Tente de novo."
     }
   },
   "booth": {
@@ -1936,7 +1978,12 @@
       "confirm": "Sim, excluir meus arquivos",
       "tooMany": "Muitas tentativas. Aguarde alguns minutos e tente de novo.",
       "failed": "Não foi possível excluir seus arquivos. Tente de novo em instantes."
-    }
+    },
+    "report": "Denunciar este conteúdo",
+    "removedTitle": "Este conteúdo foi removido",
+    "removedBody": "As fotos e os vídeos desta página não estão mais disponíveis.",
+    "removedLegalTitle": "Indisponível por motivos legais",
+    "removedLegalBody": "Este conteúdo foi removido porque pode ser ilegal."
   },
   "code": {
     "metaTitle": "Encontre seus arquivos",
@@ -1994,7 +2041,8 @@
         "tooMany": "Muitas tentativas. Aguarde alguns minutos e tente de novo.",
         "failed": "Não foi possível verificar a senha. Confira a conexão e tente de novo."
       }
-    }
+    },
+    "report": "Denunciar algo nesta galeria"
   },
   "zip": {
     "progress": "{files, plural, one {# arquivo} other {# arquivos}} · {size}",
@@ -2302,6 +2350,41 @@
           "p1": "Dúvidas sobre estes termos: {email}."
         }
       }
+    }
+  },
+  "report": {
+    "metaTitle": "Denunciar este conteúdo",
+    "title": "Denunciar este conteúdo",
+    "intro": "Conte o que está errado. Uma pessoa lê cada denúncia e age em até 24 horas. Você não precisa de uma conta.",
+    "reasonLabel": "Qual é o problema?",
+    "reasons": {
+      "not_me": "Eu não concordei que isto fosse compartilhado",
+      "inappropriate": "É impróprio ou ofensivo",
+      "illegal": "Pode ser ilegal",
+      "privacy": "Mostra informações privadas ou uma criança",
+      "other": "Outro motivo"
+    },
+    "detailsLabel": "Algo mais que devemos saber (opcional)",
+    "detailsHelp": "Evite incluir dados pessoais que você não quer que a gente leia.",
+    "contactLabel": "Seu e-mail, se quiser uma resposta (opcional)",
+    "contactHelp": "Usado apenas para responder a esta denúncia e depois apagado. Não guardamos seu endereço nem os dados do seu aparelho.",
+    "codeLabel": "Código da foto ou do vídeo",
+    "codeHelp": "Os seis caracteres abaixo dela na galeria, como K7M-2QX.",
+    "codePlaceholder": "K7M-2QX",
+    "honeypot": "Deixe este campo vazio",
+    "submit": "Enviar denúncia",
+    "back": "Voltar",
+    "errors": {
+      "invalid": "Escolha qual é o problema e envie de novo.",
+      "contact": "Esse e-mail não parece válido.",
+      "not_found": "Não encontramos essa foto ou esse vídeo. Confira o código e tente de novo.",
+      "too_many": "Houve denúncias demais daqui hoje. Tente novamente amanhã."
+    },
+    "sent": {
+      "title": "Obrigado",
+      "body": "Sua denúncia foi enviada. Alguém vai analisá-la em até 24 horas.",
+      "removedBody": "Esse conteúdo já foi removido. Obrigado por avisar.",
+      "back": "Voltar para a página"
     }
   }
 }

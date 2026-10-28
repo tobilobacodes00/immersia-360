@@ -137,6 +137,13 @@
       "body": "Watch, download and share it from your page. The link works until {date}.",
       "action": "Open my files",
       "footer": "You got this because you asked for it at the booth. We don’t keep your address."
+    },
+    "reportOperator": {
+      "subject": "A guest reported something from {event}",
+      "heading": "A report on {event}",
+      "body": "A guest reported a photo or video from this event. Reason: {reason}. You can hide it right away; Immersia reviews every report within 24 hours.",
+      "action": "Open the event",
+      "footer": "You get this because you own or created this event."
     }
   },
   "studio": {
@@ -158,7 +165,10 @@
       "closeMenu": "Close menu",
       "organization": "Organization",
       "switchFailed": "Couldn't switch organization. Please try again.",
-      "settings": "Settings"
+      "settings": "Settings",
+      "reports": "Reports",
+      "reportsOpen": "{count, plural, one {# open report} other {# open reports}}",
+      "admin": "Admin"
     },
     "launcher": {
       "title": "What are we running?",
@@ -278,7 +288,10 @@
       "cloudWaiting": "{count, plural, one {# file is waiting.} other {# files are waiting.}}",
       "cloudDisconnected": "This event copies to {provider}, but {provider} isn't connected. Connect it and this event's files catch up.",
       "cloudFailed": "{count, plural, one {# file hasn't reached {provider}.} other {# files haven't reached {provider}.}}",
-      "cloudFix": "Open Integrations"
+      "cloudFix": "Open Integrations",
+      "reportsTitle": "Reports",
+      "reportsOpen": "{count, plural, one {# report is waiting for a decision} other {# reports are waiting for a decision}}",
+      "reportsSettled": "Every report on this event has been decided."
     },
     "setup": {
       "title": "Event setup",
@@ -1584,6 +1597,35 @@
           "failed": "Couldn’t delete the organization. Try again."
         }
       }
+    },
+    "reports": {
+      "title": "Reports",
+      "subtitle": "Guests can report anything they see from your events. You can hide an item right away; Immersia reviews every report within 24 hours.",
+      "emptyTitle": "No reports",
+      "emptyBody": "Nothing has been reported from your events.",
+      "reasons": {
+        "not_me": "Someone didn’t agree to it",
+        "inappropriate": "Inappropriate",
+        "illegal": "May be illegal",
+        "privacy": "Privacy concern",
+        "other": "Other"
+      },
+      "status": {
+        "open": "Waiting for review",
+        "escalated": "Escalated",
+        "actioned": "Taken down",
+        "dismissed": "Dismissed"
+      },
+      "stateHidden": "Hidden by you",
+      "stateRemoved": "Removed by Immersia",
+      "capture": "Capture",
+      "open": "Open the page",
+      "hide": "Hide now",
+      "restore": "Restore",
+      "hiddenDone": "Hidden. It is off the share page, the gallery and the screens now.",
+      "restoredDone": "Restored. Guests can open it again.",
+      "takenDown": "Immersia has removed this item, so it can’t be restored.",
+      "failed": "That didn’t work. Try again."
     }
   },
   "booth": {
@@ -1936,7 +1978,12 @@
       "confirm": "Yes, delete my files",
       "tooMany": "Too many attempts. Wait a few minutes and try again.",
       "failed": "Couldn’t delete your files. Try again in a moment."
-    }
+    },
+    "report": "Report this",
+    "removedTitle": "This has been removed",
+    "removedBody": "The photos and videos on this page are no longer available.",
+    "removedLegalTitle": "Unavailable for legal reasons",
+    "removedLegalBody": "This content was removed because it may be illegal."
   },
   "code": {
     "metaTitle": "Find your files",
@@ -1994,7 +2041,8 @@
         "tooMany": "Too many tries. Wait a few minutes and try again.",
         "failed": "Couldn't check the password. Check your connection and try again."
       }
-    }
+    },
+    "report": "Report something in this gallery"
   },
   "zip": {
     "progress": "{files, plural, one {# file} other {# files}} · {size}",
@@ -2302,6 +2350,41 @@
           "p1": "Questions about these terms: {email}."
         }
       }
+    }
+  },
+  "report": {
+    "metaTitle": "Report this content",
+    "title": "Report this content",
+    "intro": "Tell us what is wrong. A person reads every report and acts on it within 24 hours. You don’t need an account.",
+    "reasonLabel": "What is the problem?",
+    "reasons": {
+      "not_me": "I didn’t agree to this being shared",
+      "inappropriate": "It’s inappropriate or offensive",
+      "illegal": "It may be illegal",
+      "privacy": "It shows private information or a child",
+      "other": "Something else"
+    },
+    "detailsLabel": "Anything we should know (optional)",
+    "detailsHelp": "Please leave out personal details you don’t want us to read.",
+    "contactLabel": "Your email, if you’d like a reply (optional)",
+    "contactHelp": "Used only to answer this report, then deleted. We don’t keep your address or your device’s details.",
+    "codeLabel": "Code of the photo or video",
+    "codeHelp": "The six characters under it in the gallery, like K7M-2QX.",
+    "codePlaceholder": "K7M-2QX",
+    "honeypot": "Leave this field empty",
+    "submit": "Send report",
+    "back": "Back",
+    "errors": {
+      "invalid": "Choose what the problem is, then send again.",
+      "contact": "That email address doesn’t look right.",
+      "not_found": "We couldn’t find that photo or video. Check the code and try again.",
+      "too_many": "There have been too many reports from here today. Please try again tomorrow."
+    },
+    "sent": {
+      "title": "Thank you",
+      "body": "Your report was sent. Someone will look at it within 24 hours.",
+      "removedBody": "That content has already been removed. Thank you for letting us know.",
+      "back": "Back to the page"
     }
   }
 }
