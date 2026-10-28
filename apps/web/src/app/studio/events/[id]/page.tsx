@@ -9,9 +9,11 @@ import { eventCloudAlert } from '@/server/cloud/integrations';
 import { appOrigin } from '@/server/env';
 import { eventStats, getEvent, guestFilesSummary } from '@/server/events';
 import { galleryStats } from '@/server/gallery';
+import { listServerRenders, serverRenderCounts } from '@/server/render-jobs';
 import { requireOperator } from '@/server/session';
 import { ExtendGuestFiles } from './ExtendGuestFiles';
 import { GalleryCard } from './GalleryCard';
+import { ServerRenders } from './ServerRenders';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const op = await requireOperator();
@@ -23,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function EventDashboardPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const op = await requireOperator({ event: ['read'] });
-  const [t, ti, locale, s, files, event, gallery, cloud] = await Promise.all([
+  const [t, ti, locale, s, files, event, gallery, cloud, renders, renderCounts] = await Promise.all([
     getTranslations('studio.dashboard'),
     getTranslations('studio.integrations'),
     getLocale(),
@@ -32,6 +34,8 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
     getEvent(op.organizationId, id),
     galleryStats(id),
     eventCloudAlert(op.organizationId, id),
+    listServerRenders(op.organizationId, id),
+    serverRenderCounts(op.organizationId, id),
   ]);
   const n = (v: number) => v.toLocaleString(locale);
   const cloudName = cloud ? ti(`providers.${cloud.provider}`) : '';
@@ -102,6 +106,22 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
           <Stat label={t('devices')} value={n(s.activeDevices)} hint={t('devicesHint')} />
         </div>
       </section>
+      {renders.length > 0 && (
+        <ServerRenders
+          eventId={id}
+          counts={renderCounts}
+          rows={renders.map((r) => ({
+            id: r.id,
+            stage: r.stage,
+            attempts: r.attempts,
+            error: r.error,
+            shortCode: r.shortCode,
+            createdAt: r.createdAt.toISOString(),
+            renderMs: r.renderMs,
+            canRetry: r.canRetry,
+          }))}
+        />
+      )}
       <section aria-labelledby="files-heading">
         <h2 id="files-heading" className="eyebrow mb-3">
           {t('guestFiles')}

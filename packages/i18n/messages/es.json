@@ -269,7 +269,39 @@
       "cloudWaiting": "{count, plural, one {Hay # archivo en espera.} other {Hay # archivos en espera.}}",
       "cloudDisconnected": "Este evento se copia a {provider}, pero {provider} no está conectado. Conéctalo y los archivos de este evento se pondrán al día.",
       "cloudFailed": "{count, plural, one {# archivo no llegó a {provider}.} other {# archivos no llegaron a {provider}.}}",
-      "cloudFix": "Abrir Integraciones"
+      "cloudFix": "Abrir Integraciones",
+      "serverRenders": {
+        "title": "Renderizados en el servidor",
+        "intro": "Las tomas que una cabina no pudo renderizar por sí misma se renderizan aquí. Un trabajo que falla vuelve a intentarlo solo, un poco después; cuando se rinde, puedes iniciarlo de nuevo.",
+        "stage": {
+          "queued": "En cola",
+          "rendering": "Renderizando",
+          "done": "Listo",
+          "failed": "Falló"
+        },
+        "code": "Código del invitado {code}",
+        "took": "renderizado en {time}",
+        "attempts": "{count, plural, one {# intento} other {# intentos}}",
+        "retry": "Intentar de nuevo",
+        "retried": "En cola de nuevo. Empieza en cuanto el servidor de renderizado esté libre.",
+        "retryFilesGone": "Los archivos de esta toma se eliminaron, así que no se puede renderizar de nuevo.",
+        "retryConflict": "Esta toma ya tiene un renderizado más reciente en cola.",
+        "retryFailed": "No se pudo iniciar el renderizado de nuevo. Inténtalo otra vez en un momento.",
+        "errors": {
+          "undecodable": "No se puede leer el formato del video",
+          "unsupported_encoder": "El navegador del servidor no pudo codificar el video",
+          "encoder_stall": "El codificador dejó de responder",
+          "gpu": "La aceleración gráfica no estaba disponible",
+          "source_missing": "La grabación ya no estaba en el almacenamiento",
+          "download_failed": "No se pudo obtener la grabación",
+          "upload_failed": "No se pudo guardar el video terminado",
+          "timeout": "El renderizado tardó demasiado",
+          "lease_lost": "El servidor de renderizado se detuvo a medias",
+          "shutdown": "El servidor de renderizado se apagó",
+          "invalid_recipe": "La cabina y el servidor no coinciden en los ajustes del renderizado",
+          "failed": "El renderizado falló"
+        }
+      }
     },
     "setup": {
       "title": "Configuración del evento",
@@ -1329,7 +1361,8 @@
       "imported": "Importada",
       "rendering": "Renderizando",
       "rendered": "Renderizada",
-      "failed": "Falló"
+      "failed": "Falló",
+      "server": "En el servidor"
     },
     "takeOrigin": {
       "recovered": "Recuperada",
@@ -1351,7 +1384,12 @@
       "encoder_stall": "El codificador dejó de responder",
       "gpu": "La aceleración gráfica no está disponible",
       "cancelled": "Cancelado",
-      "failed": "El renderizado falló"
+      "failed": "El renderizado falló",
+      "server_unavailable": "El renderizado en el servidor no está configurado para esta cuenta",
+      "server_rate_limited": "Esperando el límite de renderizados en el servidor",
+      "server_limit": "Este evento alcanzó su límite de renderizados en el servidor",
+      "server_upload": "No se pudo enviar la grabación al servidor",
+      "server_failed": "El servidor no pudo renderizar esta toma"
     },
     "renderQueue": {
       "title": "Cola de renderizado",
@@ -1363,6 +1401,11 @@
       "delete": "Eliminar",
       "keep": "Conservar",
       "progress": "Progreso del renderizado",
+      "path": {
+        "local": "En este dispositivo",
+        "wasm": "En este dispositivo (modo de compatibilidad)",
+        "server": "En el servidor"
+      },
       "preview": "Video renderizado",
       "deleteTitle": "¿Eliminar esta toma?",
       "deleteBody": "La grabación y todo lo renderizado a partir de ella se eliminan de este dispositivo. Los archivos ya subidos no se ven afectados."

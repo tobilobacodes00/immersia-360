@@ -269,7 +269,39 @@
       "cloudWaiting": "{count, plural, one {# file is waiting.} other {# files are waiting.}}",
       "cloudDisconnected": "This event copies to {provider}, but {provider} isn't connected. Connect it and this event's files catch up.",
       "cloudFailed": "{count, plural, one {# file hasn't reached {provider}.} other {# files haven't reached {provider}.}}",
-      "cloudFix": "Open Integrations"
+      "cloudFix": "Open Integrations",
+      "serverRenders": {
+        "title": "Server renders",
+        "intro": "Takes a booth couldn't render itself are rendered here instead. A job that fails tries again by itself, a little later; once it gives up you can start it again.",
+        "stage": {
+          "queued": "Queued",
+          "rendering": "Rendering",
+          "done": "Done",
+          "failed": "Failed"
+        },
+        "code": "Guest code {code}",
+        "took": "rendered in {time}",
+        "attempts": "{count, plural, one {# try} other {# tries}}",
+        "retry": "Try again",
+        "retried": "Queued again. It starts as soon as the render worker is free.",
+        "retryFilesGone": "The files for this take were removed, so it can't be rendered again.",
+        "retryConflict": "This take already has a newer render queued.",
+        "retryFailed": "Couldn't start the render again. Try again in a moment.",
+        "errors": {
+          "undecodable": "The video format can't be read",
+          "unsupported_encoder": "The server's browser couldn't encode the video",
+          "encoder_stall": "The encoder stopped responding",
+          "gpu": "Graphics acceleration was unavailable",
+          "source_missing": "The recording was no longer in storage",
+          "download_failed": "Couldn't fetch the recording",
+          "upload_failed": "Couldn't store the finished video",
+          "timeout": "The render took too long",
+          "lease_lost": "The render worker stopped part-way",
+          "shutdown": "The render worker was shut down",
+          "invalid_recipe": "The booth and the server disagree on the render settings",
+          "failed": "The render failed"
+        }
+      }
     },
     "setup": {
       "title": "Event setup",
@@ -1329,7 +1361,8 @@
       "imported": "Imported",
       "rendering": "Rendering",
       "rendered": "Rendered",
-      "failed": "Failed"
+      "failed": "Failed",
+      "server": "On the server"
     },
     "takeOrigin": {
       "recovered": "Recovered",
@@ -1351,7 +1384,12 @@
       "encoder_stall": "The encoder stopped responding",
       "gpu": "Graphics acceleration is unavailable",
       "cancelled": "Cancelled",
-      "failed": "Render failed"
+      "failed": "Render failed",
+      "server_unavailable": "Server rendering isn't set up for this account",
+      "server_rate_limited": "Waiting for the server render limit",
+      "server_limit": "This event reached its server render limit",
+      "server_upload": "Couldn't send the recording to the server",
+      "server_failed": "The server couldn't render this take"
     },
     "renderQueue": {
       "title": "Render queue",
@@ -1363,6 +1401,11 @@
       "delete": "Delete",
       "keep": "Keep",
       "progress": "Render progress",
+      "path": {
+        "local": "On this device",
+        "wasm": "On this device (compatibility mode)",
+        "server": "On the server"
+      },
       "preview": "Rendered video",
       "deleteTitle": "Delete this take?",
       "deleteBody": "The recording and anything rendered from it are removed from this device. Files already uploaded are not affected."
