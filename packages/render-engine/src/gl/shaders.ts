@@ -208,8 +208,10 @@ out vec4 oColor;
 uniform sampler2D uFrame;
 uniform sampler2D uOverlay;
 uniform bool uHasOverlay;
+// The look/effects stage leaves its result in a y-up texture (see gl/grade.ts).
+uniform bool uFrameYUp;
 void main() {
-  vec3 c = texture(uFrame, vUv).rgb;
+  vec3 c = texture(uFrame, vec2(vUv.x, uFrameYUp ? 1.0 - vUv.y : vUv.y)).rgb;
   if (uHasOverlay) {
     vec4 o = texture(uOverlay, vUv);
     c = mix(c, o.rgb, o.a);

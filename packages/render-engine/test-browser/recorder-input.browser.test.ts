@@ -16,6 +16,13 @@ const FORMATS = [
   'video/mp4',
 ];
 
+/**
+ * Worst case of one test: record() may wait 60 s for the take to hold enough frames on a loaded
+ * runner, then the take is probed and rendered on SwiftShader. The project's 120 s default timed
+ * the H.264 case out on a busy CI runner.
+ */
+const RECORDER_TEST_TIMEOUT_MS = 240_000;
+
 type GeneratedTrack = MediaStreamTrack & { readonly writable: WritableStream<VideoFrame> };
 const TrackGenerator = (globalThis as { MediaStreamTrackGenerator?: new (init: { kind: 'video' }) => GeneratedTrack })
   .MediaStreamTrackGenerator;
@@ -114,20 +121,24 @@ describe('MediaRecorder takes render (CAP-1 → VID-8)', () => {
   for (const mime of FORMATS) {
     const supported = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(mime);
 
-    it.skipIf(!supported)(`${mime}: a complete take decodes and renders`, async () => {
-      // WebM can be probed while it grows; MP4 is only checked once the recorder finishes it.
-      const chunks = await record(mime, 1500, async (c) =>
-        mime.startsWith('video/webm') ? (await framesIn(c, mime)) >= 8 : c.length >= 4,
-      );
-      const take = new Blob(chunks, { type: mime });
-      const probe = await probeTake(take);
-      probe.input.dispose();
-      expect(probe.decodable, `${mime} → decoder config ${probe.decoderCodec}`).toBe(true);
-      expect(probe.pts.length).toBeGreaterThan(5);
-      const result = await render(job(take));
-      // Every output frame of the take's real duration is rendered (30 fps output).
-      expect(result.frames).toBeGreaterThanOrEqual(Math.floor(probe.durationS * 30) - 1);
-    });
+    it.skipIf(!supported)(
+      `${mime}: a complete take decodes and renders`,
+      async () => {
+        // WebM can be probed while it grows; MP4 is only checked once the recorder finishes it.
+        const chunks = await record(mime, 1500, async (c) =>
+          mime.startsWith('video/webm') ? (await framesIn(c, mime)) >= 8 : c.length >= 4,
+        );
+        const take = new Blob(chunks, { type: mime });
+        const probe = await probeTake(take);
+        probe.input.dispose();
+        expect(probe.decodable, `${mime} → decoder config ${probe.decoderCodec}`).toBe(true);
+        expect(probe.pts.length).toBeGreaterThan(5);
+        const result = await render(job(take));
+        // Every output frame of the take's real duration is rendered (30 fps output).
+        expect(result.frames).toBeGreaterThanOrEqual(Math.floor(probe.durationS * 30) - 1);
+      },
+      RECORDER_TEST_TIMEOUT_MS,
+    );
 
     // WebM is the crash-safe container: a take whose last chunks never reached storage must render.
     it.skipIf(!supported || !mime.startsWith('video/webm'))(
@@ -148,6 +159,7 @@ describe('MediaRecorder takes render (CAP-1 → VID-8)', () => {
         const result = await render(job(take));
         expect(result.frames).toBeGreaterThanOrEqual(Math.floor(probe.durationS * 30) - 1);
       },
+      RECORDER_TEST_TIMEOUT_MS,
     );
   }
 });

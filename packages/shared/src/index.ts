@@ -10,4 +10,5 @@ export * from './device';
 export * from './session';
 export * from './kiosk';
 export * from './asset';
+export * from './media-refs';
 export * from './live';

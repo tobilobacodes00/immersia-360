@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { liveQuery } from 'dexie';
 import { RenderClient, RenderFailure, type RenderHandle } from '@immersia/render-engine/client';
-import { mixSoundtrack } from '@immersia/render-engine/audio';
+import { mixSoundtrack, musicBeats } from '@immersia/render-engine/audio';
+import { beatsOnOutput, snapSlowMotion } from '@immersia/render-engine/beats';
 import {
   messagingSize,
   outputSize,
@@ -11,11 +12,25 @@ import {
   probeTake,
   videoBitrate,
   type Card,
+  type RenderBackground,
   type StillCard,
 } from '@immersia/render-engine';
 import { boothDb, outputsForTake, putOutput, type LocalTake, type TakeStore } from '@immersia/offline';
 import type { Video360Settings } from '@immersia/shared';
 import { workerUrl } from '@/lib/workers';
+
+/** Below this the song has no steady beat to follow (ambient, spoken): effects keep their own time. */
+const MIN_BEAT_CONFIDENCE = 0.3;
+
+/** One analysis per song and trim for the whole session (every take uses the same music). */
+const beatCache = new Map<string, Promise<{ beats: number[]; confidence: number } | null>>();
+
+/** A stable 0..1000 seed per take: re-rendering a take gives the same confetti. */
+function seedOf(id: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619);
+  return (h >>> 0) % 1000;
+}
 
 /** Takes waiting to render. */
 export const RENDERABLE: LocalTake['status'][] = ['recorded', 'interrupted', 'imported'];
@@ -26,6 +41,8 @@ export interface RenderAssets {
   music?: () => Promise<Blob | null>;
   intro?: () => Promise<Card | null>;
   outro?: () => Promise<Card | null>;
+  /** CAP-10: what replaces the background behind the guest. Null renders as filmed. */
+  background?: () => Promise<RenderBackground | null>;
   /** DL-4: the closing QR card for this take's guest session. */
   endCard?: (take: LocalTake) => Promise<StillCard | null>;
 }
@@ -110,24 +127,60 @@ export function useRenderQueue(opts: {
         // A missing or unreadable file renders the video without it rather than failing the take.
         const media = <T>(get?: () => Promise<T | null>) => (get ? get().catch(() => null) : Promise.resolve(null));
         const endCard = assets?.endCard;
-        const [overlay, music, intro, outro, end] = await Promise.all([
+        const [overlay, music, intro, outro, end, background] = await Promise.all([
           media(assets?.overlay),
           media(assets?.music),
           media(assets?.intro),
           media(assets?.outro),
           media(endCard ? () => endCard(take) : undefined),
+          media(assets?.background),
         ]);
-        const base = { output, slowMotion: video.slowMotion, reverse: video.reverse, intro, outro, endCard: end };
+        let base = { output, slowMotion: video.slowMotion, reverse: video.reverse, intro, outro, endCard: end };
         let audio = null;
+        let beats: number[] = [];
         if (music && video.music) {
           // The soundtrack is mixed to the exact output length before rendering.
           const probe = await probeTake(blob);
           probe.input.dispose();
+          if (video.beatSync) {
+            // VID-12: effects pulse on the song's beats, and slow motion starts and ends on one.
+            const settings = video.music;
+            const key = `${settings.assetId}:${settings.trimStartMs}:${settings.trimEndMs}`;
+            let analysis = beatCache.get(key);
+            if (!analysis) {
+              analysis = musicBeats(music, settings, 120).catch(() => null);
+              beatCache.set(key, analysis);
+            }
+            const found = await analysis;
+            if (found && found.confidence >= MIN_BEAT_CONFIDENCE) {
+              const roughS = plannedDurationS(base, probe.durationS) + 2;
+              const introS = intro ? (intro.kind === 'still' ? intro.seconds : intro.maxSeconds) : 0;
+              const onOutput = beatsOnOutput(found.beats, settings, roughS);
+              if (video.slowMotion.enabled)
+                base = {
+                  ...base,
+                  slowMotion: {
+                    ...video.slowMotion,
+                    ...snapSlowMotion(video.slowMotion, onOutput, introS, probe.durationS),
+                  },
+                };
+              beats = beatsOnOutput(found.beats, settings, plannedDurationS(base, probe.durationS));
+            }
+          }
           audio = await mixSoundtrack(music, video.music, plannedDurationS(base, probe.durationS));
         }
-        handle.current = client.current.render(take.id, { take: blob, ...base, overlay, audio }, (progress) =>
-          setCurrent({ takeId: take.id, progress }),
-        );
+        const job = {
+          take: blob,
+          ...base,
+          overlay,
+          audio,
+          look: video.filterId ? { id: video.filterId, intensity: 1 } : null,
+          effects: video.effects.map((e) => ({ id: e.id, intensity: e.intensity, colorMode: e.colorMode ?? null })),
+          beats,
+          seed: seedOf(take.id),
+          background,
+        };
+        handle.current = client.current.render(take.id, job, (progress) => setCurrent({ takeId: take.id, progress }));
         const result = await handle.current.result;
         const outputId = await putOutput(db, store, {
           takeId: take.id,

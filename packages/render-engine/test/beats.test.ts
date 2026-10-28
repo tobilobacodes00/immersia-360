@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { analyseBeats, beatState, beatsOnOutput, snapSlowMotion } from '../src/beats';
+import { analyseBeats, beatState, beatsOnOutput, foldTempo, snapSlowMotion } from '../src/beats';
 
 /** mulberry32: a small, well-mixed deterministic PRNG (test fixtures must not depend on Math.random). */
 function prng(seed: number) {
@@ -119,5 +119,19 @@ describe('beat timing on the output', () => {
     expect(Math.abs(endOut / 0.5 - Math.round(endOut / 0.5))).toBeLessThan(1e-6);
     // Nothing within reach: unchanged.
     expect(snapSlowMotion({ startS: 2, endS: 6, speed: 0.5 }, [20], 0, 8)).toEqual({ startS: 2, endS: 6 });
+  });
+
+  it('plays a song faster than the strobe allows in half time, and leaves the rest alone', () => {
+    const grid = (bpm: number, n = 16) => Array.from({ length: n }, (_, i) => 1 + (i * 60) / bpm);
+    // 190 BPM (the tracker's ceiling) over a 180 BPM cap: every other beat, 95 BPM.
+    const folded = foldTempo(grid(190), 180);
+    expect(folded).toEqual(grid(190).filter((_, i) => i % 2 === 0));
+    expect(60 / (folded[1]! - folded[0]!)).toBeCloseTo(95);
+    // At or under the cap, and with one early beat in a 170 BPM song: unchanged.
+    expect(foldTempo(grid(180), 180)).toEqual(grid(180));
+    const jittered = grid(170).map((b, i) => (i === 5 ? b - 0.05 : b));
+    expect(foldTempo(jittered, 180)).toEqual(jittered);
+    // Too few beats to judge: unchanged.
+    expect(foldTempo([1, 1.2], 180)).toEqual([1, 1.2]);
   });
 });

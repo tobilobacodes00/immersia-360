@@ -51,27 +51,26 @@ import { createOpfsWorker } from '@immersia/offline/opfs-worker';
 import { workerUrl } from '@/lib/workers';
 import { guestThemeVars, uuidv7, type EventTheme, type Video360Settings } from '@immersia/shared';
 import { Pill, cx } from '@immersia/ui';
-import { CountdownDisc, GuestButton, Headline, fade } from '@immersia/ui/guest';
+import { CountdownDisc, GuestButton, GuestScreen, Headline, fade } from '@immersia/ui/guest';
 import { readDeviceIdentity, type DeviceIdentity } from '@/lib/device-identity';
 import { useCaptureKeys, useHeartbeat, useHeld, useLiveQuery, useOnline, useWakeLock } from './booth-hooks';
 import { importVideoFiles } from './import-originals';
 import { Gallery } from './Gallery';
 import { RegisterDevice } from './RegisterDevice';
 import { KioskLockLayer, useKioskLock } from './KioskLock';
+import { useLiveBackground, useWarmSegmenter } from './background-source';
+import { LookPreview } from './LookPreview';
 import { RenderQueue } from './RenderQueue';
 import { ResultScreen } from './ResultScreen';
 import { useUploadQueue } from './use-upload-queue';
 import { useEventMedia, type EventMedia } from './use-event-media';
 import { RENDERABLE, useRenderQueue } from './use-render-queue';
-import { SettingsDrawer, readCameraChoice, type CameraChoice } from './SettingsDrawer';
-
-export interface ActiveCamera {
-  label: string;
-  width: number;
-  height: number;
-  frameRate: number;
-  torch: OpenedCamera['torch'];
-}
+import { SettingsDrawer } from './SettingsDrawer';
+import { describeCamera, reconcileWithCamera, type ActiveCamera } from './active-camera';
+import { fillLightOf, needsReopen, type CameraChoice } from './camera-choice';
+import { FillLightFrame } from './FillLightFrame';
+import { useOpenGuard } from './open-guard';
+import { useCameraChoice } from './use-camera-choice';
 
 export interface BoothEvent {
   id: string;
@@ -116,7 +115,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
   // Client-only surface (loaded with ssr: false), so reading storage in initialisers is safe.
   const [identity, setIdentity] = useState<DeviceIdentity | null>(readDeviceIdentity);
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' });
-  const [cameraChoice, setCameraChoice] = useState<CameraChoice>(readCameraChoice);
+  const { choice: cameraChoice, change: changeCamera, commit: commitChoice, read: readChoice } = useCameraChoice();
   const [activeCamera, setActiveCamera] = useState<ActiveCamera | null>(null);
   const [backend, setBackend] = useState<TakeStore['backend'] | null>(null);
   // The store as state too, so the render queue starts as soon as storage is ready.
@@ -141,6 +140,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
   useEffect(() => {
     phaseRef.current = phase;
   });
+  const openGuard = useOpenGuard();
 
   const takes = useLiveQuery(() => takesForEvent(db, event.id), [event.id], [] as LocalTake[]);
   const pending = takes.filter((tk) => PENDING.includes(tk.status)).length;
@@ -163,6 +163,10 @@ export function Booth360({ event }: { event: BoothEvent }) {
     [event.media, event.share.endFrameQr, event.theme, t],
   );
   const renderMedia = useEventMedia(mediaSpec, event.video);
+  // CAP-10: the background behind the guest on the preview (the render has its own copy in its worker).
+  const liveBackground = useLiveBackground(event.video.background, event.media.assets);
+  const [backgroundUnavailable, setBackgroundUnavailable] = useState(false);
+  useWarmSegmenter(event.video.background !== null, true);
   const renderQueue = useRenderQueue({
     eventId: event.id,
     video: event.video,
@@ -213,15 +217,20 @@ export function Booth360({ event }: { event: BoothEvent }) {
     () => () => {
       clearInterval(countdownTimer.current);
       clearTimeout(stopTimer.current);
+      // An open still waiting on a permission prompt must not start a camera on a page that has gone.
+      openGuard.cancel();
       stopCamera();
     },
-    [stopCamera],
+    [stopCamera, openGuard],
   );
 
   const startCamera = useCallback(
     async (choice: CameraChoice) => {
+      // This open supersedes any other in flight (a double tap): only the newest may use its camera.
+      const token = openGuard.begin();
       setPhase({ kind: 'starting' });
       stopCamera();
+      setActiveCamera(null);
       try {
         store.current ??= await takeStore(() => createOpfsWorker(workerUrl('opfs')));
         setBackend(store.current.backend);
@@ -234,27 +243,33 @@ export function Booth360({ event }: { event: BoothEvent }) {
                 resolution: event.video.resolution,
                 frameRate: event.video.fps,
                 audio: event.video.microphone,
+                // A restart switches the light off and resets the zoom: put the operator's choice back (CAP-2, CAP-6).
+                restore: { zoom: choice.zoom, torch: choice.torch },
               });
+        if (!openGuard.isCurrent(token)) return cam.stop();
         camera.current = cam;
-        setActiveCamera({
-          label: cam.label,
-          width: cam.settings.width,
-          height: cam.settings.height,
-          frameRate: cam.settings.frameRate,
-          torch: cam.torch,
+        setActiveCamera(describeCamera(cam));
+        // Show what the camera really did with the saved zoom and torch, not what was asked of it.
+        const latest = readChoice();
+        const settled = reconcileWithCamera(latest, cam);
+        if (settled !== latest) commitChoice(settled);
+        // Only the open camera's own end counts: a camera that was replaced ends without it being an error.
+        cam.track.addEventListener('ended', () => {
+          if (camera.current === cam) setPhase({ kind: 'error', code: 'lost' });
         });
-        cam.track.addEventListener('ended', () => setPhase({ kind: 'error', code: 'lost' }));
         const v = videoRef.current;
         if (v) {
           v.srcObject = cam.stream;
           await v.play().catch(() => undefined);
         }
+        // Replaced while the picture was starting: the newer open already stopped this camera.
+        if (!openGuard.isCurrent(token)) return;
         setPhase({ kind: 'ready' });
       } catch (err) {
-        setPhase({ kind: 'error', code: toCameraError(err).code });
+        if (openGuard.isCurrent(token)) setPhase({ kind: 'error', code: toCameraError(err).code });
       }
     },
-    [event.video, stopCamera],
+    [event.video, stopCamera, readChoice, commitChoice, openGuard],
   );
 
   const finishRecording = useCallback(async () => {
@@ -411,6 +426,8 @@ export function Booth360({ event }: { event: BoothEvent }) {
   const themeVars = useMemo(() => guestThemeVars(event.theme), [event.theme]);
   const spin = event.video.spinSeconds;
   const live = phase.kind === 'ready' || phase.kind === 'countdown' || phase.kind === 'recording';
+  // The camera is left exactly as it is from the first tap until the guest is done with the result.
+  const cameraBusy = phase.kind !== 'idle' && phase.kind !== 'ready' && phase.kind !== 'error';
 
   if (!identity) {
     return (
@@ -443,6 +460,20 @@ export function Booth360({ event }: { event: BoothEvent }) {
           cameraChoice.mirror && '-scale-x-100',
         )}
       />
+      {/* CAP-9: the event's look on the live preview. */}
+      <LookPreview
+        video={videoRef}
+        lookId={event.video.filterId}
+        background={liveBackground}
+        onBackgroundUnavailable={() => setBackgroundUnavailable(true)}
+        className={cx(
+          'absolute inset-0 size-full object-cover transition-opacity duration-300',
+          live ? 'opacity-100' : 'opacity-0',
+          cameraChoice.mirror && '-scale-x-100',
+        )}
+      />
+      {/* CAP-6: a glow around the screen edge that lights the guest (a front camera has no flash). */}
+      <FillLightFrame fill={fillLightOf(cameraChoice)} active={live && activeCamera?.lens.facing !== 'back'} />
 
       {/* Top bar */}
       <div className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 p-[1.25rem]">
@@ -466,6 +497,11 @@ export function Booth360({ event }: { event: BoothEvent }) {
           {lowStorage && (
             <Pill tone="bad" className="text-[0.8rem]">
               <HardDrive className="size-3.5" aria-hidden /> {t('lowStorage')}
+            </Pill>
+          )}
+          {backgroundUnavailable && !kiosk.locked && (
+            <Pill tone="warn" className="text-[0.8rem]">
+              {t('backgroundUnavailable')}
             </Pill>
           )}
           {motionOn && live && (
@@ -547,7 +583,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
 
       <AnimatePresence mode="wait">
         {phase.kind === 'idle' && (
-          <motion.div key="idle" {...fade} className="absolute inset-0 grid place-items-center px-6 text-center">
+          <GuestScreen key="idle" className="absolute inset-0 grid place-items-center px-6 text-center">
             <div className="flex flex-col items-center">
               <Headline font={event.theme.font} className="text-[clamp(3rem,8vw,7rem)]">
                 {event.name}
@@ -564,7 +600,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
                 {t('startBooth')}
               </GuestButton>
             </div>
-          </motion.div>
+          </GuestScreen>
         )}
 
         {phase.kind === 'starting' && (
@@ -574,7 +610,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
         )}
 
         {phase.kind === 'ready' && (
-          <motion.div
+          <GuestScreen
             key="ready"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
@@ -591,7 +627,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
               </GuestButton>
             )}
             {motionOn && <p className="text-[1rem] opacity-70">{t('motionHint')}</p>}
-          </motion.div>
+          </GuestScreen>
         )}
 
         {phase.kind === 'countdown' && (
@@ -668,7 +704,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
         )}
 
         {phase.kind === 'error' && (
-          <motion.div key="error" {...fade} className="absolute inset-0 z-10 grid place-items-center px-6">
+          <GuestScreen key="error" className="absolute inset-0 z-10 grid place-items-center px-6">
             <div className="card max-w-md p-6 text-fg" role="alert">
               <h2 className="text-lg font-semibold">{t('errors.title')}</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted">{t(`errors.${errorKey(phase.code)}`)}</p>
@@ -680,16 +716,19 @@ export function Booth360({ event }: { event: BoothEvent }) {
                 >
                   {t('errors.retry')}
                 </button>
-                <button
-                  type="button"
-                  className="focus-ring rounded-[10px] border border-line-strong bg-elev px-4 py-2 text-sm font-medium"
-                  onClick={() => setDrawer(true)}
-                >
-                  {t('settings.title')}
-                </button>
+                {/* The operator's drawer stays behind the kiosk PIN, even on this screen. */}
+                {!kiosk.locked && (
+                  <button
+                    type="button"
+                    className="focus-ring rounded-[10px] border border-line-strong bg-elev px-4 py-2 text-sm font-medium"
+                    onClick={() => setDrawer(true)}
+                  >
+                    {t('settings.title')}
+                  </button>
+                )}
               </div>
             </div>
-          </motion.div>
+          </GuestScreen>
         )}
       </AnimatePresence>
 
@@ -713,14 +752,17 @@ export function Booth360({ event }: { event: BoothEvent }) {
       />
 
       <SettingsDrawer
-        open={drawer}
+        // Never while the kiosk is PIN-locked: the drawer changes the camera, its light and the fill light.
+        open={drawer && !kiosk.locked}
         onClose={() => setDrawer(false)}
         choice={cameraChoice}
-        onChoice={(c) => {
-          setCameraChoice(c);
-          if (phase.kind !== 'idle' && phase.kind !== 'recording') void startCamera(c);
+        onChoice={(patch) => {
+          const { prev, next } = changeCamera(patch);
+          // Only a different camera needs a restart, and never while a guest is being captured.
+          if (needsReopen(prev, next) && phase.kind !== 'idle' && !cameraBusy) void startCamera(next);
         }}
-        camera={activeCamera}
+        camera={phase.kind === 'error' ? null : activeCamera}
+        cameraBusy={cameraBusy}
         capture360={{
           motion: { enabled: motionOn, threshold },
           onMotion: (m) => {

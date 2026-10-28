@@ -23,7 +23,7 @@ export const PRINT_SIZES = ['2x6', '4x4', '4x6', '6x4', '5x7', 'story'] as const
 export const effectSchema = z.object({
   id: z.string().min(1),
   /** Colour mode for effects that have one, e.g. confetti colour/white/silver/gold (VID-7). */
-  colorMode: z.string().optional(),
+  colorMode: z.enum(['colour', 'white', 'silver', 'gold']).optional(),
   intensity: z.number().min(0).max(1).default(1),
 });
 
@@ -50,6 +50,17 @@ export const slowMotionSchema = z
   })
   .refine((s) => s.endS > s.startS, 'slow_motion_end_before_start');
 
+/**
+ * CAP-10: what replaces the background behind guests, found on the device with person segmentation.
+ * Exactly one of an uploaded picture or video (an asset of type `background`; photos take pictures only,
+ * which the server checks), a flat colour, or a blurred copy of the camera's own picture. Null is off.
+ */
+export const backgroundSchema = z
+  .union([z.strictObject({ assetId: uuid }), z.strictObject({ color: hex }), z.strictObject({ blur: z.literal(true) })])
+  .nullable();
+
+export type Background = z.infer<typeof backgroundSchema>;
+
 export const video360Schema = z
   .object({
     resolution: z.enum(RESOLUTIONS).default('1080p'),
@@ -63,6 +74,8 @@ export const video360Schema = z
     filterId: z.string().nullable().default(null),
     effects: z.array(effectSchema).max(8).default([]),
     beatSync: z.boolean().default(false),
+    /** CAP-10: the 360 booth's background (a picture or video, a colour, a blur) or null. */
+    background: backgroundSchema.default(null),
     overlayTemplateId: uuid.nullable().default(null),
     introAssetId: uuid.nullable().default(null),
     outroAssetId: uuid.nullable().default(null),
@@ -82,7 +95,11 @@ export const photoSchema = z.object({
   retake: z.boolean().default(true),
   layoutTemplateId: uuid.nullable().default(null),
   printSize: z.enum(PRINT_SIZES).default('2x6'),
+  /** VID-11 looks apply to photos too; PHO-10 adds one photo effect per event. */
   filterId: z.string().nullable().default(null),
+  effectId: z.string().nullable().default(null),
+  /** CAP-10: the photo booth's background (a picture, a colour, a blur) or null. Never a video. */
+  background: backgroundSchema.default(null),
   /** PHO-2: extra outputs per session. */
   outputs: z
     .object({ gif: z.boolean(), boomerang: z.boolean(), shortVideo: z.boolean() })
