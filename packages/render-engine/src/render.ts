@@ -268,7 +268,7 @@ export async function render(
     : (job.beats ?? []);
   const frames = new FrameSource(probe);
   let background: BackgroundRun | null = null;
-  let backgroundOutcome: BackgroundOutcome = 'none';
+  let backgroundOutcome: BackgroundOutcome;
   try {
     // CAP-10, started up front so a missing model shows before the first frame, not in the middle.
     ({ run: background, outcome: backgroundOutcome } = await BackgroundRun.start(job.background, compositor, {

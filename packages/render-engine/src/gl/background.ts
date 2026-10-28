@@ -444,7 +444,10 @@ export class BackgroundStage {
    * RGBA, top row first. It stalls the GPU pipeline, which is fine for a renderer that waits for its frame
    * anyway.
    */
-  readSmall(frame: WebGLTexture, maxSide: number): { data: Uint8ClampedArray; width: number; height: number } {
+  readSmall(
+    frame: WebGLTexture,
+    maxSide: number,
+  ): { data: Uint8ClampedArray<ArrayBuffer>; width: number; height: number } {
     const scale = Math.min(1, maxSide / Math.max(this.width, this.height));
     const w = Math.max(1, Math.round(this.width * scale));
     const h = Math.max(1, Math.round(this.height * scale));

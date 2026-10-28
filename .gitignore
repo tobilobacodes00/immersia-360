@@ -20,6 +20,7 @@ blob-report/
 .env
 .env.*
 !.env.example
+!.env.local.example
 
 # Generated service worker
 apps/web/public/sw.js*

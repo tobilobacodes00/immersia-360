@@ -8,6 +8,7 @@ import { CheckCircle2, CircleX, TriangleAlert } from 'lucide-react';
 import { describeUserAgent, type SetupCheckStep } from '@immersia/shared';
 import { Button, Pill, buttonClass } from '@immersia/ui';
 import { BoothHelpLink } from '@/components/BoothHelpLink';
+import { emitDeviceEvent } from '@/lib/analytics-client';
 import { HELP_ARTICLES } from '@/lib/help-links';
 import { overall } from '@/lib/setup-check/grading';
 import { formatSeconds } from '@/lib/setup-check/render-estimate';
@@ -69,6 +70,17 @@ export function Summary({
     void send().then((result) => {
       if (off) return;
       setSent(result);
+      // The PRD's `setup_check_completed`, from the booth like its other events: kept on the device and
+      // sent when the network allows, so it is counted whether or not the report above got through.
+      emitDeviceEvent(
+        {
+          name: 'setup_check_completed',
+          render_speed_ms: Math.min(3_600_000, Math.max(0, Math.round(facts.referenceMs ?? 0))),
+          camera_fps: Math.min(960, Math.max(0, Math.round(facts.cameraFps))),
+          browser: describeUserAgent(navigator.userAgent).browser,
+        },
+        eventId,
+      );
       // The check was run: the first-run offer is made once per device, whether or not the report got through.
       try {
         markCheckDone(localStorage, session.deviceId, Date.now());
@@ -80,7 +92,7 @@ export function Summary({
     return () => {
       off = true;
     };
-  }, [send, session]);
+  }, [send, session, facts, eventId]);
 
   return (
     <section aria-labelledby="check-summary" className="card">

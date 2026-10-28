@@ -7,7 +7,7 @@ import type { DeviceRow } from './devices';
 import { env } from './env';
 import { mintQrToken, verifyQrToken } from './setup-check-token';
 import { deleteObjects, objectSize, presignUpload } from './storage';
-import { track } from './analytics';
+import { insertRows, toRow } from './analytics';
 
 /**
  * Server side of the setup check (HLP-1, screen 9): the test QR, the upload test and the saved
@@ -40,15 +40,15 @@ export async function recordQrScan(token: string): Promise<'scanned' | 'expired'
     .limit(1);
   if (!dev || dev.revokedAt) return 'invalid';
   if (await qrScanned(checked.deviceId, checked.nonce)) return 'scanned';
-  await db()
-    .insert(analyticsEvent)
-    .values({
-      name: 'setup_qr_scanned',
-      props: { nonce: checked.nonce },
-      organizationId: dev.organizationId,
-      deviceId: checked.deviceId,
-      occurredAt: new Date(),
-    });
+  // Through the shared catalogue like every other analytics row (validated, no guest detail). Not
+  // `track()`: that one swallows a failed insert, and a scan the booth never learns of would leave it
+  // waiting, so a failure here must reach the phone as an error rather than a false "Scanned".
+  const row = toRow(
+    { name: 'setup_qr_scanned', nonce: checked.nonce },
+    { organizationId: dev.organizationId, deviceId: checked.deviceId },
+  );
+  if (!row) return 'invalid';
+  await insertRows([row]);
   return 'scanned';
 }
 
@@ -101,7 +101,8 @@ export async function finishUploadTest(d: DeviceRow, id: string): Promise<'ok' |
 
 /**
  * Keep the check on the device record: the Devices screen shows the render path, and support can see
- * how the last check went. Also the PRD's `setup_check_completed` event.
+ * how the last check went. The PRD's `setup_check_completed` event is not recorded here: the booth
+ * emits it itself (see the results screen), through its offline outbox, as the catalogue says.
  */
 export async function saveSetupCheck(d: DeviceRow, report: SetupCheckReport): Promise<void> {
   const [known] = report.eventId
@@ -123,13 +124,4 @@ export async function saveSetupCheck(d: DeviceRow, report: SetupCheckReport): Pr
     setupCheck: { at, eventId, results: report.results },
   };
   await db().update(device).set({ capabilities: next }).where(eq(device.id, d.id));
-  track(
-    {
-      name: 'setup_check_completed',
-      render_speed_ms: report.renderSpeedMs ?? 0,
-      camera_fps: Math.round(report.cameraFps),
-      browser: report.browser,
-    },
-    { organizationId: d.organizationId, eventId, deviceId: d.id },
-  );
 }

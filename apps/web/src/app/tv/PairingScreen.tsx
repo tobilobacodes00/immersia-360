@@ -56,7 +56,7 @@ export function PairingScreen({ initialCode }: { initialCode: string }) {
         const res = await fetch('/api/live/pair', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ code }),
+          body: JSON.stringify({ code, screen: `${window.screen.width}x${window.screen.height}` }),
         });
         if (res.ok) {
           const body = (await res.json().catch(() => null)) as { token?: string } | null;

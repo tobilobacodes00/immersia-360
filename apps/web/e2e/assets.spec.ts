@@ -1,7 +1,7 @@
 import { deflateSync } from 'node:zlib';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { open, signIn } from './helpers';
+import { open, settled, signIn } from './helpers';
 
 /**
  * Screen 8, the asset library: upload (checked in the browser, then verified on the server against
@@ -166,6 +166,8 @@ test.describe('assets library (screen 8)', () => {
 
     await page.getByRole('button', { name: 'Delete Gold frame' }).click();
     await expect(page.getByRole('dialog')).toBeVisible();
+    // The colours axe reads must be the ones the operator ends up seeing, not a panel mid-fade.
+    await settled(page.getByRole('dialog'));
     expect(
       (await scan()).violations.map((v) => `${v.id}: ${v.nodes.map((node) => node.target.join(' ')).join(' | ')}`),
     ).toEqual([]);

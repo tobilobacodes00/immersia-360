@@ -888,7 +888,7 @@ export const LIBRARY_STYLES: readonly LibraryStyle[] = [
   }),
 ];
 
-const byId = new Map(LIBRARY_STYLES.map((s) => [s.id, s]));
+const byId = new Map<string, LibraryStyle>(LIBRARY_STYLES.map((s) => [s.id, s]));
 
 export const libraryStyle = (id: string): LibraryStyle | undefined => byId.get(id);
 

@@ -78,6 +78,9 @@ jobs:
       S3_SECRET_ACCESS_KEY: ci-secret-key
       S3_FORCE_PATH_STYLE: '1'
       CRON_SECRET: ci-only-cron-secret-0123456789
+      # Platform admins for the e2e admin console: one per browser project, so parallel sign-ins
+      # never share a mailbox.
+      ADMIN_EMAILS: e2e-admin-chrome@example.com,e2e-admin-webkit@example.com
     steps:
       - uses: actions/checkout@v5
         with:

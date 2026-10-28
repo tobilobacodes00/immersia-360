@@ -1,8 +1,8 @@
 import 'server-only';
 import { and, eq, isNull, lte, sql } from 'drizzle-orm';
 import { db, schema } from '@immersia/db';
-import { normalizeShortCode, shareSettingsSchema, type OutputKind } from '@immersia/shared';
-import { isExpired, type SessionState } from './share-state';
+import { normalizeShortCode, shareSettingsSchema, type OutputKind, type RemovalBasis } from '@immersia/shared';
+import { isServed, removalOf, stateOf, type SessionState } from './share-state';
 import { EXT, slug } from './filenames';
 import { deleteObjects, presignDownload, presignView } from './storage';
 
@@ -22,8 +22,13 @@ export interface ShareFile {
 
 export interface SharePage {
   state: SessionState;
+  /** The guest session this page is for (analytics matches views to downloads by it). */
+  sessionId: string;
+  /** Why the session is not served, when its state is `hidden` (the operator) or `removed` (the platform). */
+  removal: RemovalBasis | null;
   event: {
     id: string;
+    organizationId: string;
     name: string;
     theme: { accent: string; background: string; ink: string; font: 'sans' | 'serif' };
   };
@@ -51,7 +56,10 @@ export async function sharePage(linkId: string): Promise<SharePage | null> {
       expiresAt: captureSession.expiresAt,
       expiredAt: captureSession.expiredAt,
       erasedAt: captureSession.erasedAt,
+      removedAt: captureSession.removedAt,
+      removal: captureSession.removal,
       eventId: event.id,
+      organizationId: event.organizationId,
       eventName: event.name,
       gallerySlug: event.gallerySlug,
       branding: event.branding,
@@ -68,7 +76,9 @@ export async function sharePage(linkId: string): Promise<SharePage | null> {
   const settings = shareSettingsSchema.safeParse(row.share);
   const form = settings.success ? settings.data.guestForm : null;
   const base = {
-    event: { id: row.eventId, name: row.eventName, theme: row.branding.theme },
+    sessionId: row.sessionId,
+    removal: null,
+    event: { id: row.eventId, organizationId: row.organizationId, name: row.eventName, theme: row.branding.theme },
     shortCode: row.shortCode,
     expiresAt: row.expiresAt,
     contact: typeof row.share?.contact === 'string' ? row.share.contact : '',
@@ -81,9 +91,10 @@ export async function sharePage(linkId: string): Promise<SharePage | null> {
     },
     gallerySlug: row.gallerySlug,
   };
-  // Erasure wins over expiry: the guest asked for it, and the page says so.
-  if (row.erasedAt) return { ...base, state: 'erased', files: [] };
-  if (isExpired(row)) return { ...base, state: 'expired', files: [] };
+  // Taken down, erased, hidden or expired: nothing of it is served, whatever else is true of it
+  // (the order is the one documented in share-state.ts).
+  const gone = stateOf({ ...row, ready: 0 });
+  if (!isServed(gone)) return { ...base, state: gone, removal: removalOf(row), files: [] };
 
   const rows = await db().select().from(output).where(eq(output.sessionId, row.sessionId));
   const files = await Promise.all(
@@ -106,7 +117,9 @@ export async function sharePage(linkId: string): Promise<SharePage | null> {
 const KIND_ORDER: OutputKind[] = ['mp4', 'strip', 'gif', 'boomerang', 'short_video', 'small_mp4', 'poster'];
 
 export type DownloadResult =
-  | { url: string; kind: OutputKind; bytes: number | null; eventId: string }
+  | { url: string; kind: OutputKind; bytes: number | null; eventId: string; sessionId: string }
+  /** Hidden by the operator or taken down by the platform; `removal` says which (451 for `legal`). */
+  | { error: 'removed'; removal: RemovalBasis }
   | { error: 'not_found' | 'expired' | 'erased' | 'not_ready' };
 
 /**
@@ -123,9 +136,12 @@ export async function downloadUrl(linkId: string, outputId: string): Promise<Dow
       bytes: output.bytes,
       uploadedAt: output.uploadedAt,
       eventId: event.id,
+      sessionId: captureSession.id,
       expiresAt: captureSession.expiresAt,
       expiredAt: captureSession.expiredAt,
       erasedAt: captureSession.erasedAt,
+      removedAt: captureSession.removedAt,
+      removal: captureSession.removal,
       prefix: captureSession.filenamePrefix,
       eventName: event.name,
     })
@@ -135,18 +151,30 @@ export async function downloadUrl(linkId: string, outputId: string): Promise<Dow
     .where(and(eq(output.id, outputId), eq(captureSession.linkId, linkId)))
     .limit(1);
   if (!row) return { error: 'not_found' };
-  if (row.erasedAt) return { error: 'erased' };
-  if (isExpired(row)) return { error: 'expired' };
+  const state = stateOf({ ...row, ready: 1 });
+  if (state === 'removed' || state === 'hidden') return { error: 'removed', removal: removalOf(row) ?? 'policy' };
+  if (state === 'erased') return { error: 'erased' };
+  if (state === 'expired') return { error: 'expired' };
   if (!row.uploadedAt || !row.key) return { error: 'not_ready' };
   await db()
     .update(output)
     .set({ downloads: sql`${output.downloads} + 1` })
     .where(eq(output.id, outputId));
   const filename = `${row.prefix}${slug(row.eventName)}-${row.kind.replace('_', '-')}.${EXT[row.mime] ?? 'bin'}`;
-  return { url: await presignDownload(row.key, filename), kind: row.kind, bytes: row.bytes, eventId: row.eventId };
+  return {
+    url: await presignDownload(row.key, filename),
+    kind: row.kind,
+    bytes: row.bytes,
+    eventId: row.eventId,
+    sessionId: row.sessionId,
+  };
 }
 
-/** DL-2: a typed short code → the session's link id. */
+/**
+ * DL-2: a typed short code → the session's link id. `expired` is set only for a session whose
+ * retention ran out (the code form says so); one that was erased, hidden or taken down still resolves,
+ * so the guest lands on the link's own page, which says exactly what happened (410/451).
+ */
 export async function linkIdForCode(
   input: string,
 ): Promise<{ linkId: string; eventId: string; expired: boolean } | null> {
@@ -158,11 +186,16 @@ export async function linkIdForCode(
       eventId: captureSession.eventId,
       expiresAt: captureSession.expiresAt,
       expiredAt: captureSession.expiredAt,
+      erasedAt: captureSession.erasedAt,
+      removedAt: captureSession.removedAt,
+      removal: captureSession.removal,
     })
     .from(captureSession)
     .where(eq(captureSession.shortCode, code))
     .limit(1);
-  return row ? { linkId: row.linkId, eventId: row.eventId, expired: isExpired(row) } : null;
+  return row
+    ? { linkId: row.linkId, eventId: row.eventId, expired: stateOf({ ...row, ready: 1 }) === 'expired' }
+    : null;
 }
 
 /**
