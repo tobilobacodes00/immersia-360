@@ -50,7 +50,7 @@ With music added to the event, **Beat sync** makes effects pulse on the music's 
 
 Choose one **Photo effect** for the event: **Mirror, Bulge, Pinch, Swirl, Ripple, Glass, Prism, Kaleidoscope, Op art, Halftone, Thermal, Pop art, Pixelate, Sketch, Posterize, Duotone pop, Comic, Neon edges** or **Glitch**. It is applied, together with the photo look, to every photo before the strip is made. Boomerangs and short videos get the same.
 
-## Background replacement
+## Background replacement {#background}
 
 Under **Background**, swap whatever is behind your guests, with no green screen:
 

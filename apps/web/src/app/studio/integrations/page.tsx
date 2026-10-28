@@ -3,7 +3,9 @@ import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { AlertCircle, CheckCircle2, Cloud, ExternalLink } from 'lucide-react';
 import { Card, EmptyState, PageHeader, Pill, type PillTone } from '@immersia/ui';
+import { HelpLink } from '@/components/HelpLink';
 import { formatRelative } from '@/lib/format';
+import { cloudErrorHelp } from '@/lib/help-links';
 import { roleCan } from '@/lib/permissions';
 import { copyBacklog, loadIntegrations, recentCopies, type CopyView } from '@/server/cloud/integrations';
 import { CLOUD_PROVIDERS, isCloudProvider } from '@/server/cloud/providers';
@@ -45,8 +47,9 @@ export default async function IntegrationsPage({
   searchParams: Promise<{ connected?: string; error?: string; provider?: string }>;
 }) {
   const op = await requireOperator();
-  const [t, locale, params, integrations, copies, backlogs] = await Promise.all([
+  const [t, th, locale, params, integrations, copies, backlogs] = await Promise.all([
     getTranslations('studio.integrations'),
+    getTranslations('help.links'),
     getLocale(),
     searchParams,
     loadIntegrations(op.organizationId),
@@ -97,7 +100,11 @@ export default async function IntegrationsPage({
             className="flex items-start gap-3 rounded-xl border border-bad/25 bg-bad/[0.05] p-4 text-sm"
           >
             <AlertCircle className="mt-0.5 size-4 shrink-0 text-bad" aria-hidden />
-            <p>{t(`connectErrors.${error}`, { provider: flashProvider })}</p>
+            <div className="min-w-0 space-y-1.5">
+              <p>{t(`connectErrors.${error}`, { provider: flashProvider })}</p>
+              {/* HLP-3: the article has a heading per code, so the link lands on this very message. */}
+              <HelpLink {...cloudErrorHelp(error)} label={th('cloudErrors')} />
+            </div>
           </div>
         )}
 
@@ -138,7 +145,12 @@ export default async function IntegrationsPage({
                             {formatRelative(c.completedAt ?? c.createdAt, locale)}
                           </time>
                         </div>
-                        {detail && <p className="mt-1.5 text-[13px] leading-relaxed text-fg">{detail}</p>}
+                        {detail && c.errorKey && (
+                          <div className="mt-1.5 space-y-1">
+                            <p className="text-[13px] leading-relaxed text-fg">{detail}</p>
+                            <HelpLink {...cloudErrorHelp(c.errorKey)} label={th('cloudErrors')} />
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-3">
                         {c.status === 'done' && c.remoteUrl && (

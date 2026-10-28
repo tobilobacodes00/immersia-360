@@ -36,7 +36,7 @@ related: [sharing-with-guests, live-display-moderation, expiry-and-extending, co
 - **Keep mine off the screen.** On the booth, when Live Display is on. See [Moderate what is on screen](help:live-display-moderation).
 - **Email is used once.** An address typed at the booth to receive the link is used for that message only and not stored.
 
-## The guest form
+## The guest form {#guest-form}
 
 In the event's **Setup**, under **Sharing**, switch on **Ask guests for their details**. The form asks for an email and a name (you can make the name required). A consent box starts **unticked**, and ticking it is the only way a guest's details are passed on.
 
@@ -47,7 +47,7 @@ In the event's **Setup**, under **Sharing**, switch on **Ask guests for their de
 
 Immersia keeps proof of each consent: the exact wording shown, its language, the time and your policy link.
 
-## Your guests list
+## Your guests list {#guests}
 
 Each event has a **Guests** tab with the details people left: name, email, the consent they gave, and which capture they came from. Owners and operators see and handle them; a viewer sees only how many there are.
 
@@ -55,11 +55,11 @@ Each event has a **Guests** tab with the details people left: name, email, the c
 - **Export CSV** opens in Excel with accents intact. Cells that start with `=`, `+`, `-` or `@` are made safe so a spreadsheet can't run them.
 - **Delete** removes one contact. **Delete all contacts** removes every contact collected for the event. Their photos and videos are not affected.
 
-## When a guest asks you to delete their data
+## When a guest asks you to delete their data {#requests}
 
 Open **Settings** in the Studio and find **Guest privacy requests**. Type the guest's email address and press **Find**: it shows what you hold under that address across all your events. **Delete their data** removes the contacts, and, if you tick the option, also their photos and videos. Deletions are recorded in an audit log without the address itself.
 
-## Your own data
+## Your own data {#your-data}
 
 In **Settings**, owners can **Download JSON** with the organization's members, events and settings, templates, devices and cloud connections (never their secrets) and every guest contact with its consent. Photos and videos are not in the export. Owners can also **Delete organization**, which permanently removes everything, including the hosted files and the cloud connections; it asks you to type a phrase first.
 

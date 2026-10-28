@@ -26,7 +26,7 @@ related: [chrome-kiosk-printing, 360-booth-setup, sharing-station]
 > [!WARNING]
 > A web page cannot fully lock a device. Immersia's kiosk lock keeps curious hands out of the booth screen, but a determined guest can still leave full screen, close the tab or switch apps. For an event nobody watches, combine it with your device's own lock: Guided Access, screen pinning or Chrome's kiosk mode, described below.
 
-## The kiosk lock built into the booth
+## The kiosk lock built into the booth {#lock}
 
 In the event's **Setup**, under **Kiosk**, press **Set PIN** and choose 4 to 8 digits. With a PIN set:
 

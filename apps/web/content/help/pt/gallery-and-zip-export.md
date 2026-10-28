@@ -40,7 +40,7 @@ As capturas que você ocultou das telas, e aquelas cujos convidados pediram para
 
 Em **Senha**, toque em **Definir uma senha** (com pelo menos 6 caracteres) e em **Definir**. O visitante a digita uma vez por navegador, durante uma semana. Trocar a senha desconecta todo mundo. **Remover a senha** deixa a galeria aberta de novo para qualquer pessoa com o link. Depois de muitas tentativas erradas numa mesma rede, a galeria pede ao visitante que espere alguns minutos.
 
-## Cartazes com QR
+## Cartazes com QR {#signage}
 
 A aba **Cartazes com QR** cria um pôster para a galeria inteira do evento, com as cores do seu evento, o seu logo e a sua hashtag:
 
@@ -52,7 +52,7 @@ A aba **Cartazes com QR** cria um pôster para a galeria inteira do evento, com 
 
 Mude o título e a linha embaixo do código, ou deixe uma linha vazia para removê-la. Baixe um **PDF** ou um **PNG**. Imprima em **tamanho real (100%)**, não em "ajustar à página". Nada fica a menos de 12 mm da borda, então impressoras de escritório não cortam o conteúdo.
 
-## Baixe todos os originais num ZIP
+## Baixe todos os originais num ZIP {#zip}
 
 Na aba **Visão geral**, **Galeria do evento** tem uma seção **Todos os arquivos** com **Baixar todos os arquivos (ZIP)**. Ele salva todos os arquivos do evento em qualidade total, **incluindo as capturas ocultas**, direto do armazenamento para um único ZIP no seu navegador.
 

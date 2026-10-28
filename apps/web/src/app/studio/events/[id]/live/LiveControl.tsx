@@ -31,6 +31,8 @@ import {
   updateDisplayAction,
   type DisplaySummary,
 } from '@/app/studio/live-actions';
+import { HelpLink } from '@/components/HelpLink';
+import { HELP_ARTICLES } from '@/lib/help-links';
 import { useLiveFeed } from '@/lib/live-feed';
 import type { QueueEntry } from '@/server/live';
 
@@ -274,6 +276,7 @@ export function LiveControl({
   initial: { enabled: boolean; moderation: 'auto' | 'approve'; displays: DisplaySummary[]; lists: Lists };
 }) {
   const t = useTranslations('studio.live');
+  const th = useTranslations('help.links');
   const [enabled, setEnabled] = useState(initial.enabled);
   const [moderation, setModeration] = useState(initial.moderation);
   const [displays, setDisplays] = useState(initial.displays);
@@ -363,6 +366,7 @@ export function LiveControl({
           <Link href={`/station/${eventId}`} target="_blank" className={buttonClass({ size: 'sm' })}>
             <Store className="size-3.5" aria-hidden /> {t('settings.station')}
           </Link>
+          <HelpLink slug={HELP_ARTICLES.sharingStation} label={th('sharingStation')} className="self-center" />
         </div>
       </Card>
 
@@ -370,11 +374,14 @@ export function LiveControl({
         title={t('displays.title')}
         subtitle={t('displays.subtitle')}
         action={
-          !readOnly && (
-            <Button size="sm" variant="primary" onClick={() => setPairing({ open: true, before: displays.length })}>
-              <Plus className="size-3.5" aria-hidden /> {t('displays.pair')}
-            </Button>
-          )
+          <div className="flex flex-wrap items-center gap-3">
+            <HelpLink slug={HELP_ARTICLES.livePairing} label={th('pairing')} />
+            {!readOnly && (
+              <Button size="sm" variant="primary" onClick={() => setPairing({ open: true, before: displays.length })}>
+                <Plus className="size-3.5" aria-hidden /> {t('displays.pair')}
+              </Button>
+            )}
+          </div>
         }
       >
         {displays.length === 0 ? (
@@ -392,7 +399,11 @@ export function LiveControl({
         )}
       </Card>
 
-      <Card title={t('moderation.title')} subtitle={t('moderation.subtitle')}>
+      <Card
+        title={t('moderation.title')}
+        subtitle={t('moderation.subtitle')}
+        action={<HelpLink slug={HELP_ARTICLES.liveModeration} label={th('moderation')} />}
+      >
         <div className="py-4">
           <Segmented
             value={tab}

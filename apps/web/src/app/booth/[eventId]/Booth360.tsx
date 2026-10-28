@@ -55,6 +55,7 @@ import { CountdownDisc, GuestButton, GuestScreen, Headline, fade } from '@immers
 import { readDeviceIdentity, type DeviceIdentity } from '@/lib/device-identity';
 import { useCaptureKeys, useHeartbeat, useHeld, useLiveQuery, useOnline, useWakeLock } from './booth-hooks';
 import { importVideoFiles } from './import-originals';
+import { CameraErrorHelp, StatusHelp } from './BoothHelp';
 import { Gallery } from './Gallery';
 import { RegisterDevice } from './RegisterDevice';
 import { KioskLockLayer, useKioskLock } from './KioskLock';
@@ -494,20 +495,30 @@ export function Booth360({ event }: { event: BoothEvent }) {
           </Link>
         )}
         <div className="flex flex-wrap items-center justify-end gap-2" role="status" aria-live="polite">
+          {/* The "?" beside a pill is for the operator: never while the kiosk is PIN-locked. */}
           {!online && (
-            <Pill tone="warn" className="text-[0.8rem]">
-              <WifiOff className="size-3.5" aria-hidden /> {t('offline')}
-            </Pill>
+            <>
+              <Pill tone="warn" className="text-[0.8rem]">
+                <WifiOff className="size-3.5" aria-hidden /> {t('offline')}
+              </Pill>
+              {!kiosk.locked && <StatusHelp kind="offline" />}
+            </>
           )}
           {lowStorage && (
-            <Pill tone="bad" className="text-[0.8rem]">
-              <HardDrive className="size-3.5" aria-hidden /> {t('lowStorage')}
-            </Pill>
+            <>
+              <Pill tone="bad" className="text-[0.8rem]">
+                <HardDrive className="size-3.5" aria-hidden /> {t('lowStorage')}
+              </Pill>
+              {!kiosk.locked && <StatusHelp kind="storage" />}
+            </>
           )}
           {backgroundUnavailable && !kiosk.locked && (
-            <Pill tone="warn" className="text-[0.8rem]">
-              {t('backgroundUnavailable')}
-            </Pill>
+            <>
+              <Pill tone="warn" className="text-[0.8rem]">
+                {t('backgroundUnavailable')}
+              </Pill>
+              <StatusHelp kind="background" />
+            </>
           )}
           {motionOn && live && (
             <Pill tone="info" dot className="text-[0.8rem]">
@@ -529,6 +540,13 @@ export function Booth360({ event }: { event: BoothEvent }) {
                     : t('uploads.offline', { count: uploads.status.waiting })}
             </Pill>
           )}
+          {/* One "?" for the connection and the uploads: the offline pill already has it when offline. */}
+          {!kiosk.locked &&
+            (uploads.status.revoked ? (
+              <StatusHelp kind="revoked" />
+            ) : (
+              online && (uploads.status.failed > 0 || uploads.status.waiting > 0) && <StatusHelp kind="offline" />
+            ))}
           {!kiosk.locked && (
             <>
               <button
@@ -714,6 +732,8 @@ export function Booth360({ event }: { event: BoothEvent }) {
             <div className="card max-w-md p-6 text-fg" role="alert">
               <h2 className="text-lg font-semibold">{t('errors.title')}</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted">{t(`errors.${errorKey(phase.code)}`)}</p>
+              {/* The steps for this very error, for the operator; a guest-facing kiosk shows none. */}
+              {!kiosk.locked && <CameraErrorHelp code={phase.code} className="mt-3" />}
               <div className="mt-5 flex gap-2">
                 <button
                   type="button"

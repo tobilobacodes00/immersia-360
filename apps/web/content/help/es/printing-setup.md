@@ -31,7 +31,7 @@ La cabina hace la impresión como una imagen a **300 DPI** con el tamaño exacto
 
 Tamaños: tira **2×6**, **4×4**, **4×6** vertical, **6×4** horizontal y **5×7** pulgadas. El tamaño de historia 9:16 es para pantallas y no tiene tamaño de papel.
 
-## Activar la impresión
+## Activar la impresión {#turn-on}
 
 En la **Configuración** del evento, sección **Cabina de fotos**:
 

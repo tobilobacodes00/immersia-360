@@ -6,6 +6,8 @@ import { Download, Search } from 'lucide-react';
 import { LOCALE_NAMES, isLocale } from '@immersia/i18n';
 import { formatShortCode, shareSettingsSchema } from '@immersia/shared';
 import { Card, EmptyState, Pill, Stat, buttonClass } from '@immersia/ui';
+import { HelpLink } from '@/components/HelpLink';
+import { HELP_TARGETS } from '@/lib/help-links';
 import { roleCan } from '@/lib/permissions';
 import { getEvent } from '@/server/events';
 import { contactTotals, listContacts } from '@/server/guests';
@@ -32,8 +34,9 @@ export default async function GuestsPage({
   const op = await requireOperator({ event: ['read'] });
   const event = await getEvent(op.organizationId, id);
   if (!event) notFound();
-  const [t, format, totals] = await Promise.all([
+  const [t, th, format, totals] = await Promise.all([
     getTranslations('studio.guests'),
+    getTranslations('help.links'),
     getFormatter(),
     contactTotals(op.organizationId, id),
   ]);
@@ -56,7 +59,10 @@ export default async function GuestsPage({
 
   return (
     <div className="space-y-6">
-      <p className="max-w-3xl text-[15px] leading-relaxed text-muted">{t('subtitle')}</p>
+      <div className="max-w-3xl space-y-2">
+        <p className="text-[15px] leading-relaxed text-muted">{t('subtitle')}</p>
+        <HelpLink {...HELP_TARGETS.guestList} label={th('guestPrivacy')} />
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Stat label={t('stats.contacts')} value={totals.total} />

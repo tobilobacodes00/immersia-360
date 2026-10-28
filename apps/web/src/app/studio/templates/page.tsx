@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { templateAssetIds } from '@immersia/shared';
 import { PageHeader } from '@immersia/ui';
+import { HelpLink } from '@/components/HelpLink';
+import { HELP_ARTICLES } from '@/lib/help-links';
 import { assetViews } from '@/server/assets';
 import { requireOperator } from '@/server/session';
 import { listDesignTargets, listLibraryTemplates } from '@/server/templates';
@@ -18,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default async function TemplatesPage() {
   const op = await requireOperator({ event: ['read'] });
-  const t = await getTranslations('studio.templates');
+  const [t, th] = await Promise.all([getTranslations('studio.templates'), getTranslations('help.links')]);
   const [layouts, overlays, targets] = await Promise.all([
     listLibraryTemplates(op.organizationId, 'layout', { builtIns: false }),
     listLibraryTemplates(op.organizationId, 'overlay', { builtIns: false }),
@@ -32,7 +34,11 @@ export default async function TemplatesPage() {
   );
   return (
     <>
-      <PageHeader title={t('title')} subtitle={t('subtitle')} />
+      <PageHeader
+        title={t('title')}
+        subtitle={t('subtitle')}
+        actions={<HelpLink slug={HELP_ARTICLES.templates} label={th('templates')} />}
+      />
       <TemplateLibrary mine={mine} targets={targets} views={views} />
     </>
   );

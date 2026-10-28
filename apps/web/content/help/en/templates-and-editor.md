@@ -66,7 +66,7 @@ A print canvas is made at **300 DPI**, so what you see is what prints: a 4×6 is
 
 An overlay is transparent so the video shows through. Keep the background empty.
 
-### Dynamic fields
+### Dynamic fields {#fields}
 
 Text can contain fields that fill in for each event or guest, picked from the `{ }` button in the text box:
 
@@ -81,7 +81,7 @@ Text can contain fields that fill in for each event or guest, picked from the `{
 
 A live preview underneath the box shows the result.
 
-## Your own files in Assets
+## Your own files in Assets {#assets}
 
 **Assets** holds files shared by every event on the account: overlays and frames, intros and outros, music, fonts, logos and backgrounds. Upload once, use anywhere. The limits:
 

@@ -11,7 +11,7 @@ related: [gallery-and-zip-export, connect-google-drive, sharing-with-guests, gue
 
 Hosted guest files are not kept forever. This keeps the service free and keeps guests' pictures from lingering. Each event has a retention period, and when a guest's files reach the end of it they are deleted.
 
-## Choose the period
+## Choose the period {#period}
 
 When you create an event, and later under **Setup** in **Basics**, set **Keep guest files for**: **7 days**, **30 days** or **90 days**. 30 is the default.
 
@@ -25,7 +25,7 @@ On the event's **Overview** tab, under **Guest files**:
 - **Next expiry**: when the first of them goes.
 - **Expired**: captures whose files have been deleted.
 
-## Extend before they go
+## Extend before they go {#extend}
 
 Under those numbers, **Extend by 7 days** and **Extend by 30 days** give every live guest link more time. The new date is counted from now, or from the current expiry if that is later, so pressing it again keeps adding. The message afterwards says how many links were extended.
 

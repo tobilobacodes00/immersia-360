@@ -34,7 +34,7 @@ Abre el evento y ve a la pestaña **Live Display**. **Mostrar las capturas en pa
 
 Junto a eso, **Publicación** decide si las capturas nuevas se publican solas (**Mostrar automáticamente**) o esperan a que tú las apruebes (**Aprobar primero**). Consulta [Moderar lo que sale en pantalla](help:live-display-moderation).
 
-## Vincula una pantalla
+## Vincula una pantalla {#pair}
 
 1. En la tarjeta **Pantallas**, pulsa **Vincular una pantalla**. Aparece un código de seis caracteres, válido durante 10 minutos.
 2. En la pantalla, abre el navegador y ve a la dirección que muestra la ventana, que termina en `/tv`.

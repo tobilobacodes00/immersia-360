@@ -48,7 +48,7 @@ Resumindo: o **proprietário** tem controle total; um **operador** é um assiste
 
 O servidor confere a função em cada ação, então esconder um botão nunca é a única proteção.
 
-## Convide alguém
+## Convide alguém {#invite}
 
 Só os proprietários. Abra **Dispositivos e equipe** no Estúdio e escolha a aba **Equipe**.
 

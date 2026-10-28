@@ -36,7 +36,7 @@ related: [sharing-with-guests, live-display-moderation, expiry-and-extending, co
 - **Não mostrar a minha no telão.** Na cabine, quando o Live Display está ativado. Veja [Moderar o que aparece na tela](help:live-display-moderation).
 - **O e-mail é usado uma vez só.** Um endereço digitado na cabine para receber o link é usado apenas para essa mensagem e não é guardado.
 
-## O formulário de convidados
+## O formulário de convidados {#guest-form}
 
 Na **Configuração** do evento, em **Compartilhamento**, ative **Pedir dados aos convidados**. O formulário pede um e-mail e um nome (você pode tornar o nome obrigatório). Uma caixa de consentimento começa **desmarcada**, e marcá-la é a única forma de os dados do convidado serem repassados.
 
@@ -47,7 +47,7 @@ Na **Configuração** do evento, em **Compartilhamento**, ative **Pedir dados ao
 
 A Immersia guarda a prova de cada consentimento: o texto exato exibido, o idioma, o horário e o link da sua política.
 
-## Sua lista de convidados
+## Sua lista de convidados {#guests}
 
 Cada evento tem uma aba **Convidados** com os dados que as pessoas deixaram: nome, e-mail, o consentimento dado e de qual captura vieram. Proprietários e operadores os veem e cuidam deles; um leitor só vê quantos são.
 
@@ -55,11 +55,11 @@ Cada evento tem uma aba **Convidados** com os dados que as pessoas deixaram: nom
 - **Exportar CSV** abre no Excel com os acentos preservados. As células que começam com `=`, `+`, `-` ou `@` são tornadas seguras para que uma planilha não possa executá-las.
 - **Excluir** remove um contato. **Excluir todos os contatos** remove todos os contatos coletados para o evento. As fotos e os vídeos deles não são afetados.
 
-## Quando um convidado pede que você exclua os dados dele
+## Quando um convidado pede que você exclua os dados dele {#requests}
 
 Abra **Ajustes** no Estúdio e procure **Pedidos de privacidade de convidados**. Digite o e-mail do convidado e toque em **Buscar**: ele mostra o que você guarda com esse endereço em todos os seus eventos. **Excluir os dados** remove os contatos e, se você marcar a opção, também as fotos e os vídeos. As exclusões ficam registradas num log de auditoria, sem o endereço em si.
 
-## Seus próprios dados
+## Seus próprios dados {#your-data}
 
 Em **Ajustes**, os proprietários podem **Baixar JSON** com os membros da organização, os eventos e as configurações, os modelos, os dispositivos e as conexões de nuvem (nunca os segredos) e cada contato de convidado com o consentimento. Fotos e vídeos não vão na exportação. Os proprietários também podem **Excluir organização**, que remove de forma permanente tudo, incluindo os arquivos hospedados e as conexões de nuvem; antes, ela pede que você digite uma frase.
 

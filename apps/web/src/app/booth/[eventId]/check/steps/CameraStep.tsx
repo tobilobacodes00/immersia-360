@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { listLenses, type Lens } from '@immersia/capture';
 import { Toggle, cx } from '@immersia/ui';
-import { HelpLink } from '@/components/HelpLink';
+import { BoothHelpLink } from '@/components/BoothHelpLink';
 import { HELP_ARTICLES } from '@/lib/help-links';
 import { cameraOpenFailed, gradeCamera, worst, type CameraStepCode, type Finding } from '@/lib/setup-check/grading';
 import { measureFps } from '@/lib/setup-check/measure';
@@ -206,7 +206,7 @@ export function CameraStep({ session, plan, onDone }: StepProps) {
             text={text}
             help={(f) =>
               f.code === 'permission' || f.code === 'not_found' || f.code === 'in_use' ? (
-                <HelpLink slug={HELP_ARTICLES.cameraPermissions} label={t('help')} />
+                <BoothHelpLink slug={HELP_ARTICLES.cameraPermissions} label={t('help')} />
               ) : null
             }
           />

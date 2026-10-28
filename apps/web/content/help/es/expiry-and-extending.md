@@ -25,7 +25,7 @@ related: [gallery-and-zip-export, connect-google-drive, sharing-with-guests, gue
 
 Los archivos alojados de los invitados no se conservan para siempre. Así el servicio sigue siendo gratuito y las imágenes de los invitados no se quedan indefinidamente. Cada evento tiene un periodo de conservación y, cuando los archivos de un invitado llegan al final, se eliminan.
 
-## Elige el periodo
+## Elige el periodo {#period}
 
 Cuando creas un evento, y más adelante en **Configuración**, en **Básico**, define **Conservar los archivos durante**: **7 días**, **30 días** o **90 días**. El valor predeterminado es 30.
 
@@ -39,7 +39,7 @@ En la pestaña **Resumen** del evento, en **Archivos de invitados**:
 - **Próxima caducidad**: cuándo se va el primero de ellos.
 - **Caducados**: capturas cuyos archivos ya se eliminaron.
 
-## Amplía antes de que se vayan
+## Amplía antes de que se vayan {#extend}
 
 Bajo esas cifras, **Ampliar 7 días** y **Ampliar 30 días** dan más tiempo a todos los enlaces activos. La fecha nueva se cuenta desde ahora, o desde la caducidad actual si es posterior, así que pulsarlo otra vez sigue sumando. El mensaje posterior dice a cuántos enlaces se amplió el plazo.
 

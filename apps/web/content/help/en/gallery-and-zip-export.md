@@ -40,7 +40,7 @@ Captures you hid from the screens, and those whose guests asked to be kept off t
 
 Under **Password**, press **Set a password** (at least 6 characters) and **Set**. A visitor types it once per browser, for a week. Changing the password signs everyone out. **Remove password** makes the gallery open again to anyone with the link. After too many wrong tries from one network, the gallery asks the visitor to wait a few minutes.
 
-## QR signage
+## QR signage {#signage}
 
 The **QR signage** tab makes a poster for the whole event gallery, in your event's colours, with your logo and hashtag:
 
@@ -52,7 +52,7 @@ The **QR signage** tab makes a poster for the whole event gallery, in your event
 
 Change the headline and the line under the code, or leave a line empty to drop it. Download a **PDF** or a **PNG**. Print at **actual size (100%)**, not "fit to page". Nothing is placed closer than 12 mm to the edge, so office printers won't cut it off.
 
-## Download every original as a ZIP
+## Download every original as a ZIP {#zip}
 
 On the **Overview** tab, **Event gallery** has a section **All files** with **Download every file (ZIP)**. It saves every full-quality file of the event, **including hidden captures**, straight from storage into one ZIP in your browser.
 

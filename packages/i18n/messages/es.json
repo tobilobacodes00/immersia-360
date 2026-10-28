@@ -2254,7 +2254,19 @@
       "guestPrivacy": "Sobre la privacidad de los invitados",
       "templates": "Sobre las plantillas",
       "looks": "Sobre los estilos y efectos",
-      "roles": "Sobre los roles"
+      "roles": "Sobre los roles",
+      "storage": "Sobre el almacenamiento de este dispositivo",
+      "printing": "Sobre los tamaños de impresión",
+      "moderation": "Sobre la moderación de la pantalla",
+      "sharing": "Sobre cómo compartir con los invitados",
+      "cloud": "Sobre la copia a tu nube",
+      "photoBooth": "Sobre la cabina de fotos",
+      "booth360": "Sobre la cabina 360",
+      "assets": "Sobre los recursos",
+      "signage": "Sobre los carteles con QR",
+      "triggers": "Sobre cómo iniciar una captura",
+      "slowMotion": "Sobre la cámara lenta",
+      "gettingStarted": "Tu primer evento, paso a paso"
     }
   },
   "status": {

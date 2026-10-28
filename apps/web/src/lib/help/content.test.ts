@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { LOCALES, type Locale } from '@immersia/i18n';
-import { HELP_ARTICLES } from '../help-links';
+import { cameraErrorHelp, cloudErrorHelp, HELP_ARTICLES, HELP_TARGETS, renderErrorHelp } from '../help-links';
 import { helpContentDir, listSlugs, loadArticles, searchIndex, type HelpArticle } from './content';
 import { parseArticleSource } from './frontmatter';
 import { search } from './search';
@@ -183,6 +183,57 @@ describe('help content: links go somewhere real', () => {
       for (const code of camera) expect(ids('camera-permissions'), `${locale} camera ${code}`).toContain(code);
       for (const code of booth) expect(ids('booth-error-messages'), `${locale} booth ${code}`).toContain(code);
     }
+  });
+
+  it("the screens' deep links land on a heading that exists, whatever the code", () => {
+    const cameraCodes = [
+      'permission',
+      'not_found',
+      'in_use',
+      'overconstrained',
+      'insecure',
+      'lost',
+      'recording_unsupported',
+      'unknown',
+      'something_new',
+    ];
+    const renderCodes = ['undecodable', 'unsupported_encoder', 'encoder_stall', 'gpu', 'cancelled', 'failed'];
+    const targets = [
+      ...cameraCodes.map((c) => cameraErrorHelp(c)),
+      ...[...renderCodes, 'something_new', null, undefined].map((c) => renderErrorHelp(c)),
+      ...['denied', 'reauth_required', 'quota_exceeded', 'other'].map((c) => cloudErrorHelp(c)),
+    ];
+    for (const locale of LOCALES) {
+      const all = bySlug.get(locale)!;
+      for (const target of targets) {
+        const article = all.get(target.slug);
+        expect(article, `${locale}/${target.slug}`).toBeDefined();
+        expect(headingIds(article!), `${locale}/${target.slug}#${target.anchor}`).toContain(target.anchor);
+      }
+    }
+  });
+
+  it('every fixed heading id a screen links to exists in the article, in every language', () => {
+    for (const locale of LOCALES) {
+      const all = bySlug.get(locale)!;
+      for (const [name, target] of Object.entries(HELP_TARGETS)) {
+        const article = all.get(target.slug);
+        expect(article, `${locale}/${target.slug} (${name})`).toBeDefined();
+        expect(headingIds(article!), `${locale}/${target.slug}#${target.anchor} (${name})`).toContain(target.anchor);
+      }
+    }
+  });
+
+  it('a camera problem goes to the article with the steps, and a render problem to the messages article', () => {
+    expect(cameraErrorHelp('permission')).toEqual({ slug: 'camera-permissions', anchor: 'permission' });
+    expect(cameraErrorHelp('recording_unsupported')).toEqual({
+      slug: 'booth-error-messages',
+      anchor: 'recording_unsupported',
+    });
+    expect(cameraErrorHelp('something_new')).toEqual({ slug: 'booth-error-messages', anchor: 'unknown' });
+    expect(renderErrorHelp('gpu')).toEqual({ slug: 'booth-error-messages', anchor: 'gpu' });
+    expect(renderErrorHelp('something_new')).toEqual({ slug: 'booth-error-messages', anchor: 'failed' });
+    expect(renderErrorHelp(null)).toEqual({ slug: 'booth-error-messages', anchor: 'failed' });
   });
 });
 

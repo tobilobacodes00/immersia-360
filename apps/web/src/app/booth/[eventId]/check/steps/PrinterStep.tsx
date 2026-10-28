@@ -6,7 +6,7 @@ import { Printer } from 'lucide-react';
 import { browserPrint } from '@immersia/layout/print';
 import { PRINT_SIZE_INCHES } from '@immersia/shared';
 import { Button } from '@immersia/ui';
-import { HelpLink } from '@/components/HelpLink';
+import { BoothHelpLink } from '@/components/BoothHelpLink';
 import { HELP_ARTICLES } from '@/lib/help-links';
 import { renderCalibrationSheet } from '@/lib/setup-check/calibration-render';
 import { gradePrinter, type PrintAnswer, type PrinterCode, type Finding } from '@/lib/setup-check/grading';
@@ -81,7 +81,7 @@ export function PrinterStep({ plan, onDone }: StepProps) {
         <Button variant="primary" disabled={state.kind === 'printing'} onClick={() => void sendSheet()}>
           <Printer className="size-4" aria-hidden /> {state.kind === 'idle' ? t('print') : t('printAgain')}
         </Button>
-        <HelpLink slug={HELP_ARTICLES.printing} label={t('help')} />
+        <BoothHelpLink slug={HELP_ARTICLES.printing} label={t('help')} />
       </div>
       {state.kind === 'unavailable' && (
         <p role="alert" className="mt-3 text-sm text-bad">
@@ -108,7 +108,7 @@ export function PrinterStep({ plan, onDone }: StepProps) {
             findings={done.findings}
             text={text}
             help={(f) =>
-              f.status !== 'pass' ? <HelpLink slug={HELP_ARTICLES.kioskPrinting} label={t('helpKiosk')} /> : null
+              f.status !== 'pass' ? <BoothHelpLink slug={HELP_ARTICLES.kioskPrinting} label={t('helpKiosk')} /> : null
             }
           />
         </div>

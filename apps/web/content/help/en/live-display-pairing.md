@@ -34,7 +34,7 @@ Open the event and go to the **Live Display** tab. **Show captures on screens** 
 
 Next to it, **Publishing** decides whether new captures go up by themselves (**Show automatically**) or wait for you (**Approve first**). See [Moderate what is on screen](help:live-display-moderation).
 
-## Pair a screen
+## Pair a screen {#pair}
 
 1. In the **Displays** card press **Pair a display**. A six-character code appears, valid for 10 minutes.
 2. On the screen, open the browser and go to the address shown in the window, which ends in `/tv`.

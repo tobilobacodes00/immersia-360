@@ -48,7 +48,7 @@ En resumen: el **propietario** tiene el control total; un **operador** es un asi
 
 El servidor comprueba el rol en cada acción, así que ocultar un botón nunca es la única protección.
 
-## Invita a alguien
+## Invita a alguien {#invite}
 
 Solo los propietarios. Abre **Dispositivos y equipo** en el Estudio y elige la pestaña **Equipo**.
 

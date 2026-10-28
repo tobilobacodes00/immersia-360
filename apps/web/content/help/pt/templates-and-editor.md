@@ -66,7 +66,7 @@ Uma tela de impressão é criada em **300 DPI**, então o que você vê é o que
 
 Uma sobreposição é transparente para o vídeo aparecer. Deixe o fundo vazio.
 
-### Campos dinâmicos
+### Campos dinâmicos {#fields}
 
 O texto pode conter campos que se preenchem para cada evento ou convidado, escolhidos pelo botão `{ }` da caixa de texto:
 
@@ -81,7 +81,7 @@ O texto pode conter campos que se preenchem para cada evento ou convidado, escol
 
 Uma prévia ao vivo embaixo da caixa mostra o resultado.
 
-## Seus próprios arquivos em Recursos
+## Seus próprios arquivos em Recursos {#assets}
 
 **Recursos** guarda arquivos compartilhados por todos os eventos da conta: sobreposições e molduras, aberturas e encerramentos, músicas, fontes, logotipos e fundos. Envie uma vez e use onde quiser. Os limites:
 

@@ -26,7 +26,7 @@ related: [chrome-kiosk-printing, 360-booth-setup, sharing-station]
 > [!WARNING]
 > Una página web no puede bloquear un dispositivo por completo. El bloqueo de quiosco de Immersia mantiene las manos curiosas fuera de la pantalla de la cabina, pero un invitado decidido aún puede salir de la pantalla completa, cerrar la pestaña o cambiar de app. Para un evento que nadie vigila, combínalo con el bloqueo propio del dispositivo: Acceso guiado, fijación de pantalla o el modo quiosco de Chrome, descritos abajo.
 
-## El bloqueo de quiosco integrado en la cabina
+## El bloqueo de quiosco integrado en la cabina {#lock}
 
 En la **Configuración** del evento, en **Quiosco**, pulsa **Guardar PIN** y elige de 4 a 8 dígitos. Con un PIN definido:
 

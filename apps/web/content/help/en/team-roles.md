@@ -48,7 +48,7 @@ In short: the **owner** has full control; an **operator** is an assistant who ru
 
 The server checks the role on every action, so hiding a button is never the only protection.
 
-## Invite someone
+## Invite someone {#invite}
 
 Owners only. Open **Devices and team** in the Studio and choose the **Team** tab.
 

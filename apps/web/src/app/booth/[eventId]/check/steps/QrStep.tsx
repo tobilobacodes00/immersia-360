@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { CheckCircle2 } from 'lucide-react';
 import { QrCode } from '@immersia/ui';
-import { HelpLink } from '@/components/HelpLink';
+import { BoothHelpLink } from '@/components/BoothHelpLink';
 import { HELP_ARTICLES } from '@/lib/help-links';
 import { gradeQr, isLocalOrigin, worst, type Finding, type QrCode as QrFindingCode } from '@/lib/setup-check/grading';
 import { sleep } from '@/lib/setup-check/measure';
@@ -101,7 +101,9 @@ export function QrStep({ session, onDone }: StepProps) {
           <FindingList
             findings={done.findings}
             text={text}
-            help={(f) => (f.status !== 'pass' ? <HelpLink slug={HELP_ARTICLES.sharing} label={t('help')} /> : null)}
+            help={(f) =>
+              f.status !== 'pass' ? <BoothHelpLink slug={HELP_ARTICLES.sharing} label={t('help')} /> : null
+            }
           />
         </div>
       )}

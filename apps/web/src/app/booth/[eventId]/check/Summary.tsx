@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 import { CheckCircle2, CircleX, TriangleAlert } from 'lucide-react';
 import { describeUserAgent, type SetupCheckStep } from '@immersia/shared';
 import { Button, Pill, buttonClass } from '@immersia/ui';
-import { HelpLink } from '@/components/HelpLink';
+import { BoothHelpLink } from '@/components/BoothHelpLink';
 import { HELP_ARTICLES } from '@/lib/help-links';
 import { overall } from '@/lib/setup-check/grading';
 import { formatSeconds } from '@/lib/setup-check/render-estimate';
@@ -146,7 +146,7 @@ export function Summary({
           {t('actions.finish')}
         </Link>
         <Button onClick={onRestart}>{t('actions.runAgain')}</Button>
-        <HelpLink slug={HELP_ARTICLES.setupCheck} label={t('summary.help')} className="ml-auto" />
+        <BoothHelpLink slug={HELP_ARTICLES.setupCheck} label={t('summary.help')} className="ml-auto" />
       </footer>
     </section>
   );

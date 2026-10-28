@@ -31,7 +31,7 @@ A cabine faz a impressão como uma imagem a **300 DPI** no tamanho exato do pape
 
 Tamanhos: tira **2×6**, **4×4**, **4×6** retrato, **6×4** paisagem e **5×7** polegadas. O tamanho story 9:16 é para telas e não tem tamanho de papel.
 
-## Ligar a impressão
+## Ligar a impressão {#turn-on}
 
 Na **Configuração** do evento, seção **Cabine de fotos**:
 

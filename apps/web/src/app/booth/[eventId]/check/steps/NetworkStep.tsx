@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { HelpLink } from '@/components/HelpLink';
+import { BoothHelpLink } from '@/components/BoothHelpLink';
 import { HELP_ARTICLES } from '@/lib/help-links';
 import { gradeNetwork, worst, type Finding, type NetworkCode } from '@/lib/setup-check/grading';
 import type { NetworkOutcome } from '../check-session';
@@ -56,7 +56,9 @@ export function NetworkStep({ session, onDone }: StepProps) {
           <FindingList
             findings={done.findings}
             text={text}
-            help={(f) => (f.status !== 'pass' ? <HelpLink slug={HELP_ARTICLES.offline} label={t('help')} /> : null)}
+            help={(f) =>
+              f.status !== 'pass' ? <BoothHelpLink slug={HELP_ARTICLES.offline} label={t('help')} /> : null
+            }
           />
         </div>
       )}

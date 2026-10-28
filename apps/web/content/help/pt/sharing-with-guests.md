@@ -37,7 +37,7 @@ As abas embaixo do QR code mudam o que o código faz:
 
 A cabine nunca vê um número de telefone. E **Enviar o link por e-mail** deixa o convidado digitar um endereço; o link é enviado pelo servidor e o endereço é usado só para essa mensagem e não é guardado. Uma sessão pode ser enviada por e-mail até cinco vezes por hora, e um dispositivo de cabine 120 vezes por hora.
 
-## As configurações
+## As configurações {#settings}
 
 Na **Configuração** do evento, em **Compartilhamento**:
 

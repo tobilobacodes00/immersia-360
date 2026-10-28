@@ -28,6 +28,8 @@ import {
   Toggle,
   useHydrated,
 } from '@immersia/ui';
+import { HelpLink } from '@/components/HelpLink';
+import { HELP_ARTICLES, HELP_TARGETS } from '@/lib/help-links';
 import type { CloudProviderId, IntegrationState } from '@/server/cloud/types';
 import { updateBasicsAction, updateSectionAction } from '../../../actions';
 import { useAutosave, type SaveStatus } from './use-autosave';
@@ -116,19 +118,27 @@ function ToggleField({
   );
 }
 
+/** A card of settings. `help` is the "?" link(s) to the article that explains them (HLP-3). */
 function Section({
   title,
   subtitle,
   children,
   id,
+  help,
 }: {
   title: string;
   subtitle?: string;
   children: ReactNode;
   id: string;
+  help?: ReactNode;
 }) {
   return (
-    <Card id={id} title={title} subtitle={subtitle}>
+    <Card
+      id={id}
+      title={title}
+      subtitle={subtitle}
+      action={help ? <div className="flex flex-wrap items-center gap-x-4 gap-y-1">{help}</div> : undefined}
+    >
       <div className="divide-y divide-line">{children}</div>
     </Card>
   );
@@ -156,6 +166,7 @@ export function EventSetup({
   const t = useTranslations('studio.setup');
   const te = useTranslations('studio.events');
   const tint = useTranslations('studio.integrations');
+  const th = useTranslations('help.links');
   const [basics, setBasics] = useState(initialBasics);
   const [output, setOutput] = useState(initialOutput);
   const [share, setShare] = useState(initialShare);
@@ -232,7 +243,11 @@ export function EventSetup({
         <SaveIndicator statuses={[basicsStatus, outputStatus, shareStatus]} />
       </div>
 
-      <Section id="basics" title={t('basics.title')}>
+      <Section
+        id="basics"
+        title={t('basics.title')}
+        help={<HelpLink {...HELP_TARGETS.expiryPeriod} label={th('expiry')} />}
+      >
         <Field label={t('basics.name')} htmlFor="setup-name">
           <TextInput
             id="setup-name"
@@ -284,7 +299,17 @@ export function EventSetup({
       </Section>
 
       {runsVideo && (
-        <Section id="video" title={t('video.title')} subtitle={t('video.subtitle')}>
+        <Section
+          id="video"
+          title={t('video.title')}
+          subtitle={t('video.subtitle')}
+          help={
+            <>
+              <HelpLink slug={HELP_ARTICLES.booth360} label={th('booth360')} />
+              <HelpLink slug={HELP_ARTICLES.slowMotion} label={th('slowMotion')} />
+            </>
+          }
+        >
           <Issues issues={outputIssues} />
           <Field label={t('video.resolution')} help={t('video.resolutionHelp')}>
             <Segmented
@@ -406,7 +431,18 @@ export function EventSetup({
       )}
 
       {runsPhoto && (
-        <Section id="photo" title={t('photo.title')} subtitle={t('photo.subtitle')}>
+        <Section
+          id="photo"
+          title={t('photo.title')}
+          subtitle={t('photo.subtitle')}
+          help={
+            <>
+              <HelpLink slug={HELP_ARTICLES.photoBooth} label={th('photoBooth')} />
+              <HelpLink {...HELP_TARGETS.printingOn} label={th('printing')} />
+              <HelpLink slug={HELP_ARTICLES.kioskPrinting} label={th('kioskPrinting')} />
+            </>
+          }
+        >
           <Field label={t('photo.shots')}>
             <Segmented<'1' | '2' | '3' | '4'>
               label={t('photo.shots')}
@@ -502,7 +538,12 @@ export function EventSetup({
         </Section>
       )}
 
-      <Section id="triggers" title={t('triggers.title')} subtitle={t('triggers.subtitle')}>
+      <Section
+        id="triggers"
+        title={t('triggers.title')}
+        subtitle={t('triggers.subtitle')}
+        help={<HelpLink slug={HELP_ARTICLES.captureKeys} label={th('triggers')} />}
+      >
         <ToggleField label={t('triggers.tap')} checked={output.triggers.tap} onChange={(tap) => setTriggers({ tap })} />
         <ToggleField
           label={t('triggers.keyboard')}
@@ -531,7 +572,18 @@ export function EventSetup({
         )}
       </Section>
 
-      <Section id="sharing" title={t('sharing.title')} subtitle={t('sharing.subtitle')}>
+      <Section
+        id="sharing"
+        title={t('sharing.title')}
+        subtitle={t('sharing.subtitle')}
+        help={
+          <>
+            <HelpLink {...HELP_TARGETS.shareSettings} label={th('sharing')} />
+            <HelpLink {...HELP_TARGETS.guestForm} label={th('guestPrivacy')} />
+            <HelpLink slug={HELP_ARTICLES.googleDrive} label={th('cloud')} />
+          </>
+        }
+      >
         <ToggleField label={t('sharing.qr')} checked={share.qr} onChange={(qr) => setShare((s) => ({ ...s, qr }))} />
         <ToggleField
           label={t('sharing.email')}

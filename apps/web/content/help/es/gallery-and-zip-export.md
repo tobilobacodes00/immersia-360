@@ -40,7 +40,7 @@ Las capturas que ocultaste de las pantallas, y aquellas cuyos invitados pidieron
 
 En **Contraseña**, pulsa **Definir una contraseña** (de al menos 6 caracteres) y **Definir**. Cada visitante la escribe una vez por navegador, durante una semana. Cambiar la contraseña cierra la sesión de todos. **Quitar la contraseña** vuelve a abrir la galería a cualquiera que tenga el enlace. Tras demasiados intentos fallidos desde una misma red, la galería le pide al visitante que espere unos minutos.
 
-## Carteles con QR
+## Carteles con QR {#signage}
 
 La pestaña **Carteles con QR** crea un póster para toda la galería del evento, con los colores de tu evento, tu logo y tu hashtag:
 
@@ -52,7 +52,7 @@ La pestaña **Carteles con QR** crea un póster para toda la galería del evento
 
 Cambia el titular y la línea bajo el código, o deja una línea vacía para quitarla. Descarga un **PDF** o un **PNG**. Imprime a **tamaño real (100 %)**, no con "ajustar a la página". Nada se coloca a menos de 12 mm del borde, así las impresoras de oficina no lo cortan.
 
-## Descarga todos los originales en un ZIP
+## Descarga todos los originales en un ZIP {#zip}
 
 En la pestaña **Resumen**, **Galería del evento** tiene una sección **Todos los archivos** con **Descargar todos los archivos (ZIP)**. Guarda todos los archivos en calidad completa del evento, **incluidas las capturas ocultas**, directamente desde el almacenamiento en un solo ZIP en tu navegador.
 

@@ -25,7 +25,7 @@ related: [gallery-and-zip-export, connect-google-drive, sharing-with-guests, gue
 
 Os arquivos hospedados dos convidados não ficam guardados para sempre. Assim o serviço continua gratuito e as imagens dos convidados não ficam por aí indefinidamente. Cada evento tem um período de retenção e, quando os arquivos de um convidado chegam ao fim dele, são excluídos.
 
-## Escolha o período
+## Escolha o período {#period}
 
 Ao criar um evento, e depois em **Configuração**, em **Básico**, defina **Guardar os arquivos por**: **7 dias**, **30 dias** ou **90 dias**. O padrão é 30.
 
@@ -39,7 +39,7 @@ Na aba **Visão geral** do evento, em **Arquivos dos convidados**:
 - **Próxima expiração**: quando o primeiro deles vai embora.
 - **Expirados**: capturas cujos arquivos já foram excluídos.
 
-## Estenda antes que se vão
+## Estenda antes que se vão {#extend}
 
 Abaixo desses números, **Estender por 7 dias** e **Estender por 30 dias** dão mais tempo a todos os links ativos. A nova data é contada a partir de agora, ou da expiração atual se ela for posterior, então tocar de novo continua somando. A mensagem seguinte diz quantos links foram estendidos.
 

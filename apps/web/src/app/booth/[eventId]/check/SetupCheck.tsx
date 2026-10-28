@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 import { ArrowLeft } from 'lucide-react';
 import type { BoothMode, SetupCheckStep } from '@immersia/shared';
 import { BrandMark, Pill } from '@immersia/ui';
-import { HelpLink } from '@/components/HelpLink';
+import { BoothHelpLink } from '@/components/BoothHelpLink';
 import { HELP_ARTICLES } from '@/lib/help-links';
 import type { CheckPlan } from '@/lib/setup-check/config';
 import { readDeviceIdentity, type DeviceIdentity } from '@/lib/device-identity';
@@ -98,7 +98,7 @@ export function SetupCheck(props: SetupCheckProps) {
       >
         <ArrowLeft className="size-4" aria-hidden /> {t('backToBooth')}
       </Link>
-      <HelpLink slug={HELP_ARTICLES.setupCheck} label={t('help')} className="ml-auto" />
+      <BoothHelpLink slug={HELP_ARTICLES.setupCheck} label={t('help')} className="ml-auto" />
     </header>
   );
 

@@ -37,7 +37,7 @@ Las pestañas bajo el código QR cambian lo que hace el código:
 
 La cabina nunca ve un número de teléfono. Y **Envíame el enlace** permite a un invitado escribir una dirección de correo; el enlace se envía desde el servidor y la dirección se usa para ese único mensaje y no se guarda. Una sesión se puede enviar por correo hasta cinco veces por hora, y un dispositivo de cabina 120 veces por hora.
 
-## Los ajustes
+## Los ajustes {#settings}
 
 En la **Configuración** del evento, en **Compartir**:
 

@@ -34,7 +34,7 @@ Abra o evento e vá para a aba **Live Display**. **Mostrar as capturas nas telas
 
 Ao lado, **Publicação** decide se as capturas novas sobem sozinhas (**Mostrar automaticamente**) ou esperam por você (**Aprovar antes**). Veja [Moderar o que aparece na tela](help:live-display-moderation).
 
-## Pareie uma tela
+## Pareie uma tela {#pair}
 
 1. No cartão **Telas**, toque em **Parear uma tela**. Aparece um código de seis caracteres, válido por 10 minutos.
 2. Na tela, abra o navegador e vá para o endereço mostrado na janela, que termina em `/tv`.

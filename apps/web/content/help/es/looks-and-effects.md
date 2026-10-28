@@ -50,7 +50,7 @@ Con música añadida al evento, **Sincronizar con el ritmo** hace que los efecto
 
 Elige un **Efecto de foto** para el evento: **Espejo, Esferizar, Pellizcar, Molinete, Ondas, Cristal, Prisma, Caleidoscopio, Op art, Semitono, Térmico, Pop art, Pixelado, Boceto, Posterizar, Duotono pop, Cómic, Bordes neón** o **Glitch**. Se aplica, junto con el estilo de las fotos, a cada foto antes de crear la tira. Los boomerangs y los videos cortos reciben lo mismo.
 
-## Reemplazo de fondo
+## Reemplazo de fondo {#background}
 
 En **Fondo**, cambia lo que hay detrás de tus invitados, sin pantalla verde:
 

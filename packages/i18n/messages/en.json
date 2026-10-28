@@ -2254,7 +2254,19 @@
       "guestPrivacy": "About guest privacy",
       "templates": "About templates",
       "looks": "About looks and effects",
-      "roles": "About roles"
+      "roles": "About roles",
+      "storage": "About storage on this device",
+      "printing": "About print sizes",
+      "moderation": "About moderating the screen",
+      "sharing": "About sharing with guests",
+      "cloud": "About copying to your cloud",
+      "photoBooth": "About the photo booth",
+      "booth360": "About the 360 booth",
+      "assets": "About assets",
+      "signage": "About QR signage",
+      "triggers": "About starting a capture",
+      "slowMotion": "About slow motion",
+      "gettingStarted": "Your first event, step by step"
     }
   },
   "status": {

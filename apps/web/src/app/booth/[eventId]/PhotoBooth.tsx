@@ -41,6 +41,7 @@ import { useCaptureKeys, useHeartbeat, useOnline, useWakeLock } from './booth-ho
 import type { AssetView } from '@/server/assets';
 import { fillAssets } from './event-assets';
 import { fitted, templateResources } from './media';
+import { CameraErrorHelp, StatusHelp } from './BoothHelp';
 import { Confetti } from './Confetti';
 import { Gallery } from './Gallery';
 import { KioskLockLayer, useKioskLock } from './KioskLock';
@@ -567,22 +568,33 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
           </Link>
         )}
         <div className="flex flex-wrap items-center justify-end gap-2" role="status" aria-live="polite">
+          {/* The "?" beside a pill is for the operator: never while the kiosk is PIN-locked. */}
           {!online && (
-            <Pill tone="warn" className="text-[0.8rem]">
-              <WifiOff className="size-3.5" aria-hidden /> {t('offline')}
-            </Pill>
+            <>
+              <Pill tone="warn" className="text-[0.8rem]">
+                <WifiOff className="size-3.5" aria-hidden /> {t('offline')}
+              </Pill>
+              {!kiosk.locked && <StatusHelp kind="offline" />}
+            </>
           )}
           {backgroundUnavailable && !kiosk.locked && (
-            <Pill tone="warn" className="text-[0.8rem]">
-              {t('backgroundUnavailable')}
-            </Pill>
+            <>
+              <Pill tone="warn" className="text-[0.8rem]">
+                {t('backgroundUnavailable')}
+              </Pill>
+              <StatusHelp kind="background" />
+            </>
           )}
           {uploads.status.waiting > 0 && (
-            <Pill tone={online ? 'neutral' : 'warn'} className="text-[0.8rem]">
-              {online
-                ? t('uploads.waiting', { count: uploads.status.waiting })
-                : t('uploads.offline', { count: uploads.status.waiting })}
-            </Pill>
+            <>
+              <Pill tone={online ? 'neutral' : 'warn'} className="text-[0.8rem]">
+                {online
+                  ? t('uploads.waiting', { count: uploads.status.waiting })
+                  : t('uploads.offline', { count: uploads.status.waiting })}
+              </Pill>
+              {/* Offline, the offline pill already carries the same "?". */}
+              {online && !kiosk.locked && <StatusHelp kind="offline" />}
+            </>
           )}
           {!kiosk.locked && (
             <>
@@ -749,6 +761,8 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
             <div role="alert" className="max-w-md text-center">
               <h2 className="text-[1.6rem] font-bold">{t('errors.title')}</h2>
               <p className="mt-2 opacity-70">{t(`errors.${errorKey(phase.code)}`)}</p>
+              {/* The steps for this very error, for the operator; a guest-facing kiosk shows none. */}
+              {!kiosk.locked && <CameraErrorHelp code={phase.code} className="mt-3" />}
               <GuestButton primary className="mt-6" onClick={() => void startCamera(cameraChoice)}>
                 {t('errors.retry')}
               </GuestButton>

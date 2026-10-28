@@ -31,7 +31,7 @@ The booth makes the print as an image at **300 DPI** at the exact paper size (a 
 
 Sizes: **2×6** strip, **4×4**, **4×6** portrait, **6×4** landscape and **5×7** inches. The 9:16 story size is for screens and has no paper size.
 
-## Turn printing on
+## Turn printing on {#turn-on}
 
 In the event's **Setup**, **Photo booth** section:
 

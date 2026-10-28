@@ -23,7 +23,7 @@ Tabs under the QR code change what the code does:
 
 The booth never sees a phone number. And **Email me the link** lets a guest type an address; the link is sent from the server and the address is used for that one message and not stored. A session can be emailed up to five times an hour, and a booth device 120 times an hour.
 
-## The settings
+## The settings {#settings}
 
 In the event's **Setup**, under **Sharing**:
 

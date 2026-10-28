@@ -65,7 +65,7 @@ Un lienzo de impresión se crea a **300 DPI**, así que lo que ves es lo que se 
 
 Una superposición es transparente para que se vea el video. Deja el fondo vacío.
 
-### Campos dinámicos
+### Campos dinámicos {#fields}
 
 El texto puede contener campos que se rellenan para cada evento o invitado, y que se eligen con el botón `{ }` del cuadro de texto:
 
@@ -80,7 +80,7 @@ El texto puede contener campos que se rellenan para cada evento o invitado, y qu
 
 Una vista previa en directo bajo el cuadro muestra el resultado.
 
-## Tus propios archivos en Recursos
+## Tus propios archivos en Recursos {#assets}
 
 **Recursos** contiene archivos que comparten todos los eventos de la cuenta: superposiciones y marcos, intros y cierres, música, fuentes, logotipos y fondos. Súbelos una vez y úsalos donde quieras. Los límites:
 

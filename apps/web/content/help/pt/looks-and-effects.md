@@ -50,7 +50,7 @@ Com música adicionada ao evento, **Sincronizar com a batida** faz os efeitos pu
 
 Escolha um **Efeito de foto** para o evento: **Espelho, Esfera, Comprimir, Torcer, Ondulação, Vidro, Prisma, Caleidoscópio, Op art, Meio-tom, Térmico, Pop art, Pixelado, Esboço, Posterizar, Duotone pop, Quadrinhos, Bordas neon** ou **Glitch**. Ele é aplicado, junto com o estilo das fotos, a cada foto antes de montar a tira. Bumerangues e vídeos curtos recebem o mesmo.
 
-## Troca de fundo
+## Troca de fundo {#background}
 
 Em **Fundo**, troque o que fica atrás dos seus convidados, sem tela verde:
 

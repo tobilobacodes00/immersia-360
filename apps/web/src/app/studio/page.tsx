@@ -3,7 +3,9 @@ import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { ArrowRight, Images, Lock, RotateCw } from 'lucide-react';
 import { Card, EmptyState, PageHeader, Pill } from '@immersia/ui';
+import { HelpLink } from '@/components/HelpLink';
 import { formatEventDate } from '@/lib/format';
+import { HELP_ARTICLES } from '@/lib/help-links';
 import { roleCan } from '@/lib/permissions';
 import { recentEvents } from '@/server/events';
 import { requireOperator } from '@/server/session';
@@ -16,10 +18,11 @@ export async function generateMetadata(): Promise<Metadata> {
 /** Screen 2: mode launcher — two large cards, then recent events. */
 export default async function LauncherPage({ searchParams }: { searchParams: Promise<{ denied?: string }> }) {
   const op = await requireOperator();
-  const [t, te, tr, locale, recent, { denied }] = await Promise.all([
+  const [t, te, tr, th, locale, recent, { denied }] = await Promise.all([
     getTranslations('studio.launcher'),
     getTranslations('studio.events'),
     getTranslations('roles'),
+    getTranslations('help.links'),
     getLocale(),
     recentEvents(op.organizationId),
     searchParams,
@@ -31,7 +34,12 @@ export default async function LauncherPage({ searchParams }: { searchParams: Pro
   ];
   return (
     <>
-      <PageHeader eyebrow={op.organizationName} title={t('title')} subtitle={t('subtitle')} />
+      <PageHeader
+        eyebrow={op.organizationName}
+        title={t('title')}
+        subtitle={t('subtitle')}
+        actions={<HelpLink slug={HELP_ARTICLES.gettingStarted} label={th('gettingStarted')} />}
+      />
       {denied && (
         <p
           role="status"

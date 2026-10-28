@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { HelpLink } from '@/components/HelpLink';
+import { BoothHelpLink } from '@/components/BoothHelpLink';
 import { HELP_ARTICLES } from '@/lib/help-links';
 import {
   RENDER_TARGET_LAPTOP_MS,
@@ -103,7 +103,9 @@ export function RenderStep({ session, plan, onDone }: StepProps) {
           <FindingList
             findings={done.findings}
             text={text}
-            help={(f) => (f.status !== 'pass' ? <HelpLink slug={HELP_ARTICLES.renderSpeed} label={t('help')} /> : null)}
+            help={(f) =>
+              f.status !== 'pass' ? <BoothHelpLink slug={HELP_ARTICLES.renderSpeed} label={t('help')} /> : null
+            }
           />
           {result && <p className="pl-7 text-[13px] leading-relaxed text-faint">{t('estimateNote')}</p>}
         </div>

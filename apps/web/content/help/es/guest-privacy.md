@@ -36,7 +36,7 @@ related: [sharing-with-guests, live-display-moderation, expiry-and-extending, co
 - **No mostrar la mía en pantalla.** En la cabina, cuando Live Display está activado. Consulta [Moderar lo que sale en pantalla](help:live-display-moderation).
 - **El correo se usa una sola vez.** Una dirección escrita en la cabina para recibir el enlace se usa solo para ese mensaje y no se guarda.
 
-## El formulario de invitados
+## El formulario de invitados {#guest-form}
 
 En la **Configuración** del evento, en **Compartir**, activa **Pedir datos a los invitados**. El formulario pide un correo y un nombre (puedes hacer el nombre obligatorio). Una casilla de consentimiento empieza **sin marcar**, y marcarla es la única forma de que los datos de un invitado se transmitan.
 
@@ -47,7 +47,7 @@ En la **Configuración** del evento, en **Compartir**, activa **Pedir datos a lo
 
 Immersia conserva la prueba de cada consentimiento: el texto exacto que se mostró, su idioma, la hora y el enlace de tu política.
 
-## Tu lista de invitados
+## Tu lista de invitados {#guests}
 
 Cada evento tiene una pestaña **Invitados** con los datos que dejó la gente: nombre, correo, el consentimiento que dieron y de qué captura vienen. Los propietarios y operadores los ven y los gestionan; un lector solo ve cuántos hay.
 
@@ -55,11 +55,11 @@ Cada evento tiene una pestaña **Invitados** con los datos que dejó la gente: n
 - **Exportar CSV** se abre en Excel con los acentos intactos. Las celdas que empiezan por `=`, `+`, `-` o `@` se vuelven seguras para que una hoja de cálculo no pueda ejecutarlas.
 - **Eliminar** quita un contacto. **Eliminar todos los contactos** quita todos los contactos recopilados para el evento. Sus fotos y vídeos no se ven afectados.
 
-## Cuando un invitado te pide que elimines sus datos
+## Cuando un invitado te pide que elimines sus datos {#requests}
 
 Abre **Ajustes** en el Estudio y busca **Solicitudes de privacidad de invitados**. Escribe el correo del invitado y pulsa **Buscar**: muestra lo que guardas con esa dirección en todos tus eventos. **Eliminar sus datos** quita los contactos y, si marcas la opción, también sus fotos y vídeos. Las eliminaciones se registran en un registro de auditoría sin la dirección en sí.
 
-## Tus propios datos
+## Tus propios datos {#your-data}
 
 En **Ajustes**, los propietarios pueden **Descargar JSON** con los miembros de la organización, sus eventos y ajustes, plantillas, dispositivos y conexiones de nube (nunca sus secretos) y cada contacto de invitado con su consentimiento. Las fotos y los vídeos no van en la exportación. Los propietarios también pueden **Eliminar organización**, que quita de forma permanente todo, incluidos los archivos alojados y las conexiones de nube; antes te pide que escribas una frase.
 

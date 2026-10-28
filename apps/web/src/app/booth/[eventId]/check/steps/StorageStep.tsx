@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { HelpLink } from '@/components/HelpLink';
+import { BoothHelpLink } from '@/components/BoothHelpLink';
 import { formatBytes } from '@/lib/format';
 import { HELP_ARTICLES } from '@/lib/help-links';
 import { gradeStorage, worst, type Finding, type StorageCode } from '@/lib/setup-check/grading';
@@ -55,7 +55,7 @@ export function StorageStep({ session, onDone }: StepProps) {
               text={text}
               help={(f) =>
                 f.code === 'notPersistedApple' || f.code === 'notPersisted' ? (
-                  <HelpLink slug={HELP_ARTICLES.iosStorage} label={t('help')} />
+                  <BoothHelpLink slug={HELP_ARTICLES.iosStorage} label={t('help')} />
                 ) : null
               }
             />
