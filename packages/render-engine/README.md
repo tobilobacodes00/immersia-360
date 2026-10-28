@@ -32,8 +32,15 @@ encoder (or the machine) changes, which is why server and local renders match.
   skip runs out; a take that cannot be decoded says nothing about the rung. Starting always from the top
   lets a device recover its fast path.
 
-The booth stores the memory in its own database and reports the rung that worked to the server (it ends
-up in the device's `capabilities.renderPath`).
+The booth (`apps/web/src/app/booth/[eventId]/ladder-run.ts`, `use-render-queue.ts`) stores the memory in
+its own database and reports the rung that worked to the server (it ends up in the device's
+`capabilities.renderPath`, shown on the Devices screen). A take on the `server` rung stays on the device
+as `server` while the worker renders it; the booth asks the server about it every few seconds, and the
+guest's page shows "Your files are on their way" until the outputs land, as for any other rung.
+
+The `server` rung does not run this engine on a server by magic: `apps/render-worker` loads the same
+`render()` in headless Chrome and feeds it the job the booth would have built, from a recipe
+(`@immersia/shared` `renderRecipeSchema`). See that app's README.
 
 `render(job, { encoder: 'wasm' })` selects the WASM encoder; `'native'` is the default. A browser with no
 H.264 encoder fails fast with `unsupported_encoder` (a `canEncodeVideo` check before any work is done),

@@ -34,3 +34,17 @@ Neither the model nor the WebAssembly runtime is committed to this repository.
 
 Segmentation runs entirely in the browser (main thread or the render worker). No frame, mask or image is ever sent to a
 server; the only network traffic is the one-off download of the files above from our own origin.
+
+## H.264 encoder for browsers without one (the `wasm` rung of the render ladder)
+
+| Asset                                   | Files                                                                  | Source                                                     | Licence                                             |
+| --------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------- | --------------------------------------------------- |
+| `h264-mp4-encoder` 1.0.12 (the wrapper) | `public/workers/h264-encoder.js` (built from the package's web bundle) | npm, pinned in `pnpm-workspace.yaml`                       | MIT                                                 |
+| minih264 (the encoder inside it)        | compiled into that bundle                                              | github.com/lieff/minih264                                  | CC0 1.0 (public domain)                             |
+| libmp4v2 (its MP4 writer, unmodified)   | compiled into that bundle                                              | github.com/TrevorSundberg/libmp4v2 (a fork for Emscripten) | MPL 1.1 (file-level copyleft; source is upstream's) |
+
+Nothing GPL is included: ffmpeg.wasm's cores bundle x264 (GPL-2.0-or-later) and are deliberately not used. The
+encoder is only loaded by a browser that has no H.264 encoder of its own, from this site's own origin. H.264 is a
+patent-encumbered format whatever the encoder's licence; see `packages/render-engine/README.md` for the full decision.
+The file is built by `packages/render-engine/scripts/h264-worker.mjs` (run by `apps/web/scripts/build-workers.mjs`
+and by the render worker's bundle step) and is not committed.
