@@ -164,7 +164,8 @@ describe('render engine (VID-1, 2, 3, 8, 9)', () => {
     };
     const progress: number[] = [];
     const done = render(job(await getClip()), { gate, onProgress: (p) => progress.push(p) });
-    await expect.poll(() => parked).toBe(true);
+    // (Reaching the tenth gate call includes decoder and GL start-up: far over poll's 1 s default on a busy runner.)
+    await expect.poll(() => parked, { timeout: 30_000 }).toBe(true);
     const reported = progress.length;
     await new Promise((r) => setTimeout(r, 300));
     expect(progress).toHaveLength(reported);
