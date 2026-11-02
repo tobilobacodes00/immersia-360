@@ -93,7 +93,8 @@ describe('a native take on its way to the take store (CAP-14)', () => {
     await openTake(flow, row);
     expect(await db.takes.get(TAKE)).toMatchObject({ status: 'recording', fps: 240, mimeType: 'video/quicktime' });
 
-    const rec = new NativeTakeRecorder(cam, {
+    // Typed as the booth sees it: `onChunk` reads the recorder's clock, so `rec` refers to itself.
+    const rec: TakeCapture = new NativeTakeRecorder(cam, {
       takeId: TAKE,
       onChunk: chunkWriter(flow, { id: TAKE, path: PATH }, () => rec.elapsedMs),
       readFile,
