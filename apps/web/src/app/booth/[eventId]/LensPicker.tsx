@@ -3,7 +3,14 @@
 import { useId, useRef, useState, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import { Check } from 'lucide-react';
-import { groupLenses, type GroupedLens, type Lens, type LensFacing } from '@immersia/capture';
+import {
+  groupLenses,
+  nativeLensClass,
+  type GroupedLens,
+  type HighSpeedLens,
+  type Lens,
+  type LensFacing,
+} from '@immersia/capture';
 import { Pill, cx } from '@immersia/ui';
 import { useSettler } from './settle';
 
@@ -12,6 +19,27 @@ const SETTLE_MS = 600;
 
 export const DEFAULT_CAMERA = '__default__';
 export const SIMULATOR = '__simulator__';
+
+/** A native high-speed lens (CAP-14) in the picker's one string value: `native:<lens id>`. */
+const NATIVE_PREFIX = 'native:';
+export const nativeValue = (lensId: string) => `${NATIVE_PREFIX}${lensId}`;
+/** The lens id in a picker value, or null when the value is not a native lens. */
+export const nativeLensId = (value: string) =>
+  value.startsWith(NATIVE_PREFIX) ? value.slice(NATIVE_PREFIX.length) : null;
+
+/** The native lenses as the picker's own lens type, so they are named and ordered the way browser lenses are. */
+function nativeLensRows(lenses: readonly HighSpeedLens[]): { lens: GroupedLens; maxFps: number }[] {
+  const asLenses: Lens[] = lenses.map((l, i) => ({
+    deviceId: l.id,
+    label: l.label,
+    position: i + 1,
+    ...nativeLensClass(l),
+  }));
+  const maxFps = new Map(lenses.map((l) => [l.id, Math.max(0, ...l.formats.map((f) => f.fps))]));
+  return groupLenses(asLenses).flatMap((g) =>
+    g.lenses.map((lens) => ({ lens, maxFps: maxFps.get(lens.deviceId) ?? 0 })),
+  );
+}
 
 /** CAP-2: the human name of a lens, in the operator's language rather than the phone's. */
 function LensName({ lens }: { lens: GroupedLens }) {
@@ -57,22 +85,26 @@ export function LensPicker({
   selected,
   inUse,
   simulatorInUse,
+  highSpeed,
   disabled,
   onSelect,
 }: {
   lenses: readonly Lens[];
-  /** `DEFAULT_CAMERA`, `SIMULATOR` or a device id. */
+  /** `DEFAULT_CAMERA`, `SIMULATOR`, a device id, or `nativeValue(lens id)`. */
   selected: string;
   /** The device id the open camera is really using. */
   inUse: string | null;
   /** The open camera is the simulator (which has no device id). */
   simulatorInUse: boolean;
+  /** CAP-14: the companion's native high-speed lenses, and the one in use; absent in a browser. */
+  highSpeed?: { lenses: readonly HighSpeedLens[]; inUse: string | null };
   disabled: boolean;
   onSelect: (value: string) => void;
 }) {
   const t = useTranslations('booth.settings');
   const name = useId();
   const groups = groupLenses(lenses);
+  const highSpeedRows = highSpeed ? nativeLensRows(highSpeed.lenses) : [];
   // Arrowing through the cameras previews each one; the camera reopens for the one the operator rests on
   // (after a short pause, at once on a click, Enter or leaving the list).
   const [preview, setPreview] = useState<string | null>(null);
@@ -139,7 +171,10 @@ export function LensPicker({
   // Names (and ids) arrive with camera permission; until then the list may be empty or unnamed.
   const unnamed = lenses.length === 0 || lenses.some((l) => l.label === '');
   const savedButNotListed =
-    selected !== DEFAULT_CAMERA && selected !== SIMULATOR && !lenses.some((l) => l.deviceId === selected);
+    selected !== DEFAULT_CAMERA &&
+    selected !== SIMULATOR &&
+    nativeLensId(selected) === null &&
+    !lenses.some((l) => l.deviceId === selected);
 
   return (
     <div
@@ -161,6 +196,23 @@ export function LensPicker({
           {g.lenses.map((l) => option(l.deviceId, <LensName lens={l} />, inUse === l.deviceId))}
         </div>
       ))}
+      {highSpeedRows.length > 0 && (
+        <div role="group" aria-labelledby={`${name}-hfr`} className="space-y-1.5">
+          <p id={`${name}-hfr`} className="text-[11px] font-semibold tracking-wider text-faint uppercase">
+            {t('hfr.group')}
+          </p>
+          {highSpeedRows.map(({ lens, maxFps }) =>
+            option(
+              nativeValue(lens.deviceId),
+              <>
+                <LensName lens={lens} />
+                <span className="text-faint"> · {t('hfr.maxFps', { fps: maxFps })}</span>
+              </>,
+              highSpeed?.inUse === lens.deviceId,
+            ),
+          )}
+        </div>
+      )}
       {option(SIMULATOR, t('simulator'), simulatorInUse)}
       {unnamed && <p className="text-[13px] text-faint">{t('lenses.namesLater')}</p>}
     </div>

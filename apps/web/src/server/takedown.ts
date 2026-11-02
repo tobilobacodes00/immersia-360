@@ -5,6 +5,7 @@ import type { RemovalBasis } from '@immersia/shared';
 import { audit, type AuditAction } from './audit';
 import { cancelPendingCopies } from './cloud/copy';
 import { appOrigin } from './env';
+import { withdrawHighlightsWith } from './highlights';
 import { refreshSessionItem, withdrawSession } from './live';
 import { deleteObjects, quarantineObjects } from './storage';
 
@@ -23,6 +24,29 @@ const { captureSession, event, output } = schema;
  */
 
 export type TakedownResult = { ok: true; objects: number } | { ok: false; error: 'not_found' | 'storage_failed' };
+
+/**
+ * What else holds a taken-down session's footage besides its own outputs, and is stopped now (the hourly sweeps
+ * would find both later; each step is best effort and logged, so neither can fail the takedown itself):
+ *
+ * - a highlight reel (LIV-14) with the guest's clip in it is deleted with its files (an operator's hide, by
+ *   contrast, only withholds a reel: see highlight-footage.ts);
+ * - a server render (the render ladder's last rung) of the session stops, and the working copies of its
+ *   recording are deleted, so no worker can publish files for it any more.
+ */
+async function stopDerivedWork(sessionId: string): Promise<void> {
+  const log = (what: string) => (err: unknown) =>
+    console.error(`[takedown] ${what} failed, the sweep will retry`, err instanceof Error ? err.name : err);
+  await withdrawHighlightsWith(sessionId).catch(log('highlight reel withdrawal'));
+  try {
+    // Loaded when needed: render-jobs reaches this module through sessions.ts and reports.ts (it publishes a worker's
+    // files the way a booth's uploads are published), so a static import would make a cycle.
+    const { abandonServerRenders } = await import('./render-jobs');
+    await abandonServerRenders(sessionId);
+  } catch (err) {
+    log('server render cleanup')(err);
+  }
+}
 
 /**
  * The platform takes a session down. Idempotent: calling it again on a session already taken down
@@ -78,6 +102,7 @@ export async function takeDownSession(input: {
 
   // Off every connected screen now; the database already keeps it off the next feed read.
   await withdrawSession(row.eventId, row.id);
+  await stopDerivedWork(row.id);
 
   const keys = outputs.flatMap((o) => (o.key ? [o.key] : []));
   try {

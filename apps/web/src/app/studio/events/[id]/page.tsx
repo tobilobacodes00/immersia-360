@@ -3,17 +3,23 @@ import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { AlertTriangle } from 'lucide-react';
 import { Card, Stat, buttonClass } from '@immersia/ui';
+import { HelpLink } from '@/components/HelpLink';
 import { formatBytes } from '@/lib/format';
+import { galleryUrl, outputSettingsSchema } from '@immersia/shared';
+import { cloudErrorHelp, HELP_ARTICLES, type HelpTarget } from '@/lib/help-links';
 import { roleCan } from '@/lib/permissions';
-import { galleryUrl } from '@immersia/shared';
 import { eventCloudAlert } from '@/server/cloud/integrations';
 import { appOrigin } from '@/server/env';
 import { eventStats, getEvent, guestFilesSummary } from '@/server/events';
 import { galleryStats } from '@/server/gallery';
+import { highlightSummary } from '@/server/highlights';
+import { listServerRenders, serverRenderCounts } from '@/server/render-jobs';
 import { reportsForOrganization, type ReportItem } from '@/server/reports';
 import { requireOperator } from '@/server/session';
 import { ExtendGuestFiles } from './ExtendGuestFiles';
 import { GalleryCard } from './GalleryCard';
+import { HighlightReel } from './HighlightReel';
+import { ServerRenders } from './ServerRenders';
 import { ReportList } from '../../reports/ReportList';
 import { toReportView } from '../../reports/views';
 
@@ -27,9 +33,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function EventDashboardPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const op = await requireOperator({ event: ['read'] });
-  const [t, ti, locale, s, files, event, gallery, cloud, reports] = await Promise.all([
+  const [t, ti, th, locale, s, files, event, gallery, cloud, reports, renders, renderCounts, reel] = await Promise.all([
     getTranslations('studio.dashboard'),
     getTranslations('studio.integrations'),
+    getTranslations('help.links'),
     getLocale(),
     eventStats(op.organizationId, id),
     guestFilesSummary(op.organizationId, id),
@@ -39,10 +46,24 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
     roleCan(op.role, { report: ['read'] })
       ? reportsForOrganization(op.organizationId, { eventId: id, limit: 50 })
       : Promise.resolve<ReportItem[]>([]),
+    listServerRenders(op.organizationId, id),
+    serverRenderCounts(op.organizationId, id),
+    highlightSummary(op.organizationId, id),
   ]);
   const unresolved = reports.filter((r) => r.status === 'open' || r.status === 'escalated').length;
   const n = (v: number) => v.toLocaleString(locale);
   const cloudName = cloud ? ti(`providers.${cloud.provider}`) : '';
+  const video = event ? outputSettingsSchema.parse(event.outputSettings).video360 : null;
+  // Where the notice's reason is explained: the reconnect steps, the connect guide, or the failed copy's heading.
+  const cloudHelp: HelpTarget | null = !cloud
+    ? null
+    : cloud.reason === 'needs_reauth'
+      ? cloudErrorHelp('reauth_required')
+      : cloud.reason === 'disconnected'
+        ? { slug: cloud.provider === 'drive' ? HELP_ARTICLES.googleDrive : HELP_ARTICLES.dropbox }
+        : cloud.failedKey
+          ? cloudErrorHelp(cloud.failedKey)
+          : null;
   return (
     <div className="space-y-6">
       {cloud && (
@@ -73,6 +94,12 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
                 {ti(`copyErrors.${cloud.failedKey}`, { provider: cloudName })}
               </p>
             )}
+            {cloudHelp && (
+              <HelpLink
+                {...cloudHelp}
+                label={cloudHelp.slug === HELP_ARTICLES.cloudErrors ? th('cloudErrors') : th('cloud')}
+              />
+            )}
           </div>
           <Link href="/studio/integrations" className={buttonClass({ variant: 'secondary', size: 'sm' })}>
             {t('cloudFix')}
@@ -101,9 +128,12 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
         </div>
       </section>
       <section aria-labelledby="pipeline-heading">
-        <h2 id="pipeline-heading" className="eyebrow mb-3">
-          {t('pipeline')}
-        </h2>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+          <h2 id="pipeline-heading" className="eyebrow">
+            {t('pipeline')}
+          </h2>
+          <HelpLink slug={HELP_ARTICLES.offline} label={th('offline')} />
+        </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <Stat
             label={t('renderQueue')}
@@ -120,10 +150,29 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
           <Stat label={t('devices')} value={n(s.activeDevices)} hint={t('devicesHint')} />
         </div>
       </section>
+      {renders.length > 0 && (
+        <ServerRenders
+          eventId={id}
+          counts={renderCounts}
+          rows={renders.map((r) => ({
+            id: r.id,
+            stage: r.stage,
+            attempts: r.attempts,
+            error: r.error,
+            shortCode: r.shortCode,
+            createdAt: r.createdAt.toISOString(),
+            renderMs: r.renderMs,
+            canRetry: r.canRetry,
+          }))}
+        />
+      )}
       <section aria-labelledby="files-heading">
-        <h2 id="files-heading" className="eyebrow mb-3">
-          {t('guestFiles')}
-        </h2>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+          <h2 id="files-heading" className="eyebrow">
+            {t('guestFiles')}
+          </h2>
+          <HelpLink slug={HELP_ARTICLES.expiry} label={th('expiry')} />
+        </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <Stat label={t('liveLinks')} value={n(files.live)} />
           <Stat
@@ -139,8 +188,20 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
           eventId={id}
           eventName={event.name}
           url={galleryUrl(appOrigin(), event.gallerySlug, 'direct')}
+          nfcUrl={galleryUrl(appOrigin(), event.gallerySlug, 'nfc')}
           items={gallery.items}
           locked={event.galleryPasswordHash !== null}
+        />
+      )}
+      {event && video && roleCan(op.role, { event: ['update'] }) && (
+        <HighlightReel
+          eventId={id}
+          eventName={event.name}
+          eventDate={event.date}
+          aspect={video.aspect}
+          items={gallery.items}
+          hasMusic={video.music !== null}
+          existing={reel}
         />
       )}
     </div>

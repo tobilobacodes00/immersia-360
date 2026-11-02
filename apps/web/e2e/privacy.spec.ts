@@ -1,7 +1,7 @@
-import { randomBytes, randomUUID } from 'node:crypto';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Browser, type Page } from '@playwright/test';
 import { createEvent, open, signIn } from './helpers';
+import { PNG, deviceToken, registerSession } from './session-helpers';
 
 /**
  * Privacy (SHR-6 and the PRD's privacy obligations): the optional guest form, what the operator can
@@ -10,72 +10,8 @@ import { createEvent, open, signIn } from './helpers';
  * a presigned upload to S3-compatible storage), so no camera or render is involved.
  */
 
-// A real 1×1 PNG: the share page shows it as the guest's "photo strip".
-const PNG = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-  'base64',
-);
-
 const axe = (page: Page) => new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();
 const violations = async (page: Page) => (await axe(page)).violations.map((v) => `${v.id}: ${v.nodes.length}`);
-
-/** Register this browser as a booth device and return its token. */
-async function deviceToken(page: Page, eventId: string): Promise<string> {
-  await open(page, `/booth/${eventId}`);
-  await page.getByRole('button', { name: 'Register and continue' }).click();
-  await page.waitForFunction(() => localStorage.getItem('immersia.device.v1') !== null);
-  return page.evaluate(() => (JSON.parse(localStorage.getItem('immersia.device.v1')!) as { token: string }).token);
-}
-
-interface Registered {
-  linkId: string;
-  sessionId: string;
-  outputId: string;
-  token: string;
-  eventId: string;
-}
-
-/** What a booth does: register a session with one photo strip, upload it, confirm it. */
-async function registerSession(page: Page, token: string, eventId: string): Promise<Registered> {
-  const linkId = randomBytes(16).toString('base64url');
-  const sessionId = randomUUID();
-  const outputId = randomUUID();
-  const auth = { authorization: `Device ${token}` };
-  const res = await page.request.post('/api/booth/sessions', {
-    headers: auth,
-    data: {
-      id: sessionId,
-      eventId,
-      linkId,
-      shortCode: null,
-      capturedAt: new Date().toISOString(),
-      optedOutOfDisplay: false,
-      takes: [],
-      outputs: [
-        {
-          id: outputId,
-          takeId: null,
-          kind: 'strip',
-          mime: 'image/png',
-          bytes: PNG.length,
-          width: 400,
-          height: 1200,
-          durationMs: 0,
-        },
-      ],
-    },
-  });
-  expect(res.ok(), await res.text()).toBe(true);
-  const { uploads } = (await res.json()) as {
-    uploads: { outputId: string; url: string; headers: Record<string, string> }[];
-  };
-  const ticket = uploads[0]!;
-  const put = await page.request.put(ticket.url, { headers: ticket.headers, data: PNG });
-  expect(put.ok()).toBe(true);
-  const done = await page.request.post(`/api/booth/outputs/${ticket.outputId}/complete`, { headers: auth, data: {} });
-  expect(done.ok()).toBe(true);
-  return { linkId, sessionId, outputId: ticket.outputId, token, eventId };
-}
 
 /** Turn the guest form on in Setup → Sharing, with the operator's own policy link and sentence. */
 async function enableGuestForm(page: Page, eventId: string) {

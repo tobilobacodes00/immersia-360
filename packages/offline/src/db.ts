@@ -6,7 +6,19 @@ import Dexie, { type EntityTable } from 'dexie';
  * the upload queue, and the reserved short-code pool. Media bytes live in OPFS (take-store.ts).
  */
 
-export type TakeStatus = 'recording' | 'recorded' | 'interrupted' | 'imported' | 'rendering' | 'rendered' | 'failed';
+export type TakeStatus =
+  | 'recording'
+  | 'recorded'
+  | 'interrupted'
+  | 'imported'
+  | 'rendering'
+  /** Handed to the server render worker (the last rung of the render ladder): the video lands in the guest's session from there. */
+  | 'server'
+  | 'rendered'
+  | 'failed';
+
+/** The rungs of the render ladder: this device, this device with a WebAssembly encoder, the server. */
+export type RenderRung = 'local' | 'wasm' | 'server';
 export type CaptureTrigger = 'tap' | 'timer' | 'motion' | 'remote' | 'keyboard' | 'import';
 
 export interface LocalTake {
@@ -31,6 +43,16 @@ export interface LocalTake {
   error?: string;
   /** Why a derived output (the messaging copy) couldn't be made; not retried automatically. */
   derivedError?: string;
+  /** Which rung of the render ladder produced (or is producing) the video. */
+  renderPath?: RenderRung;
+  /** Server rung: the job the server queued for this take. */
+  serverJobId?: string;
+  /** Server rung: when to ask the server about this take again (submitting, or polling). */
+  serverCheckAt?: number;
+  /** Server rung: failed calls in a row, for the growing delay between tries. */
+  serverAttempts?: number;
+  /** Server rung: the server could not use one of the event's library files, so the job goes without them. */
+  serverStripped?: boolean;
 }
 
 export type OutputKind = 'mp4' | 'small_mp4' | 'gif' | 'strip' | 'short_video' | 'boomerang' | 'poster';

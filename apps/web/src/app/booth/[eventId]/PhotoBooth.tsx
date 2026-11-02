@@ -34,6 +34,7 @@ import {
 import { Pill } from '@immersia/ui';
 import { CountdownDisc, GuestButton, GuestScreen, Headline, fade } from '@immersia/ui/guest';
 import { readDeviceIdentity, type DeviceIdentity } from '@/lib/device-identity';
+import { localEncoder, warmWasmEncoder } from '@/lib/device-ladder';
 import { pageSegmenter } from '@/lib/segmenter';
 import { workerUrl } from '@/lib/workers';
 import { useLiveBackground, useWarmSegmenter } from './background-source';
@@ -41,6 +42,7 @@ import { useCaptureKeys, useHeartbeat, useOnline, useWakeLock } from './booth-ho
 import type { AssetView } from '@/server/assets';
 import { fillAssets } from './event-assets';
 import { fitted, templateResources } from './media';
+import { CameraErrorHelp, StatusHelp } from './BoothHelp';
 import { Confetti } from './Confetti';
 import { Gallery } from './Gallery';
 import { KioskLockLayer, useKioskLock } from './KioskLock';
@@ -50,10 +52,12 @@ import { RegisterDevice } from './RegisterDevice';
 import { ResultScreen } from './ResultScreen';
 import { SettingsDrawer } from './SettingsDrawer';
 import { describeCamera, reconcileWithCamera, type ActiveCamera } from './active-camera';
-import { fillLightOf, needsReopen, type CameraChoice } from './camera-choice';
+import { fillLightOf, needsReopen, usableChoice, type CameraChoice } from './camera-choice';
 import { FillLightFrame } from './FillLightFrame';
 import { useOpenGuard } from './open-guard';
 import { useCameraChoice } from './use-camera-choice';
+import { SetupCheckPrompt } from './SetupCheckPrompt';
+import { useSetupCheckPrompt } from './use-setup-check-prompt';
 import { boothBrowser, useBoothAnalytics } from './use-booth-analytics';
 import { useUploadQueue } from './use-upload-queue';
 
@@ -72,6 +76,8 @@ export interface PhotoBoothEvent {
   layout: Template | null;
   /** LIV-8: guests are told their capture may appear on the Live Display, and can opt out. */
   liveDisplay: boolean;
+  /** HLP-1: the setup check for this booth. */
+  checkHref: string;
   /** Dynamic fields and every file the layout draws (screen 5). */
   media: { branding: { hashtag: string; custom1: string; custom2: string; custom3: string }; assets: AssetView[] };
 }
@@ -138,6 +144,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
   const p = event.photo;
   const wantsClips = p.outputs.boomerang || p.outputs.shortVideo;
   const kiosk = useKioskLock(event.kioskPinHash);
+  const setupCheck = useSetupCheckPrompt(identity?.id ?? null);
   // A session is under way, from the first countdown until the strip is kept: the gallery stays out of its way.
   const capturing =
     phase.kind === 'starting' ||
@@ -168,6 +175,11 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
     };
   }, []);
 
+  // A browser without an H.264 encoder fetches the WebAssembly one now, while online, for the boomerang and the short video.
+  useEffect(() => {
+    void warmWasmEncoder(false);
+  }, []);
+
   const releaseShots = useCallback(() => {
     for (const s of shots.current) {
       s.still.close();
@@ -195,7 +207,10 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
   );
 
   const startCamera = useCallback(
-    async (choice: CameraChoice) => {
+    async (saved: CameraChoice) => {
+      // The photo booth has no use for the companion's native high-speed camera (CAP-14), which the 360
+      // booth may have left as the saved choice: it opens a browser camera.
+      const choice = usableChoice(saved, false);
       // This open supersedes any other in flight (a double tap): only the newest may use its camera.
       const token = openGuard.begin();
       setPhase({ kind: 'starting' });
@@ -425,20 +440,22 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
           clips.push(graded);
         }
         const client = renderer.current;
+        // The browser's H.264 encoder, or the WebAssembly one on a browser that has none.
+        const encoder = await localEncoder();
         if (client && p.outputs.boomerang && clips.at(-1)?.length) {
           // The last shot's moment, forward and back. The worker takes ownership of the frames it
           // gets, so when the short video also needs them, the boomerang gets copies.
           const last = clips.at(-1)!;
           const frames = p.outputs.shortVideo ? await Promise.all(last.map((f) => createImageBitmap(f))) : last;
           const { width, height } = frames[0]!;
-          const mp4 = await client.clip(`${session.id}:boomerang`, frames, CLIP_FPS, true);
+          const mp4 = await client.clip(`${session.id}:boomerang`, frames, CLIP_FPS, true, encoder);
           if (!p.outputs.shortVideo) clips[clips.length - 1] = [];
           await save('boomerang', mp4, width, height, Math.round(((frames.length * 2 - 2) / CLIP_FPS) * 1000));
         }
         const all = clips.flat();
         if (client && p.outputs.shortVideo && all.length) {
           const { width, height } = all[0]!;
-          const mp4 = await client.clip(`${session.id}:short`, all, CLIP_FPS, false);
+          const mp4 = await client.clip(`${session.id}:short`, all, CLIP_FPS, false, encoder);
           await save('short_video', mp4, width, height, Math.round((all.length / CLIP_FPS) * 1000));
         } else all.forEach((f) => f.close());
       } catch (err) {
@@ -603,22 +620,33 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
           </Link>
         )}
         <div className="flex flex-wrap items-center justify-end gap-2" role="status" aria-live="polite">
+          {/* The "?" beside a pill is for the operator: never while the kiosk is PIN-locked. */}
           {!online && (
-            <Pill tone="warn" className="text-[0.8rem]">
-              <WifiOff className="size-3.5" aria-hidden /> {t('offline')}
-            </Pill>
+            <>
+              <Pill tone="warn" className="text-[0.8rem]">
+                <WifiOff className="size-3.5" aria-hidden /> {t('offline')}
+              </Pill>
+              {!kiosk.locked && <StatusHelp kind="offline" />}
+            </>
           )}
           {backgroundUnavailable && !kiosk.locked && (
-            <Pill tone="warn" className="text-[0.8rem]">
-              {t('backgroundUnavailable')}
-            </Pill>
+            <>
+              <Pill tone="warn" className="text-[0.8rem]">
+                {t('backgroundUnavailable')}
+              </Pill>
+              <StatusHelp kind="background" />
+            </>
           )}
           {uploads.status.waiting > 0 && (
-            <Pill tone={online ? 'neutral' : 'warn'} className="text-[0.8rem]">
-              {online
-                ? t('uploads.waiting', { count: uploads.status.waiting })
-                : t('uploads.offline', { count: uploads.status.waiting })}
-            </Pill>
+            <>
+              <Pill tone={online ? 'neutral' : 'warn'} className="text-[0.8rem]">
+                {online
+                  ? t('uploads.waiting', { count: uploads.status.waiting })
+                  : t('uploads.offline', { count: uploads.status.waiting })}
+              </Pill>
+              {/* Offline, the offline pill already carries the same "?". */}
+              {online && !kiosk.locked && <StatusHelp kind="offline" />}
+            </>
           )}
           {!kiosk.locked && (
             <>
@@ -661,6 +689,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
               >
                 {t('startBooth')}
               </GuestButton>
+              {setupCheck.due && <SetupCheckPrompt href={event.checkHref} onSkip={setupCheck.skip} />}
             </div>
           </GuestScreen>
         )}
@@ -792,6 +821,8 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
             <div role="alert" className="max-w-md text-center">
               <h2 className="text-[1.6rem] font-bold">{t('errors.title')}</h2>
               <p className="mt-2 opacity-70">{t(`errors.${errorKey(phase.code)}`)}</p>
+              {/* The steps for this very error, for the operator; a guest-facing kiosk shows none. */}
+              {!kiosk.locked && <CameraErrorHelp code={phase.code} className="mt-3" />}
               <GuestButton primary className="mt-6" onClick={() => void startCamera(cameraChoice)}>
                 {t('errors.retry')}
               </GuestButton>
@@ -820,6 +851,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
         }}
         camera={phase.kind === 'error' ? null : activeCamera}
         cameraBusy={cameraBusy}
+        checkHref={event.checkHref}
       />
 
       <KioskLockLayer eventId={event.id} pinHash={event.kioskPinHash} kiosk={kiosk} />

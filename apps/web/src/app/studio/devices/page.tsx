@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
+import { HelpLink } from '@/components/HelpLink';
+import { HELP_ARTICLES } from '@/lib/help-links';
 import { listDevices } from '@/server/devices';
 import { requireOperator } from '@/server/session';
 import { DeviceList, type DeviceView } from './DeviceList';
@@ -22,5 +24,13 @@ export default async function DevicesPage() {
     revoked: Boolean(d.revokedAt),
     renderPath: d.capabilities.renderPath,
   }));
-  return <DeviceList devices={devices} />;
+  const th = await getTranslations('help.links');
+  return (
+    <>
+      <div className="mb-4">
+        <HelpLink slug={HELP_ARTICLES.devices} label={th('devices')} />
+      </div>
+      <DeviceList devices={devices} />
+    </>
+  );
 }

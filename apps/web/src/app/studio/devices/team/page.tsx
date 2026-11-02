@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { getLocale, getTranslations } from 'next-intl/server';
+import { HelpLink } from '@/components/HelpLink';
+import { HELP_ARTICLES } from '@/lib/help-links';
 import { roleCan } from '@/lib/permissions';
 import { requireOperator } from '@/server/session';
 import { expiryOf, listMembers, listPendingInvitations, organizationsOf } from '@/server/team-data';
@@ -16,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default async function TeamPage() {
   const op = await requireOperator();
-  const locale = await getLocale();
+  const [locale, th] = await Promise.all([getLocale(), getTranslations('help.links')]);
   const canInvite = roleCan(op.role, { invitation: ['create'] });
   const date = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' });
   const [members, invitations, organizations] = await Promise.all([
@@ -41,12 +43,17 @@ export default async function TeamPage() {
       ...expiryOf(i.expiresAt, locale),
     })) ?? null;
   return (
-    <TeamPanel
-      organizationName={op.organizationName}
-      me={{ userId: op.userId, role: op.role }}
-      members={memberItems}
-      invitations={invitationItems}
-      organizationCount={organizations.length}
-    />
+    <>
+      <div className="mb-4">
+        <HelpLink slug={HELP_ARTICLES.roles} label={th('roles')} />
+      </div>
+      <TeamPanel
+        organizationName={op.organizationName}
+        me={{ userId: op.userId, role: op.role }}
+        members={memberItems}
+        invitations={invitationItems}
+        organizationCount={organizations.length}
+      />
+    </>
   );
 }

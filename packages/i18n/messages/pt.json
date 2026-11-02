@@ -160,6 +160,7 @@
       "templates": "Modelos",
       "devices": "Dispositivos e equipe",
       "integrations": "Integrações",
+      "help": "Ajuda",
       "signOut": "Sair",
       "openMenu": "Abrir menu",
       "closeMenu": "Fechar menu",
@@ -289,6 +290,38 @@
       "cloudDisconnected": "Este evento é copiado para o {provider}, mas o {provider} não está conectado. Conecte e os arquivos deste evento serão atualizados.",
       "cloudFailed": "{count, plural, one {# arquivo não chegou ao {provider}.} other {# arquivos não chegaram ao {provider}.}}",
       "cloudFix": "Abrir Integrações",
+      "serverRenders": {
+        "title": "Renderizações no servidor",
+        "intro": "As gravações que uma cabine não conseguiu renderizar sozinha são renderizadas aqui. Um trabalho que falha tenta de novo sozinho, um pouco depois; quando desiste, você pode iniciá-lo outra vez.",
+        "stage": {
+          "queued": "Na fila",
+          "rendering": "Renderizando",
+          "done": "Concluído",
+          "failed": "Falhou"
+        },
+        "code": "Código do convidado {code}",
+        "took": "renderizado em {time}",
+        "attempts": "{count, plural, one {# tentativa} other {# tentativas}}",
+        "retry": "Tentar de novo",
+        "retried": "Na fila de novo. Começa assim que o servidor de renderização estiver livre.",
+        "retryFilesGone": "Os arquivos desta gravação foram removidos, então ela não pode ser renderizada de novo.",
+        "retryConflict": "Esta gravação já tem uma renderização mais recente na fila.",
+        "retryFailed": "Não foi possível iniciar a renderização de novo. Tente outra vez em instantes.",
+        "errors": {
+          "undecodable": "Não foi possível ler o formato do vídeo",
+          "unsupported_encoder": "O navegador do servidor não conseguiu codificar o vídeo",
+          "encoder_stall": "O codificador parou de responder",
+          "gpu": "A aceleração gráfica não estava disponível",
+          "source_missing": "A gravação não estava mais no armazenamento",
+          "download_failed": "Não foi possível obter a gravação",
+          "upload_failed": "Não foi possível guardar o vídeo pronto",
+          "timeout": "A renderização demorou demais",
+          "lease_lost": "O servidor de renderização parou no meio",
+          "shutdown": "O servidor de renderização foi desligado",
+          "invalid_recipe": "A cabine e o servidor não concordam com os ajustes da renderização",
+          "failed": "A renderização falhou"
+        }
+      },
       "reportsTitle": "Denúncias",
       "reportsOpen": "{count, plural, one {# denúncia aguarda uma decisão} other {# denúncias aguardam uma decisão}}",
       "reportsSettled": "Todas as denúncias deste evento já foram resolvidas."
@@ -1351,6 +1384,8 @@
       "copy": "Copiar",
       "copied": "Copiado",
       "openLink": "Abrir",
+      "nfc": "Tag NFC ou pulseira",
+      "nfcHelp": "Grave o link da galeria em uma tag ou pulseira e os convidados abrem a galeria encostando o celular.",
       "password": "Senha",
       "passwordHelp": "Opcional. Quem tem o link precisa dela uma vez por navegador. Capturas ocultas e convidados que pediram para não aparecer no telão nunca aparecem aqui.",
       "locked": "Protegida",
@@ -1367,6 +1402,95 @@
       "export": "Todos os arquivos",
       "exportHelp": "Todos os arquivos do evento em qualidade total num único ZIP, incluindo as capturas ocultas, salvos pelo seu navegador direto do armazenamento.",
       "exportButton": "Baixar todos os arquivos (ZIP)"
+    },
+    "nfc": {
+      "intro": "Abrir com um toque: grave este link em uma tag, adesivo ou pulseira NFC. É o link da galeria marcado como rota NFC, então suas análises mostram quantos convidados chegaram encostando o celular.",
+      "linkLabel": "Link NFC",
+      "copy": "Copiar link NFC",
+      "copied": "Copiado",
+      "write": "Gravar em tag NFC",
+      "cancel": "Cancelar",
+      "waiting": "Encoste a tag na parte de trás deste celular e mantenha-a ali até esta mensagem mudar.",
+      "written": "Pronto. Encoste outro celular na tag para conferir se ela abre a galeria.",
+      "unsupported": "Não é possível gravar tags por este navegador: o Web NFC só funciona no Chrome em um celular Android. Copie o link acima e grave com qualquer app de gravação NFC em um celular (por exemplo NFC Tools ou NXP TagWriter), como registro de URL.",
+      "insecure": "O Web NFC só funciona em páginas seguras (https). Abra o estúdio por https para gravar tags daqui, ou copie o link acima e use um app de gravação NFC.",
+      "failures": {
+        "denied": "O navegador bloqueou o NFC. Permita para este site nas configurações do navegador e tente de novo.",
+        "unavailable": "O NFC está desligado neste celular, ou ele não tem. Ative o NFC nas configurações do celular e tente de novo.",
+        "unreadable": "Não foi possível gravar nesta tag. Ela pode estar bloqueada ou não ser uma tag para links. Tente outra.",
+        "lost": "A tag se afastou antes de ser gravada. Mantenha-a parada junto ao celular e tente de novo.",
+        "failed": "Não foi possível gravar a tag. Tente de novo."
+      },
+      "tips": {
+        "title": "Dicas sobre tags e pulseiras",
+        "tags": "Compre tags ou pulseiras NTAG213, NTAG215 ou NTAG216: guardam um link com folga e funcionam em iPhone e em Android.",
+        "record": "Grave um registro de URL (link da web), não texto simples. A maioria dos apps NFC chama de “URL” ou “Link”.",
+        "test": "Teste cada tag com um celular antes do evento. O iPhone lê perto da borda superior; a maioria dos Android, perto da câmera.",
+        "metal": "Metal bloqueia o sinal: cole as tags em plástico, madeira ou papel, ou compre tags feitas para superfícies metálicas.",
+        "lock": "Não bloqueie uma tag antes de testá-la. Uma tag bloqueada não pode ser regravada."
+      }
+    },
+    "highlightReel": {
+      "title": "Vídeo de melhores momentos",
+      "subtitle": "Uma montagem das suas melhores capturas, criada neste navegador com o que está na galeria do cliente.",
+      "empty": "Ainda não há nada na galeria do cliente. Quando houver capturas de convidados, você poderá criar um vídeo com elas.",
+      "options": {
+        "length": "Duração",
+        "lengthSeconds": "{seconds} s",
+        "quality": "Qualidade",
+        "qualityHelp": "720p baixa menos e é criado mais rápido; 1080p fica melhor em uma tela grande.",
+        "format": "Formato",
+        "transitions": "Cortes",
+        "beat": "No ritmo",
+        "fade": "Fusão",
+        "transitionsHelp": "No ritmo segue a música do evento; sem música, corta em um passo constante."
+      },
+      "music": {
+        "with": "A música do evento toca sob o vídeo e os cortes seguem o ritmo dela.",
+        "without": "Este evento não tem música, então o vídeo ficará sem som. Adicione uma faixa em Configuração para trilhar o vídeo."
+      },
+      "build": "Criar vídeo de melhores momentos",
+      "cancel": "Cancelar",
+      "progress": {
+        "label": "Criando o vídeo",
+        "downloading": "Baixando capturas ({done} de {total})",
+        "analysing": "Ouvindo a música e planejando os cortes",
+        "rendering": "Renderizando o vídeo",
+        "finishing": "Finalizando"
+      },
+      "summary": "{duration} · {clips, plural, one {# captura} other {# capturas}} · {size}",
+      "ready": {
+        "title": "Seu vídeo está pronto",
+        "beatSynced": "Os cortes caem no ritmo.",
+        "preview": "Pré-visualização do vídeo de melhores momentos",
+        "download": "Baixar MP4",
+        "publish": "Mostrar na galeria do cliente",
+        "uploading": "Enviando {percent}",
+        "again": "Criar outro",
+        "published": "Já está na galeria do cliente."
+      },
+      "published": {
+        "title": "Na galeria do cliente",
+        "hidden": "Não está aparecendo",
+        "when": "Publicado em {date}",
+        "withheld": "{count, plural, one {# captura incluída foi ocultada} other {# capturas incluídas foram ocultadas}} ou tiradas da tela, então o vídeo não aparece para os convidados. Crie um novo.",
+        "preview": "O vídeo de melhores momentos publicado",
+        "remove": "Tirar da galeria",
+        "removed": "O vídeo foi tirado da galeria do cliente."
+      },
+      "card": {
+        "subtitle": "Melhores momentos",
+        "hint": "Escaneie para ver todas as fotos e vídeos"
+      },
+      "errors": {
+        "nothing": "Nenhuma captura da galeria pôde ser usada. Confira se a galeria tem vídeos ou tiras de fotos e tente de novo.",
+        "download": "Não foi possível baixar uma captura. Verifique sua conexão e tente de novo.",
+        "unsupported": "Este navegador não consegue criar o vídeo. Use o Chrome ou o Edge em um computador.",
+        "failed": "Não foi possível criar o vídeo. Tente de novo, ou escolha uma duração menor ou 720p.",
+        "publish": "Não foi possível enviar o vídeo. Tente de novo.",
+        "withheld": "Uma captura do vídeo foi ocultada depois do planejamento. Crie o vídeo de novo.",
+        "remove": "Não foi possível tirar o vídeo. Tente de novo."
+      }
     },
     "signage": {
       "title": "Cartazes com QR",
@@ -1401,6 +1525,10 @@
         "label": "Link da galeria",
         "copy": "Copiar link",
         "copied": "Copiado"
+      },
+      "nfc": {
+        "title": "Tag NFC",
+        "subtitle": "Abrir com um toque além de escanear: grave o link da galeria em uma tag ou pulseira."
       },
       "preview": {
         "title": "Pré-visualização",
@@ -1631,6 +1759,13 @@
   "booth": {
     "startBooth": "Iniciar cabine",
     "startHint": "Confira a câmera e depois passe a vez para os convidados.",
+    "setupCheck": "Teste de configuração",
+    "setupPrompt": {
+      "title": "Primeira vez neste dispositivo?",
+      "body": "Faça o teste de configuração: câmera, armazenamento, uma gravação de teste, velocidade de renderização, a leitura de um QR e o caminho do envio. Cerca de três minutos.",
+      "run": "Fazer o teste de configuração",
+      "skip": "Pular por enquanto"
+    },
     "startingCamera": "Iniciando a câmera…",
     "backgroundUnavailable": "A troca de fundo não está disponível neste dispositivo; os convidados verão o fundo real.",
     "offline": "Offline",
@@ -1647,7 +1782,11 @@
     "saving": "Salvando…",
     "saved": "Salvo. Próximo convidado!",
     "warnings": {
-      "storage": "Este dispositivo teve problemas para salvar a última gravação. Tudo até o problema foi mantido. Confira o armazenamento livre."
+      "storage": "Este dispositivo teve problemas para salvar a última gravação. Tudo até o problema foi mantido. Confira o armazenamento livre.",
+      "hfrThermal": "Este dispositivo está esquentando. A câmera pode parar sozinha; deixe-o esfriar se a gravação falhar.",
+      "hfrCall": "Uma chamada ou outro app interrompeu a câmera. A gravação até esse ponto foi mantida.",
+      "hfrBackground": "O app saiu da tela e a câmera pausou. A gravação até esse ponto foi mantida.",
+      "hfrInterrupted": "A câmera de alta velocidade parou antes da hora. A gravação até esse ponto foi mantida."
     },
     "errors": {
       "title": "A câmera não está disponível",
@@ -1658,6 +1797,11 @@
       "insecure": "A câmera só funciona em uma conexão segura (https).",
       "lost": "A câmera desconectou.",
       "recording_unsupported": "Este navegador não consegue gravar vídeo. Use Chrome, Edge ou Safari.",
+      "native_permission": "O acesso à câmera ou ao microfone foi recusado. Abra os ajustes deste app no dispositivo, permita Câmera e Microfone e tente de novo.",
+      "no_high_speed": "Esta câmera não tem modo de alta velocidade na taxa de quadros escolhida. Escolha outra câmera ou uma taxa menor nas configurações.",
+      "native_audio": "A câmera de alta velocidade deste celular não grava som. Desative o microfone na configuração do evento ou escolha outra câmera.",
+      "native_storage": "Este dispositivo está quase sem armazenamento. Libere espaço e tente de novo.",
+      "native_failed": "A câmera de alta velocidade parou de funcionar. Tente de novo ou escolha outra câmera nas configurações.",
       "unknown": "Algo deu errado ao iniciar a câmera.",
       "retry": "Tentar de novo"
     },
@@ -1686,6 +1830,15 @@
       },
       "cameraBusy": "As mudanças de câmera ficam em pausa enquanto um convidado usa a cabine.",
       "delivering": "Entregando {width}×{height} a {fps} fps",
+      "hfr": {
+        "group": "Câmeras de alta velocidade · 120 a 240 fps",
+        "fps": "Taxa de quadros",
+        "fpsOption": "{fps} fps",
+        "maxFps": "até {fps} fps",
+        "help": "Grava câmera lenta na velocidade própria da câmera. Esta prévia é a imagem bruta: o visual e o fundo são aplicados quando o vídeo é renderizado.",
+        "unavailable": "Este dispositivo não tem nenhuma câmera que grave a 120 fps ou mais. Use uma câmera do navegador.",
+        "noMotion": "O início por movimento não está disponível com esta câmera. Comece pelo botão ou pelo teclado."
+      },
       "mirror": "Espelhar a prévia",
       "mirrorHelp": "Só nesta tela. As gravações nunca são espelhadas.",
       "zoom": "Zoom",
@@ -1720,6 +1873,9 @@
         "opfs": "Salvo no armazenamento do dispositivo",
         "idb": "Salvo no armazenamento do navegador"
       },
+      "setupCheck": "Teste de configuração",
+      "setupCheckHelp": "Teste a câmera, o armazenamento, a velocidade de renderização, a leitura de QR e os envios neste dispositivo.",
+      "setupCheckRun": "Executar",
       "lens": {
         "wide": "grande-angular",
         "ultrawide": "ultra-grande-angular",
@@ -1734,7 +1890,8 @@
       "imported": "Importada",
       "rendering": "Renderizando",
       "rendered": "Renderizada",
-      "failed": "Falhou"
+      "failed": "Falhou",
+      "server": "No servidor"
     },
     "takeOrigin": {
       "recovered": "Recuperada",
@@ -1756,7 +1913,12 @@
       "encoder_stall": "O codificador parou de responder",
       "gpu": "A aceleração gráfica não está disponível",
       "cancelled": "Cancelado",
-      "failed": "A renderização falhou"
+      "failed": "A renderização falhou",
+      "server_unavailable": "A renderização no servidor não está configurada para esta conta",
+      "server_rate_limited": "Aguardando o limite de renderizações no servidor",
+      "server_limit": "Este evento atingiu o limite de renderizações no servidor",
+      "server_upload": "Não foi possível enviar a gravação ao servidor",
+      "server_failed": "O servidor não conseguiu renderizar esta gravação"
     },
     "renderQueue": {
       "title": "Fila de renderização",
@@ -1768,6 +1930,11 @@
       "delete": "Excluir",
       "keep": "Manter",
       "progress": "Progresso da renderização",
+      "path": {
+        "local": "Neste dispositivo",
+        "wasm": "Neste dispositivo (modo de compatibilidade)",
+        "server": "No servidor"
+      },
       "preview": "Vídeo renderizado",
       "deleteTitle": "Excluir esta gravação?",
       "deleteBody": "A gravação e tudo o que foi renderizado a partir dela são removidos deste dispositivo. Arquivos já enviados não são afetados."
@@ -1917,6 +2084,441 @@
     "startOther": "Iniciar {booth}",
     "endCard": "Escaneie para pegar seu vídeo"
   },
+  "check": {
+    "metaTitle": "Teste de configuração",
+    "title": "Teste de configuração",
+    "subtitle": "Alguns minutos neste dispositivo antes do evento: a câmera, o armazenamento, uma gravação de teste, a velocidade de renderização, a leitura de um QR e o caminho do envio. Nada do teste é guardado.",
+    "backToBooth": "Voltar à cabine",
+    "help": "Como funciona o teste de configuração",
+    "stepsLabel": "Etapas do teste de configuração",
+    "stepOf": "etapa {n} de {total}",
+    "status": {
+      "pass": "Ok",
+      "warn": "Conferir",
+      "fail": "Corrigir",
+      "skipped": "Pulado",
+      "current": "Agora",
+      "waiting": "Aguardando"
+    },
+    "findingLabel": {
+      "pass": "Passou",
+      "warn": "Vale conferir",
+      "fail": "Problema"
+    },
+    "actions": {
+      "continue": "Continuar",
+      "continueAnyway": "Continuar mesmo assim",
+      "retry": "Tentar de novo",
+      "skip": "Pular esta etapa",
+      "runAgain": "Refazer o teste",
+      "finish": "Voltar à cabine"
+    },
+    "steps": {
+      "camera": "Câmera e lente",
+      "storage": "Armazenamento",
+      "take": "Gravação de teste",
+      "render": "Velocidade de renderização",
+      "qr": "Leitura de QR de teste",
+      "printer": "Teste da impressora",
+      "network": "Envio e rede"
+    },
+    "camera": {
+      "intro": "Escolha a câmera e a lente que a cabine vai usar e olhe a imagem. Depois o teste conta os quadros por segundo que a câmera entrega de verdade, quase sempre menos do que ela anuncia.",
+      "opening": "Abrindo a câmera…",
+      "measuring": "Contando quadros…",
+      "lensHelp": "Celulares e tablets listam cada lente como uma câmera separada. Escolha a grande angular em uma cabine 360 para que a plataforma inteira fique no enquadramento.",
+      "help": "Problemas com a câmera",
+      "stats": {
+        "camera": "Câmera",
+        "size": "Imagem",
+        "reported": "Informado pela câmera",
+        "measured": "Medido",
+        "wanted": "O que este evento pede",
+        "fps": "{fps} fps"
+      },
+      "findings": {
+        "ok": "A câmera entrega o que este evento pede.",
+        "simulator": "Esta é a câmera simulada, então nenhuma câmera real foi verificada. Escolha a sua câmera acima ou refaça o teste com ela antes do evento.",
+        "fpsBelowEvent": "A câmera entrega cerca de {fps} fps, menos que os {target} fps que este evento pede. Funciona, mas a câmera lenta fica mais suave com uma câmera ou um modo mais rápido. Você também pode ajustar o evento para 30 fps na configuração do evento.",
+        "fpsTooLow": "A câmera entrega só cerca de {fps} fps, e a imagem fica travando. Feche outros apps que usam a câmera, tente outra câmera ou outra porta USB e acrescente luz: muitas câmeras reduzem os fps em ambientes escuros.",
+        "resolutionBelowEvent": "A câmera entrega {size}, abaixo dos {target} do evento. Os vídeos continuam sendo gerados em {target}, mas a partir de uma imagem menor. Tente outra câmera ou lente, ou escolha uma resolução menor na configuração do evento.",
+        "fpsUnmeasured": "Este navegador não consegue contar quadros, então os fps reais da câmera são desconhecidos. A etapa de gravação ainda mostra se a imagem está suave."
+      }
+    },
+    "storage": {
+      "intro": "As gravações são salvas primeiro neste dispositivo e enviadas depois, então o dispositivo precisa guardá-las com segurança. Aqui se confere o espaço livre e se o navegador promete não apagá-las.",
+      "checking": "Verificando o armazenamento…",
+      "help": "Armazenamento e iOS",
+      "stats": {
+        "free": "Espaço livre",
+        "unknown": "Não informado",
+        "persisted": "O navegador mantém os dados",
+        "yes": "Sim",
+        "no": "Não promete",
+        "backend": "As gravações são salvas em",
+        "backends": {
+          "opfs": "Armazenamento do dispositivo (rápido)",
+          "idb": "Banco de dados do navegador (mais lento)"
+        }
+      },
+      "findings": {
+        "ok": "Há bastante espaço livre e o navegador prometeu manter os dados deste site.",
+        "noStorage": "Este navegador não tem armazenamento para gravações. Use uma versão atual do Chrome, Edge ou Safari, e não uma janela privada.",
+        "spaceUnknown": "O navegador não informa quanto espaço resta. Garanta que o dispositivo tenha pelo menos 2 GB livres.",
+        "lowSpace": "Só restam {gb} GB livres, e a cabine avisa abaixo de 2 GB. Libere espaço antes do evento: exclua gravações antigas na fila de renderização ou arquivos de que não precisa.",
+        "criticalSpace": "Só restam {gb} GB livres. Isso não basta para fazer um evento com segurança. Libere espaço primeiro.",
+        "notPersisted": "O navegador não prometeu manter os dados deste site, então pode apagá-los se o dispositivo ficar sem espaço. Deixe bastante armazenamento livre e não limpe os dados de navegação. Instalar o Immersia 360 como app faz o Chrome ter mais chance de protegê-los.",
+        "notPersistedApple": "O Safari pode apagar os dados de um site depois de cerca de uma semana sem uso, a menos que o site esteja na Tela de Início. Adicione o Immersia 360 à Tela de Início (Compartilhar, depois Adicionar à Tela de Início) e abra por lá.",
+        "idbBackend": "Este navegador não consegue gravar no armazenamento rápido do dispositivo e usa um banco de dados mais lento. Funciona, mas gravações em 4K ou muito longas podem sofrer."
+      }
+    },
+    "take": {
+      "intro": "Grave {seconds} segundos pelo mesmo caminho que a cabine usa: a câmera, o gravador e o armazenamento deste dispositivo. A gravação de teste é apagada quando o teste termina.",
+      "record": "Gravar um teste",
+      "again": "Gravar de novo",
+      "recording": "Gravando…",
+      "progress": "Progresso da gravação de teste",
+      "stats": {
+        "length": "Duração",
+        "seconds": "{seconds} s",
+        "size": "Tamanho",
+        "format": "Formato",
+        "chunks": "Salvo em partes"
+      },
+      "findings": {
+        "ok": "Gravou, salvou no dispositivo e leu o arquivo inteiro.",
+        "short": "Só {seconds} s dos {asked} s foram gravados. Confira se a câmera continua funcionando e se o dispositivo não está com pouca bateria ou pouco armazenamento.",
+        "empty": "Nada foi gravado. Confira se a câmera mostra imagem e tente de novo.",
+        "writeFailed": "A gravação não pôde ser salva no dispositivo. Confira o armazenamento livre e se o navegador não está em uma janela privada.",
+        "noCamera": "Não há câmera para gravar. Refaça o teste a partir da etapa da câmera."
+      }
+    },
+    "render": {
+      "intro": "A gravação de teste é renderizada com os ajustes de saída deste evento ({resolution}, {fps} fps) pelo mesmo mecanismo de renderização que a cabine usa. Depois a velocidade é escalada para um clipe de 15 s em 1080p, que deve levar no máximo {laptop} s em um notebook e {tablet} s em um iPad de 2021.",
+      "rendering": "Renderizando a gravação de teste…",
+      "progress": "Progresso da renderização",
+      "help": "Velocidade de renderização e a fila",
+      "estimateNote": "É uma estimativa. O clipe de teste é curto e inclui o tempo de partida, então tende a ser mais lento que clipes reais.",
+      "stats": {
+        "rendered": "Renderização de teste",
+        "renderedValue": "{frames} quadros em {size} em {seconds} s",
+        "reference": "Um clipe de 15 s em 1080p levaria",
+        "event": "Um clipe de 15 s deste evento levaria",
+        "seconds": "{seconds} s",
+        "path": "Caminho de renderização deste dispositivo"
+      },
+      "paths": {
+        "local": "Renderiza no dispositivo",
+        "wasm": "Renderiza no dispositivo (mais lento)",
+        "server": "Não consegue renderizar no dispositivo"
+      },
+      "findings": {
+        "fast": "Um clipe de 15 s em 1080p seria renderizado aqui em cerca de {seconds} s, dentro da meta de 45 s para notebooks.",
+        "slower": "Um clipe de 15 s em 1080p levaria cerca de {seconds} s aqui: mais lento que a meta de 45 s para notebooks, mas dentro da meta de 90 s para um iPad de 2021. Os convidados recebem os vídeos do mesmo jeito, mas haverá fila se chegarem em sequência. Reduzir os fps ou a resolução na configuração do evento acelera.",
+        "slow": "Um clipe de 15 s em 1080p levaria cerca de {seconds} s aqui, acima do limite de 90 s, então os convidados esperariam muito. Use um dispositivo mais rápido neste evento, reduza a resolução ou os fps na configuração do evento ou desligue os efeitos.",
+        "undecodable": "Este navegador não consegue decodificar a gravação de teste, então não consegue renderizar. Atualize para a versão mais recente do Chrome, Edge ou Safari.",
+        "unsupported_encoder": "Este navegador não consegue codificar vídeo H.264, que o MP4 do convidado exige. Atualize para a versão mais recente do Chrome, Edge ou Safari.",
+        "encoder_stall": "O codificador de vídeo parou de responder. Feche outras abas e apps e tente de novo; se repetir, reinicie o navegador.",
+        "gpu": "A aceleração gráfica (WebGL 2) não está disponível, então os vídeos não podem ser compostos. Ative a aceleração de hardware nas configurações do navegador, atualize o driver de vídeo e tente de novo.",
+        "cancelled": "A renderização foi cancelada. Tente de novo.",
+        "noTake": "Não há gravação de teste para renderizar. Refaça o teste e grave primeiro o teste.",
+        "backgroundUnavailable": "O evento troca o fundo, mas este dispositivo não conseguiu iniciar esse recurso (ele precisa do modelo e de um navegador com gráficos funcionando, e baixa o modelo no primeiro uso com conexão). Os convidados receberiam o fundo original. Conecte-se à internet e refaça o teste; se persistir, use uma versão mais recente do Chrome, Edge ou Safari, ou desligue o fundo em Marca.",
+        "failed": "A renderização de teste falhou. Tente de novo; se falhar outra vez, atualize o navegador e reinicie o dispositivo."
+      }
+    },
+    "qr": {
+      "intro": "É isto que um convidado faz: ler um código com o celular. Aponte a câmera de um celular para o código abaixo. A página que abrir confirma a leitura, e esta tela passa a mostrar \"Lido\".",
+      "creating": "Criando o código…",
+      "waiting": "Aguardando um celular ler o código…",
+      "manual": "Sem app de câmera? Abra este endereço no celular:",
+      "scanned": "Lido",
+      "qrLabel": "QR code de teste. Leia com um celular",
+      "newCode": "Criar um código novo",
+      "help": "Compartilhar com os convidados",
+      "findings": {
+        "ok": "Um celular abriu o código de teste, então os convidados conseguem chegar a este servidor de onde a cabine está.",
+        "okLocalhost": "O código funcionou, mas esta cabine está aberta em um endereço local ({host}) que os celulares dos convidados não alcançam. Abra a cabine pelo endereço web do Immersia 360 do evento.",
+        "expired": "O código de teste venceu antes de um celular abri-lo. Crie um novo e tente de novo, ou pule esta etapa.",
+        "offline": "Este dispositivo está sem conexão, então o código não pode ser verificado. Conecte-o à rede e tente de novo.",
+        "failed": "Não foi possível criar o código de teste. Tente de novo; se continuar falhando, este dispositivo pode ter sido removido da sua conta."
+      }
+    },
+    "printer": {
+      "notApplicable": "Este tamanho de layout é para telas, não para papel, então não há o que imprimir.",
+      "intro": "Imprima uma folha de calibração no tamanho de impressão deste evento ({size}, {width}×{height} pol.) pelo mesmo código que a impressão de um convidado usa e confira com uma régua. A meta é ficar a menos de 1 mm.",
+      "printingOff": "A impressão está desligada neste evento. Você ainda pode testar a impressora para deixá-la pronta quando ligar.",
+      "twoUp": "Este evento imprime duas tiras 2×6 lado a lado em uma folha 4×6, então carregue papel 4×6.",
+      "how": {
+        "print": "Toque no botão abaixo. Na janela de impressão, escolha a impressora e o tamanho do papel, deixe a escala em 100% (não \"Ajustar à página\") e as margens em nenhuma.",
+        "ruler": "Encoste uma régua na régua de 50 mm da folha. Deve medir 50 mm, com tolerância de 1 mm.",
+        "marks": "Meça entre as marcas dos cantos. A distância está impressa na folha.",
+        "circle": "O círculo de 20 mm deve parecer redondo, não oval.",
+        "frames": "Conte as molduras finas perto das bordas. As molduras a 1, 2, 3 e 4 mm da borda devem aparecer nos quatro lados. Cada moldura que falta significa cerca de 1 mm cortado."
+      },
+      "print": "Imprimir a folha de calibração",
+      "printAgain": "Imprimir de novo",
+      "help": "Imprimir no tamanho certo",
+      "helpKiosk": "Imprimir sem caixa de diálogo (impressão de quiosque do Chrome)",
+      "unavailable": "Este navegador não conseguiu iniciar a impressão. Tente o Chrome ou o Edge, ou pule esta etapa.",
+      "question": "O que a folha impressa mostrou?",
+      "answers": {
+        "matches": "A régua tem 50 mm e todas as marcas aparecem",
+        "off": "Desvio de mais de 1 mm",
+        "cropped": "Cantos ou molduras cortados",
+        "nothing": "Nada foi impresso ou saiu em outro papel"
+      },
+      "answerAgain": "Responder de novo",
+      "findings": {
+        "ok": "A impressão fica a menos de 1 mm e nada é cortado: as impressões dos convidados sairão no tamanho que você escolheu.",
+        "off": "A impressão tem desvio de mais de 1 mm. Na janela de impressão, deixe a escala em 100% (desligue \"Ajustar à página\" ou \"Dimensionar\") e o tamanho do papel exatamente igual ao papel da impressora. Se ainda estiver fora, confira as configurações de escala e margens do driver da impressora.",
+        "cropped": "A impressora está cortando as bordas. Deixe as margens em nenhuma (ou ative a impressão sem bordas) e use o tamanho de papel que corresponde ao seu papel. Mantenha o que é importante em um layout a 4 mm ou mais da borda.",
+        "nothing": "Nada saiu, ou saiu em outro papel. Confira se a impressora está ligada, com papel e definida como padrão, e veja o artigo de impressão para a configuração única do Chrome."
+      }
+    },
+    "network": {
+      "intro": "Isto segue o caminho do arquivo de um convidado: o dispositivo pede ao servidor um envio assinado, manda 1 MB direto ao armazenamento, e o servidor confirma que chegou inteiro e o apaga.",
+      "running": "Testando o envio…",
+      "help": "Modo offline e envios",
+      "stats": {
+        "speed": "Velocidade de envio",
+        "mbps": "{mbps} Mbit/s"
+      },
+      "findings": {
+        "ok": "1 MB foi enviado ao armazenamento a {mbps} Mbit/s e o servidor confirmou. Um clipe típico de 12 MB levaria cerca de {seconds} s.",
+        "slow": "Os envios andam a só {mbps} Mbit/s, então um clipe típico de 12 MB levaria cerca de {seconds} s para chegar ao convidado. Chegue mais perto do roteador, use um cabo ou o ponto de acesso do celular, ou conte com a espera dos convidados. Nada se perde: a cabine guarda os arquivos e os envia em segundo plano.",
+        "offline": "Este dispositivo não tem conexão com o servidor. A cabine continua gravando e renderizando offline e envia depois, mas os links dos convidados ficam vazios até a conexão voltar.",
+        "unauthorized": "O servidor não reconhece mais este dispositivo. Provavelmente ele foi revogado: registre-o de novo e reabra a cabine.",
+        "storage_unavailable": "O armazenamento de arquivos do servidor não está configurado, então os arquivos dos convidados não podem ser enviados. Se você hospeda o Immersia por conta própria, defina as configurações S3_ (veja .env.example).",
+        "rate_limited": "O teste foi executado vezes demais seguidas. Aguarde alguns minutos e tente de novo.",
+        "put_failed": "O envio ao armazenamento falhou. O mais comum é um firewall, uma VPN ou uma rede Wi-Fi com página de login. Abra uma página web neste dispositivo para concluir o login e tente de novo.",
+        "incomplete": "O arquivo chegou ao armazenamento, mas incompleto. Tente de novo; se continuar falhando, a rede está derrubando envios grandes.",
+        "failed": "O teste de envio falhou por um motivo desconhecido. Tente de novo em um minuto."
+      }
+    },
+    "summary": {
+      "title": "Resultados",
+      "verdict": {
+        "pass": "Este dispositivo está pronto para o evento.",
+        "warn": "Este dispositivo vai funcionar, mas algumas coisas pedem uma olhada. Estão listadas abaixo.",
+        "fail": "Algo precisa ser corrigido antes do evento. Está listado abaixo."
+      },
+      "render": "Um clipe de 15 s em 1080p é renderizado aqui em cerca de {seconds} s. Caminho de renderização registrado para este dispositivo: {path}.",
+      "paths": {
+        "local": "renderiza no dispositivo",
+        "wasm": "renderiza no dispositivo (mais lento)",
+        "server": "não consegue renderizar no dispositivo"
+      },
+      "sending": "Salvando o resultado na sua conta…",
+      "sent": "O resultado foi salvo no registro deste dispositivo, em Dispositivos.",
+      "failed": "Não foi possível salvar o resultado na sua conta.",
+      "retrySend": "Tentar de novo",
+      "nothingKept": "A gravação de teste foi apagada deste dispositivo",
+      "help": "Como ler os resultados"
+    },
+    "scan": {
+      "scanned": {
+        "title": "Lido",
+        "body": "Seu celular abriu o código de teste. A cabine está vendo: você pode fechar esta página."
+      },
+      "expired": {
+        "title": "Este código de teste venceu",
+        "body": "Volte à cabine e crie um novo."
+      },
+      "invalid": {
+        "title": "Este código de teste não é válido",
+        "body": "Leia o código que o teste de configuração mostra na cabine."
+      }
+    }
+  },
+  "help": {
+    "metaTitle": "Central de ajuda",
+    "title": "Central de ajuda",
+    "subtitle": "Guias, respostas para as dúvidas mais comuns e um jeito de falar com a gente.",
+    "shell": {
+      "home": "Início do Immersia 360",
+      "nav": "Site",
+      "help": "Central de ajuda",
+      "status": "Status",
+      "signIn": "Entrar"
+    },
+    "search": {
+      "label": "Pesquisar na central de ajuda",
+      "placeholder": "Tente “impressão de quiosque” ou “câmera bloqueada”",
+      "clear": "Limpar a pesquisa",
+      "count": "{count, plural, =0 {Nenhum artigo corresponde a “{query}”} one {# artigo corresponde a “{query}”} other {# artigos correspondem a “{query}”}}",
+      "none": "Tente menos palavras ou palavras diferentes, ou escreva para a gente no formulário de contato abaixo.",
+      "resultsLabel": "Resultados da pesquisa"
+    },
+    "browse": {
+      "title": "Navegar por assunto",
+      "articles": "{count, plural, one {# artigo} other {# artigos}}"
+    },
+    "categories": {
+      "start": "Primeiros passos",
+      "booth": "Cabine 360 e local do evento",
+      "photo": "Cabine de fotos e impressão",
+      "sharing": "Compartilhamento e convidados",
+      "live": "Live Display",
+      "cloud": "Google Drive e Dropbox",
+      "design": "Modelos e estilos",
+      "troubleshooting": "Solução de problemas",
+      "account": "Conta e suporte",
+      "faq": "Perguntas frequentes"
+    },
+    "faq": {
+      "title": "Perguntas frequentes",
+      "subtitle": "Respostas curtas. Cada uma leva ao guia completo quando existe um."
+    },
+    "videos": {
+      "title": "Vídeos tutoriais",
+      "empty": "Vídeos curtos estão a caminho. Cada um terá legendas e um guia escrito ao lado, então tudo aqui funciona também sem som.",
+      "watch": "Assistir: {title}",
+      "captions": "Com legendas"
+    },
+    "article": {
+      "back": "Central de ajuda",
+      "breadcrumb": "Caminho de navegação",
+      "onThisPage": "Nesta página",
+      "related": "Continue lendo",
+      "updated": "Última revisão: {date}",
+      "video": "Vídeo: {title}",
+      "videoFallback": "Seu navegador não consegue reproduzir este vídeo. Os passos abaixo cobrem o mesmo conteúdo.",
+      "captionsLabel": "Legendas",
+      "stillStuck": "Ainda travado?",
+      "stillStuckBody": "Escreva para a gente. Respondemos em até {days} dias úteis.",
+      "contact": "Falar com o suporte"
+    },
+    "markdown": {
+      "note": "Nota",
+      "tip": "Dica",
+      "warning": "Atenção",
+      "code": "Comando",
+      "table": "Tabela",
+      "newTab": "abre em uma nova aba"
+    },
+    "contact": {
+      "title": "Fale com a gente",
+      "subtitle": "Conte o que aconteceu e a gente ajuda. Respondemos em até {days} dias úteis, muitas vezes antes.",
+      "target": "Meta de resposta: {days} dias úteis (de segunda a sexta).",
+      "name": "Seu nome (opcional)",
+      "email": "Seu e-mail",
+      "topic": "Sobre o que é?",
+      "topics": {
+        "setup": "Preparar um evento",
+        "booth": "Usar a cabine",
+        "printing": "Impressão",
+        "sharing": "Compartilhamento e downloads",
+        "account": "Minha conta",
+        "other": "Outro assunto"
+      },
+      "message": "Sua mensagem",
+      "messageHint": "O que você estava fazendo, o que esperava e o que aconteceu? Mencione o evento e o dispositivo, se puder.",
+      "submit": "Enviar mensagem",
+      "sending": "Enviando…",
+      "sent": {
+        "title": "Mensagem enviada",
+        "body": "Obrigado. Vamos responder para {email} em até {days} dias úteis."
+      },
+      "another": "Enviar outra mensagem",
+      "errors": {
+        "invalid": "Alguns dados precisam de correção. Confira os campos marcados e tente de novo.",
+        "email": "Digite um e-mail válido.",
+        "message": "Escreva pelo menos {min} caracteres para entendermos o problema.",
+        "rate_limited": "Mensagens demais daqui em pouco tempo. Aguarde um pouco ou escreva diretamente por e-mail.",
+        "failed": "Não conseguimos enviar. Escreva diretamente por e-mail."
+      },
+      "orEmail": "Prefere e-mail? Escreva para {email}.",
+      "privacy": "Usamos seus dados só para responder você."
+    },
+    "statusLink": {
+      "title": "Status do serviço",
+      "body": "Algo não está funcionando para todo mundo? Veja se já sabemos.",
+      "open": "Abrir a página de status"
+    },
+    "learnMore": "Ler o artigo de ajuda",
+    "links": {
+      "cloudErrors": "O que isso significa e o que fazer",
+      "boothErrors": "Ajuda com esta mensagem",
+      "cameraPermissions": "Corrigir o acesso à câmera",
+      "offline": "Sobre o modo offline e os envios",
+      "renderQueue": "Sobre a renderização",
+      "devices": "Sobre os dispositivos",
+      "kioskPrinting": "Imprimir sem caixa de diálogo",
+      "kiosk": "Sobre o bloqueio de quiosque",
+      "pairing": "Como parear uma tela",
+      "sharingStation": "Sobre a Sharing Station",
+      "expiry": "Sobre a expiração e como estendê-la",
+      "gallery": "Sobre a galeria e a exportação em ZIP",
+      "guestPrivacy": "Sobre a privacidade dos convidados",
+      "templates": "Sobre os modelos",
+      "looks": "Sobre os estilos e efeitos",
+      "roles": "Sobre as funções",
+      "storage": "Sobre o armazenamento deste dispositivo",
+      "printing": "Sobre os tamanhos de impressão",
+      "moderation": "Sobre a moderação da tela",
+      "sharing": "Sobre o compartilhamento com os convidados",
+      "cloud": "Sobre a cópia para a sua nuvem",
+      "photoBooth": "Sobre a cabine de fotos",
+      "booth360": "Sobre a cabine 360",
+      "assets": "Sobre os recursos",
+      "signage": "Sobre os cartazes com QR",
+      "triggers": "Sobre como iniciar uma captura",
+      "slowMotion": "Sobre a câmera lenta",
+      "gettingStarted": "Seu primeiro evento, passo a passo"
+    }
+  },
+  "status": {
+    "metaTitle": "Status",
+    "title": "Status do serviço",
+    "subtitle": "Verificações ao vivo do que o Immersia 360 usa. Vêm direto dos nossos servidores, não de um serviço de status de terceiros.",
+    "overall": {
+      "operational": "Todos os sistemas operando normalmente",
+      "degraded": "Alguns sistemas estão mais lentos que o normal",
+      "outage": "Um sistema está fora do ar"
+    },
+    "checked": "Verificado {time}. Os resultados ficam guardados por até {seconds} segundos.",
+    "servicesTitle": "Serviços",
+    "services": {
+      "database": {
+        "name": "Banco de dados",
+        "description": "Contas, eventos, dispositivos e links dos convidados."
+      },
+      "storage": {
+        "name": "Armazenamento de arquivos",
+        "description": "Fotos e vídeos dos convidados e os downloads deles."
+      },
+      "realtime": {
+        "name": "Servidor do Live Display",
+        "description": "Envia as capturas novas para as telas em menos de um segundo."
+      },
+      "email": {
+        "name": "E-mail",
+        "description": "Links de login, e-mails para convidados e respostas do suporte."
+      }
+    },
+    "state": {
+      "operational": "Operando",
+      "degraded": "Degradado",
+      "down": "Fora do ar",
+      "not_configured": "Não configurado"
+    },
+    "responded": "{ms} ms",
+    "notConfigured": "Não configurado significa que esta instalação não usa esse serviço. As telas do Live Display passam então a consultar a cada poucos segundos, e em desenvolvimento o e-mail aparece no log do servidor.",
+    "incidentsTitle": "Incidentes recentes",
+    "noIncidents": "Nenhum incidente nos últimos {days} dias.",
+    "ongoing": "Em andamento",
+    "resolved": "Resolvido {date}",
+    "started": "Começou {date}",
+    "impact": {
+      "minor": "Leve",
+      "major": "Grave",
+      "maintenance": "Manutenção"
+    },
+    "affected": "Afeta: {services}",
+    "supportTitle": "Contato",
+    "supportBody": "Algo que não aparece aqui? Escreva para {email}. Respondemos em até {days} dias úteis.",
+    "helpLink": "Central de ajuda"
+  },
   "share": {
     "metaTitle": "{event}: seus arquivos",
     "eyebrow": "Seu momento em",
@@ -2032,6 +2634,11 @@
     "open": "Abrir a captura {code}",
     "older": "Anteriores",
     "newest": "Voltar para as mais recentes",
+    "highlight": {
+      "title": "Melhores momentos",
+      "player": "Vídeo de melhores momentos do evento",
+      "download": "Baixar o vídeo"
+    },
     "lock": {
       "body": "Esta galeria é protegida.",
       "label": "Senha",

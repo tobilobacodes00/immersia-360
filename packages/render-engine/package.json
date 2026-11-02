@@ -11,7 +11,8 @@
     "./timeline": "./src/timeline.ts",
     "./beats": "./src/beats.ts",
     "./preview": "./src/preview.ts",
-    "./background": "./src/background.ts"
+    "./background": "./src/background.ts",
+    "./ladder": "./src/ladder.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.worker.json",
@@ -22,6 +23,7 @@
     "@immersia/capture": "workspace:*",
     "@immersia/shared": "workspace:*",
     "@mediabunny/aac-encoder": "catalog:",
+    "h264-mp4-encoder": "catalog:",
     "mediabunny": "catalog:",
     "@immersia/effects": "workspace:*"
   },

@@ -267,28 +267,38 @@ export async function completeUpload(
   }
   const size = await objectSize(row.key);
   if (size === null || (row.bytes !== null && size !== row.bytes)) return 'incomplete';
+  await markOutputUploaded({
+    outputId,
+    sessionId: row.sessionId,
+    eventId: row.eventId,
+    organizationId: device.organizationId,
+    objectKey: row.key,
+    mime: row.mime,
+    bytes: size,
+  });
+  return 'ok';
+}
+
+/**
+ * An output's file is in storage at its declared size (the caller has checked): record it, make the session
+ * live, and start the follow-ups: the media scanner, the Live Display, the copy to the operator's cloud.
+ * Shared by the booth's uploads and the server render worker's, so a finished server render lands exactly
+ * where a booth's does. Call it inside a request (the follow-ups run after the response).
+ */
+export async function markOutputUploaded(file: MediaScanInput): Promise<void> {
+  const { outputId, sessionId } = file;
   await db().transaction(async (tx) => {
     await tx.update(output).set({ uploadedAt: new Date() }).where(eq(output.id, outputId));
     await tx
       .update(captureSession)
       .set({ status: 'live' })
-      .where(and(eq(captureSession.id, row.sessionId), eq(captureSession.status, 'pending')));
+      .where(and(eq(captureSession.id, sessionId), eq(captureSession.status, 'pending')));
   });
   // Abuse: hand the verified file to the media scanner (hash matching against known illegal content).
-  after(() =>
-    scanUpload({
-      outputId,
-      sessionId: row.sessionId,
-      eventId: row.eventId,
-      organizationId: device.organizationId,
-      objectKey: row.key!,
-      mime: row.mime,
-      bytes: size,
-    }),
-  );
+  after(() => scanUpload(file));
   // LIV-2: the session may be ready for the Live Display now. After the response, so the booth's
   // upload queue moves on at once.
-  after(() => refreshSessionItem(row.sessionId, appOrigin()));
+  after(() => refreshSessionItem(sessionId, appOrigin()));
   // SHR-7: when the event copies to the operator's own cloud, queue this file and start copying. Also
   // after the response, and from the cron sweep as well, so a failure here only delays the copy.
   after(() =>
@@ -296,7 +306,6 @@ export async function completeUpload(
       .then(() => processCloudCopies(5))
       .catch((err: unknown) => console.error('[cloud-copy] could not start', err instanceof Error ? err.name : err)),
   );
-  return 'ok';
 }
 
 /**

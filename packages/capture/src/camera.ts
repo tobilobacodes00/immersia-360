@@ -33,9 +33,27 @@ export interface OpenedCamera {
   stop: () => void;
 }
 
+export type CameraErrorCode =
+  | 'permission'
+  | 'not_found'
+  | 'in_use'
+  | 'overconstrained'
+  | 'insecure'
+  /** CAP-14, the companion's native high-speed camera: the OS refused the camera or microphone. */
+  | 'native_permission'
+  /** No format of this lens records the wanted frame rate. */
+  | 'no_high_speed'
+  /** The high-speed recorder cannot carry the microphone. */
+  | 'native_audio'
+  /** The device is almost out of storage. */
+  | 'native_storage'
+  /** Anything else the native camera reported. */
+  | 'native_failed'
+  | 'unknown';
+
 export class CameraError extends Error {
   constructor(
-    readonly code: 'permission' | 'not_found' | 'in_use' | 'overconstrained' | 'insecure' | 'unknown',
+    readonly code: CameraErrorCode,
     message: string,
   ) {
     super(message);

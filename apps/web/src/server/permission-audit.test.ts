@@ -47,7 +47,9 @@ const isMutating = (p: Permission) =>
 /**
  * Actions that touch no operator session: guests' code lookup, the language cookie, the guest's own
  * form and erasure on their session page (SHR-6), where holding the session link is the authority,
- * and the report form (Abuse NFR), open to any guest and limited per reporter, session and event.
+ * the report form (Abuse NFR), open to any guest and limited per reporter, session and event, and the
+ * help centre's contact form (HLP-2), open to anyone who cannot get into the Studio and limited per
+ * address and per sender.
  */
 const PUBLIC_ACTIONS = new Set([
   'app/c/actions.ts#findCode',
@@ -56,6 +58,7 @@ const PUBLIC_ACTIONS = new Set([
   'app/guest-actions.ts#skipGuestFormAction',
   'app/guest-actions.ts#eraseSessionAction',
   'app/report/actions.ts#submitReport',
+  'app/help/actions.ts#submitSupportRequest',
 ]);
 /**
  * The /admin actions (decide a report, enter the month's cloud bill). Platform admins are named in
@@ -203,6 +206,12 @@ type RouteKind =
   | 'device'
   /** Vercel Cron's bearer secret. */
   | 'cron'
+  /**
+   * The server render worker (apps/render-worker): the shared RENDER_WORKER_SECRET as a bearer token
+   * (`isRenderWorker`), compared in constant time; a deployment without the secret refuses everyone.
+   * Never a device or an operator session.
+   */
+  | 'worker'
   /** Only when E2E=1 and the run's token is sent. */
   | 'e2e'
   /**
@@ -219,10 +228,16 @@ const ROUTES: Record<string, RouteKind> = {
   'app/api/auth/[...all]/route.ts': 'auth',
   'app/api/booth/codes/route.ts': 'device',
   'app/api/booth/outputs/[id]/complete/route.ts': 'device',
+  'app/api/booth/render-path/route.ts': 'device',
   'app/api/booth/sessions/route.ts': 'device',
   'app/api/booth/sessions/[id]/display/route.ts': 'device',
   'app/api/booth/sessions/[id]/email/route.ts': 'device',
+  'app/api/booth/takes/[id]/files/route.ts': 'device',
+  'app/api/booth/takes/[id]/render/route.ts': 'device',
   'app/api/cron/expire/route.ts': 'cron',
+  'app/api/devices/check/qr/route.ts': 'device',
+  'app/api/devices/check/route.ts': 'device',
+  'app/api/devices/check/upload/route.ts': 'device',
   'app/api/devices/heartbeat/route.ts': 'device',
   'app/api/events/[id]/files/route.ts': { operator: { mutates: false } },
   'app/api/events/[id]/guests/route.ts': { operator: { mutates: false } },
@@ -234,7 +249,13 @@ const ROUTES: Record<string, RouteKind> = {
   'app/api/live/feed/route.ts': 'public',
   'app/api/live/media/[outputId]/route.ts': 'public',
   'app/api/live/pair/route.ts': 'public',
+  'app/api/render-worker/claim/route.ts': 'worker',
+  'app/api/render-worker/jobs/[id]/complete/route.ts': 'worker',
+  'app/api/render-worker/jobs/[id]/fail/route.ts': 'worker',
+  'app/api/render-worker/jobs/[id]/heartbeat/route.ts': 'worker',
+  'app/api/render-worker/jobs/[id]/outputs/route.ts': 'worker',
   'app/api/share/[linkId]/route.ts': 'public',
+  'app/api/status/route.ts': 'public',
   'app/api/studio/export/route.ts': { operator: { mutates: false } },
   'app/api/t/route.ts': 'ingest',
   'app/api/test/age-report/route.ts': 'e2e',
@@ -259,6 +280,14 @@ describe('route handlers under app/api: who may call them', () => {
       expect(source).toMatch(/if \(!device\)/);
     } else if (kind === 'cron') {
       expect(source).toContain('CRON_SECRET');
+    } else if (kind === 'worker') {
+      expect(source, 'worker routes check the shared secret').toMatch(/if \(!isRenderWorker\(request\)\)/);
+      expect(source, 'a worker is not a device or an operator').not.toMatch(
+        /authenticateDevice|getOperator|requireOperator/,
+      );
+      // Nothing from the request (its body, its ids) is read before the caller is known.
+      const read = source.search(/request\.json\(|await params/);
+      if (read >= 0) expect(source.indexOf('isRenderWorker(request)'), file).toBeLessThan(read);
     } else if (kind === 'e2e') {
       expect(source).toMatch(/if \(!isE2ERequest\(request\)\)/);
     } else if (kind === 'ingest') {

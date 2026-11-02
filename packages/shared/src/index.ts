@@ -13,6 +13,7 @@ export * from './kiosk';
 export * from './asset';
 export * from './media-refs';
 export * from './live';
+export * from './render';
 export * from './browser';
 export * from './crash';
 export * from './metrics';

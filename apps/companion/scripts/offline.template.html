@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Immersia 360</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: #f7f6f2;
+        color: #111110;
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+      }
+      main {
+        box-sizing: border-box;
+        display: grid;
+        place-content: center;
+        justify-items: center;
+        gap: 16px;
+        min-height: 100%;
+        padding: 32px 24px;
+        text-align: center;
+      }
+      h1 {
+        margin: 0;
+        font-size: 28px;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+      }
+      p {
+        max-width: 32ch;
+        margin: 0;
+        font-size: 17px;
+        line-height: 1.5;
+        color: #55544f;
+      }
+      a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        padding: 0 28px;
+        border-radius: 12px;
+        background: #111110;
+        color: #fff;
+        font-size: 17px;
+        font-weight: 600;
+        text-decoration: none;
+      }
+      a:focus-visible {
+        outline: 3px solid #2b3fe6;
+        outline-offset: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1 id="title">The booth can't be reached</h1>
+      <p id="body">Check that this device is online, then try again. Takes already recorded on it are safe.</p>
+      <a id="retry" href="__SERVER_URL__">Try again</a>
+    </main>
+    <script>
+      // The page is static and bundled with the app; the three booth languages are picked from the device.
+      var text = {
+        en: [
+          "The booth can't be reached",
+          'Check that this device is online, then try again. Takes already recorded on it are safe.',
+          'Try again',
+        ],
+        es: [
+          'No se puede acceder a la cabina',
+          'Comprueba que este dispositivo tiene conexión y vuelve a intentarlo. Las tomas ya grabadas están a salvo.',
+          'Reintentar',
+        ],
+        pt: [
+          'Não foi possível acessar a cabine',
+          'Verifique se este dispositivo está online e tente novamente. As gravações já feitas estão seguras.',
+          'Tentar novamente',
+        ],
+      };
+      var language = String(navigator.language || 'en')
+        .slice(0, 2)
+        .toLowerCase();
+      var chosen = text[language] || text.en;
+      document.documentElement.lang = text[language] ? language : 'en';
+      document.getElementById('title').textContent = chosen[0];
+      document.getElementById('body').textContent = chosen[1];
+      document.getElementById('retry').textContent = chosen[2];
+    </script>
+  </body>
+</html>

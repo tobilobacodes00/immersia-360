@@ -163,3 +163,23 @@ export function frameRuns(frames: VideoFrameRef[]): FrameRun[] {
   }
   return runs;
 }
+
+/**
+ * The length of the finished video before it is rendered: the take on the timeline (slow motion,
+ * reverse), plus the intro, outro and end card, in seconds. The soundtrack is mixed to this length, and a
+ * server render plans it from the recipe (which only says how long each card is), so it comes out at
+ * exactly the length the worker will plan.
+ */
+export function plannedDurationFromCards(
+  job: { slowMotion: SlowMotion; reverse: TimelineInput['reverse']; output: { fps: number } },
+  cards: { intro: number; outro: number; end: number },
+  takeDurationS: number,
+): number {
+  const frames = buildSourceTimes({
+    durationS: takeDurationS,
+    outputFps: job.output.fps,
+    slowMotion: job.slowMotion,
+    reverse: job.reverse,
+  }).length;
+  return frames / job.output.fps + cards.intro + cards.outro + cards.end;
+}

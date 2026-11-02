@@ -17,6 +17,10 @@ export default tseslint.config(
       '**/test-results/**',
       '**/next-env.d.ts',
       'apps/web/public/**',
+      // The companion's generated native projects and the page it shows offline (CAP-14).
+      'apps/companion/android/**',
+      'apps/companion/ios/**',
+      'apps/companion/www/**',
     ],
   },
   js.configs.recommended,

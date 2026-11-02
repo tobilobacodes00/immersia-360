@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "lib": ["ES2023"],
+    // `capacitor.config.ts` and the prepare script import `./src/config.ts` with its extension, which both
+    // the Capacitor CLI's loader and Node's type stripping need.
+    "allowImportingTsExtensions": true
+  },
+  "include": ["capacitor.config.ts", "src", "scripts", "test"]
+}

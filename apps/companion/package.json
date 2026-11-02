@@ -1,0 +1,29 @@
+{
+  "name": "@immersia/companion",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Immersia 360 companion app (CAP-14): the booth web app in a Capacitor shell with a native 120-240 fps recorder.",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "prepare:native": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/prepare.mts",
+    "sync": "pnpm run prepare:native && cap sync",
+    "icons": "node scripts/generate-icons.mjs",
+    "open:android": "cap open android",
+    "open:ios": "cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "catalog:",
+    "@capacitor/core": "catalog:",
+    "@capacitor/ios": "catalog:",
+    "@immersia/capacitor-high-speed": "workspace:*"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "catalog:",
+    "@types/node": "catalog:",
+    "sharp": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

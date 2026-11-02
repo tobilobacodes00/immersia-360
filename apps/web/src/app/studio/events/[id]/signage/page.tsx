@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { brandingSchema, galleryUrl } from '@immersia/shared';
+import { HelpLink } from '@/components/HelpLink';
+import { HELP_TARGETS } from '@/lib/help-links';
 import { assetViews } from '@/server/assets';
 import { appOrigin } from '@/server/env';
 import { getEvent } from '@/server/events';
@@ -23,13 +25,18 @@ export default async function SignagePage({ params }: { params: Promise<{ id: st
   const branding = brandingSchema.parse(event.branding);
   // A logo that has since been deleted is simply left off.
   const [logo] = branding.logoAssetId ? await assetViews(op.organizationId, [branding.logoAssetId]) : [];
+  const th = await getTranslations('help.links');
   return (
-    <SignageStudio
-      eventName={event.name}
-      theme={branding.theme}
-      hashtag={branding.hashtag}
-      logo={logo ?? null}
-      link={galleryUrl(appOrigin(), event.gallerySlug, 'event_qr')}
-    />
+    <div className="space-y-4">
+      <HelpLink {...HELP_TARGETS.signage} label={th('signage')} />
+      <SignageStudio
+        eventName={event.name}
+        theme={branding.theme}
+        hashtag={branding.hashtag}
+        logo={logo ?? null}
+        link={galleryUrl(appOrigin(), event.gallerySlug, 'event_qr')}
+        nfcLink={galleryUrl(appOrigin(), event.gallerySlug, 'nfc')}
+      />
+    </div>
   );
 }

@@ -25,6 +25,8 @@ export const LIMITS = {
   emailPerDevice: { limit: 120, windowS: 3600 },
   /** Each asset upload is a database row and a presigned URL: bound them per organization. */
   assetUploadPerOrg: { limit: 300, windowS: 3600 },
+  /** LIV-14: publishing a highlight reel reserves a large upload and replaces the gallery's reel. */
+  highlightPerOrg: { limit: 30, windowS: 3600 },
   /** LIV-1: a six-character pairing code must not be guessable by brute force. */
   displayPairPerIp: { limit: 20, windowS: 600 },
   /** SHR-5: gallery passwords are short; slow guessing right down. */
@@ -49,6 +51,24 @@ export const LIMITS = {
   /** Operators: exports and the by-email privacy search are heavy or sensitive, so they are bounded too. */
   privacyExportPerOrg: { limit: 12, windowS: 3600 },
   privacyLookupPerOrg: { limit: 60, windowS: 600 },
+  /**
+   * Server renders (apps/render-worker): a presigned upload and a queued job per request. The money
+   * limits are per event and organization, in the database (render-jobs-core.ts); these only bound
+   * how fast one device can hammer the endpoints.
+   */
+  serverFilesPerDevice: { limit: 180, windowS: 3600 },
+  serverRenderPerDevice: { limit: 240, windowS: 3600 },
+  /** A booth tells the server which rung of the render ladder worked (the device's record). */
+  renderPathPerDevice: { limit: 600, windowS: 3600 },
+  /** HLP-1: the setup check's test QR and upload test (a presigned URL and a small object each). */
+  setupCheckPerDevice: { limit: 30, windowS: 3600 },
+  /** HLP-1: the booth asks every ~2 s while the test QR is on screen (at most its 10 minutes). */
+  setupCheckPollPerDevice: { limit: 400, windowS: 600 },
+  /** HLP-1: a phone opening the test QR. */
+  setupCheckScanPerIp: { limit: 30, windowS: 600 },
+  /** HLP-2: the help centre's contact form is public, so it can't be turned into a mailer. */
+  supportPerIp: { limit: 5, windowS: 3600 },
+  supportPerEmail: { limit: 3, windowS: 3600 },
   /** POST /api/t: batches per booth, display or operator (a booth flushes every ~10 s while busy)… */
   analyticsIngest: { limit: 120, windowS: 60 },
   /** …and per address, so one network full of booths is not throttled by a single bad actor's key. */

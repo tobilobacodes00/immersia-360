@@ -10,6 +10,7 @@ import {
   reconcileChoice,
   saveCameraChoice,
   switchCamera,
+  usableChoice,
   type CameraChoice,
 } from './camera-choice';
 
@@ -231,5 +232,54 @@ describe('reconcileChoice: what the camera really did on opening', () => {
     expect(reconcileChoice(choice({ zoom: 2 }), cam({ applied: { zoom: null, torch: false } }))).toStrictEqual(DEFAULT);
     const c = choice({ zoom: 2 });
     expect(reconcileChoice(c, cam({ zoomSupported: false, applied: { zoom: null, torch: false } }))).toBe(c);
+  });
+});
+
+describe('the native high-speed camera as a choice (CAP-14)', () => {
+  const native = (over: Partial<CameraChoice> = {}) =>
+    choice({ source: 'native-hfr', deviceId: 'back-wide', hfrFps: 240, ...over });
+
+  it('is saved and read back, frame rate and all', () => {
+    expect(parseCameraChoice(JSON.stringify(native()))).toStrictEqual(native());
+    expect(parseCameraChoice(JSON.stringify(native({ deviceId: null, hfrFps: undefined })))).toStrictEqual(
+      choice({ source: 'native-hfr' }),
+    );
+  });
+
+  it('drops a frame rate that cannot be one, and one saved for another source', () => {
+    for (const hfrFps of [0, 30, 120.5, '240', null, true]) {
+      expect(parseCameraChoice(JSON.stringify({ ...native(), hfrFps })), String(hfrFps)).toStrictEqual(
+        choice({ source: 'native-hfr', deviceId: 'back-wide' }),
+      );
+    }
+    expect(parseCameraChoice(JSON.stringify({ ...DEFAULT, hfrFps: 240 }))).toStrictEqual(DEFAULT);
+  });
+
+  it('reopens for another lens or another frame rate, not for the mirror', () => {
+    expect(needsReopen(native(), native({ hfrFps: 120 }))).toBe(true);
+    expect(needsReopen(native(), native({ deviceId: 'back-ultra' }))).toBe(true);
+    expect(needsReopen(native(), choice())).toBe(true);
+    expect(needsReopen(native(), native({ mirror: true }))).toBe(false);
+  });
+
+  it('keeps the frame rate through a lens change, and drops it when another camera is picked', () => {
+    const lensChange = applyChoice(native(), switchCamera({ source: 'native-hfr', deviceId: 'back-ultra' }));
+    expect(lensChange).toStrictEqual(native({ deviceId: 'back-ultra' }));
+    const away = applyChoice(native(), switchCamera({ source: 'camera', deviceId: 'abc' }));
+    expect(away).toStrictEqual(choice({ deviceId: 'abc' }));
+    expect('hfrFps' in away).toBe(false);
+    // The frame rate alone changes without a new camera: zoom and torch are not touched.
+    expect(applyChoice(native({ zoom: 2 }), { hfrFps: 120 })).toStrictEqual(native({ zoom: 2, hfrFps: 120 }));
+  });
+
+  it('is only used where the companion has it: elsewhere the booth opens its default camera', () => {
+    const saved = native({ mirror: true, torch: true });
+    expect(usableChoice(saved, true)).toBe(saved);
+    expect(usableChoice(saved, false)).toStrictEqual({ ...saved, source: 'camera', deviceId: null });
+    // Nothing to do for the cameras that were always there.
+    const web = choice({ deviceId: 'abc' });
+    expect(usableChoice(web, false)).toBe(web);
+    const simulator = choice({ source: 'simulator' });
+    expect(usableChoice(simulator, false)).toBe(simulator);
   });
 });

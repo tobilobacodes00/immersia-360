@@ -9,17 +9,20 @@ with one cobalt accent.
 
 ## Layout
 
-| Path              | What it is                                                                                                    |
-| ----------------- | ------------------------------------------------------------------------------------------------------------- |
-| `apps/web`        | Next.js 16 app: operator console, booth, kiosk, Live Display, guest pages, API                                |
-| `packages/ui`     | Design system ported from Immersia Booth (tokens, kit, guest components)                                      |
-| `packages/shared` | IDs and short codes, the token language, event and template schemas, colour/contrast, routes, analytics types |
-| `packages/db`     | Drizzle schema and migrations (Neon Postgres)                                                                 |
-| `packages/i18n`   | English, Spanish and Portuguese message catalogues                                                            |
+| Path                            | What it is                                                                                                           |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `apps/web`                      | Next.js 16 app: operator console, booth, kiosk, Live Display, guest pages, API                                       |
+| `apps/render-worker`            | Server render fallback (Fly.io, scale to zero): headless Chrome runs the booth's own `render()` — see its README     |
+| `apps/companion`                | iOS and Android companion app (Capacitor): the booth plus a native 120-240 fps recorder (CAP-14), see its README     |
+| `packages/render-engine`        | Demux, decode, WebGL2 compositor, encode: the same renderer on the device, in the browser fallback and on the server |
+| `packages/capacitor-high-speed` | The native recorder plugin of the companion (AVFoundation, CameraX)                                                  |
+| `packages/ui`                   | Design system ported from Immersia Booth (tokens, kit, guest components)                                             |
+| `packages/shared`               | IDs and short codes, the token language, event and template schemas, colour/contrast, routes, analytics types        |
+| `packages/db`                   | Drizzle schema and migrations (Neon Postgres)                                                                        |
+| `packages/i18n`                 | English, Spanish and Portuguese message catalogues                                                                   |
 
-These arrive in later milestones: `apps/realtime` (Durable Objects hub), `apps/render-worker` (server
-render fallback), `packages/render-engine`, `packages/effects`, `packages/layout`, `packages/capture`,
-`packages/offline`.
+These arrive in later milestones: `apps/realtime` (Durable Objects hub), `packages/effects`, `packages/layout`,
+`packages/capture`, `packages/offline`.
 
 ## Running it on your machine
 
@@ -116,6 +119,32 @@ infrastructure cost per active operator from the monthly bill you enter there. `
 queue with its 24-hour clock. How reports, takedowns and hash matching work, and what is not covered, is in
 [SECURITY.md](SECURITY.md#abuse-reports-takedown-and-hash-matching). Video hash matching needs a vendor and a
 legal decision: the `MediaScanner` seam exists, and no scanner is connected.
+
+### Help centre, the setup check and the status page
+
+The help centre is Markdown, in `apps/web/content/help/{en,es,pt}/<slug>.md`: front matter (title, summary,
+category, order, keywords, `updated`, `related`, optionally `video` and `captions`, see
+`apps/web/src/lib/help/frontmatter.ts`) and a body in a small Markdown subset that the app renders itself into
+React elements (no HTML, no `dangerouslySetInnerHTML`, so there is no sanitiser to keep patched). Every article
+must exist in all three languages under the same slug, with the same category, order, related list, headings,
+tables, code blocks and links; `apps/web/src/lib/help/content.test.ts` enforces it, checks that every
+`help:slug#anchor` link lands on a real heading, and that search finds the obvious things in each language. A
+heading with a fixed `{#id}` is a deep link the app's screens use (the error articles carry one per error code:
+see `HELP_TARGETS` and the error helpers in `apps/web/src/lib/help-links.ts`). Names of buttons and settings
+in an article are bold and come word for word from `packages/i18n/messages/<locale>.json`. A tutorial video goes
+in `apps/web/public/help/videos/` (create the folder) with a `.vtt` captions file (the front matter refuses one without the other);
+none are shipped yet. Pages: `/help` (public) and `/studio/help` (inside the Studio), search runs in the browser
+over an index sent with the page, and the contact form emails `SUPPORT_EMAIL` (rate limited, with a honeypot).
+
+The setup check (`/booth/<event>/check`) walks the camera, storage, a test take through the booth's own capture
+path, the render engine (scaled to a 15 s 1080p clip: 45 s on a laptop, 90 s on a 2021 iPad), a test QR scan, a
+printer calibration sheet (photo events) and an upload test. Its server side is under `/api/devices/check`. The
+render path it measures is stored on the device record, and the booth emits `setup_check_completed`.
+
+`/status` and `/api/status` run live checks of the database, file storage, the Live Display hub (if configured)
+and the email sender, each with a 4 s timeout and a 20 s cache; no third-party status service is involved.
+Incidents are entries in `apps/web/content/status/incidents.json` (one text per language), written by hand and
+deployed when something happens.
 
 ## Principles
 

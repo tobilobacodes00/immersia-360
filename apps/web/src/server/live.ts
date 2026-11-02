@@ -233,6 +233,9 @@ export async function refreshSessionItem(sessionId: string, origin: string): Pro
   if (session.erasedAt || session.removedAt) return;
   if (session.displayStatus === 'hidden' || session.displayStatus === 'opted_out') return;
   if (session.optedOutOfDisplay || !ev.liveDisplayEnabled) {
+    // `opted_out` here means "never on a screen": for a guest who declined, and for one captured while the display was
+    // off. Only the screens read it. The client gallery does not: it excludes `opted_out_of_display`, so an event that
+    // never used Live Display still has a gallery (and a highlight reel). See gallery-filter.ts.
     await db().update(captureSession).set({ displayStatus: 'opted_out' }).where(eq(captureSession.id, sessionId));
     return;
   }

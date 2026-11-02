@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { Download } from 'lucide-react';
 import { Card, PageHeader, buttonClass } from '@immersia/ui';
+import { HelpLink } from '@/components/HelpLink';
+import { HELP_TARGETS } from '@/lib/help-links';
 import { roleCan } from '@/lib/permissions';
 import { requireOperator } from '@/server/session';
 import { DeleteOrganization } from './DeleteOrganization';
@@ -18,7 +20,11 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default async function SettingsPage() {
   const op = await requireOperator();
-  const [t, tr] = await Promise.all([getTranslations('studio.settings'), getTranslations('roles')]);
+  const [t, tr, th] = await Promise.all([
+    getTranslations('studio.settings'),
+    getTranslations('roles'),
+    getTranslations('help.links'),
+  ]);
   const canHandleRequests = roleCan(op.role, { guest: ['delete'] });
   const isOwner = roleCan(op.role, { account: ['export'] });
   const canDeleteOrg = roleCan(op.role, { organization: ['delete'] });
@@ -39,7 +45,12 @@ export default async function SettingsPage() {
           </dl>
         </Card>
 
-        <Card id="privacy" title={t('requests.title')} subtitle={t('requests.subtitle')}>
+        <Card
+          id="privacy"
+          title={t('requests.title')}
+          subtitle={t('requests.subtitle')}
+          action={<HelpLink {...HELP_TARGETS.guestRequests} label={th('guestPrivacy')} />}
+        >
           {canHandleRequests ? (
             <PrivacyRequests />
           ) : (
@@ -47,7 +58,11 @@ export default async function SettingsPage() {
           )}
         </Card>
 
-        <Card title={t('export.title')} subtitle={t('export.body')}>
+        <Card
+          title={t('export.title')}
+          subtitle={t('export.body')}
+          action={<HelpLink {...HELP_TARGETS.yourData} label={th('guestPrivacy')} />}
+        >
           <div className="py-4">
             {isOwner ? (
               <a href="/api/studio/export" download className={buttonClass()}>

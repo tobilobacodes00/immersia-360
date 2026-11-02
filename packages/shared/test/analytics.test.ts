@@ -19,6 +19,7 @@ const SESSION = '0192f3a0-7c1e-7a55-9a5b-3f6f2d3c9a10';
 const EXAMPLES: AnalyticsEvent[] = [
   { name: 'event_created', mode: 'video360', from_duplicate: false },
   { name: 'setup_check_completed', render_speed_ms: 5400, camera_fps: 30, browser: 'Chrome' },
+  { name: 'setup_qr_scanned', nonce: 'a1B2c3D4e5_' },
   { name: 'take_recorded', mode: 'video360', duration_s: 8.2, fps: 60, resolution: '1080p', trigger: 'tap' },
   { name: 'render_completed', render_ms: 11_200, path: 'local', preset: '1080p-60fps-balanced', effects_count: 2 },
   { name: 'render_failed', error_code: 'encoder_stall', path: 'local', browser: 'Safari' },
@@ -148,6 +149,17 @@ describe('who may emit what', () => {
     expect(canEmit('device', 'setup_check_completed')).toBe(true);
     expect(canEmit('studio', 'setup_check_completed')).toBe(true);
     expect(canEmit('display', 'setup_check_completed')).toBe(false);
+  });
+
+  it("records the setup check's test-QR scan on the server only, and nothing a guest could be recognised by", () => {
+    expect(EVENT_SOURCES.setup_qr_scanned).toEqual(['server']);
+    for (const source of ['device', 'display', 'studio'] as const)
+      expect(canEmit(source, 'setup_qr_scanned'), source).toBe(false);
+    expect(analyticsEventSchema.parse({ name: 'setup_qr_scanned', nonce: 'a1B2c3D4e5_', ip: '10.0.0.1' })).toEqual({
+      name: 'setup_qr_scanned',
+      nonce: 'a1B2c3D4e5_',
+    });
+    expect(analyticsEventSchema.safeParse({ name: 'setup_qr_scanned', nonce: 'not a code!' }).success).toBe(false);
   });
 
   it('keeps the guest-facing measurements server-side only', () => {
