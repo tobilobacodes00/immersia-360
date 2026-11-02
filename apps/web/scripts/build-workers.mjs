@@ -10,7 +10,8 @@
 import { build } from 'esbuild';
 import { mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { buildH264Worker } from '../../packages/render-engine/scripts/h264-worker.mjs';
+// Three levels up: this file is apps/web/scripts/, so the repo root is ../../../.
+import { buildH264Worker } from '../../../packages/render-engine/scripts/h264-worker.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const outdir = `${root}/public/workers`;
