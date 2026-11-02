@@ -298,10 +298,14 @@ describe('the loop', () => {
   it('runs jobs one after another, polls when the queue is empty, and exits when idle long enough', async () => {
     let clock = 0;
     const sleeps: number[] = [];
+    // The jobs the render was given, in order. This render replaces the default one, which is what records
+    // `render` in the fake's calls, so it keeps its own record.
+    const rendered: string[] = [];
     const queue = [job({ id: 'a' }), job({ id: 'b' })];
     const api = idle({ claim: async () => queue.shift() ?? null });
-    const { io, calls } = fakeIO({
-      render: async () => {
+    const { io } = fakeIO({
+      render: async (claimed) => {
+        rendered.push(claimed.id);
         clock += 30_000; // a render takes 30 s
         return { outputs: [file('mp4')], renderMs: 30_000 };
       },
@@ -322,7 +326,7 @@ describe('the loop', () => {
       new AbortController().signal,
     );
     expect(result).toBe('idle');
-    expect(calls.filter((c) => c === 'render')).toHaveLength(2);
+    expect(rendered).toEqual(['a', 'b']);
     // After the last job the loop polled every 5 s until 20 s had passed.
     expect(sleeps).toEqual([5_000, 5_000, 5_000, 5_000]);
   });
