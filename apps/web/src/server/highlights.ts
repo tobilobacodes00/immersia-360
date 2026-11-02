@@ -14,7 +14,8 @@ import { fail, ok, type ActionResult } from './action-result';
 import { appOrigin } from './env';
 import { getEvent } from './events';
 import { slug } from './filenames';
-import { publicSessions } from './gallery';
+import { publicSessions } from './gallery-filter';
+import { footageGoneSql } from './highlight-footage';
 import {
   boothCardSeconds,
   candidatesFor,
@@ -470,9 +471,10 @@ export async function withdrawHighlightsWith(sessionId: string): Promise<number>
 }
 
 /**
- * The hourly sweep: a reel whose clips include a session that was erased, has expired or whose guest asked to stay off
- * screen is deleted (the footage it holds is meant to be gone), and so is an upload that was started and never finished.
- * A clip the operator merely hid only keeps the reel off the gallery until it is rebuilt.
+ * The hourly sweep: a reel whose clips include a session that was erased, has expired (by the flag or by the clock),
+ * whose guest asked to stay off screens or that the platform took down is deleted (the footage it holds is meant to
+ * be gone: see highlight-footage.ts), and so is an upload that was started and never finished. A clip the operator
+ * merely hid only keeps the reel off the gallery until they show it again.
  */
 export async function sweepHighlights(limit = 50): Promise<{ reels: number }> {
   const gone = await db()
@@ -482,7 +484,7 @@ export async function sweepHighlights(limit = 50): Promise<{ reels: number }> {
       sql`exists (
         select 1 from jsonb_array_elements_text(${eventHighlight.sessionIds}) as sid
         join ${captureSession} s on s.id = sid::uuid
-        where s.erased_at is not null or s.expired_at is not null or s.opted_out_of_display
+        where ${footageGoneSql}
       )`,
     )
     .limit(limit);

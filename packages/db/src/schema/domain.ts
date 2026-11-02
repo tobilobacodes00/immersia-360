@@ -249,12 +249,17 @@ export const captureSession = pgTable(
     shortCode: text('short_code').notNull(),
     filenamePrefix: text('filename_prefix').notNull().default(''),
     status: sessionStatus('status').notNull().default('pending'),
-    /** Guest chose "don't show on screen" (LIV-8): never published to displays. */
+    /**
+     * Guest chose "don't show on screen" (LIV-8): never published to displays, and left out of the
+     * client gallery and the highlight reel. This flag, not `display_status`, is what says the guest declined.
+     */
     optedOutOfDisplay: boolean('opted_out_of_display').notNull().default(false),
     /**
      * The session as one Live Display item (LIV-7): pending (not ready, or awaiting approval),
-     * shown, hidden by the operator, or opted_out (the guest declined, or the display was off when
-     * they captured it, so they were never told it might appear).
+     * shown, hidden by the operator (also left out of the client gallery), or opted_out (the guest
+     * declined, or the display was off when they captured it, so they were never told it might
+     * appear). `opted_out` is about screens only: the gallery reads `opted_out_of_display`, so a
+     * session that never went to a screen is still in the gallery (see server/gallery-filter.ts).
      */
     displayStatus: displayStatus('display_status').notNull().default('pending'),
     /** When it went on screen: approve-first items are timed at approval, so they appear as new. */

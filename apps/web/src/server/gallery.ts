@@ -1,6 +1,6 @@
 import 'server-only';
 import { createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
-import { and, desc, eq, inArray, isNotNull, isNull, lt, notInArray, or, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm';
 import { db, schema } from '@immersia/db';
 import {
   brandingSchema,
@@ -11,6 +11,7 @@ import {
   type GuestFormSettings,
 } from '@immersia/shared';
 import { env } from './env';
+import { publicSessions } from './gallery-filter';
 import { pickMedia, sessionBooth } from './live';
 import { presignView } from './storage';
 
@@ -19,7 +20,9 @@ const { event, captureSession, output, asset } = schema;
 /**
  * The event gallery (screen 19, SHR-5, DL-7): every capture of the event on one page, for the client
  * and for guests who scan the event QR. Hidden items (LIV-7) and guests who asked not to be shown
- * (LIV-8) are left out of this public page; the operator's export (EVT-4) has everything.
+ * (LIV-8) are left out of this public page; the operator's export (EVT-4) has everything. What is
+ * listed is decided in one place, gallery-filter.ts, which the page, the ZIP, the dashboard's count
+ * and the highlight reel all use.
  */
 
 export interface GalleryEvent {
@@ -162,20 +165,6 @@ export interface GalleryItem {
 }
 
 export const GALLERY_PAGE = 48;
-
-/** Sessions guests may browse: live, not expired, not hidden or removed, not opted out. */
-export const publicSessions = (eventId: string) =>
-  and(
-    eq(captureSession.eventId, eventId),
-    eq(captureSession.status, 'live'),
-    isNull(captureSession.expiredAt),
-    // Not served by the link either (share-state.ts): erased by the guest (which also expires it,
-    // checked on its own anyway), hidden by the operator or taken down by the platform.
-    isNull(captureSession.erasedAt),
-    isNull(captureSession.removedAt),
-    eq(captureSession.optedOutOfDisplay, false),
-    notInArray(captureSession.displayStatus, ['hidden', 'opted_out']),
-  );
 
 /** Newest first; `cursor` is the last item of the previous page (`<capturedAt ISO>_<id>`). */
 export async function galleryItems(
