@@ -45,8 +45,8 @@ beforeAll(async () => {
 afterAll(() => new Promise<void>((ok) => server.close(() => ok())));
 
 const signal = () => new AbortController().signal;
-let dir: string;
-const fresh = async () => (dir = await mkdtemp(join(tmpdir(), 'render-files-test-')));
+/** A fresh temporary directory; each test removes its own when done. */
+const fresh = () => mkdtemp(join(tmpdir(), 'render-files-test-'));
 
 describe('download', () => {
   it('streams an object to disk', async () => {
