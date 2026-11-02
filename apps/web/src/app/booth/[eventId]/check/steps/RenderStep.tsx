@@ -93,7 +93,9 @@ export function RenderStep({ session, plan, onDone }: StepProps) {
             { label: t('stats.event'), value: t('stats.seconds', { seconds: formatSeconds(result.eventMs) }) },
             {
               label: t('stats.path'),
-              value: t(`paths.${chooseRenderPath({ kind: 'estimate', referenceMs: result.referenceMs })}`),
+              value: t(
+                `paths.${chooseRenderPath({ kind: 'estimate', referenceMs: result.referenceMs, encoder: result.encoder })}`,
+              ),
             },
           ]}
         />
@@ -123,7 +125,9 @@ export function RenderStep({ session, plan, onDone }: StepProps) {
             referenceMs: result ? result.referenceMs : null,
             eventMs: result ? result.eventMs : null,
             renderPath: chooseRenderPath(
-              result ? { kind: 'estimate', referenceMs: result.referenceMs } : { kind: 'error' },
+              result
+                ? { kind: 'estimate', referenceMs: result.referenceMs, encoder: result.encoder }
+                : { kind: 'error' },
             ),
           });
         }}

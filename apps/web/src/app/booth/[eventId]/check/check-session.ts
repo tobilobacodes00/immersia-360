@@ -10,8 +10,9 @@ import {
 } from '@immersia/capture';
 import { requestPersistence, storageHealth, takeStore, type TakeStore } from '@immersia/offline';
 import { createOpfsWorker } from '@immersia/offline/opfs-worker';
-import { outputSize, videoBitrate, type RenderJob } from '@immersia/render-engine';
+import { outputSize, videoBitrate, type EncoderKind, type RenderJob } from '@immersia/render-engine';
 import { RenderClient, RenderFailure } from '@immersia/render-engine/client';
+import { localEncoder } from '@/lib/device-ladder';
 import { workerUrl } from '@/lib/workers';
 import {
   REFERENCE_CLIP,
@@ -22,7 +23,7 @@ import {
 } from '@/lib/setup-check/render-estimate';
 import { testBackground, type CheckPlan } from '@/lib/setup-check/config';
 import { isAppleTouchDevice, isStandalone, sleep } from '@/lib/setup-check/measure';
-import type { CameraChoice } from '../camera-choice';
+import { usableChoice, type CameraChoice } from '../camera-choice';
 import type { CheckApi } from './check-api';
 
 /** Time to give the persistence request before moving on: some browsers leave it pending (Booth360 does the same). */
@@ -62,6 +63,8 @@ export type RenderOutcome =
       interpolatedFrames: number;
       /** CAP-10: whether the background the event asks for was replaced in the test render. */
       background: 'none' | 'applied' | 'unavailable';
+      /** The ladder's on-device encoder the test render used: the browser's own, or the WebAssembly one where it has none. */
+      encoder: EncoderKind;
     }
   | { kind: 'error'; code: string };
 
@@ -97,9 +100,13 @@ export class CheckSession {
   // Camera
 
   /** Open the chosen camera as the booth would; any camera already open is released first. */
-  async openCamera(choice: CameraChoice): Promise<{ ok: true; camera: OpenedCamera } | { ok: false; code: string }> {
+  async openCamera(saved: CameraChoice): Promise<{ ok: true; camera: OpenedCamera } | { ok: false; code: string }> {
     const ticket = ++this.opening;
     this.closeCamera();
+    // The check exercises the browser's camera path. The saved choice is shared with the booth, which may have chosen
+    // the companion's native high-speed camera (CAP-14): its lens id means nothing to the browser, so it reads as
+    // the default camera here (as it does in the booth outside the companion).
+    const choice = usableChoice(saved, false);
     try {
       const { resolution, frameRate, audio } = this.plan.camera;
       const camera =
@@ -245,7 +252,10 @@ export class CheckSession {
     };
     this.renderer ??= new RenderClient(() => new Worker(workerUrl('render'), { type: 'module' }));
     try {
-      const result = await this.renderer.render(`check:${this.deviceId}`, job, onProgress).result;
+      // The ladder's on-device rungs, as the booth chooses them: the browser's own H.264 encoder, or the
+      // WebAssembly one where it has none (so such a device is measured on the path it will really render on).
+      const encoder = await localEncoder();
+      const result = await this.renderer.render(`check:${this.deviceId}`, job, onProgress, encoder).result;
       const measurement: RenderMeasurement = {
         renderMs: result.renderMs,
         frames: result.frames,
@@ -267,6 +277,7 @@ export class CheckSession {
         eventMs,
         interpolatedFrames: result.interpolatedFrames,
         background: result.background,
+        encoder,
       };
     } catch (err) {
       console.warn('[setup check] render', err);

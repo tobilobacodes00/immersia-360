@@ -202,14 +202,16 @@ export function gradeRender(
 
 /**
  * The render path to record on the device (the Devices screen shows it): rendering on the device at
- * the target speed is `local`; slower than the iPad target is `wasm` ("renders on device (slower)");
- * a device that can't render the test clip at all is `server`. It is a hint: today every booth
- * renders on its own device.
+ * the target speed is `local`; a device whose test render needed the WebAssembly encoder (the browser
+ * has none of its own, the ladder's `wasm` rung), or ran slower than the iPad target, is `wasm`
+ * ("renders on device (slower)"); a device that can't render the test clip at all is `server`. It is
+ * a hint: the booth records the rung that really produced its videos once it renders (the ladder).
  */
 export function chooseRenderPath(
-  input: { kind: 'estimate'; referenceMs: number } | { kind: 'error' },
+  input: { kind: 'estimate'; referenceMs: number; encoder?: 'native' | 'wasm' } | { kind: 'error' },
 ): 'local' | 'wasm' | 'server' {
   if (input.kind === 'error') return 'server';
+  if (input.encoder === 'wasm') return 'wasm';
   return input.referenceMs <= RENDER_TARGET_TABLET_MS ? 'local' : 'wasm';
 }
 

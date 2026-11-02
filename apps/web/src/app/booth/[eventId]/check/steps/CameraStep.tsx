@@ -14,6 +14,7 @@ import {
   readCameraChoice,
   saveCameraChoice,
   switchCamera,
+  usableChoice,
   type CameraChoice,
 } from '../../camera-choice';
 import { DEFAULT_CAMERA, LensPicker, SIMULATOR } from '../../LensPicker';
@@ -44,7 +45,9 @@ export function CameraStep({ session, plan, onDone }: StepProps) {
   const t = useTranslations('check.camera');
   const ts = useTranslations('booth.settings');
   const te = useTranslations('booth.errors');
-  const [choice, setChoice] = useState<CameraChoice>(readCameraChoice);
+  // The booth may have saved the companion's native high-speed camera: the check tests the browser's camera, so a
+  // native lens id reads as the default camera (nothing is saved until the operator changes something).
+  const [choice, setChoice] = useState<CameraChoice>(() => usableChoice(readCameraChoice(), false));
   const [lenses, setLenses] = useState<Lens[]>([]);
   const [phase, setPhase] = useState<Phase>({ kind: 'opening' });
   const video = useRef<HTMLVideoElement>(null);
@@ -112,9 +115,11 @@ export function CameraStep({ session, plan, onDone }: StepProps) {
   const change = (patch: Partial<CameraChoice>) => {
     const next = applyChoice(choice, patch);
     setChoice(next);
-    saveCameraChoice(next);
-    // The picture is mirrored by CSS; only a different camera needs reopening.
-    if (needsReopen(choice, next)) {
+    // The picture is mirrored by CSS; only a different camera needs reopening. A change that leaves the camera
+    // alone is saved onto what was saved, so the native high-speed choice this step does not use survives it.
+    const reopen = needsReopen(choice, next);
+    saveCameraChoice(reopen ? next : applyChoice(readCameraChoice(), patch));
+    if (reopen) {
       setPhase({ kind: 'opening' });
       void run(next, apply, setLenses);
     }

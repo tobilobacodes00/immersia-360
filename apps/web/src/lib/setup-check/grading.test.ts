@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   CRITICAL_STORAGE_BYTES,
   FPS_FLOOR,
+  RENDER_TARGET_TABLET_MS,
   SLOW_UPLOAD_MBPS,
   cameraOpenFailed,
+  chooseRenderPath,
   gradeCamera,
   gradeNetwork,
   gradePrinter,
@@ -171,6 +173,25 @@ describe('test QR, printer and network grades', () => {
     expect(gradeNetwork({ kind: 'ok', mbps: SLOW_UPLOAD_MBPS })[0]?.status).toBe('pass');
     expect(gradeNetwork({ kind: 'error', code: 'offline' })[0]?.status).toBe('fail');
     expect(gradeNetwork({ kind: 'error', code: 'rate_limited' })[0]?.status).toBe('warn');
+  });
+});
+
+describe('the render path recorded for a device', () => {
+  it('is local when the browser renders the test clip fast enough with its own encoder', () => {
+    expect(chooseRenderPath({ kind: 'estimate', referenceMs: RENDER_TARGET_TABLET_MS })).toBe('local');
+    expect(chooseRenderPath({ kind: 'estimate', referenceMs: 10_000, encoder: 'native' })).toBe('local');
+  });
+
+  it('is wasm when the test render needed the WebAssembly encoder, however fast it ran', () => {
+    expect(chooseRenderPath({ kind: 'estimate', referenceMs: 10_000, encoder: 'wasm' })).toBe('wasm');
+  });
+
+  it('is wasm ("on device, slower") for a native encoder slower than the iPad target', () => {
+    expect(chooseRenderPath({ kind: 'estimate', referenceMs: RENDER_TARGET_TABLET_MS + 1 })).toBe('wasm');
+  });
+
+  it('is server only when the test clip could not be rendered on the device at all', () => {
+    expect(chooseRenderPath({ kind: 'error' })).toBe('server');
   });
 });
 
