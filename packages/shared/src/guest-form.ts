@@ -119,8 +119,8 @@ export type GuestFormScope = 'session' | 'gallery';
 
 /**
  * What the form remembers about a browser, in first-party cookies scoped to the share and gallery
- * paths (one each, see `guestFormCookie` and `guestFormGalleryCookie`): `submitted` or `skipped`. It only stops the form from reappearing; downloads never depend
- * on it.
+ * paths (one each, see `guestFormCookie` and `guestFormGalleryCookie`): `submitted` or `skipped`.
+ * It only stops the form from reappearing; downloads never depend on it.
  */
 export type GuestFormChoice = 'submitted' | 'skipped';
 
