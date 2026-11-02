@@ -80,7 +80,7 @@ export class FrontmatterError extends Error {
 
 /** Split `---` front matter from the body. */
 export function splitFrontmatter(source: string): { raw: string; body: string } {
-  const text = source.replace(/^﻿/, '').replace(/\r\n?/g, '\n');
+  const text = source.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
   const m = /^---\n([\s\S]*?)\n---[ \t]*(?:\n|$)/.exec(text);
   if (!m) throw new FrontmatterError('missing front matter block (--- … ---)');
   return { raw: m[1]!, body: text.slice(m[0].length).replace(/^\n+/, '') };

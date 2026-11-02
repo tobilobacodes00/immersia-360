@@ -65,7 +65,7 @@ describe('help front matter', () => {
   });
 
   it('accepts Windows line endings and a byte order mark', () => {
-    const { data } = parseArticleSource(`﻿${valid.replace(/\n/g, '\r\n')}`);
+    const { data } = parseArticleSource(`\uFEFF${valid.replace(/\n/g, '\r\n')}`);
     expect(data.title).toBe('Run the setup check');
   });
 
