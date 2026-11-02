@@ -279,7 +279,8 @@ test.describe('guest form, erasure and the operator side (SHR-6, GDPR/NDPA)', ()
     await expect(page.getByRole('heading', { name: 'No ads, no trackers' })).toBeVisible();
     await page.getByRole('combobox', { name: 'Language' }).selectOption('es');
     await expect(page.getByRole('heading', { name: 'Sin anuncios ni rastreadores' })).toBeVisible();
-    await page.getByRole('combobox', { name: 'Language' }).selectOption('pt');
+    // The picker is labelled in the page's language, so in Spanish it is no longer "Language".
+    await page.getByRole('combobox', { name: 'Idioma' }).selectOption('pt');
     await expect(page.getByRole('heading', { name: 'Sem anúncios, sem rastreadores' })).toBeVisible();
   });
 });
