@@ -59,7 +59,8 @@ export default async function DesignPage({ params }: { params: Promise<{ id: str
   const [assets, fonts, library] = await Promise.all([
     assetViews(op.organizationId, templateAssetIds(doc)),
     listAssets(op.organizationId, ['font']),
-    listLibraryTemplates(op.organizationId, kind),
+    // The panel adds the built-in library itself (it is generated in the browser from code).
+    listLibraryTemplates(op.organizationId, kind, { builtIns: false }),
   ]);
 
   return (

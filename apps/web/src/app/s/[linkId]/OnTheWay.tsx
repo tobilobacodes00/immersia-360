@@ -24,7 +24,8 @@ export function OnTheWay({ linkId, ready, compact }: { linkId: string; ready: nu
           const res = await fetch(`/api/share/${linkId}`, { cache: 'no-store' });
           if (res.ok) {
             const s = (await res.json()) as { state: string; ready: number };
-            if (s.ready > ready || s.state === 'expired') return router.refresh();
+            // Anything but pending or live (expired, erased, hidden, taken down): show the page for it.
+            if (s.ready > ready || (s.state !== 'pending' && s.state !== 'live')) return router.refresh();
           }
         } catch {
           // Offline for a moment: try again on the next tick.

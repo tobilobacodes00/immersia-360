@@ -48,7 +48,8 @@
     "react-konva": "catalog:",
     "client-zip": "catalog:",
     "@immersia/effects": "workspace:*",
-    "@mediapipe/tasks-vision": "catalog:"
+    "@mediapipe/tasks-vision": "catalog:",
+    "@immersia/capacitor-high-speed": "workspace:*"
   },
   "devDependencies": {
     "@axe-core/playwright": "catalog:",
@@ -62,6 +63,7 @@
     "vitest": "catalog:",
     "esbuild": "catalog:",
     "@types/pg": "catalog:",
-    "@types/nodemailer": "catalog:"
+    "@types/nodemailer": "catalog:",
+    "fake-indexeddb": "catalog:"
   }
 }

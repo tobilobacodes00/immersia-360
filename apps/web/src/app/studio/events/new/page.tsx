@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { PageHeader } from '@immersia/ui';
+import { HelpLink } from '@/components/HelpLink';
+import { HELP_ARTICLES } from '@/lib/help-links';
 import { requireOperator } from '@/server/session';
 import { NewEventForm } from './NewEventForm';
 
@@ -12,10 +14,14 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function NewEventPage({ searchParams }: { searchParams: Promise<{ mode?: string }> }) {
   await requireOperator({ event: ['create'] });
   const { mode } = await searchParams;
-  const t = await getTranslations('studio.newEvent');
+  const [t, th] = await Promise.all([getTranslations('studio.newEvent'), getTranslations('help.links')]);
   return (
     <>
-      <PageHeader title={t('title')} subtitle={t('subtitle')} />
+      <PageHeader
+        title={t('title')}
+        subtitle={t('subtitle')}
+        actions={<HelpLink slug={HELP_ARTICLES.gettingStarted} label={th('gettingStarted')} />}
+      />
       <NewEventForm initialMode={mode === 'photo' ? 'photo' : 'video360'} />
     </>
   );

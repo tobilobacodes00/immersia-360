@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { GRID_H, GRID_W, MotionTrigger, analyzeFrames } from '../src/motion';
+import { describe, expect, it, vi } from 'vitest';
+import { GRID_H, GRID_W, MotionTrigger, analyzeFrames, createMotionDetector } from '../src/motion';
 
 /** A textured scene (vertical stripes of varying brightness) shifted right by `dx` columns. */
 function scene(dx: number, brightness = 0): Uint8Array {
@@ -105,5 +105,38 @@ describe('MotionTrigger', () => {
     const trig = new MotionTrigger({ threshold: 0.05, sustain: 2 });
     expect(trig.update(analyzeFrames(scene(0), scene(0, 40)))).toBe(false);
     expect(trig.update(analyzeFrames(scene(0, 40), scene(0, 80)))).toBe(false);
+  });
+});
+
+describe('createMotionDetector (one decision for a video element and the native camera)', () => {
+  it('triggers when a spin has been seen for a few frames, then rests for the cooldown', () => {
+    let t = 0;
+    const onTrigger = vi.fn();
+    const detect = createMotionDetector({ threshold: 0.1, cooldownMs: 1000, now: () => t, onTrigger });
+    let step = 0;
+    const frame = () => {
+      t += 100;
+      detect(scene(step++ * 2));
+    };
+
+    // The first frame has nothing to compare with; three qualifying comparisons follow before it fires.
+    for (let i = 0; i < 3; i++) frame();
+    expect(onTrigger).not.toHaveBeenCalled();
+    frame();
+    expect(onTrigger).toHaveBeenCalledTimes(1);
+
+    // Still spinning through the cooldown: one start is one trigger.
+    while (t < 1400) frame();
+    expect(onTrigger).toHaveBeenCalledTimes(1);
+    // After it, a new run of sideways motion starts it again.
+    for (let i = 0; i < 3; i++) frame();
+    expect(onTrigger).toHaveBeenCalledTimes(2);
+  });
+
+  it('does nothing for a still platform or a change of light', () => {
+    const onTrigger = vi.fn();
+    const detect = createMotionDetector({ threshold: 0.05, cooldownMs: 0, now: () => 1e9, onTrigger });
+    for (let i = 0; i < 20; i++) detect(scene(0, i % 2 ? 40 : 0));
+    expect(onTrigger).not.toHaveBeenCalled();
   });
 });

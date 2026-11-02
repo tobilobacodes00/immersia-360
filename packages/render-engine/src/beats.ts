@@ -336,3 +336,20 @@ export function snapSlowMotion(
   if (endS <= startS + 0.25) return { startS: seg.startS, endS: seg.endS };
   return { startS, endS };
 }
+
+/**
+ * A song's beats on a reel's timeline when the song is played over and over (a highlight reel can be longer than
+ * the music): the beats inside the played part `[fromS, fromS + lengthS)`, moved to start at 0 and repeated every
+ * `lengthS` until `outputS`.
+ */
+export function loopedBeats(beats: number[], fromS: number, lengthS: number, outputS: number): number[] {
+  if (!(lengthS > 0)) return [];
+  const inside = beats.filter((b) => b >= fromS && b < fromS + lengthS).map((b) => b - fromS);
+  const out: number[] = [];
+  for (let k = 0; k * lengthS < outputS; k++)
+    for (const b of inside) {
+      const t = b + k * lengthS;
+      if (t <= outputS) out.push(t);
+    }
+  return out;
+}

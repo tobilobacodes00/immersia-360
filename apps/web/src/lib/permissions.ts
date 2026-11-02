@@ -12,6 +12,12 @@ export const statements = {
   asset: ['create', 'read', 'delete'],
   integration: ['connect', 'disconnect'],
   gallery: ['export'],
+  /** Guest form contacts (SHR-6): personal data, so only owners and operators handle them. */
+  guest: ['read', 'export', 'delete'],
+  /** The organization's own data export (privacy): the account holder only. */
+  account: ['export'],
+  /** Abuse reports on the organization's events: see them, and hide a reported item at once. */
+  report: ['read', 'hide'],
 } as const;
 
 export const ac = createAccessControl(statements);
@@ -25,6 +31,9 @@ export const owner = ac.newRole({
   asset: ['create', 'read', 'delete'],
   integration: ['connect', 'disconnect'],
   gallery: ['export'],
+  guest: ['read', 'export', 'delete'],
+  account: ['export'],
+  report: ['read', 'hide'],
 });
 
 /** An assistant who runs booths: everything about events and devices, nothing about the team. */
@@ -33,6 +42,8 @@ export const operator = ac.newRole({
   device: ['register', 'read'],
   asset: ['create', 'read', 'delete'],
   gallery: ['export'],
+  guest: ['read', 'export', 'delete'],
+  report: ['read', 'hide'],
 });
 
 /** Read-only: sees events, galleries and devices; can export a gallery for a client. */
@@ -41,6 +52,7 @@ export const viewer = ac.newRole({
   device: ['read'],
   asset: ['read'],
   gallery: ['export'],
+  report: ['read'],
 });
 
 export const roles = { owner, operator, viewer };
@@ -48,7 +60,8 @@ export type RoleName = keyof typeof roles;
 export type Permission = { [K in keyof typeof statements]?: (typeof statements)[K][number][] };
 
 export function isRoleName(value: string): value is RoleName {
-  return value in roles;
+  // Own keys only: `'constructor' in roles` is true through the prototype chain.
+  return Object.hasOwn(roles, value);
 }
 
 /** Pure check used by both server guards and client UI. */

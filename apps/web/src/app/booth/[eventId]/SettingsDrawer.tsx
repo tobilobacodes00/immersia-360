@@ -1,16 +1,25 @@
 'use client';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import Link from 'next/link';
+import type { Route } from 'next';
 import { useLocale, useTranslations } from 'next-intl';
 import { AnimatePresence, motion } from 'motion/react';
 import { Sun, X } from 'lucide-react';
-import { listLenses, type Lens } from '@immersia/capture';
+import {
+  defaultNativeLens,
+  hfrFpsOptions,
+  listLenses,
+  pickHfrFps,
+  type HighSpeedCapabilities,
+  type Lens,
+} from '@immersia/capture';
 import type { LocalTake } from '@immersia/offline';
-import { Field, IconButton, Segmented, Slider, Toggle, cx, softSpring } from '@immersia/ui';
+import { Field, IconButton, Segmented, Slider, Toggle, buttonClass, cx, softSpring } from '@immersia/ui';
 import { formatBytes, formatRelative } from '@/lib/format';
 import { zoomUnit, type ActiveCamera } from './active-camera';
 import { FILL_LEVELS, FILL_TINTS, fillLightOf, switchCamera, type CameraChoice } from './camera-choice';
-import { DEFAULT_CAMERA, LensPicker, SIMULATOR } from './LensPicker';
+import { DEFAULT_CAMERA, LensPicker, SIMULATOR, nativeLensId, nativeValue } from './LensPicker';
 import { TakeBadges } from './TakeBadges';
 
 export function SettingsDrawer({
@@ -20,7 +29,9 @@ export function SettingsDrawer({
   onChoice,
   camera,
   cameraBusy,
+  checkHref,
   capture360,
+  highSpeed,
 }: {
   open: boolean;
   onClose: () => void;
@@ -31,8 +42,15 @@ export function SettingsDrawer({
   camera: ActiveCamera | null;
   /** A guest is using the booth: the camera is left exactly as it is (no reopen, zoom or torch). */
   cameraBusy: boolean;
+  /** HLP-1: where the setup check for this booth lives. */
+  checkHref?: string;
   /** The 360 booth's motion trigger, video import and takes; the photo booth has none of these. */
   capture360?: Capture360Props;
+  /**
+   * CAP-14: what the companion app's native high-speed camera offers on this device. Absent in a browser
+   * (and in the photo booth), where nothing about it is shown.
+   */
+  highSpeed?: Pick<HighSpeedCapabilities, 'available' | 'lenses'>;
 }) {
   const t = useTranslations('booth.settings');
   const [lenses, setLenses] = useState<Lens[]>([]);
@@ -81,7 +99,23 @@ export function SettingsDrawer({
     };
   }, [open, hasCamera, cameraId, cameraFacing]);
 
-  const selected = choice.source === 'simulator' ? SIMULATOR : (choice.deviceId ?? DEFAULT_CAMERA);
+  // The native high-speed camera is the choice only where it exists; a saved choice outside the companion
+  // reads as the default camera (the booth opens it that way, see usableChoice).
+  const nativeLenses = highSpeed?.lenses ?? [];
+  const nativeChosen = choice.source === 'native-hfr' && highSpeed !== undefined && nativeLenses.length > 0;
+  const nativeLens = nativeChosen
+    ? (nativeLenses.find((l) => l.id === choice.deviceId) ?? defaultNativeLens(nativeLenses))
+    : undefined;
+  const fpsOptions = hfrFpsOptions(nativeLens);
+  const nativeFps = pickHfrFps(fpsOptions, choice.hfrFps);
+  const selected =
+    choice.source === 'simulator'
+      ? SIMULATOR
+      : nativeChosen
+        ? nativeValue(nativeLens?.id ?? '')
+        : choice.source === 'native-hfr'
+          ? DEFAULT_CAMERA
+          : (choice.deviceId ?? DEFAULT_CAMERA);
   const range = camera?.zoom.range ?? null;
   const zoom = choice.zoom ?? camera?.zoomAtOpen ?? range?.min ?? 1;
   const fill = fillLightOf(choice);
@@ -141,19 +175,30 @@ export function SettingsDrawer({
                   <LensPicker
                     lenses={lenses}
                     selected={selected}
-                    inUse={camera?.deviceId ?? null}
+                    inUse={camera?.kind === 'native-hfr' ? null : (camera?.deviceId ?? null)}
                     simulatorInUse={camera !== null && choice.source === 'simulator'}
+                    highSpeed={
+                      nativeLenses.length > 0
+                        ? { lenses: nativeLenses, inUse: camera?.kind === 'native-hfr' ? camera.deviceId : null }
+                        : undefined
+                    }
                     disabled={cameraBusy}
-                    onSelect={(value) =>
+                    onSelect={(value) => {
+                      const lensId = nativeLensId(value);
                       onChoice(
                         switchCamera(
                           value === SIMULATOR
                             ? { source: 'simulator', deviceId: null }
-                            : { source: 'camera', deviceId: value === DEFAULT_CAMERA ? null : value },
+                            : lensId !== null
+                              ? { source: 'native-hfr', deviceId: lensId }
+                              : { source: 'camera', deviceId: value === DEFAULT_CAMERA ? null : value },
                         ),
-                      )
-                    }
+                      );
+                    }}
                   />
+                  {highSpeed && !highSpeed.available && (
+                    <p className="text-[13px] leading-relaxed text-muted">{t('hfr.unavailable')}</p>
+                  )}
                   {camera && (
                     <p className="text-[13px] text-muted">
                       {t('delivering', { width: camera.width, height: camera.height, fps: camera.frameRate })}
@@ -166,6 +211,21 @@ export function SettingsDrawer({
                   )}
                 </div>
               </Field>
+              {nativeChosen && nativeFps !== null && (
+                <Field label={t('hfr.fps')} help={t('hfr.help')} stack>
+                  {/* A disabled fieldset disables every button inside it, like the zoom slider below. */}
+                  <fieldset disabled={cameraBusy} className={cx('min-w-0', cameraBusy && 'opacity-50')}>
+                    <Segmented
+                      label={t('hfr.fps')}
+                      value={String(nativeFps)}
+                      options={[...fpsOptions]
+                        .sort((a, b) => a - b)
+                        .map((fps) => ({ value: String(fps), label: t('hfr.fpsOption', { fps }) }))}
+                      onChange={(fps) => onChoice({ hfrFps: Number(fps) })}
+                    />
+                  </fieldset>
+                </Field>
+              )}
               {camera && range && (
                 <Field label={t('zoom')} stack>
                   {/* A disabled fieldset disables the slider and its number box together. */}
@@ -228,6 +288,13 @@ export function SettingsDrawer({
                 <Toggle checked={choice.mirror} onChange={(mirror) => onChoice({ mirror })} label={t('mirror')} />
               </Field>
               {capture360 && <Capture360 {...capture360} />}
+              {checkHref && (
+                <Field label={t('setupCheck')} help={t('setupCheckHelp')}>
+                  <Link href={checkHref as Route} className={buttonClass({ size: 'sm' })}>
+                    {t('setupCheckRun')}
+                  </Link>
+                </Field>
+              )}
             </div>
           </motion.aside>
         </motion.div>
@@ -238,6 +305,8 @@ export function SettingsDrawer({
 
 interface Capture360Props {
   motion: { enabled: boolean; threshold: number };
+  /** The open camera's picture can drive the motion trigger (false for a native camera that cannot be sampled). */
+  motionSupported: boolean;
   onMotion: (m: { enabled: boolean; threshold: number }) => void;
   takes: LocalTake[];
   onImport: (files: FileList) => void;
@@ -246,15 +315,24 @@ interface Capture360Props {
 }
 
 /** 360 booth only: the motion trigger (CAP-4), video import (CAP-12) and the takes on this device. */
-function Capture360({ motion: motionSettings, onMotion, takes, onImport, storeBackend, importIcon }: Capture360Props) {
+function Capture360({
+  motion: motionSettings,
+  motionSupported,
+  onMotion,
+  takes,
+  onImport,
+  storeBackend,
+  importIcon,
+}: Capture360Props) {
   const t = useTranslations('booth.settings');
   const locale = useLocale();
   const fileInput = useRef<HTMLInputElement>(null);
   return (
     <>
-      <Field label={t('motion')} help={t('motionHelp')}>
+      <Field label={t('motion')} help={motionSupported ? t('motionHelp') : t('hfr.noMotion')}>
         <Toggle
-          checked={motionSettings.enabled}
+          checked={motionSupported && motionSettings.enabled}
+          disabled={!motionSupported}
           onChange={(enabled) => onMotion({ ...motionSettings, enabled })}
           label={t('motion')}
         />

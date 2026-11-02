@@ -6,7 +6,9 @@
 import { SEGMENTER_ASSETS, createSegmenter, type Segmenter } from '@immersia/capture/segment';
 import type { MaskSource } from './background-math';
 import { encodeClip, messagingCopy, posterFrame } from './derive';
+import { renderMontage, type MontageJob, type MontageResult } from './montage';
 import { RenderError, render, type RenderJob } from './render';
+import type { EncoderKind } from './wasm/wasm-h264';
 
 export {};
 declare const self: DedicatedWorkerGlobalScope;
@@ -40,11 +42,13 @@ function closeSegmenterWhenIdle() {
 }
 
 export type WorkerMessage =
-  | { type: 'render'; id: string; job: RenderJob }
+  | { type: 'render'; id: string; job: RenderJob; encoder?: EncoderKind }
+  /** The highlight reel (LIV-14): many clips, one MP4. The cards' bitmaps are transferred. */
+  | { type: 'montage'; id: string; job: MontageJob; encoder?: EncoderKind }
   /** Poster and (optionally) the messaging copy of a finished render (DL-8). */
-  | { type: 'derive'; id: string; mp4: Blob; fps: number; poster: boolean; small: boolean }
+  | { type: 'derive'; id: string; mp4: Blob; fps: number; poster: boolean; small: boolean; encoder?: EncoderKind }
   /** A short MP4 from photo-booth motion frames (PHO-2). The bitmaps are transferred. */
-  | { type: 'clip'; id: string; frames: ImageBitmap[]; fps: number; pingPong: boolean }
+  | { type: 'clip'; id: string; frames: ImageBitmap[]; fps: number; pingPong: boolean; encoder?: EncoderKind }
   | { type: 'cancel'; id: string }
   | { type: 'pause' }
   | { type: 'resume' };
@@ -52,6 +56,7 @@ export type WorkerMessage =
 export type WorkerReply =
   | { type: 'progress'; id: string; progress: number }
   | { type: 'done'; id: string; result: Awaited<ReturnType<typeof render>> }
+  | { type: 'montaged'; id: string; result: MontageResult }
   | { type: 'derived'; id: string; poster: Blob | null; small: Blob | null }
   | { type: 'clipped'; id: string; mp4: Blob }
   | { type: 'error'; id: string; code: RenderError['code']; message: string };
@@ -85,7 +90,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
   }
   if (msg.type === 'clip') {
     try {
-      const mp4 = await encodeClip(msg.frames, msg.fps, { pingPong: msg.pingPong });
+      const mp4 = await encodeClip(msg.frames, msg.fps, { pingPong: msg.pingPong, encoder: msg.encoder });
       self.postMessage({ type: 'clipped', id: msg.id, mp4 } satisfies WorkerReply);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -96,11 +101,33 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
   if (msg.type === 'derive') {
     try {
       const poster = msg.poster ? await posterFrame(msg.mp4) : null;
-      const small = msg.small ? await messagingCopy(msg.mp4, msg.fps) : null;
+      const small = msg.small ? await messagingCopy(msg.mp4, msg.fps, { encoder: msg.encoder }) : null;
       self.postMessage({ type: 'derived', id: msg.id, poster, small } satisfies WorkerReply);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       self.postMessage({ type: 'error', id: msg.id, code: 'failed', message } satisfies WorkerReply);
+    }
+    return;
+  }
+  if (msg.type === 'montage') {
+    const controller = new AbortController();
+    running.set(msg.id, controller);
+    try {
+      const result = await renderMontage(msg.job, {
+        gate,
+        signal: controller.signal,
+        encoder: msg.encoder,
+        onProgress: (progress) => self.postMessage({ type: 'progress', id: msg.id, progress } satisfies WorkerReply),
+      });
+      self.postMessage({ type: 'montaged', id: msg.id, result } satisfies WorkerReply);
+    } catch (err) {
+      const e2 =
+        err instanceof RenderError ? err : new RenderError('failed', err instanceof Error ? err.message : String(err));
+      self.postMessage({ type: 'error', id: msg.id, code: e2.code, message: e2.message } satisfies WorkerReply);
+    } finally {
+      running.delete(msg.id);
+      msg.job.intro?.close();
+      msg.job.end?.close();
     }
     return;
   }
@@ -110,6 +137,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
     const result = await render(msg.job, {
       gate,
       signal: controller.signal,
+      encoder: msg.encoder,
       segmenter: openSegmenter,
       onProgress: (progress) => self.postMessage({ type: 'progress', id: msg.id, progress } satisfies WorkerReply),
     });

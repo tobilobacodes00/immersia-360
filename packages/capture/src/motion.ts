@@ -157,3 +157,32 @@ export function createFrameSampler() {
     return out;
   };
 }
+
+export interface MotionDetectorOptions {
+  /** CAP-4 threshold: share of the frame that must move (0.01-1). */
+  threshold: number;
+  /** Quiet time after a trigger, so one spin start is one trigger. */
+  cooldownMs: number;
+  onTrigger: () => void;
+  /** The clock; tests pass their own. */
+  now?: () => number;
+}
+
+/**
+ * The motion start as a function of frames: feed it each luma grid in turn (from a video element through
+ * `createFrameSampler`, or from the companion's native camera) and it calls `onTrigger` when the platform
+ * starts turning. The same decision for every camera, so a native preview behaves as a web one does.
+ */
+export function createMotionDetector(opts: MotionDetectorOptions): (frame: Uint8Array) => void {
+  const trigger = new MotionTrigger({ threshold: opts.threshold });
+  const now = opts.now ?? (() => performance.now());
+  let prev: Uint8Array | null = null;
+  let cooldownUntil = 0;
+  return (frame) => {
+    if (prev && now() > cooldownUntil && trigger.update(analyzeFrames(prev, frame))) {
+      cooldownUntil = now() + opts.cooldownMs;
+      opts.onTrigger();
+    }
+    prev = frame;
+  };
+}

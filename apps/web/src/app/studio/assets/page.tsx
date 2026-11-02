@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { CloudOff } from 'lucide-react';
 import { EmptyState, PageHeader } from '@immersia/ui';
+import { HelpLink } from '@/components/HelpLink';
+import { HELP_TARGETS } from '@/lib/help-links';
 import { listAssets } from '@/server/assets';
 import { requireOperator } from '@/server/session';
 import { storageConfigured } from '@/server/storage';
@@ -15,12 +17,16 @@ export async function generateMetadata(): Promise<Metadata> {
 /** Screen 8 (assets library): overlays, intros, outros, music, fonts, logos and backgrounds. */
 export default async function AssetsPage() {
   const op = await requireOperator({ asset: ['read'] });
-  const t = await getTranslations('studio.assets');
+  const [t, th] = await Promise.all([getTranslations('studio.assets'), getTranslations('help.links')]);
   // Self-hosted without a bucket: say so, rather than failing on the first signed URL.
   const assets = storageConfigured() ? await listAssets(op.organizationId) : null;
   return (
     <>
-      <PageHeader title={t('title')} subtitle={t('subtitle')} />
+      <PageHeader
+        title={t('title')}
+        subtitle={t('subtitle')}
+        actions={<HelpLink {...HELP_TARGETS.assets} label={th('assets')} />}
+      />
       {assets ? (
         <AssetLibrary initial={assets} />
       ) : (

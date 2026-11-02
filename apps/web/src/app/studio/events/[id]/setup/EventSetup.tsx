@@ -9,6 +9,8 @@ import {
   PRINT_SIZES,
   QUALITY_PRESETS,
   RESOLUTIONS,
+  buildConsentText,
+  isSafePolicyUrl,
   outputSettingsSchema,
   shareSettingsSchema,
   type OutputSettings,
@@ -26,6 +28,8 @@ import {
   Toggle,
   useHydrated,
 } from '@immersia/ui';
+import { HelpLink } from '@/components/HelpLink';
+import { HELP_ARTICLES, HELP_TARGETS } from '@/lib/help-links';
 import type { CloudProviderId, IntegrationState } from '@/server/cloud/types';
 import { updateBasicsAction, updateSectionAction } from '../../../actions';
 import { useAutosave, type SaveStatus } from './use-autosave';
@@ -114,19 +118,27 @@ function ToggleField({
   );
 }
 
+/** A card of settings. `help` is the "?" link(s) to the article that explains them (HLP-3). */
 function Section({
   title,
   subtitle,
   children,
   id,
+  help,
 }: {
   title: string;
   subtitle?: string;
   children: ReactNode;
   id: string;
+  help?: ReactNode;
 }) {
   return (
-    <Card id={id} title={title} subtitle={subtitle}>
+    <Card
+      id={id}
+      title={title}
+      subtitle={subtitle}
+      action={help ? <div className="flex flex-wrap items-center gap-x-4 gap-y-1">{help}</div> : undefined}
+    >
       <div className="divide-y divide-line">{children}</div>
     </Card>
   );
@@ -139,9 +151,12 @@ export function EventSetup({
   output: initialOutput,
   share: initialShare,
   cloud: cloudStates,
+  operatorName,
 }: {
   id: string;
   readOnly: boolean;
+  /** The organization's name: the controller named in the guest form's consent sentence. */
+  operatorName: string;
   basics: Basics;
   output: OutputSettings;
   share: ShareSettings;
@@ -151,12 +166,21 @@ export function EventSetup({
   const t = useTranslations('studio.setup');
   const te = useTranslations('studio.events');
   const tint = useTranslations('studio.integrations');
+  const th = useTranslations('help.links');
   const [basics, setBasics] = useState(initialBasics);
   const [output, setOutput] = useState(initialOutput);
   const [share, setShare] = useState(initialShare);
   const hydrated = useHydrated();
 
   const ti = useTranslations('studio.setup.issues');
+  const tf = useTranslations('share.form');
+  // SHR-6: the exact sentence guests will tick, and a bad policy link caught before it is saved.
+  const consentPreview = buildConsentText(
+    tf('consent', { operator: operatorName, event: basics.name.trim() || '…' }),
+    share.guestForm.consentText,
+  );
+  const policy = share.guestForm.policyUrl.trim();
+  const policyInvalid = policy !== '' && !isSafePolicyUrl(policy);
   const outputIssues = useMemo(() => {
     const r = outputSettingsSchema.safeParse(output);
     if (r.success) return [];
@@ -219,7 +243,11 @@ export function EventSetup({
         <SaveIndicator statuses={[basicsStatus, outputStatus, shareStatus]} />
       </div>
 
-      <Section id="basics" title={t('basics.title')}>
+      <Section
+        id="basics"
+        title={t('basics.title')}
+        help={<HelpLink {...HELP_TARGETS.expiryPeriod} label={th('expiry')} />}
+      >
         <Field label={t('basics.name')} htmlFor="setup-name">
           <TextInput
             id="setup-name"
@@ -271,7 +299,17 @@ export function EventSetup({
       </Section>
 
       {runsVideo && (
-        <Section id="video" title={t('video.title')} subtitle={t('video.subtitle')}>
+        <Section
+          id="video"
+          title={t('video.title')}
+          subtitle={t('video.subtitle')}
+          help={
+            <>
+              <HelpLink slug={HELP_ARTICLES.booth360} label={th('booth360')} />
+              <HelpLink slug={HELP_ARTICLES.slowMotion} label={th('slowMotion')} />
+            </>
+          }
+        >
           <Issues issues={outputIssues} />
           <Field label={t('video.resolution')} help={t('video.resolutionHelp')}>
             <Segmented
@@ -393,7 +431,18 @@ export function EventSetup({
       )}
 
       {runsPhoto && (
-        <Section id="photo" title={t('photo.title')} subtitle={t('photo.subtitle')}>
+        <Section
+          id="photo"
+          title={t('photo.title')}
+          subtitle={t('photo.subtitle')}
+          help={
+            <>
+              <HelpLink slug={HELP_ARTICLES.photoBooth} label={th('photoBooth')} />
+              <HelpLink {...HELP_TARGETS.printingOn} label={th('printing')} />
+              <HelpLink slug={HELP_ARTICLES.kioskPrinting} label={th('kioskPrinting')} />
+            </>
+          }
+        >
           <Field label={t('photo.shots')}>
             <Segmented<'1' | '2' | '3' | '4'>
               label={t('photo.shots')}
@@ -489,7 +538,12 @@ export function EventSetup({
         </Section>
       )}
 
-      <Section id="triggers" title={t('triggers.title')} subtitle={t('triggers.subtitle')}>
+      <Section
+        id="triggers"
+        title={t('triggers.title')}
+        subtitle={t('triggers.subtitle')}
+        help={<HelpLink slug={HELP_ARTICLES.captureKeys} label={th('triggers')} />}
+      >
         <ToggleField label={t('triggers.tap')} checked={output.triggers.tap} onChange={(tap) => setTriggers({ tap })} />
         <ToggleField
           label={t('triggers.keyboard')}
@@ -518,7 +572,18 @@ export function EventSetup({
         )}
       </Section>
 
-      <Section id="sharing" title={t('sharing.title')} subtitle={t('sharing.subtitle')}>
+      <Section
+        id="sharing"
+        title={t('sharing.title')}
+        subtitle={t('sharing.subtitle')}
+        help={
+          <>
+            <HelpLink {...HELP_TARGETS.shareSettings} label={th('sharing')} />
+            <HelpLink {...HELP_TARGETS.guestForm} label={th('guestPrivacy')} />
+            <HelpLink slug={HELP_ARTICLES.googleDrive} label={th('cloud')} />
+          </>
+        }
+      >
         <ToggleField label={t('sharing.qr')} checked={share.qr} onChange={(qr) => setShare((s) => ({ ...s, qr }))} />
         <ToggleField
           label={t('sharing.email')}
@@ -593,15 +658,50 @@ export function EventSetup({
               checked={share.guestForm.requireName}
               onChange={(requireName) => setShare((s) => ({ ...s, guestForm: { ...s.guestForm, requireName } }))}
             />
-            <Field label={t('sharing.consent')} help={t('sharing.consentHelp')} stack>
+            <Field label={t('sharing.policyUrl')} help={t('sharing.policyUrlHelp')} htmlFor="setup-policy-url" stack>
               <TextInput
+                id="setup-policy-url"
+                type="url"
+                value={share.guestForm.policyUrl}
+                placeholder={t('sharing.policyUrlPlaceholder')}
+                onChange={(policyUrl) =>
+                  setShare((s) => ({ ...s, guestForm: { ...s.guestForm, policyUrl: policyUrl.slice(0, 500) } }))
+                }
+                autoComplete="off"
+              />
+              {policyInvalid ? (
+                <p role="alert" className="mt-2 text-[13px] text-bad">
+                  {ti('policy_url_invalid')}
+                </p>
+              ) : (
+                !share.guestForm.policyUrl.trim() && (
+                  <p className="mt-2 text-[13px] leading-relaxed text-warn">{t('sharing.policyMissing')}</p>
+                )
+              )}
+            </Field>
+            <Field label={t('sharing.consent')} help={t('sharing.consentHelp')} htmlFor="setup-consent" stack>
+              <TextInput
+                id="setup-consent"
                 value={share.guestForm.consentText}
                 onChange={(consentText) =>
                   setShare((s) => ({ ...s, guestForm: { ...s.guestForm, consentText: consentText.slice(0, 500) } }))
                 }
-                ariaLabel={t('sharing.consent')}
               />
             </Field>
+            <div className="py-3.5">
+              <div className="text-sm font-medium">{t('sharing.consentPreview')}</div>
+              <p className="mt-2 rounded-[10px] border border-line bg-sunken px-3 py-2.5 text-[13px] leading-relaxed">
+                <span aria-hidden>☐ </span>
+                {consentPreview}
+              </p>
+              <p className="mt-1.5 text-[13px] leading-relaxed text-faint">{t('sharing.consentPreviewHelp')}</p>
+              <Link
+                href={`/studio/events/${id}/guests`}
+                className="focus-ring mt-2 inline-block rounded text-[13px] font-medium text-accent hover:underline"
+              >
+                {t('sharing.viewGuests')}
+              </Link>
+            </div>
           </>
         )}
       </Section>

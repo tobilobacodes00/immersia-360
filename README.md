@@ -9,26 +9,51 @@ with one cobalt accent.
 
 ## Layout
 
-| Path              | What it is                                                                                                    |
-| ----------------- | ------------------------------------------------------------------------------------------------------------- |
-| `apps/web`        | Next.js 16 app: operator console, booth, kiosk, Live Display, guest pages, API                                |
-| `packages/ui`     | Design system ported from Immersia Booth (tokens, kit, guest components)                                      |
-| `packages/shared` | IDs and short codes, the token language, event and template schemas, colour/contrast, routes, analytics types |
-| `packages/db`     | Drizzle schema and migrations (Neon Postgres)                                                                 |
-| `packages/i18n`   | English, Spanish and Portuguese message catalogues                                                            |
+| Path                            | What it is                                                                                                           |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `apps/web`                      | Next.js 16 app: operator console, booth, kiosk, Live Display, guest pages, API                                       |
+| `apps/render-worker`            | Server render fallback (Fly.io, scale to zero): headless Chrome runs the booth's own `render()` — see its README     |
+| `apps/companion`                | iOS and Android companion app (Capacitor): the booth plus a native 120-240 fps recorder (CAP-14), see its README     |
+| `packages/render-engine`        | Demux, decode, WebGL2 compositor, encode: the same renderer on the device, in the browser fallback and on the server |
+| `packages/capacitor-high-speed` | The native recorder plugin of the companion (AVFoundation, CameraX)                                                  |
+| `packages/ui`                   | Design system ported from Immersia Booth (tokens, kit, guest components)                                             |
+| `packages/shared`               | IDs and short codes, the token language, event and template schemas, colour/contrast, routes, analytics types        |
+| `packages/db`                   | Drizzle schema and migrations (Neon Postgres)                                                                        |
+| `packages/i18n`                 | English, Spanish and Portuguese message catalogues                                                                   |
 
-These arrive in later milestones: `apps/realtime` (Durable Objects hub), `apps/render-worker` (server
-render fallback), `packages/render-engine`, `packages/effects`, `packages/layout`, `packages/capture`,
-`packages/offline`.
+These arrive in later milestones: `apps/realtime` (Durable Objects hub), `packages/effects`, `packages/layout`,
+`packages/capture`, `packages/offline`.
 
-## Working on it
+## Running it on your machine
+
+Needs Node 22+, pnpm and Docker (for Postgres and an S3-compatible store; Neon and R2 take their
+place in production).
 
 ```sh
 corepack enable
 pnpm install
-cp .env.example apps/web/.env.local   # fill in what you need
-pnpm --filter @immersia/web dev
+docker compose up -d                        # Postgres on 5432, file storage on 9090
+cp .env.local.example apps/web/.env.local    # dev-only secrets, already filled in
+pnpm --filter @immersia/db db:migrate        # create the tables
+pnpm --filter @immersia/web dev              # http://localhost:3000
 ```
+
+Sign in at `/sign-in`: with no mail server configured the magic link is printed in the terminal
+running `dev`, after `[dev-mailbox]`. Open it to land in the studio, then make an event and open its
+booth. A laptop camera is enough; the booth also has a simulated camera for when there is none.
+
+`docker compose down` stops the containers and keeps the data; `down -v` throws it away. To run the
+hourly sweep (expiry, cloud copies, cleanup) by hand:
+
+```sh
+curl -H "authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/expire
+```
+
+Email, Google sign-in, Drive and Dropbox, the Live Display hub, Upstash rate limits and the server
+render worker are all optional: without their keys the app runs and the screens that need one say so.
+`.env.example` lists every variable.
+
+## Working on it
 
 Verification runs in CI: lint, types, unit tests, Playwright on Chrome and WebKit, and axe accessibility
 checks. Every PR also gets a Vercel preview with its own Neon database branch.
@@ -71,6 +96,55 @@ It is off until the server has a token key and credentials (the Integrations scr
 - Dropbox: an app with access type "App folder", the redirect URI `{origin}/api/integrations/dropbox/callback`
   and the scopes `account_info.read`, `files.metadata.read`, `files.metadata.write`, `files.content.write`.
   `DROPBOX_APP_KEY` / `DROPBOX_APP_SECRET`.
+
+### Analytics, the admin console and reports
+
+Analytics are first-party and anonymous on guest pages: no third-party script, no cookie, no address or user agent
+stored (a browser family at most). Events are defined once, as zod schemas, in `packages/shared/src/analytics.ts`.
+The server records its own (`track()`); booths and Live Displays buffer theirs in the device database and flush
+them to `POST /api/t` in batches with backoff (the studio posts its own); the server corrects each event's time
+for the device's clock error and drops a retried batch's duplicates. A booth also reports `booth_session_started`
+/ `booth_session_ended` and, on an uncaught error, `booth_crashed` (error name and a hash of the code location,
+nothing else). To emit from new code, call `emitDeviceEvent`, `emitDisplayEvent` or `emitStudioEvent` from
+`apps/web/src/lib/analytics-client.ts`, after adding the event to the catalogue and to `EVENT_SOURCES`.
+
+`analytics_event` is partitioned by month. Inserts never fail for want of a partition (a default partition takes
+the rest) and the hourly cron (`/api/cron/expire`) keeps the next months created. To drop old data:
+`DROP TABLE analytics_event_pYYYYMM`.
+
+`/admin` is for platform admins: set `ADMIN_EMAILS` (comma-separated, full addresses). It shows the six success
+metrics against their targets over 30 or 90 days with a weekly trend, capture-to-QR by render path, render
+failures, download success by route, storage per organization against the 50 GB fair-use ceiling, and
+infrastructure cost per active operator from the monthly bill you enter there. `/admin/reports` is the reports
+queue with its 24-hour clock. How reports, takedowns and hash matching work, and what is not covered, is in
+[SECURITY.md](SECURITY.md#abuse-reports-takedown-and-hash-matching). Video hash matching needs a vendor and a
+legal decision: the `MediaScanner` seam exists, and no scanner is connected.
+
+### Help centre, the setup check and the status page
+
+The help centre is Markdown, in `apps/web/content/help/{en,es,pt}/<slug>.md`: front matter (title, summary,
+category, order, keywords, `updated`, `related`, optionally `video` and `captions`, see
+`apps/web/src/lib/help/frontmatter.ts`) and a body in a small Markdown subset that the app renders itself into
+React elements (no HTML, no `dangerouslySetInnerHTML`, so there is no sanitiser to keep patched). Every article
+must exist in all three languages under the same slug, with the same category, order, related list, headings,
+tables, code blocks and links; `apps/web/src/lib/help/content.test.ts` enforces it, checks that every
+`help:slug#anchor` link lands on a real heading, and that search finds the obvious things in each language. A
+heading with a fixed `{#id}` is a deep link the app's screens use (the error articles carry one per error code:
+see `HELP_TARGETS` and the error helpers in `apps/web/src/lib/help-links.ts`). Names of buttons and settings
+in an article are bold and come word for word from `packages/i18n/messages/<locale>.json`. A tutorial video goes
+in `apps/web/public/help/videos/` (create the folder) with a `.vtt` captions file (the front matter refuses one without the other);
+none are shipped yet. Pages: `/help` (public) and `/studio/help` (inside the Studio), search runs in the browser
+over an index sent with the page, and the contact form emails `SUPPORT_EMAIL` (rate limited, with a honeypot).
+
+The setup check (`/booth/<event>/check`) walks the camera, storage, a test take through the booth's own capture
+path, the render engine (scaled to a 15 s 1080p clip: 45 s on a laptop, 90 s on a 2021 iPad), a test QR scan, a
+printer calibration sheet (photo events) and an upload test. Its server side is under `/api/devices/check`. The
+render path it measures is stored on the device record, and the booth emits `setup_check_completed`.
+
+`/status` and `/api/status` run live checks of the database, file storage, the Live Display hub (if configured)
+and the email sender, each with a 4 s timeout and a 20 s cache; no third-party status service is involved.
+Incidents are entries in `apps/web/content/status/incidents.json` (one text per language), written by hand and
+deployed when something happens.
 
 ## Principles
 

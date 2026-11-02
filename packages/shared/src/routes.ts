@@ -20,6 +20,15 @@ export function parseRoute(value: string | null | undefined): DownloadRoute {
   return (DOWNLOAD_ROUTES as readonly string[]).includes(value ?? '') ? (value as DownloadRoute) : 'direct';
 }
 
+/**
+ * The route of a guest-page request. Links carry `?r=` (see sessionUrl); `?route=` is accepted as
+ * well, so a link written by hand or by an integration that spells it out still counts.
+ */
+export function parseRouteParams(params: { r?: string | null; route?: string | null }): DownloadRoute {
+  const short = parseRoute(params.r);
+  return short !== 'direct' ? short : parseRoute(params.route);
+}
+
 /** Absolute session URL for a QR/link, tagged with its route. */
 export function sessionUrl(origin: string, linkId: string, route: DownloadRoute): string {
   const url = new URL(`/s/${linkId}`, origin);

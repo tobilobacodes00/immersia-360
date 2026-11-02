@@ -41,6 +41,41 @@ jobs:
       - run: pnpm format:check
       - run: pnpm turbo run lint typecheck test --continue
 
+  # The server render worker (apps/render-worker): builds the static render bundle that Chrome loads, then
+  # renders the render engine's test fixtures through it in Chrome stable and decodes what comes out. The
+  # Docker image is not built here (see apps/render-worker/README.md for building and deploying it).
+  render-worker:
+    name: Render worker smoke (Chrome)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          # Corepack provides pnpm in the next step; the built-in cache would look for it too early.
+          package-manager-cache: false
+      - run: corepack enable
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
+      - run: pnpm install --frozen-lockfile
+      # The bundle includes the person-segmentation model (CAP-10), pinned by sha256 in
+      # apps/web/scripts/fetch-segmentation.mjs and cached here by that script's hash.
+      - name: Cache segmentation model
+        uses: actions/cache@v4
+        with:
+          path: apps/render-worker/.cache/mediapipe
+          key: mediapipe-worker-${{ runner.os }}-${{ hashFiles('apps/web/scripts/fetch-segmentation.mjs') }}
+      # Chrome stable (the runner image has it): Playwright's own Chromium has no H.264 encoder.
+      - name: Smoke test
+        run: pnpm --filter @immersia/render-worker smoke
+
   e2e:
     name: End-to-end (Chrome, WebKit)
     runs-on: ubuntu-latest
@@ -78,6 +113,12 @@ jobs:
       S3_SECRET_ACCESS_KEY: ci-secret-key
       S3_FORCE_PATH_STYLE: '1'
       CRON_SECRET: ci-only-cron-secret-0123456789
+      # Turns the `server` rung on. No worker runs in CI: render-ladder.spec.ts plays the worker's part
+      # through the same endpoints (claim, outputs, complete) with this secret.
+      RENDER_WORKER_SECRET: ci-only-render-worker-secret-0123456789abcdef
+      # Platform admins for the e2e admin console: one per browser project, so parallel sign-ins
+      # never share a mailbox.
+      ADMIN_EMAILS: e2e-admin-chrome@example.com,e2e-admin-webkit@example.com
     steps:
       - uses: actions/checkout@v5
         with:

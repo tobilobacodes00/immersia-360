@@ -10,6 +10,8 @@
 import { build } from 'esbuild';
 import { mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
+// Three levels up: this file is apps/web/scripts/, so the repo root is ../../../.
+import { buildH264Worker } from '../../../packages/render-engine/scripts/h264-worker.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const outdir = `${root}/public/workers`;
@@ -36,4 +38,8 @@ await build({
   logLevel: 'warning',
 });
 
-console.log(`[workers] built ${Object.keys(entries).join(', ')} → public/workers`);
+// The WASM H.264 encoder's worker (the `wasm` rung of the render ladder) is a classic script served
+// beside the render worker, which starts it by name (see packages/render-engine/src/wasm/wasm-h264.ts).
+await buildH264Worker(`${outdir}/h264-encoder.js`);
+
+console.log(`[workers] built ${Object.keys(entries).join(', ')}, h264-encoder → public/workers`);

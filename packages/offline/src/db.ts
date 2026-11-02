@@ -6,7 +6,19 @@ import Dexie, { type EntityTable } from 'dexie';
  * the upload queue, and the reserved short-code pool. Media bytes live in OPFS (take-store.ts).
  */
 
-export type TakeStatus = 'recording' | 'recorded' | 'interrupted' | 'imported' | 'rendering' | 'rendered' | 'failed';
+export type TakeStatus =
+  | 'recording'
+  | 'recorded'
+  | 'interrupted'
+  | 'imported'
+  | 'rendering'
+  /** Handed to the server render worker (the last rung of the render ladder): the video lands in the guest's session from there. */
+  | 'server'
+  | 'rendered'
+  | 'failed';
+
+/** The rungs of the render ladder: this device, this device with a WebAssembly encoder, the server. */
+export type RenderRung = 'local' | 'wasm' | 'server';
 export type CaptureTrigger = 'tap' | 'timer' | 'motion' | 'remote' | 'keyboard' | 'import';
 
 export interface LocalTake {
@@ -31,6 +43,16 @@ export interface LocalTake {
   error?: string;
   /** Why a derived output (the messaging copy) couldn't be made; not retried automatically. */
   derivedError?: string;
+  /** Which rung of the render ladder produced (or is producing) the video. */
+  renderPath?: RenderRung;
+  /** Server rung: the job the server queued for this take. */
+  serverJobId?: string;
+  /** Server rung: when to ask the server about this take again (submitting, or polling). */
+  serverCheckAt?: number;
+  /** Server rung: failed calls in a row, for the growing delay between tries. */
+  serverAttempts?: number;
+  /** Server rung: the server could not use one of the event's library files, so the job goes without them. */
+  serverStripped?: boolean;
 }
 
 export type OutputKind = 'mp4' | 'small_mp4' | 'gif' | 'strip' | 'short_video' | 'boomerang' | 'poster';
@@ -110,6 +132,26 @@ export interface FallbackChunk {
   data: Blob;
 }
 
+/** Which credentials a buffered analytics event is sent with: the booth's device token or a display's token. */
+export type AnalyticsChannel = 'device' | 'display';
+
+/**
+ * An analytics event waiting to be sent (POST /api/t). The outbox is bounded and best effort: it is
+ * never allowed to get in the way of capture, rendering or uploads.
+ */
+export interface LocalAnalyticsEvent {
+  /** Auto-increment: oldest first. */
+  seq?: number;
+  channel: AnalyticsChannel;
+  /** What the server dedupes on, so a batch sent twice after a lost response counts once. */
+  clientId: string;
+  /** The event the booth was running (the server keeps it only if it is the organization's). */
+  eventId: string | null;
+  /** The device clock when it happened (the server corrects for clock drift). */
+  at: number;
+  event: Record<string, unknown>;
+}
+
 export interface KeyValue {
   key: string;
   value: unknown;
@@ -123,6 +165,7 @@ export class BoothDB extends Dexie {
   kv!: EntityTable<KeyValue, 'key'>;
   sessions!: EntityTable<LocalSession, 'id'>;
   codes!: EntityTable<ReservedCode, 'code'>;
+  analytics!: EntityTable<LocalAnalyticsEvent, 'seq'>;
 
   constructor(name = 'immersia-booth') {
     super(name);
@@ -144,6 +187,10 @@ export class BoothDB extends Dexie {
     // v4 (M5): session-level outputs (photo strips, GIFs) are found by their session.
     this.version(4).stores({
       outputs: 'id, takeId, sessionId, eventId, kind, [eventId+createdAt]',
+    });
+    // v5: the analytics outbox (events buffered offline, flushed with backoff).
+    this.version(5).stores({
+      analytics: '++seq, channel, at',
     });
   }
 }

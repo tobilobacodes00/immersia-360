@@ -23,6 +23,8 @@ describe('recording format', () => {
   it('maps containers to file extensions', () => {
     expect(extensionFor('video/mp4;codecs=avc1')).toBe('mp4');
     expect(extensionFor('video/webm;codecs=vp9')).toBe('webm');
+    // The companion's iOS recorder writes QuickTime movies (CAP-14).
+    expect(extensionFor('video/quicktime')).toBe('mov');
   });
 });
 

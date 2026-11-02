@@ -39,6 +39,7 @@ export default async function EventSetupPage({ params }: { params: Promise<{ id:
         }}
         output={outputSettingsSchema.parse(event.outputSettings)}
         share={shareSettingsSchema.parse(event.shareSettings)}
+        operatorName={op.organizationName}
         cloud={{
           drive: integrations.find((i) => i.provider === 'drive')?.state ?? 'unavailable',
           dropbox: integrations.find((i) => i.provider === 'dropbox')?.state ?? 'unavailable',

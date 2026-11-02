@@ -9,6 +9,7 @@ import {
   Maximize,
   QrCode,
   Redo2,
+  Sparkles,
   Square,
   Type,
   Undo2,
@@ -16,7 +17,7 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
-import { MIN_PRINT_QR_PX, printIssues } from '@immersia/layout';
+import { MIN_PRINT_QR_PX, printIssues, type Ornament } from '@immersia/layout';
 import type { ASPECTS, PRINT_SIZES, TemplateElement, TokenContext } from '@immersia/shared';
 import { Button, IconButton, Pill, Segmented, cx } from '@immersia/ui';
 import { AssetPicker } from '@/components/assets/AssetPicker';
@@ -25,6 +26,7 @@ import type { AssetView } from '@/server/assets';
 import type { TemplateSummary } from '@/server/templates';
 import { Inspector } from './Inspector';
 import { LayersPanel } from './LayersPanel';
+import { OrnamentPicker } from './OrnamentPicker';
 import { TemplatesPanel, type Theme } from './TemplatesPanel';
 import { editorReducer, initialEditorState, type EditorAction, type EditorDoc } from './state';
 import { useTemplateInputs } from './use-template-inputs';
@@ -227,6 +229,12 @@ export function TemplateEditor(p: TemplateEditorProps) {
       showCode: true,
     });
   };
+  const [ornamentPicker, setOrnamentPicker] = useState(false);
+  const addOrnament = (ornament: Ornament) => {
+    setOrnamentPicker(false);
+    const s = unit * 0.18;
+    add({ ...common, ...centred(s, s), id: newId(), type: 'ornament', ornament, color: p.event.theme.accent });
+  };
   const [imagePicker, setImagePicker] = useState(false);
   const addImage = (a: AssetView) => {
     addView(a);
@@ -376,6 +384,9 @@ export function TemplateEditor(p: TemplateEditorProps) {
         <IconButton label={t('add.image')} onClick={() => setImagePicker(true)}>
           <ImageIcon className="size-4" aria-hidden />
         </IconButton>
+        <IconButton label={t('add.ornament')} onClick={() => setOrnamentPicker(true)}>
+          <Sparkles className="size-4" aria-hidden />
+        </IconButton>
         <IconButton label={t('add.rect')} onClick={() => addShape('rect')}>
           <Square className="size-4" aria-hidden />
         </IconButton>
@@ -485,6 +496,7 @@ export function TemplateEditor(p: TemplateEditorProps) {
         </div>
       )}
 
+      <OrnamentPicker open={ornamentPicker} onClose={() => setOrnamentPicker(false)} onPick={addOrnament} />
       <AssetPicker
         open={imagePicker}
         onClose={() => setImagePicker(false)}

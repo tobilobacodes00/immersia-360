@@ -1,14 +1,27 @@
 import type { Metadata } from 'next';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations } from 'next-intl/server';
-import { Search } from 'lucide-react';
-import { formatShortCode, guestThemeVars, parseRoute, type BoothMode } from '@immersia/shared';
+import { Download, Search } from 'lucide-react';
+import {
+  formatShortCode,
+  guestFormGalleryCookie,
+  guestThemeVars,
+  isGuestFormChoice,
+  isLinkPreviewBot,
+  parseDisplayLayout,
+  parseRouteParams,
+  type BoothMode,
+} from '@immersia/shared';
 import { cx } from '@immersia/ui';
 import { displayFontClass } from '@immersia/ui/guest-fonts';
+import { GuestFooter } from '@/components/guest/GuestFooter';
+import { GuestForm } from '@/components/guest/GuestForm';
 import { ZipDownload } from '@/components/zip/ZipDownload';
 import { track } from '@/server/analytics';
 import { galleryCookie, galleryEvent, galleryItems, validGalleryPass } from '@/server/gallery';
+import { guestConsent } from '@/server/guest-form';
+import { galleryHighlight } from '@/server/highlights';
 import { GalleryLock } from './GalleryLock';
 
 /**
@@ -19,7 +32,7 @@ export const dynamic = 'force-dynamic';
 
 type Props = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ r?: string; booth?: string; code?: string; cursor?: string }>;
+  searchParams: Promise<{ r?: string; route?: string; dl?: string; booth?: string; code?: string; cursor?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -38,7 +51,7 @@ export default async function GalleryPage({ params, searchParams }: Props) {
   const ev = await galleryEvent(slug);
   if (!ev) notFound();
   const [t, format] = await Promise.all([getTranslations('gallery'), getFormatter()]);
-  const route = parseRoute(sp.r);
+  const route = parseRouteParams(sp);
 
   if (ev.passwordHash && !validGalleryPass(slug, ev.passwordHash, (await cookies()).get(galleryCookie(slug))?.value))
     return (
@@ -48,14 +61,30 @@ export default async function GalleryPage({ params, searchParams }: Props) {
             {ev.name}
           </h1>
           <GalleryLock slug={slug} />
+          <GuestFooter />
         </main>
       </div>
     );
 
+  // SHR-6: the optional guest form, once per browser (this gallery's own first-party cookie).
+  const choice = (await cookies()).get(guestFormGalleryCookie(ev.id))?.value;
+  const consent =
+    ev.guestForm.enabled && !isGuestFormChoice(choice)
+      ? await guestConsent({ operator: ev.operator, eventName: ev.name, settings: ev.guestForm })
+      : null;
+
   const booth: BoothMode | null = sp.booth === 'photo' || sp.booth === 'video360' ? sp.booth : null;
   const code = sp.code?.trim() || null;
   const { items, next } = await galleryItems(ev.id, { booth, code, cursor: sp.cursor ?? null });
-  if (!sp.cursor) track({ name: 'gallery_viewed', route }, { eventId: ev.id, organizationId: ev.organizationId });
+  // First page only, and not a link-preview robot: anonymous, no cookie, no address, no user agent.
+  if (!sp.cursor && !isLinkPreviewBot((await headers()).get('user-agent'))) {
+    const scope = { eventId: ev.id, organizationId: ev.organizationId };
+    track({ name: 'gallery_viewed', route }, scope);
+    // The big screen's gallery QR: a scan, by the layout it was shown in.
+    if (route === 'display') track({ name: 'display_qr_scanned', layout: parseDisplayLayout(sp.dl) }, scope);
+  }
+  // LIV-14: the operator's highlight reel opens the first page of the gallery, not a search or a later page.
+  const highlight = !sp.cursor && !code ? await galleryHighlight(ev.id, ev.name) : null;
 
   // Every link keeps how the guest got here (DL-13) and the current filters.
   const href = (patch: Record<string, string | null>) => {
@@ -92,13 +121,63 @@ export default async function GalleryPage({ params, searchParams }: Props) {
               </p>
             </div>
           </div>
-          <ZipDownload
-            source={`/api/g/${slug}/files`}
-            filename={`${ev.name.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'event'}.zip`}
-            label={t('downloadAll')}
-            primary
-          />
+          {/* SHR-6: until this browser has sent or skipped the form, it comes first (downloads wait, never lock). */}
+          {!consent && (
+            <ZipDownload
+              source={`/api/g/${slug}/files`}
+              filename={`${ev.name.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'event'}.zip`}
+              label={t('downloadAll')}
+              primary
+            />
+          )}
         </header>
+
+        {consent && (
+          <GuestForm
+            scope="gallery"
+            refId={slug}
+            route={route === 'direct' ? '' : route}
+            operator={ev.operator}
+            requireName={ev.guestForm.requireName}
+            consentText={consent.text}
+            policyUrl={consent.policyUrl}
+            fingerprint={consent.fingerprint}
+          />
+        )}
+
+        {highlight && (
+          <section aria-labelledby="highlight-heading" className="mt-8">
+            <h2 id="highlight-heading" className="text-lg font-semibold">
+              {t('highlight.title')}
+            </h2>
+            <div
+              className={cx(
+                'mt-3 w-full overflow-hidden rounded-[1.25rem] bg-black',
+                highlight.width >= highlight.height ? 'max-w-3xl' : 'max-w-[26rem]',
+              )}
+              style={{ aspectRatio: `${highlight.width} / ${highlight.height}` }}
+            >
+              <video
+                className="size-full object-contain"
+                src={highlight.url}
+                poster={highlight.poster ?? undefined}
+                controls
+                playsInline
+                preload="metadata"
+                aria-label={t('highlight.player')}
+              />
+            </div>
+            {/* SHR-6: like the other downloads, it waits for the guest form to be sent or skipped. */}
+            {!consent && (
+              <a
+                href={highlight.downloadUrl}
+                className="focus-ring mt-3 inline-flex min-h-11 items-center gap-2 rounded-full border border-g-ink/20 px-5 font-semibold"
+              >
+                <Download className="size-4" aria-hidden /> {t('highlight.download')}
+              </a>
+            )}
+          </section>
+        )}
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
           {ev.booths.length > 1 ? (
@@ -197,6 +276,18 @@ export default async function GalleryPage({ params, searchParams }: Props) {
             </a>
           )}
         </div>
+
+        <p className="mt-10 text-center text-sm">
+          <a
+            href={`/report?g=${slug}${route === 'direct' ? '' : `&r=${route}`}`}
+            rel="nofollow"
+            className="focus-ring underline underline-offset-4 opacity-70 hover:opacity-100"
+          >
+            {t('report')}
+          </a>
+        </p>
+
+        <GuestFooter />
       </main>
     </div>
   );

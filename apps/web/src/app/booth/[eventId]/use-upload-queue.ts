@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { liveQuery } from 'dexie';
 import { UploadQueue, boothDb, topUpCodes, type TakeStore } from '@immersia/offline';
+import type { EventFrom } from '@immersia/shared';
 import { createBoothApi } from './booth-api';
 
 export interface UploadStatus {
@@ -18,8 +19,18 @@ export interface UploadStatus {
  * something new is saved or rendered, when the network comes back, or when a backoff ends. Also
  * keeps the device's short-code pool topped up for the event (DL-2).
  */
-export function useUploadQueue(opts: { eventId: string; token: string | null; store: TakeStore | null }) {
+export function useUploadQueue(opts: {
+  eventId: string;
+  token: string | null;
+  store: TakeStore | null;
+  /** Analytics: `upload_completed` for every file that reaches the hosted storage. */
+  onTrack?: (event: EventFrom<'device'>) => void;
+}) {
   const { eventId, token, store } = opts;
+  const trackRef = useRef(opts.onTrack);
+  useEffect(() => {
+    trackRef.current = opts.onTrack;
+  });
   const db = boothDb();
   const [status, setStatus] = useState<UploadStatus>({ waiting: 0, failed: 0, revoked: false });
   const queueRef = useRef<UploadQueue | null>(null);
@@ -65,6 +76,8 @@ export function useUploadQueue(opts: { eventId: string; token: string | null; st
           setStatus((s) => ({ ...s, revoked: true }));
           return;
         }
+        if (step.kind === 'uploaded')
+          trackRef.current?.({ name: 'upload_completed', target: 'hosted', bytes: step.bytes, retries: step.retries });
         if (step.kind !== 'idle' && step.kind !== 'retry') continue;
         // Nothing due: sleep until the next backoff ends or something changes.
         const at = await queue.nextWakeAt();

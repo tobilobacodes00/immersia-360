@@ -1,4 +1,5 @@
 import { encode } from 'uqr';
+import { EVEN_ODD, ornamentPath } from './ornaments';
 import {
   evaluate,
   formatShortCode,
@@ -238,6 +239,10 @@ function drawContent(ctx: Ctx2D, el: TemplateElement, inp: RenderInputs) {
     }
     case 'qr':
       return drawQr(ctx, el, inp);
+    case 'ornament':
+      ctx.fillStyle = el.color;
+      ctx.fill(ornamentPath(el.ornament, el.width, el.height), EVEN_ODD.has(el.ornament) ? 'evenodd' : 'nonzero');
+      return;
   }
 }
 

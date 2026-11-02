@@ -5,3 +5,13 @@ export * from './render';
 export * from './derive';
 export { gainEnvelope, type MusicSettings } from './audio';
 export * from './beats';
+export * from './ladder';
+export {
+  WasmEncoderError,
+  configureWasmEncoder,
+  wasmEncoderSupported,
+  withVideoEncoder,
+  type EncoderKind,
+} from './wasm/wasm-h264';
+export * from './montage-plan';
+export type { MontageFile, MontageJob, MontageResult } from './montage';

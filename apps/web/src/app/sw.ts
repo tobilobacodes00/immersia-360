@@ -18,6 +18,10 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope;
 
+/** Where Capacitor's WebView serves files and content URIs from the device (the companion app, CAP-14). */
+const NATIVE_FILE_PREFIX = '/_capacitor_file_/';
+const NATIVE_CONTENT_PREFIX = '/_capacitor_content_/';
+
 /**
  * Offline shell (NFR Installability). Deliberately NO skipWaiting/clientsClaim: a booth must never
  * hot-swap its code in the middle of a guest session. A new version activates when every tab of
@@ -34,6 +38,12 @@ const serwist = new Serwist({
     // the token-authenticated feed by URL alone and copy every video it plays into a second cache.
     {
       matcher: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/api/live/'),
+      handler: new NetworkOnly(),
+    },
+    // The status page (HLP-4) is only worth anything live: never a cached "all systems operational".
+    // Offline, it falls back to the offline page, which is the honest answer.
+    {
+      matcher: ({ url, sameOrigin }) => sameOrigin && (url.pathname === '/status' || url.pathname === '/api/status'),
       handler: new NetworkOnly(),
     },
     // The PHO-9 font library: a booth must draw its event's fonts offline, and the default font rule
@@ -66,6 +76,18 @@ const serwist = new Serwist({
       },
     ],
   },
+});
+
+// CAP-14: inside the companion app the booth reads the native camera's recordings through Capacitor's file
+// URLs (`/_capacitor_file_/...`), which the WebView itself serves from the device's storage. They belong to no
+// cache (the default video rule would copy a whole recorded take into Cache Storage) and a service worker's own
+// fetch would not reach the WebView's file server at all. Registered before Serwist's listeners, this one stops
+// the event there: with no response given, the request goes on as if no service worker were running.
+self.addEventListener('fetch', (event) => {
+  const { pathname } = new URL(event.request.url);
+  if (pathname.startsWith(NATIVE_FILE_PREFIX) || pathname.startsWith(NATIVE_CONTENT_PREFIX)) {
+    event.stopImmediatePropagation();
+  }
 });
 
 serwist.addEventListeners();

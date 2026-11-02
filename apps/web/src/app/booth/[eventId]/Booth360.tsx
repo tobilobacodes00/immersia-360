@@ -17,28 +17,30 @@ import {
   WifiOff,
 } from 'lucide-react';
 import {
-  MotionTrigger,
+  NativeTakeRecorder,
   TakeRecorder,
-  analyzeFrames,
   createFrameSampler,
+  createMotionDetector,
   extensionFor,
+  nativeFileUrl,
   openCamera,
+  openNativeHfrCamera,
   openSimulatedCamera,
   pickRecordingMime,
+  readNativeFile,
   recordingBitrate,
   toCameraError,
-  type OpenedCamera,
+  type NativeHfrEvent,
+  type OpenedNativeCamera,
+  type TakeCapture,
 } from '@immersia/capture';
 import {
-  beginTake,
   boothDb,
-  completeTake,
-  failTake,
   mintSession,
-  noteChunk,
   optOutOfDisplay,
   queueEmail,
   recoverInterrupted,
+  recoverNativeTakes,
   requestPersistence,
   storageHealth,
   takeStore,
@@ -55,6 +57,7 @@ import { CountdownDisc, GuestButton, GuestScreen, Headline, fade } from '@immers
 import { readDeviceIdentity, type DeviceIdentity } from '@/lib/device-identity';
 import { useCaptureKeys, useHeartbeat, useHeld, useLiveQuery, useOnline, useWakeLock } from './booth-hooks';
 import { importVideoFiles } from './import-originals';
+import { CameraErrorHelp, StatusHelp } from './BoothHelp';
 import { Gallery } from './Gallery';
 import { RegisterDevice } from './RegisterDevice';
 import { KioskLockLayer, useKioskLock } from './KioskLock';
@@ -62,15 +65,20 @@ import { useLiveBackground, useWarmSegmenter } from './background-source';
 import { LookPreview } from './LookPreview';
 import { RenderQueue } from './RenderQueue';
 import { ResultScreen } from './ResultScreen';
+import { useBoothAnalytics } from './use-booth-analytics';
 import { useUploadQueue } from './use-upload-queue';
 import { useEventMedia, type EventMedia } from './use-event-media';
 import { RENDERABLE, useRenderQueue } from './use-render-queue';
 import { SettingsDrawer } from './SettingsDrawer';
-import { describeCamera, reconcileWithCamera, type ActiveCamera } from './active-camera';
-import { fillLightOf, needsReopen, type CameraChoice } from './camera-choice';
+import { describeCamera, reconcileWithCamera, type ActiveCamera, type AnyCamera } from './active-camera';
+import { fillLightOf, needsReopen, usableChoice, type CameraChoice } from './camera-choice';
 import { FillLightFrame } from './FillLightFrame';
 import { useOpenGuard } from './open-guard';
 import { useCameraChoice } from './use-camera-choice';
+import { abandonTake, chunkWriter, finishTake, openTake } from './take-flow';
+import { useNativeHfr } from './use-native-hfr';
+import { SetupCheckPrompt } from './SetupCheckPrompt';
+import { useSetupCheckPrompt } from './use-setup-check-prompt';
 
 export interface BoothEvent {
   id: string;
@@ -87,6 +95,14 @@ export interface BoothEvent {
   media: Omit<EventMedia, 'endCard'>;
   /** LIV-8: guests are told their capture may appear on the Live Display, and can opt out. */
   liveDisplay: boolean;
+  render: {
+    /** The server has a render worker: the last rung of the render ladder exists. */
+    server: boolean;
+    /** The server runs in E2E test mode: tests may fail render rungs on purpose. Never true in production. */
+    testHooks: boolean;
+  };
+  /** HLP-1: the setup check for this booth. */
+  checkHref: string;
 }
 
 type Phase =
@@ -97,8 +113,8 @@ type Phase =
   | { kind: 'recording'; takeId: string; startedAt: number }
   | { kind: 'saving' }
   | { kind: 'saved' }
-  /** Screen 13: the guest's QR and code, straight after the take is saved. */
-  | { kind: 'result'; session: LocalSession }
+  /** Screen 13: the guest's QR and code, straight after the take is saved (`endedAt`: when the take ended, for analytics). */
+  | { kind: 'result'; session: LocalSession; endedAt: number }
   | { kind: 'error'; code: string };
 
 const PENDING: LocalTake['status'][] = [...RENDERABLE, 'rendering'];
@@ -107,6 +123,16 @@ const SAVED_HOLD_MS = 1400;
 const ARMED: Phase['kind'][] = ['ready', 'result'];
 /** How long the ready screen settles before background rendering resumes. */
 const RENDER_RESUME_MS = 2000;
+/** CAP-14: the warning for each reason the native camera was interrupted. */
+const INTERRUPTION_WARNING = {
+  thermal: 'hfrThermal',
+  call: 'hfrCall',
+  background: 'hfrBackground',
+  other: 'hfrInterrupted',
+} as const satisfies Record<
+  Extract<NativeHfrEvent, { kind: 'interruption' }>['reason'],
+  keyof Messages['booth']['warnings']
+>;
 
 export function Booth360({ event }: { event: BoothEvent }) {
   const t = useTranslations('booth');
@@ -130,10 +156,18 @@ export function Booth360({ event }: { event: BoothEvent }) {
   const [recovered, setRecovered] = useState(0);
   const [elapsed, setElapsed] = useState(0);
 
+  // CAP-14: the companion app's native high-speed camera; null in a browser, where nothing of it is loaded.
+  const { native, ensure: ensureNative } = useNativeHfr();
+  /** The open camera when it is the native one (state, so the effects that listen to it follow it). */
+  const [nativeCam, setNativeCam] = useState<OpenedNativeCamera | null>(null);
+
   const videoRef = useRef<HTMLVideoElement>(null);
-  const camera = useRef<OpenedCamera | null>(null);
-  const recorder = useRef<TakeRecorder | null>(null);
+  const camera = useRef<AnyCamera | null>(null);
+  const recorder = useRef<TakeCapture | null>(null);
   const store = useRef<TakeStore | null>(null);
+  /** A take is being started (the native camera takes a moment): another trigger must not start a second. */
+  const recordBusy = useRef(false);
+  const bootRecovery = useRef<Promise<unknown>>(Promise.resolve());
   const stopTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const countdownTimer = useRef<ReturnType<typeof setInterval>>(undefined);
   const phaseRef = useRef(phase);
@@ -154,7 +188,14 @@ export function Booth360({ event }: { event: BoothEvent }) {
     phase.kind === 'saved';
   const renderPaused = useHeld(capturing, RENDER_RESUME_MS);
   const kiosk = useKioskLock(event.kioskPinHash);
-  const uploads = useUploadQueue({ eventId: event.id, token: identity?.token ?? null, store: storeReady });
+  const setupCheck = useSetupCheckPrompt(identity?.id ?? null);
+  const track = useBoothAnalytics({ eventId: event.id, mode: 'video360', token: identity?.token ?? null });
+  const uploads = useUploadQueue({
+    eventId: event.id,
+    token: identity?.token ?? null,
+    store: storeReady,
+    onTrack: track,
+  });
   const mediaSpec = useMemo<EventMedia>(
     () => ({
       ...event.media,
@@ -174,7 +215,11 @@ export function Booth360({ event }: { event: BoothEvent }) {
     store: storeReady,
     paused: renderPaused,
     smallerVersion: event.share.smallerVersion,
+    token: identity?.token ?? null,
+    serverRender: event.render.server,
+    testHooks: event.render.testHooks,
     onRendered: (take) => uploads.nudge(take.id),
+    onTrack: track,
   });
 
   useWakeLock(phase.kind !== 'idle');
@@ -188,9 +233,10 @@ export function Booth360({ event }: { event: BoothEvent }) {
   // persistence request below, which some browsers leave pending indefinitely.
   useEffect(() => {
     let cancelled = false;
-    void recoverInterrupted(db).then((r) => {
+    const recovery = recoverInterrupted(db).then((r) => {
       if (!cancelled) setRecovered(r.length);
     });
+    bootRecovery.current = recovery;
     void (async () => {
       await Promise.race([requestPersistence(), new Promise((r) => setTimeout(r, 3000))]);
       const health = await storageHealth();
@@ -210,6 +256,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
   const stopCamera = useCallback(() => {
     camera.current?.stop();
     camera.current = null;
+    setNativeCam(null);
     if (videoRef.current) videoRef.current.srcObject = null;
   }, []);
 
@@ -225,7 +272,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
   );
 
   const startCamera = useCallback(
-    async (choice: CameraChoice) => {
+    async (saved: CameraChoice) => {
       // This open supersedes any other in flight (a double tap): only the newest may use its camera.
       const token = openGuard.begin();
       setPhase({ kind: 'starting' });
@@ -235,17 +282,32 @@ export function Booth360({ event }: { event: BoothEvent }) {
         store.current ??= await takeStore(() => createOpfsWorker(workerUrl('opfs')));
         setBackend(store.current.backend);
         setStoreReady(store.current);
-        const cam =
-          choice.source === 'simulator'
-            ? openSimulatedCamera({ resolution: event.video.resolution, frameRate: event.video.fps })
-            : await openCamera({
-                deviceId: choice.deviceId,
-                resolution: event.video.resolution,
-                frameRate: event.video.fps,
-                audio: event.video.microphone,
-                // A restart switches the light off and resets the zoom: put the operator's choice back (CAP-2, CAP-6).
-                restore: { zoom: choice.zoom, torch: choice.torch },
-              });
+        // CAP-14: a saved native high-speed choice needs the companion to have answered; outside it (or on a
+        // phone with no high-speed lens) the booth opens the default browser camera instead.
+        const nativeHfr = saved.source === 'native-hfr' ? await ensureNative() : null;
+        const choice = usableChoice(saved, nativeHfr !== null && nativeHfr.capabilities.available);
+        let cam: AnyCamera;
+        if (choice.source === 'simulator') {
+          cam = openSimulatedCamera({ resolution: event.video.resolution, frameRate: event.video.fps });
+        } else if (choice.source === 'native-hfr' && nativeHfr) {
+          cam = await openNativeHfrCamera({
+            bridge: nativeHfr.bridge,
+            capabilities: nativeHfr.capabilities,
+            choice: { deviceId: choice.deviceId, hfrFps: choice.hfrFps },
+            resolution: event.video.resolution,
+            audio: event.video.microphone,
+            mirror: choice.mirror,
+          });
+        } else {
+          cam = await openCamera({
+            deviceId: choice.deviceId,
+            resolution: event.video.resolution,
+            frameRate: event.video.fps,
+            audio: event.video.microphone,
+            // A restart switches the light off and resets the zoom: put the operator's choice back (CAP-2, CAP-6).
+            restore: { zoom: choice.zoom, torch: choice.torch },
+          });
+        }
         if (!openGuard.isCurrent(token)) return cam.stop();
         camera.current = cam;
         setActiveCamera(describeCamera(cam));
@@ -253,14 +315,19 @@ export function Booth360({ event }: { event: BoothEvent }) {
         const latest = readChoice();
         const settled = reconcileWithCamera(latest, cam);
         if (settled !== latest) commitChoice(settled);
-        // Only the open camera's own end counts: a camera that was replaced ends without it being an error.
-        cam.track.addEventListener('ended', () => {
-          if (camera.current === cam) setPhase({ kind: 'error', code: 'lost' });
-        });
-        const v = videoRef.current;
-        if (v) {
-          v.srcObject = cam.stream;
-          await v.play().catch(() => undefined);
+        if (cam.kind === 'native-hfr') {
+          // The picture is the native layer behind the page; its errors reach us through the listener below.
+          setNativeCam(cam);
+        } else {
+          // Only the open camera's own end counts: a camera that was replaced ends without it being an error.
+          cam.track.addEventListener('ended', () => {
+            if (camera.current === cam) setPhase({ kind: 'error', code: 'lost' });
+          });
+          const v = videoRef.current;
+          if (v) {
+            v.srcObject = cam.stream;
+            await v.play().catch(() => undefined);
+          }
         }
         // Replaced while the picture was starting: the newer open already stopped this camera.
         if (!openGuard.isCurrent(token)) return;
@@ -269,26 +336,22 @@ export function Booth360({ event }: { event: BoothEvent }) {
         if (openGuard.isCurrent(token)) setPhase({ kind: 'error', code: toCameraError(err).code });
       }
     },
-    [event.video, stopCamera, readChoice, commitChoice, openGuard],
+    [event.video, stopCamera, readChoice, commitChoice, openGuard, ensureNative],
   );
 
   const finishRecording = useCallback(async () => {
     clearTimeout(stopTimer.current);
+    const endedAt = performance.now();
     const rec = recorder.current;
     const current = phaseRef.current;
     if (!rec || current.kind !== 'recording') return;
     recorder.current = null;
     setPhase({ kind: 'saving' });
-    const take = await db.takes.get(current.takeId);
-    try {
-      const result = await rec.stop();
-      if (take) await store.current?.finish(take.path);
-      await completeTake(db, current.takeId, result.durationMs);
-    } catch (err) {
-      // Data up to the failure is on disk; keep the take but flag it for the operator.
-      setWarning(t('warnings.storage'));
-      if (take && take.chunks > 0) await completeTake(db, current.takeId, take.durationMs);
-      else await failTake(db, current.takeId, String(err));
+    const s = store.current;
+    if (s) {
+      // Data up to a failure is on disk; the take is kept (or, for a native one, recovered later) and flagged.
+      const closed = await finishTake({ db, store: s }, { id: current.takeId }, rec);
+      if (!closed.ok) setWarning(t('warnings.storage'));
     }
     const saved = await db.takes.get(current.takeId);
     // A take with nothing recorded has no guest to share with.
@@ -296,48 +359,81 @@ export function Booth360({ event }: { event: BoothEvent }) {
       saved && saved.status !== 'failed'
         ? await mintSession(db, { eventId: event.id, takeIds: [saved.id], capturedAt: saved.capturedAt })
         : null;
-    if (session && event.share.qr) return setPhase({ kind: 'result', session });
+    // Usage (success metrics): what was recorded, and how.
+    if (saved && saved.status !== 'failed' && saved.trigger !== 'import')
+      track({
+        name: 'take_recorded',
+        mode: 'video360',
+        duration_s: Math.min(86_400, saved.durationMs / 1000),
+        fps: saved.fps,
+        resolution: `${saved.width}x${saved.height}`,
+        trigger: saved.trigger,
+      });
+    if (session && event.share.qr) return setPhase({ kind: 'result', session, endedAt });
     setPhase({ kind: 'saved' });
     setTimeout(() => setPhase((p) => (p.kind === 'saved' ? { kind: 'ready' } : p)), SAVED_HOLD_MS);
-  }, [db, t, event.id, event.share.qr]);
+  }, [db, t, event.id, event.share.qr, track]);
 
   const record = useCallback(
     async (source: 'tap' | 'keyboard' | 'motion') => {
       const cam = camera.current;
       const s = store.current;
-      if (!cam || !s || !identity) return;
-      // Some engines (e.g. WebKitGTK) have no MediaRecorder at all: explain instead of throwing.
-      const mime =
-        typeof MediaRecorder === 'undefined' ? null : pickRecordingMime((m) => MediaRecorder.isTypeSupported(m));
-      if (!mime) return setPhase({ kind: 'error', code: 'recording_unsupported' });
-      const takeId = uuidv7();
-      const path = `takes/${event.id}/${takeId}.${extensionFor(mime)}`;
-      await beginTake(db, {
-        id: takeId,
-        eventId: event.id,
-        deviceId: identity.id,
-        path,
-        mimeType: mime.split(';')[0]!,
-        trigger: source,
-        width: cam.settings.width,
-        height: cam.settings.height,
-        fps: cam.settings.frameRate,
-      });
-      await s.begin(path);
-      const rec = new TakeRecorder(cam.stream, {
-        mimeType: mime,
-        videoBitsPerSecond: recordingBitrate(cam.settings.width, cam.settings.height, cam.settings.frameRate),
-        onChunk: async (chunk) => {
-          await s.append(path, chunk);
-          await noteChunk(db, takeId, chunk.size, rec.elapsedMs);
-        },
-        onError: () => setWarning(t('warnings.storage')),
-      });
-      recorder.current = rec;
-      rec.start();
-      setPhase({ kind: 'recording', takeId, startedAt: performance.now() });
-      // CAP-5: auto-stop at the spin length.
-      stopTimer.current = setTimeout(() => void finishRecording(), event.video.spinSeconds * 1000);
+      if (!cam || !s || !identity || recordBusy.current) return;
+      // The native camera takes a moment to start: a second trigger in that moment must not start a second take.
+      recordBusy.current = true;
+      try {
+        // The raw take's container: the browser's own (some engines, e.g. WebKitGTK, have no MediaRecorder at
+        // all: explain instead of throwing), or the companion's native movie (CAP-14).
+        const mime =
+          cam.kind === 'native-hfr'
+            ? cam.mime
+            : typeof MediaRecorder === 'undefined'
+              ? null
+              : pickRecordingMime((m) => MediaRecorder.isTypeSupported(m));
+        if (!mime) return setPhase({ kind: 'error', code: 'recording_unsupported' });
+        const takeId = uuidv7();
+        const path = `takes/${event.id}/${takeId}.${extensionFor(mime)}`;
+        const flow = { db, store: s };
+        await openTake(flow, {
+          id: takeId,
+          eventId: event.id,
+          deviceId: identity.id,
+          path,
+          mimeType: mime.split(';')[0]!,
+          trigger: source,
+          width: cam.settings.width,
+          height: cam.settings.height,
+          // The real capture rate: a native take is 120 or 240 fps, and the render uses every frame (CAP-13).
+          fps: cam.settings.frameRate,
+        });
+        const onChunk = chunkWriter(flow, { id: takeId, path }, () => rec.elapsedMs);
+        const rec: TakeCapture =
+          cam.kind === 'native-hfr'
+            ? new NativeTakeRecorder(cam, {
+                takeId,
+                onChunk,
+                readFile: (nativePath) => readNativeFile(nativeFileUrl(nativePath)),
+              })
+            : new TakeRecorder(cam.stream, {
+                mimeType: mime,
+                videoBitsPerSecond: recordingBitrate(cam.settings.width, cam.settings.height, cam.settings.frameRate),
+                onChunk,
+                onError: () => setWarning(t('warnings.storage')),
+              });
+        try {
+          // The native camera confirms once it is writing frames: the spin length counts from there.
+          await rec.start();
+        } catch (err) {
+          await abandonTake(flow, { id: takeId, path }, err);
+          return setPhase({ kind: 'error', code: toCameraError(err).code });
+        }
+        recorder.current = rec;
+        setPhase({ kind: 'recording', takeId, startedAt: performance.now() });
+        // CAP-5: auto-stop at the spin length.
+        stopTimer.current = setTimeout(() => void finishRecording(), event.video.spinSeconds * 1000);
+      } finally {
+        recordBusy.current = false;
+      }
     },
     [db, event.id, event.video.spinSeconds, finishRecording, identity, t],
   );
@@ -382,26 +478,83 @@ export function Booth360({ event }: { event: BoothEvent }) {
     return () => clearInterval(id);
   }, [phase]);
 
-  // Motion trigger (CAP-4): ~10 samples a second while ready.
+  // Motion trigger (CAP-4): ~10 samples a second while ready. A browser camera is sampled from its video
+  // element; the native high-speed camera (CAP-14) sends the same luma grids itself, since its picture is
+  // not in the page. The decision is the same for both.
   useEffect(() => {
     if (!motionOn || !ARMED.includes(phase.kind)) return;
+    const detect = createMotionDetector({
+      threshold,
+      cooldownMs: event.triggers.motion.cooldownS * 1000,
+      onTrigger: () => trigger('motion'),
+    });
+    if (nativeCam) return nativeCam.motion.supported ? nativeCam.motion.subscribe(detect) : undefined;
     const v = videoRef.current;
     if (!v) return;
     const sample = createFrameSampler();
-    const trig = new MotionTrigger({ threshold });
-    let prev: Uint8Array | null = null;
-    let cooldownUntil = 0;
     const id = setInterval(() => {
       if (v.readyState < 2) return;
-      const frame = sample(v);
-      if (prev && performance.now() > cooldownUntil && trig.update(analyzeFrames(prev, frame))) {
-        cooldownUntil = performance.now() + event.triggers.motion.cooldownS * 1000;
-        trigger('motion');
-      }
-      prev = frame;
+      detect(sample(v));
     }, 100);
     return () => clearInterval(id);
-  }, [motionOn, threshold, phase.kind, trigger, event.triggers.motion.cooldownS]);
+  }, [motionOn, threshold, phase.kind, trigger, event.triggers.motion.cooldownS, nativeCam]);
+
+  // CAP-14: the native camera's errors and interruptions (a call, the phone running hot, the app sent to the
+  // background). A recording an interruption ended is collected like any other stop; the take so far is kept.
+  useEffect(() => {
+    if (!nativeCam) return;
+    return nativeCam.onEvent((e) => {
+      if (camera.current !== nativeCam) return;
+      const recording = phaseRef.current.kind === 'recording';
+      if (e.kind === 'interruption') {
+        if (e.state === 'began' && (e.reason === 'thermal' || e.recording)) {
+          setWarning(t(`warnings.${INTERRUPTION_WARNING[e.reason]}`));
+        }
+        if (e.recording && recording) void finishRecording();
+        return;
+      }
+      if (!e.fatal) return;
+      // The session is gone: save what the camera kept, then ask for a restart.
+      if (recording) void finishRecording().then(() => setPhase({ kind: 'error', code: 'lost' }));
+      else setPhase({ kind: 'error', code: 'lost' });
+    });
+  }, [nativeCam, finishRecording, t]);
+
+  // The native preview shows through the page: it is transparent while the guest-facing screens that sit on
+  // top of the picture are up, and opaque again for every screen that is not.
+  const nativeActive = activeCamera?.kind === 'native-hfr';
+  // The motion start is armed only where the open camera's picture can drive it.
+  const motionActive = motionOn && (activeCamera?.motion ?? true);
+  const nativePreview =
+    nativeActive && (phase.kind === 'ready' || phase.kind === 'countdown' || phase.kind === 'recording');
+  useEffect(() => {
+    document.documentElement.classList.toggle('native-preview', nativePreview);
+    return () => document.documentElement.classList.remove('native-preview');
+  }, [nativePreview]);
+
+  // The mirror is on screen only, so for a native preview it is the native view that is mirrored.
+  useEffect(() => {
+    nativeCam?.setMirrored(cameraChoice.mirror);
+  }, [nativeCam, cameraChoice.mirror]);
+
+  // CAP-14: movies the native camera still holds after a crash come home, so no clip is ever lost. Once, after
+  // the browser-side recovery above has settled, when the native camera and the take store are both there.
+  const nativeRecovered = useRef(false);
+  useEffect(() => {
+    if (!native || nativeRecovered.current) return;
+    nativeRecovered.current = true;
+    void (async () => {
+      await bootRecovery.current;
+      const takes = await takeStore(() => createOpfsWorker(workerUrl('opfs')));
+      const result = await recoverNativeTakes({
+        db,
+        store: takes,
+        native: native.bridge,
+        readFile: (path) => readNativeFile(nativeFileUrl(path)),
+      });
+      if (result.recovered > 0) setRecovered((n) => n + result.recovered);
+    })().catch((err: unknown) => console.warn('[booth] native take recovery failed', err));
+  }, [native, db]);
 
   // CAP-13 import: the settings drawer, drag and drop and the event gallery all come through here.
   const importFiles = useCallback(
@@ -439,7 +592,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
 
   return (
     <div
-      className="fixed inset-0 overflow-hidden bg-g-bg text-g-ink"
+      className={cx('fixed inset-0 overflow-hidden text-g-ink', nativePreview ? 'bg-transparent' : 'bg-g-bg')}
       style={themeVars}
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
@@ -447,7 +600,11 @@ export function Booth360({ event }: { event: BoothEvent }) {
         if (e.dataTransfer.files.length) void importFiles(e.dataTransfer.files);
       }}
     >
-      {/* Live preview: full bleed, mirrored only on screen if the operator asked (recording is not). */}
+      {/*
+        Live preview: full bleed, mirrored only on screen if the operator asked (recording is not). The
+        companion's native high-speed camera (CAP-14) draws its own preview behind this transparent page
+        instead, so for it the video element stays empty and hidden.
+      */}
       <video
         ref={videoRef}
         muted
@@ -456,22 +613,24 @@ export function Booth360({ event }: { event: BoothEvent }) {
         aria-hidden
         className={cx(
           'absolute inset-0 size-full object-cover transition-opacity duration-300',
-          live ? 'opacity-100' : 'opacity-0',
+          live && !nativeActive ? 'opacity-100' : 'opacity-0',
           cameraChoice.mirror && '-scale-x-100',
         )}
       />
-      {/* CAP-9: the event's look on the live preview. */}
-      <LookPreview
-        video={videoRef}
-        lookId={event.video.filterId}
-        background={liveBackground}
-        onBackgroundUnavailable={() => setBackgroundUnavailable(true)}
-        className={cx(
-          'absolute inset-0 size-full object-cover transition-opacity duration-300',
-          live ? 'opacity-100' : 'opacity-0',
-          cameraChoice.mirror && '-scale-x-100',
-        )}
-      />
+      {/* CAP-9: the event's look on the live preview (a browser camera's; the native preview has none). */}
+      {!nativeActive && (
+        <LookPreview
+          video={videoRef}
+          lookId={event.video.filterId}
+          background={liveBackground}
+          onBackgroundUnavailable={() => setBackgroundUnavailable(true)}
+          className={cx(
+            'absolute inset-0 size-full object-cover transition-opacity duration-300',
+            live ? 'opacity-100' : 'opacity-0',
+            cameraChoice.mirror && '-scale-x-100',
+          )}
+        />
+      )}
       {/* CAP-6: a glow around the screen edge that lights the guest (a front camera has no flash). */}
       <FillLightFrame fill={fillLightOf(cameraChoice)} active={live && activeCamera?.lens.facing !== 'back'} />
 
@@ -489,22 +648,32 @@ export function Booth360({ event }: { event: BoothEvent }) {
           </Link>
         )}
         <div className="flex flex-wrap items-center justify-end gap-2" role="status" aria-live="polite">
+          {/* The "?" beside a pill is for the operator: never while the kiosk is PIN-locked. */}
           {!online && (
-            <Pill tone="warn" className="text-[0.8rem]">
-              <WifiOff className="size-3.5" aria-hidden /> {t('offline')}
-            </Pill>
+            <>
+              <Pill tone="warn" className="text-[0.8rem]">
+                <WifiOff className="size-3.5" aria-hidden /> {t('offline')}
+              </Pill>
+              {!kiosk.locked && <StatusHelp kind="offline" />}
+            </>
           )}
           {lowStorage && (
-            <Pill tone="bad" className="text-[0.8rem]">
-              <HardDrive className="size-3.5" aria-hidden /> {t('lowStorage')}
-            </Pill>
+            <>
+              <Pill tone="bad" className="text-[0.8rem]">
+                <HardDrive className="size-3.5" aria-hidden /> {t('lowStorage')}
+              </Pill>
+              {!kiosk.locked && <StatusHelp kind="storage" />}
+            </>
           )}
           {backgroundUnavailable && !kiosk.locked && (
-            <Pill tone="warn" className="text-[0.8rem]">
-              {t('backgroundUnavailable')}
-            </Pill>
+            <>
+              <Pill tone="warn" className="text-[0.8rem]">
+                {t('backgroundUnavailable')}
+              </Pill>
+              <StatusHelp kind="background" />
+            </>
           )}
-          {motionOn && live && (
+          {motionActive && live && (
             <Pill tone="info" dot className="text-[0.8rem]">
               {t('motionArmed')}
             </Pill>
@@ -524,6 +693,13 @@ export function Booth360({ event }: { event: BoothEvent }) {
                     : t('uploads.offline', { count: uploads.status.waiting })}
             </Pill>
           )}
+          {/* One "?" for the connection and the uploads: the offline pill already has it when offline. */}
+          {!kiosk.locked &&
+            (uploads.status.revoked ? (
+              <StatusHelp kind="revoked" />
+            ) : (
+              online && (uploads.status.failed > 0 || uploads.status.waiting > 0) && <StatusHelp kind="offline" />
+            ))}
           {!kiosk.locked && (
             <>
               <button
@@ -599,6 +775,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
               >
                 {t('startBooth')}
               </GuestButton>
+              {setupCheck.due && <SetupCheckPrompt href={event.checkHref} onSkip={setupCheck.skip} />}
             </div>
           </GuestScreen>
         )}
@@ -626,7 +803,7 @@ export function Booth360({ event }: { event: BoothEvent }) {
                 <CircleDot className="size-6" aria-hidden /> {event.attract.cta}
               </GuestButton>
             )}
-            {motionOn && <p className="text-[1rem] opacity-70">{t('motionHint')}</p>}
+            {motionActive && <p className="text-[1rem] opacity-70">{t('motionHint')}</p>}
           </GuestScreen>
         )}
 
@@ -698,6 +875,14 @@ export function Booth360({ event }: { event: BoothEvent }) {
             event={{ name: event.name, font: event.theme.font, share: event.share }}
             onEmail={(email) => queueEmail(db, phase.session.id, email)}
             onDone={backToReady}
+            // The QR is on screen: the capture-to-QR time, from the end of the take.
+            onShown={() =>
+              track({
+                name: 'qr_shown',
+                seconds_since_take: Math.max(0, (performance.now() - phase.endedAt) / 1000),
+                mode: 'video360',
+              })
+            }
             liveDisplay={event.liveDisplay}
             onOptOut={() => optOutOfDisplay(db, phase.session.id).then(() => uploads.nudgeSession(phase.session.id))}
           />
@@ -708,6 +893,8 @@ export function Booth360({ event }: { event: BoothEvent }) {
             <div className="card max-w-md p-6 text-fg" role="alert">
               <h2 className="text-lg font-semibold">{t('errors.title')}</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted">{t(`errors.${errorKey(phase.code)}`)}</p>
+              {/* The steps for this very error, for the operator; a guest-facing kiosk shows none. */}
+              {!kiosk.locked && <CameraErrorHelp code={phase.code} className="mt-3" />}
               <div className="mt-5 flex gap-2">
                 <button
                   type="button"
@@ -763,8 +950,14 @@ export function Booth360({ event }: { event: BoothEvent }) {
         }}
         camera={phase.kind === 'error' ? null : activeCamera}
         cameraBusy={cameraBusy}
+        // CAP-14: only inside the companion; a browser's drawer shows nothing of the native camera.
+        highSpeed={
+          native ? { available: native.capabilities.available, lenses: native.capabilities.lenses } : undefined
+        }
+        checkHref={event.checkHref}
         capture360={{
           motion: { enabled: motionOn, threshold },
+          motionSupported: activeCamera?.motion ?? true,
           onMotion: (m) => {
             setMotionOn(m.enabled);
             setThreshold(m.threshold);
@@ -791,5 +984,10 @@ const ERROR_KEYS = new Set<string>([
   'insecure',
   'lost',
   'recording_unsupported',
+  'native_permission',
+  'no_high_speed',
+  'native_audio',
+  'native_storage',
+  'native_failed',
 ]);
 const errorKey = (code: string): CameraErrorKey => (ERROR_KEYS.has(code) ? (code as CameraErrorKey) : 'unknown');

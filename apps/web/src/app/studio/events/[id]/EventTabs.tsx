@@ -21,6 +21,7 @@ export function EventTabs({ id }: { id: string }) {
     },
     { href: `${base}/live` as const, label: t('live'), active: path.startsWith(`${base}/live`) },
     { href: `${base}/signage` as const, label: t('signage'), active: path.startsWith(`${base}/signage`) },
+    { href: `${base}/guests` as const, label: t('guests'), active: path.startsWith(`${base}/guests`) },
   ];
   return (
     <nav aria-label={t('label')} className="-mb-px mt-5 flex gap-1 overflow-x-auto">

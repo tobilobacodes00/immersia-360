@@ -29,6 +29,7 @@ import { AssetPicker } from '@/components/assets/AssetPicker';
 import type { AssetView } from '@/server/assets';
 import { AlphaColorField, Row, Section } from './fields';
 import { FontPicker, weightsOf } from './FontPicker';
+import { OrnamentPicker, OrnamentSwatch } from './OrnamentPicker';
 import type { EditorAction, EditorDoc, ElementPatch } from './state';
 
 type AssetType = AssetView['type'];
@@ -240,6 +241,7 @@ function MultiPanel(p: InspectorProps & { selected: TemplateElement[] }) {
 function ElementPanel(p: InspectorProps & { el: TemplateElement; openPicker: PickerOpener }) {
   const t = useTranslations('studio.editor');
   const { el, dispatch } = p;
+  const [ornamentOpen, setOrnamentOpen] = useState(false);
   const set = (patch: ElementPatch, coalesce?: string) =>
     dispatch({
       type: 'patch',
@@ -538,6 +540,34 @@ function ElementPanel(p: InspectorProps & { el: TemplateElement; openPicker: Pic
               />
             </Row>
           )}
+        </Section>
+      )}
+
+      {el.type === 'ornament' && (
+        <Section title={t('sections.ornament')}>
+          <Row label={t('fields.ornament')}>
+            <Button size="sm" onClick={() => setOrnamentOpen(true)}>
+              <OrnamentSwatch name={el.ornament} size={18} />
+              {t(`ornaments.names.${el.ornament}`)}
+            </Button>
+          </Row>
+          <div className="py-1.5">
+            <AlphaColorField
+              value={el.color}
+              label={t('fields.colour')}
+              alphaLabel={t('fields.colourOpacity')}
+              onChange={(v, g) => set({ color: v }, g ? 'colour' : undefined)}
+            />
+          </div>
+          <OrnamentPicker
+            open={ornamentOpen}
+            selected={el.ornament}
+            onClose={() => setOrnamentOpen(false)}
+            onPick={(ornament) => {
+              setOrnamentOpen(false);
+              set({ ornament });
+            }}
+          />
         </Section>
       )}
 

@@ -1,6 +1,6 @@
 import 'server-only';
 import { createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
-import { and, desc, eq, inArray, isNotNull, isNull, lt, notInArray, or, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm';
 import { db, schema } from '@immersia/db';
 import {
   brandingSchema,
@@ -8,8 +8,10 @@ import {
   outputSettingsSchema,
   shareSettingsSchema,
   type BoothMode,
+  type GuestFormSettings,
 } from '@immersia/shared';
 import { env } from './env';
+import { publicSessions } from './gallery-filter';
 import { pickMedia, sessionBooth } from './live';
 import { presignView } from './storage';
 
@@ -18,7 +20,9 @@ const { event, captureSession, output, asset } = schema;
 /**
  * The event gallery (screen 19, SHR-5, DL-7): every capture of the event on one page, for the client
  * and for guests who scan the event QR. Hidden items (LIV-7) and guests who asked not to be shown
- * (LIV-8) are left out of this public page; the operator's export (EVT-4) has everything.
+ * (LIV-8) are left out of this public page; the operator's export (EVT-4) has everything. What is
+ * listed is decided in one place, gallery-filter.ts, which the page, the ZIP, the dashboard's count
+ * and the highlight reel all use.
  */
 
 export interface GalleryEvent {
@@ -33,12 +37,22 @@ export interface GalleryEvent {
   booths: BoothMode[];
   contact: string;
   passwordHash: string | null;
+  /** SHR-6: the business running the event, and the optional guest form shown before "Download all". */
+  operator: string;
+  guestForm: GuestFormSettings;
 }
 
 export async function galleryEvent(slug: string): Promise<GalleryEvent | null> {
   if (!/^[A-Za-z0-9_-]{8,40}$/.test(slug)) return null;
-  const [ev] = await db().select().from(event).where(eq(event.gallerySlug, slug)).limit(1);
-  if (!ev) return null;
+  const [found] = await db()
+    .select({ ev: event, operator: schema.organization.name })
+    .from(event)
+    .innerJoin(schema.organization, eq(schema.organization.id, event.organizationId))
+    .where(eq(event.gallerySlug, slug))
+    .limit(1);
+  if (!found) return null;
+  const { ev, operator } = found;
+  const share = shareSettingsSchema.parse(ev.shareSettings);
   const branding = brandingSchema.parse(ev.branding);
   let logoUrl: string | null = null;
   if (branding.logoAssetId) {
@@ -66,8 +80,10 @@ export async function galleryEvent(slug: string): Promise<GalleryEvent | null> {
     hashtag: branding.hashtag,
     logoUrl,
     booths: eventBooths(ev.mode, outputSettingsSchema.parse(ev.outputSettings)),
-    contact: shareSettingsSchema.parse(ev.shareSettings).contact,
+    contact: share.contact,
     passwordHash: ev.galleryPasswordHash,
+    operator,
+    guestForm: share.guestForm,
   };
 }
 
@@ -149,16 +165,6 @@ export interface GalleryItem {
 }
 
 export const GALLERY_PAGE = 48;
-
-/** Sessions guests may browse: live, not expired, not hidden by the operator, not opted out. */
-const publicSessions = (eventId: string) =>
-  and(
-    eq(captureSession.eventId, eventId),
-    eq(captureSession.status, 'live'),
-    isNull(captureSession.expiredAt),
-    eq(captureSession.optedOutOfDisplay, false),
-    notInArray(captureSession.displayStatus, ['hidden', 'opted_out']),
-  );
 
 /** Newest first; `cursor` is the last item of the previous page (`<capturedAt ISO>_<id>`). */
 export async function galleryItems(
@@ -272,7 +278,14 @@ export async function zipFiles(
 ): Promise<{ files: ZipFile[]; next: string | null }> {
   const conditions = [
     opts.everything
-      ? and(eq(captureSession.eventId, eventId), isNull(captureSession.expiredAt))
+      ? // The operator's export has everything they own: also what they hid. What the platform took
+        // down is not theirs to export (and its files are gone or quarantined).
+        and(
+          eq(captureSession.eventId, eventId),
+          isNull(captureSession.expiredAt),
+          isNull(captureSession.erasedAt),
+          or(isNull(captureSession.removedAt), eq(captureSession.removal, 'operator')),
+        )
       : publicSessions(eventId),
     isNotNull(output.uploadedAt),
     inArray(output.kind, [...ZIP_KINDS]),

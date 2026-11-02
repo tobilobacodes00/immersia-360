@@ -12,7 +12,11 @@ export interface FillLight {
 }
 
 export interface CameraChoice {
-  source: 'camera' | 'simulator';
+  /**
+   * `camera`: a browser camera. `simulator`: no hardware. `native-hfr` (CAP-14): the companion app's native
+   * 120-240 fps recorder; it exists only inside the companion, where `deviceId` is one of its lens ids.
+   */
+  source: 'camera' | 'simulator' | 'native-hfr';
   deviceId: string | null;
   /** Mirror the on-screen preview only (front cameras feel natural mirrored). */
   mirror: boolean;
@@ -22,6 +26,8 @@ export interface CameraChoice {
   torch?: boolean;
   /** An on-screen glow that lights guests' faces (front cameras). */
   fillLight?: FillLight;
+  /** The frame rate asked of the native high-speed camera (120, 240); absent means the lens's best. */
+  hfrFps?: number;
 }
 
 export const FILL_OFF: FillLight = { level: 'off', tint: 'neutral' };
@@ -49,7 +55,7 @@ export function parseCameraChoice(raw: string | null): CameraChoice {
   }
   if (typeof v !== 'object' || v === null) return fallback;
   const o = v as Record<string, unknown>;
-  if (o.source !== 'camera' && o.source !== 'simulator') return fallback;
+  if (o.source !== 'camera' && o.source !== 'simulator' && o.source !== 'native-hfr') return fallback;
 
   const choice: CameraChoice = {
     source: o.source,
@@ -58,6 +64,9 @@ export function parseCameraChoice(raw: string | null): CameraChoice {
   };
   if (typeof o.zoom === 'number' && Number.isFinite(o.zoom) && o.zoom > 0) choice.zoom = o.zoom;
   if (o.torch === true) choice.torch = true;
+  if (o.source === 'native-hfr' && typeof o.hfrFps === 'number' && Number.isInteger(o.hfrFps) && o.hfrFps >= 60) {
+    choice.hfrFps = o.hfrFps;
+  }
   const fill = o.fillLight;
   if (typeof fill === 'object' && fill !== null) {
     const { level, tint } = fill as Record<string, unknown>;
@@ -87,11 +96,22 @@ export function saveCameraChoice(c: CameraChoice) {
 }
 
 /**
- * Whether going from one choice to another needs the camera reopened. Only a different camera does:
- * zoom and the light are set on the live track, and the mirror and fill light are only on screen.
+ * Whether going from one choice to another needs the camera reopened. Only a different camera does (or,
+ * for the native high-speed camera, a different frame rate): zoom and the light are set on the live track,
+ * and the mirror and fill light are only on screen.
  */
 export function needsReopen(prev: CameraChoice, next: CameraChoice): boolean {
-  return prev.source !== next.source || prev.deviceId !== next.deviceId;
+  return prev.source !== next.source || prev.deviceId !== next.deviceId || prev.hfrFps !== next.hfrFps;
+}
+
+/**
+ * The choice to open a camera with where the native high-speed camera may not exist: a saved `native-hfr`
+ * choice outside the companion (or on a phone with no high-speed lens) becomes the default browser camera,
+ * since a native lens id means nothing to the browser.
+ */
+export function usableChoice(choice: CameraChoice, nativeAvailable: boolean): CameraChoice {
+  if (choice.source !== 'native-hfr' || nativeAvailable) return choice;
+  return { ...choice, source: 'camera', deviceId: null };
 }
 
 /** The change for picking a different camera: it has its own zoom range, so zoom starts over. */
@@ -108,6 +128,8 @@ export function applyChoice(prev: CameraChoice, patch: Partial<CameraChoice>): C
   if (next.zoom === undefined) delete next.zoom;
   if (!next.torch) delete next.torch;
   if (next.fillLight === undefined) delete next.fillLight;
+  // A frame rate belongs to the native camera: switching to another camera clears it.
+  if (next.hfrFps === undefined || next.source !== 'native-hfr') delete next.hfrFps;
   return next;
 }
 

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { isBuiltinId } from '@immersia/layout';
 import { templateDocumentSchema } from '@immersia/shared';
 import { fail, ok, withOperator, type ActionResult } from '@/server/action-result';
 import { mediaPatchSchema, patchMedia } from '@/server/events';
@@ -97,6 +98,8 @@ export async function saveToLibraryAction(
 
 export async function deleteLibraryTemplateAction(templateId: string): Promise<ActionResult> {
   return withOperator({ event: ['update'] }, async (op) => {
+    // The built-in library is code, not rows: it cannot be deleted.
+    if (isBuiltinId(templateId)) return fail('forbidden');
     if (!id.safeParse(templateId).success) return fail('invalid');
     return (await deleteLibraryTemplate(op.organizationId, templateId)) ? ok(undefined) : fail('not_found');
   });

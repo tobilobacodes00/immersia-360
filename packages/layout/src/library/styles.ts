@@ -1,0 +1,896 @@
+import type { Ornament } from '../ornaments';
+import type { OrnamentRole } from './geometry';
+
+/**
+ * The look of the built-in templates (PHO-5): eight occasions, four styles each. A style is a
+ * palette, a type pairing, the ornaments it uses and where, and a few finishing choices (page border,
+ * photo mats, corner radius). Combined with a layout geometry (layouts.ts) by generate.ts.
+ *
+ * Text is tokens only ({eventName}, dates, {custom1}, {hashtag}), never words: a template then reads
+ * right in every language, and the names shown in the UI come from the message catalogues.
+ */
+
+export const TEMPLATE_CATEGORIES = [
+  'wedding',
+  'birthday',
+  'graduation',
+  'baby-shower',
+  'christmas',
+  'halloween',
+  'quinceanera',
+  'corporate',
+] as const;
+
+export type TemplateCategory = (typeof TEMPLATE_CATEGORIES)[number];
+
+/** Every style id, in library order. Typed so message catalogues can be checked against it. */
+export const STYLE_IDS = [
+  'blush',
+  'ivory-gold',
+  'garden-script',
+  'midnight',
+  'confetti-pop',
+  'party-bold',
+  'sweet-pastel',
+  'neon-night',
+  'classic-cap',
+  'modern-class',
+  'honors',
+  'varsity',
+  'little-blue',
+  'little-pink',
+  'sunny-side',
+  'woodland',
+  'classic-xmas',
+  'snowy-night',
+  'gold-evergreen',
+  'cozy-cabin',
+  'spooky-night',
+  'pumpkin-patch',
+  'friendly-ghost',
+  'gothic',
+  'rose-gold',
+  'royal-purple',
+  'fiesta',
+  'teal-tiara',
+  'clean-slate',
+  'executive-navy',
+  'warm-neutral',
+  'launch-day',
+] as const;
+
+export type StyleId = (typeof STYLE_IDS)[number];
+
+export type ColorRole = 'ink' | 'accent' | 'secondary';
+
+export interface FontSpec {
+  /** A library family or one of the built-ins (Satoshi, Instrument Serif). */
+  family: string;
+  weight: number;
+  italic?: boolean;
+  uppercase?: boolean;
+  /** Letter spacing, in em. */
+  tracking: number;
+  /** Size relative to the layout's type size: script faces sit small, slab faces large. */
+  scale: number;
+}
+
+export interface OrnamentRule {
+  /** Used in turn for the zones of a role (a pair of stickers gets the first two names). */
+  names: readonly Ornament[];
+  color: ColorRole;
+  /** Size relative to the zone, 1 = fills it. */
+  scale?: number;
+}
+
+export interface LibraryStyle {
+  /** Unique across the library; names come from `studio.templates.styles.<id>`. */
+  id: StyleId;
+  category: TemplateCategory;
+  background: string;
+  ink: string;
+  accent: string;
+  /** A soft tint of the palette: panels, mats, film frames. Ink on it reads at 4.5:1. */
+  secondary: string;
+  /** Card stock for instant prints and photo mats. */
+  paper: string;
+  display: FontSpec;
+  body: FontSpec;
+  /** Token text (never words). */
+  title: string;
+  subtitle: string;
+  titleColor: 'ink' | 'accent';
+  subtitleColor: 'ink' | 'accent';
+  border: 'none' | 'line' | 'double';
+  /** Hairlines between the photos and the text. */
+  rules: boolean;
+  /** Paint the text box on a panel of the secondary colour. */
+  footerPanel: boolean;
+  /** Width of a mat round each photo: none, thin, wide. */
+  mat: 0 | 1 | 2;
+  matColor: 'paper' | 'accent' | 'secondary' | 'ink';
+  /** Photo corner radius: square, soft, round. */
+  radius: 0 | 1 | 2;
+  ornaments: Partial<Record<OrnamentRole, OrnamentRule>>;
+}
+
+const font = (
+  family: string,
+  weight: number,
+  tracking: number,
+  scale: number,
+  o: { italic?: boolean; uppercase?: boolean } = {},
+): FontSpec => ({ family, weight, tracking, scale, ...o });
+
+type Draft = Omit<
+  LibraryStyle,
+  'title' | 'subtitle' | 'border' | 'rules' | 'footerPanel' | 'mat' | 'matColor' | 'radius'
+> &
+  Partial<Pick<LibraryStyle, 'title' | 'border' | 'rules' | 'footerPanel' | 'mat' | 'matColor' | 'radius'>> & {
+    subtitle: string;
+  };
+
+const style = (d: Draft): LibraryStyle => ({
+  title: '{eventName}',
+  border: 'none',
+  rules: false,
+  footerPanel: false,
+  mat: 0,
+  matColor: 'paper',
+  radius: 0,
+  ...d,
+});
+
+const date = (fallback: string, format: string) => `{default,{${fallback}},${format}}`;
+
+export const LIBRARY_STYLES: readonly LibraryStyle[] = [
+  /* ------------------------------------------------------------ wedding */
+  style({
+    id: 'blush',
+    category: 'wedding',
+    background: '#fbf1ee',
+    ink: '#4a2c2a',
+    accent: '#a9455f',
+    secondary: '#f1d6d0',
+    paper: '#ffffff',
+    display: font('Cormorant Garamond', 400, 0, 1.2, { italic: true }),
+    body: font('Jost', 400, 0.22, 1, { uppercase: true }),
+    subtitle: date('custom1', '%d · %m · %Y'),
+    titleColor: 'ink',
+    subtitleColor: 'accent',
+    border: 'line',
+    rules: true,
+    mat: 1,
+    radius: 1,
+    ornaments: {
+      crest: { names: ['hearts'], color: 'accent' },
+      sticker: { names: ['heart', 'sparkle'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['rings'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'ivory-gold',
+    category: 'wedding',
+    background: '#f8f3e8',
+    ink: '#2d2a24',
+    accent: '#8a6618',
+    secondary: '#ece1c8',
+    paper: '#fffdf7',
+    display: font('Playfair Display', 400, 0, 1, { italic: true }),
+    body: font('Lato', 400, 0.24, 0.95, { uppercase: true }),
+    subtitle: date('custom1', '%d.%m.%Y'),
+    titleColor: 'ink',
+    subtitleColor: 'accent',
+    border: 'double',
+    rules: true,
+    ornaments: {
+      crest: { names: ['rings'], color: 'accent' },
+      sticker: { names: ['sparkle', 'star'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['laurel'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'garden-script',
+    category: 'wedding',
+    background: '#f3f6ef',
+    ink: '#2f3d2b',
+    accent: '#587a45',
+    secondary: '#dfe8d6',
+    paper: '#ffffff',
+    display: font('Great Vibes', 400, 0, 1.3),
+    body: font('Raleway', 400, 0.2, 0.95, { uppercase: true }),
+    subtitle: date('custom1', '%d / %m / %Y'),
+    titleColor: 'accent',
+    subtitleColor: 'ink',
+    border: 'line',
+    mat: 1,
+    radius: 1,
+    ornaments: {
+      crest: { names: ['leaf'], color: 'accent' },
+      sticker: { names: ['leaf', 'flower'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['laurel'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'midnight',
+    category: 'wedding',
+    background: '#1b2038',
+    ink: '#f4efe6',
+    accent: '#d8b66a',
+    secondary: '#2d3560',
+    paper: '#f4efe6',
+    display: font('Cinzel', 400, 0.1, 0.85, { uppercase: true }),
+    body: font('Montserrat', 400, 0.3, 0.9, { uppercase: true }),
+    subtitle: date('hashtag', '%d.%m.%Y'),
+    titleColor: 'accent',
+    subtitleColor: 'ink',
+    border: 'line',
+    rules: true,
+    mat: 1,
+    matColor: 'accent',
+    ornaments: {
+      crest: { names: ['star'], color: 'accent' },
+      sticker: { names: ['sparkle', 'star'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['moon'], color: 'accent' },
+    },
+  }),
+
+  /* ------------------------------------------------------------ birthday */
+  style({
+    id: 'confetti-pop',
+    category: 'birthday',
+    background: '#fff7e8',
+    ink: '#231f45',
+    accent: '#d92c48',
+    secondary: '#ffe08a',
+    paper: '#ffffff',
+    display: font('Lilita One', 400, 0.01, 1),
+    body: font('Nunito', 700, 0.12, 0.95, { uppercase: true }),
+    subtitle: date('custom1', '%d.%m.%Y'),
+    titleColor: 'accent',
+    subtitleColor: 'ink',
+    mat: 2,
+    radius: 2,
+    ornaments: {
+      crest: { names: ['star'], color: 'accent' },
+      sticker: { names: ['balloons', 'confetti'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['cake', 'gift'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'party-bold',
+    category: 'birthday',
+    background: '#2b3fe6',
+    ink: '#ffffff',
+    accent: '#ffd23f',
+    secondary: '#1f2fb4',
+    paper: '#ffffff',
+    display: font('Bebas Neue', 400, 0.04, 1.25, { uppercase: true }),
+    body: font('Outfit', 700, 0.2, 0.95, { uppercase: true }),
+    subtitle: date('hashtag', '%d.%m.%Y'),
+    titleColor: 'accent',
+    subtitleColor: 'ink',
+    border: 'line',
+    mat: 2,
+    radius: 1,
+    ornaments: {
+      crest: { names: ['burst'], color: 'accent' },
+      sticker: { names: ['burst', 'star'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['balloons'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'sweet-pastel',
+    category: 'birthday',
+    background: '#fdeef4',
+    ink: '#5b2a4e',
+    accent: '#c93a72',
+    secondary: '#cfeee3',
+    paper: '#ffffff',
+    display: font('Pacifico', 400, 0, 0.88),
+    body: font('Quicksand', 700, 0.14, 0.95, { uppercase: true }),
+    subtitle: date('custom1', '%d / %m / %Y'),
+    titleColor: 'accent',
+    subtitleColor: 'ink',
+    footerPanel: true,
+    mat: 2,
+    radius: 2,
+    ornaments: {
+      crest: { names: ['heart'], color: 'accent' },
+      sticker: { names: ['cake', 'gift'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['hearts'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'neon-night',
+    category: 'birthday',
+    background: '#14121f',
+    ink: '#f5f2ff',
+    accent: '#ff4fd8',
+    secondary: '#2a2547',
+    paper: '#f5f2ff',
+    display: font('Audiowide', 400, 0.02, 0.85, { uppercase: true }),
+    body: font('Space Grotesk', 700, 0.2, 0.9, { uppercase: true }),
+    subtitle: date('hashtag', '%d · %m · %Y'),
+    titleColor: 'accent',
+    subtitleColor: 'ink',
+    border: 'line',
+    rules: true,
+    mat: 1,
+    matColor: 'accent',
+    radius: 1,
+    ornaments: {
+      crest: { names: ['sparkle'], color: 'accent' },
+      sticker: { names: ['sparkle', 'star'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['burst'], color: 'accent' },
+    },
+  }),
+
+  /* ------------------------------------------------------------ graduation */
+  style({
+    id: 'classic-cap',
+    category: 'graduation',
+    background: '#14213d',
+    ink: '#ffffff',
+    accent: '#fca311',
+    secondary: '#1f3159',
+    paper: '#f6f1e3',
+    display: font('Playfair Display', 700, 0, 0.95),
+    body: font('Source Sans 3', 400, 0.22, 1, { uppercase: true }),
+    subtitle: date('custom1', '%Y'),
+    titleColor: 'ink',
+    subtitleColor: 'accent',
+    border: 'double',
+    rules: true,
+    mat: 1,
+    matColor: 'accent',
+    ornaments: {
+      crest: { names: ['grad-cap'], color: 'accent' },
+      sticker: { names: ['star', 'sparkle'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['laurel'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'modern-class',
+    category: 'graduation',
+    background: '#f4f4f0',
+    ink: '#111110',
+    accent: '#2b3fe6',
+    secondary: '#e1e4fb',
+    paper: '#ffffff',
+    display: font('Space Grotesk', 700, -0.02, 1),
+    body: font('Inter', 700, 0.18, 0.9, { uppercase: true }),
+    subtitle: date('hashtag', '%Y'),
+    titleColor: 'ink',
+    subtitleColor: 'accent',
+    rules: true,
+    radius: 1,
+    ornaments: {
+      crest: { names: ['grad-cap'], color: 'accent' },
+      sticker: { names: ['burst', 'star'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['grad-cap'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'honors',
+    category: 'graduation',
+    background: '#fbf8f0',
+    ink: '#4a0f1c',
+    accent: '#7d5c10',
+    secondary: '#efe4cc',
+    paper: '#fffdf8',
+    display: font('Cinzel', 700, 0.08, 0.8, { uppercase: true }),
+    body: font('Libre Baskerville', 400, 0.12, 0.85, { italic: true }),
+    subtitle: date('custom1', '%Y'),
+    titleColor: 'ink',
+    subtitleColor: 'accent',
+    border: 'double',
+    rules: true,
+    ornaments: {
+      crest: { names: ['laurel'], color: 'accent' },
+      sticker: { names: ['star', 'sparkle'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['grad-cap'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'varsity',
+    category: 'graduation',
+    background: '#0d3b2e',
+    ink: '#fff8e1',
+    accent: '#f2b705',
+    secondary: '#145a45',
+    paper: '#fff8e1',
+    display: font('Alfa Slab One', 400, 0.02, 0.85, { uppercase: true }),
+    body: font('Barlow Condensed', 700, 0.24, 1.15, { uppercase: true }),
+    subtitle: date('hashtag', '%Y'),
+    titleColor: 'accent',
+    subtitleColor: 'ink',
+    border: 'line',
+    mat: 2,
+    matColor: 'accent',
+    ornaments: {
+      crest: { names: ['star'], color: 'accent' },
+      sticker: { names: ['star', 'burst'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['grad-cap'], color: 'accent' },
+    },
+  }),
+
+  /* ------------------------------------------------------------ baby shower */
+  style({
+    id: 'little-blue',
+    category: 'baby-shower',
+    background: '#eef6fb',
+    ink: '#27455f',
+    accent: '#256a99',
+    secondary: '#d3e8f6',
+    paper: '#ffffff',
+    display: font('Fraunces', 400, 0, 1),
+    body: font('Nunito', 700, 0.14, 0.95, { uppercase: true }),
+    subtitle: date('custom1', '%d.%m.%Y'),
+    titleColor: 'ink',
+    subtitleColor: 'accent',
+    mat: 2,
+    radius: 2,
+    ornaments: {
+      crest: { names: ['rattle'], color: 'accent' },
+      sticker: { names: ['moon', 'star'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['bottle'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'little-pink',
+    category: 'baby-shower',
+    background: '#fff1f4',
+    ink: '#6a2f45',
+    accent: '#c94873',
+    secondary: '#fbd9e3',
+    paper: '#ffffff',
+    display: font('Playball', 400, 0, 1.15),
+    body: font('Quicksand', 700, 0.16, 0.95, { uppercase: true }),
+    subtitle: date('custom1', '%d / %m / %Y'),
+    titleColor: 'accent',
+    subtitleColor: 'ink',
+    mat: 2,
+    radius: 2,
+    ornaments: {
+      crest: { names: ['heart'], color: 'accent' },
+      sticker: { names: ['hearts', 'flower'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['rattle'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'sunny-side',
+    category: 'baby-shower',
+    background: '#fff9e6',
+    ink: '#4a3f1f',
+    accent: '#8f5d00',
+    secondary: '#d9ecdd',
+    paper: '#ffffff',
+    display: font('Comfortaa', 700, 0, 0.9),
+    body: font('Mulish', 700, 0.16, 0.95, { uppercase: true }),
+    subtitle: date('custom1', '%d · %m · %Y'),
+    titleColor: 'ink',
+    subtitleColor: 'accent',
+    footerPanel: true,
+    mat: 2,
+    radius: 2,
+    ornaments: {
+      crest: { names: ['balloon'], color: 'accent' },
+      sticker: { names: ['star', 'balloons'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['balloons'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'woodland',
+    category: 'baby-shower',
+    background: '#f6f1e7',
+    ink: '#3b3a2a',
+    accent: '#7b5e2a',
+    secondary: '#dfe3cf',
+    paper: '#fffdf6',
+    display: font('Amatic SC', 700, 0.04, 1.35, { uppercase: true }),
+    body: font('Karla', 700, 0.2, 0.95, { uppercase: true }),
+    subtitle: date('custom1', '%d.%m.%Y'),
+    titleColor: 'ink',
+    subtitleColor: 'accent',
+    border: 'line',
+    rules: true,
+    mat: 1,
+    radius: 1,
+    ornaments: {
+      crest: { names: ['leaf'], color: 'accent' },
+      sticker: { names: ['leaf', 'moon'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['laurel'], color: 'accent' },
+    },
+  }),
+
+  /* ------------------------------------------------------------ christmas */
+  style({
+    id: 'classic-xmas',
+    category: 'christmas',
+    background: '#fbf6ee',
+    ink: '#1f3d2b',
+    accent: '#b3222e',
+    secondary: '#e4efe3',
+    paper: '#ffffff',
+    display: font('Yeseva One', 400, 0, 0.9),
+    body: font('Lora', 700, 0.14, 0.9, { uppercase: true }),
+    subtitle: date('custom1', '%Y'),
+    titleColor: 'accent',
+    subtitleColor: 'ink',
+    border: 'double',
+    rules: true,
+    mat: 1,
+    radius: 1,
+    ornaments: {
+      crest: { names: ['tree'], color: 'accent' },
+      sticker: { names: ['bauble', 'snowflake'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['tree'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'snowy-night',
+    category: 'christmas',
+    background: '#0e2238',
+    ink: '#f4f9ff',
+    accent: '#9fd0ff',
+    secondary: '#1b3a5c',
+    paper: '#f4f9ff',
+    display: font('Cormorant Garamond', 700, 0, 1.15, { italic: true }),
+    body: font('Josefin Sans', 700, 0.28, 0.95, { uppercase: true }),
+    subtitle: date('custom1', '%d.%m.%Y'),
+    titleColor: 'ink',
+    subtitleColor: 'accent',
+    border: 'line',
+    mat: 1,
+    ornaments: {
+      crest: { names: ['snowflake'], color: 'accent' },
+      sticker: { names: ['snowflake', 'sparkle'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['snowflake'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'gold-evergreen',
+    category: 'christmas',
+    background: '#123524',
+    ink: '#f6ecd0',
+    accent: '#d4af37',
+    secondary: '#1c4a33',
+    paper: '#f6ecd0',
+    display: font('Cinzel Decorative', 700, 0.02, 0.8),
+    body: font('Lato', 700, 0.24, 0.9, { uppercase: true }),
+    subtitle: date('hashtag', '%Y'),
+    titleColor: 'accent',
+    subtitleColor: 'ink',
+    border: 'double',
+    rules: true,
+    mat: 1,
+    matColor: 'accent',
+    ornaments: {
+      crest: { names: ['tree'], color: 'accent' },
+      sticker: { names: ['bauble', 'star'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['bauble'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'cozy-cabin',
+    category: 'christmas',
+    background: '#f3e6d3',
+    ink: '#4a2a1c',
+    accent: '#a3341f',
+    secondary: '#e5d2b5',
+    paper: '#fff8ec',
+    display: font('Kaushan Script', 400, 0, 1),
+    body: font('Karla', 700, 0.16, 0.95, { uppercase: true }),
+    subtitle: date('hashtag', '%Y'),
+    titleColor: 'accent',
+    subtitleColor: 'ink',
+    footerPanel: true,
+    mat: 2,
+    radius: 1,
+    ornaments: {
+      crest: { names: ['snowflake'], color: 'accent' },
+      sticker: { names: ['gift', 'tree'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['gift'], color: 'accent' },
+    },
+  }),
+
+  /* ------------------------------------------------------------ halloween */
+  style({
+    id: 'spooky-night',
+    category: 'halloween',
+    background: '#17101f',
+    ink: '#f6efe0',
+    accent: '#ff7a1a',
+    secondary: '#2b1d3d',
+    paper: '#f6efe0',
+    display: font('Creepster', 400, 0.02, 1.05),
+    body: font('Space Grotesk', 700, 0.2, 0.9, { uppercase: true }),
+    subtitle: date('custom1', '%d.%m.%Y'),
+    titleColor: 'accent',
+    subtitleColor: 'ink',
+    border: 'line',
+    mat: 1,
+    matColor: 'accent',
+    ornaments: {
+      crest: { names: ['bat'], color: 'accent' },
+      sticker: { names: ['bat', 'ghost'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['moon'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'pumpkin-patch',
+    category: 'halloween',
+    background: '#fff1dc',
+    ink: '#3a1f0f',
+    accent: '#cc4a08',
+    secondary: '#fbd9a8',
+    paper: '#fffaf0',
+    display: font('Pirata One', 400, 0.01, 1.15),
+    body: font('Karla', 700, 0.18, 0.95, { uppercase: true }),
+    subtitle: date('custom1', '%d / %m / %Y'),
+    titleColor: 'accent',
+    subtitleColor: 'ink',
+    footerPanel: true,
+    mat: 2,
+    radius: 1,
+    ornaments: {
+      crest: { names: ['pumpkin'], color: 'accent' },
+      sticker: { names: ['pumpkin', 'bat'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['pumpkin'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'friendly-ghost',
+    category: 'halloween',
+    background: '#eef0f7',
+    ink: '#232540',
+    accent: '#6244d6',
+    secondary: '#dcdff4',
+    paper: '#ffffff',
+    display: font('Chewy', 400, 0.01, 1.05),
+    body: font('Nunito', 700, 0.14, 0.95, { uppercase: true }),
+    subtitle: date('hashtag', '%d.%m.%Y'),
+    titleColor: 'accent',
+    subtitleColor: 'ink',
+    mat: 2,
+    radius: 2,
+    ornaments: {
+      crest: { names: ['ghost'], color: 'accent' },
+      sticker: { names: ['ghost', 'star'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['ghost'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'gothic',
+    category: 'halloween',
+    background: '#0b0b0e',
+    ink: '#e8e2d6',
+    accent: '#e04a60',
+    secondary: '#201c28',
+    paper: '#e8e2d6',
+    display: font('Cinzel Decorative', 700, 0.02, 0.75),
+    body: font('Cormorant Garamond', 700, 0.24, 1.1, { uppercase: true }),
+    subtitle: date('custom1', '%d · %m · %Y'),
+    titleColor: 'ink',
+    subtitleColor: 'accent',
+    border: 'double',
+    rules: true,
+    ornaments: {
+      crest: { names: ['moon'], color: 'accent' },
+      sticker: { names: ['bat', 'moon'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['bat'], color: 'accent' },
+    },
+  }),
+
+  /* ------------------------------------------------------------ quinceañera */
+  style({
+    id: 'rose-gold',
+    category: 'quinceanera',
+    background: '#fdf0ef',
+    ink: '#5a2f35',
+    accent: '#a85a64',
+    secondary: '#f4d3d0',
+    paper: '#ffffff',
+    display: font('Great Vibes', 400, 0, 1.3),
+    body: font('Montserrat', 400, 0.24, 0.9, { uppercase: true }),
+    subtitle: date('custom1', '%d · %m · %Y'),
+    titleColor: 'accent',
+    subtitleColor: 'ink',
+    border: 'line',
+    rules: true,
+    mat: 1,
+    radius: 1,
+    ornaments: {
+      crest: { names: ['crown'], color: 'accent' },
+      sticker: { names: ['sparkle', 'hearts'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['crown'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'royal-purple',
+    category: 'quinceanera',
+    background: '#2a1250',
+    ink: '#fbeeff',
+    accent: '#f2c14e',
+    secondary: '#43207a',
+    paper: '#fbeeff',
+    display: font('Cinzel', 700, 0.06, 0.8, { uppercase: true }),
+    body: font('Raleway', 700, 0.26, 0.9, { uppercase: true }),
+    subtitle: date('custom1', '%d.%m.%Y'),
+    titleColor: 'accent',
+    subtitleColor: 'ink',
+    border: 'double',
+    rules: true,
+    mat: 1,
+    matColor: 'accent',
+    ornaments: {
+      crest: { names: ['crown'], color: 'accent' },
+      sticker: { names: ['star', 'sparkle'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['crown'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'fiesta',
+    category: 'quinceanera',
+    background: '#fff4e0',
+    ink: '#3b1236',
+    accent: '#d0204f',
+    secondary: '#c6efe9',
+    paper: '#ffffff',
+    display: font('Shrikhand', 400, 0.01, 0.9),
+    body: font('Poppins', 700, 0.14, 0.9, { uppercase: true }),
+    subtitle: date('custom1', '%d / %m / %Y'),
+    titleColor: 'accent',
+    subtitleColor: 'ink',
+    mat: 2,
+    radius: 2,
+    ornaments: {
+      crest: { names: ['flower'], color: 'accent' },
+      sticker: { names: ['flower', 'confetti'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['burst'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'teal-tiara',
+    category: 'quinceanera',
+    background: '#e8f6f4',
+    ink: '#12383d',
+    accent: '#0f7680',
+    secondary: '#cdeae6',
+    paper: '#ffffff',
+    display: font('Playfair Display', 400, 0, 1.1, { italic: true }),
+    body: font('Josefin Sans', 700, 0.26, 0.95, { uppercase: true }),
+    subtitle: date('custom1', '%d.%m.%Y'),
+    titleColor: 'ink',
+    subtitleColor: 'accent',
+    border: 'line',
+    mat: 1,
+    radius: 1,
+    ornaments: {
+      crest: { names: ['crown'], color: 'accent' },
+      sticker: { names: ['sparkle', 'hearts'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['crown'], color: 'accent' },
+    },
+  }),
+
+  /* ------------------------------------------------------------ corporate */
+  style({
+    id: 'clean-slate',
+    category: 'corporate',
+    background: '#ffffff',
+    ink: '#111110',
+    accent: '#2b3fe6',
+    secondary: '#eceefd',
+    paper: '#ffffff',
+    display: font('Inter', 700, -0.02, 1),
+    body: font('Inter', 700, 0.2, 0.9, { uppercase: true }),
+    subtitle: date('hashtag', '%d.%m.%Y'),
+    titleColor: 'ink',
+    subtitleColor: 'accent',
+    rules: true,
+    ornaments: {
+      corner: { names: ['corner'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'executive-navy',
+    category: 'corporate',
+    background: '#0e1b33',
+    ink: '#ffffff',
+    accent: '#5ec2ff',
+    secondary: '#1b3157',
+    paper: '#ffffff',
+    display: font('Montserrat', 700, 0.02, 0.9),
+    body: font('Open Sans', 700, 0.2, 0.9, { uppercase: true }),
+    subtitle: date('hashtag', '%d.%m.%Y'),
+    titleColor: 'ink',
+    subtitleColor: 'accent',
+    border: 'line',
+    rules: true,
+    ornaments: {
+      crest: { names: ['sparkle'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'warm-neutral',
+    category: 'corporate',
+    background: '#f5efe6',
+    ink: '#2a2622',
+    accent: '#b03a08',
+    secondary: '#e6dccb',
+    paper: '#fffaf1',
+    display: font('DM Serif Display', 400, 0, 1),
+    body: font('DM Sans', 700, 0.18, 0.9, { uppercase: true }),
+    subtitle: date('hashtag', '%d.%m.%Y'),
+    titleColor: 'ink',
+    subtitleColor: 'accent',
+    rules: true,
+    footerPanel: true,
+    radius: 1,
+    ornaments: {
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['camera'], color: 'accent' },
+    },
+  }),
+  style({
+    id: 'launch-day',
+    category: 'corporate',
+    background: '#101418',
+    ink: '#f2f5f7',
+    accent: '#35d0a0',
+    secondary: '#1d242b',
+    paper: '#f2f5f7',
+    display: font('Sora', 700, -0.01, 0.85),
+    body: font('IBM Plex Sans', 700, 0.22, 0.9, { uppercase: true }),
+    subtitle: date('hashtag', '%d.%m.%Y'),
+    titleColor: 'ink',
+    subtitleColor: 'accent',
+    border: 'line',
+    mat: 1,
+    matColor: 'secondary',
+    radius: 1,
+    ornaments: {
+      crest: { names: ['sparkle'], color: 'accent' },
+      sticker: { names: ['sparkle', 'star'], color: 'accent' },
+      corner: { names: ['corner'], color: 'accent' },
+      feature: { names: ['camera'], color: 'accent' },
+    },
+  }),
+];
+
+const byId = new Map<string, LibraryStyle>(LIBRARY_STYLES.map((s) => [s.id, s]));
+
+export const libraryStyle = (id: string): LibraryStyle | undefined => byId.get(id);
+
+export const stylesOf = (category: TemplateCategory): LibraryStyle[] =>
+  LIBRARY_STYLES.filter((s) => s.category === category);

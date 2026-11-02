@@ -16,8 +16,12 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const OUT_DIR = join(here, '..', 'public', 'mediapipe');
-const CACHE_DIR = join(here, '..', '.next', 'cache', 'mediapipe');
+// The server render worker (apps/render-worker) runs this same script for its own static files, so the three
+// places are overridable: where the files go, where the model is cached, and which package to resolve
+// @mediapipe/tasks-vision from (a file path inside it). Unset, they are this app's.
+const OUT_DIR = process.env.SEGMENTATION_OUT_DIR ?? join(here, '..', 'public', 'mediapipe');
+const CACHE_DIR = process.env.SEGMENTATION_CACHE_DIR ?? join(here, '..', '.next', 'cache', 'mediapipe');
+const RESOLVE_FROM = process.env.SEGMENTATION_RESOLVE_FROM ?? import.meta.url;
 
 // `/float16/1/` is the immutable copy of `/float16/latest/`; the hash below is what is actually trusted.
 const MODEL = {
@@ -73,7 +77,7 @@ async function fetchBytes(url, tries = 3) {
 
 async function copyRuntime() {
   // The package exports its wasm files by name, not its package.json: resolve one, then walk up.
-  const wasmDir = dirname(createRequire(import.meta.url).resolve('@mediapipe/tasks-vision/vision_wasm_internal.js'));
+  const wasmDir = dirname(createRequire(RESOLVE_FROM).resolve('@mediapipe/tasks-vision/vision_wasm_internal.js'));
   const { version } = JSON.parse(await readFile(join(wasmDir, '..', 'package.json'), 'utf8'));
   const sources = await Promise.all(WASM_FILES.map(async (name) => [name, await sizeOf(join(wasmDir, name))]));
   const missing = sources.filter(([, size]) => size === null).map(([name]) => name);
@@ -128,7 +132,7 @@ try {
   const model = await fetchModel();
   if (copied || model !== 'present')
     console.log(
-      `[segmentation] runtime ${copied ? `copied (${copied} files)` : 'up to date'}, model ${model} → public/mediapipe`,
+      `[segmentation] runtime ${copied ? `copied (${copied} files)` : 'up to date'}, model ${model} → ${OUT_DIR}`,
     );
 } catch (err) {
   console.error(

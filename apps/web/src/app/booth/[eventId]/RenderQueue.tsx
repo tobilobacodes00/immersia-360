@@ -7,7 +7,10 @@ import { Play, RotateCcw, Trash2, X } from 'lucide-react';
 import { boothDb, deleteTakeAndOutputs, outputsForTake, type LocalTake, type TakeStore } from '@immersia/offline';
 import { Button, EmptyState, IconButton, Modal, softSpring } from '@immersia/ui';
 import type { Messages } from 'next-intl';
+import { BoothHelpLink } from '@/components/BoothHelpLink';
 import { formatBytes, formatRelative } from '@/lib/format';
+import { HELP_ARTICLES } from '@/lib/help-links';
+import { RenderErrorHelp } from './BoothHelp';
 import { TakeBadges } from './TakeBadges';
 import type { RenderState } from './use-render-queue';
 
@@ -33,6 +36,8 @@ export function RenderQueue({
 }) {
   const t = useTranslations('booth.renderQueue');
   const te = useTranslations('booth.renderErrors');
+  const tp = useTranslations('booth.renderQueue.path');
+  const th = useTranslations('help.links');
   const locale = useLocale();
   const [playing, setPlaying] = useState<{ url: string; takeId: string } | null>(null);
   const [deleting, setDeleting] = useState<LocalTake | null>(null);
@@ -84,9 +89,12 @@ export function RenderQueue({
             >
               <header className="flex items-center justify-between border-b border-line px-6 py-4">
                 <h2 className="text-base font-semibold">{t('title')}</h2>
-                <IconButton label={t('close')} onClick={onClose}>
-                  <X className="size-4" />
-                </IconButton>
+                <div className="flex items-center gap-3">
+                  <BoothHelpLink slug={HELP_ARTICLES.renderSpeed} label={th('renderQueue')} />
+                  <IconButton label={t('close')} onClick={onClose}>
+                    <X className="size-4" />
+                  </IconButton>
+                </div>
               </header>
               <div className="flex-1 overflow-y-auto">
                 {takes.length === 0 ? (
@@ -95,6 +103,8 @@ export function RenderQueue({
                   <ul className="divide-y divide-line">
                     {takes.map((tk) => {
                       const active = current?.takeId === tk.id;
+                      // Where it is being (or was) rendered; the usual way, on this device, needs no mention.
+                      const path = active ? current.path : tk.renderPath;
                       return (
                         <li key={tk.id} className="px-6 py-3.5">
                           <div className="flex items-center gap-3">
@@ -104,7 +114,8 @@ export function RenderQueue({
                               </div>
                               <div className="tabular text-[12px] text-faint">
                                 {(tk.durationMs / 1000).toFixed(1)} s · {formatBytes(tk.bytes, locale)}
-                                {tk.status === 'failed' && tk.error && (
+                                {path && path !== 'local' && <> · {tp(path)}</>}
+                                {(tk.status === 'failed' || tk.status === 'server') && tk.error && (
                                   <>
                                     {' '}
                                     ·{' '}
@@ -112,10 +123,13 @@ export function RenderQueue({
                                   </>
                                 )}
                               </div>
+                              {/* HLP-3: why it failed and what to do. The queue is operator-only (hidden under the kiosk lock). */}
+                              {tk.status === 'failed' && <RenderErrorHelp code={tk.error} />}
                             </div>
                             <TakeBadges take={tk} />
                             <div className="flex items-center gap-0.5">
-                              {tk.status === 'rendered' && (
+                              {/* A video the server made is not on this device to play. */}
+                              {tk.status === 'rendered' && tk.renderPath !== 'server' && (
                                 <IconButton label={t('open')} onClick={() => void play(tk)}>
                                   <Play className="size-4" />
                                 </IconButton>

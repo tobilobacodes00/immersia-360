@@ -1,5 +1,6 @@
 import 'server-only';
 import { z } from 'zod';
+import { resolveSupportEmail } from '@/lib/support-email';
 import { parseKey } from './crypto-box';
 
 /**
@@ -12,6 +13,13 @@ import { parseKey } from './crypto-box';
 const optional = <T extends z.ZodType>(type: T) =>
   z.preprocess((v) => (typeof v === 'string' && v.trim() === '' ? undefined : v), type.optional());
 
+/** A positive whole number from the environment (empty counts as unset), with a default. */
+const intEnv = (fallback: number) =>
+  z.preprocess(
+    (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v),
+    z.coerce.number().int().min(1).max(1_000_000).default(fallback),
+  );
+
 const schema = z.object({
   DATABASE_URL: z.url(),
   BETTER_AUTH_SECRET: z.string().min(32, 'BETTER_AUTH_SECRET must be at least 32 characters'),
@@ -22,6 +30,8 @@ const schema = z.object({
   /** e.g. smtps://booth%40gmail.com:app-password@smtp.gmail.com:465 */
   SMTP_URL: z.url().optional(),
   EMAIL_FROM: z.string().min(3).default('Immersia 360 <onboarding@resend.dev>'),
+  /** Where privacy and support requests go (shown on /privacy and /terms); see lib/support-email.ts. */
+  SUPPORT_EMAIL: optional(z.email()),
   UPSTASH_REDIS_REST_URL: z.url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
   /** Object storage for guest files (S3 API: Cloudflare R2, MinIO in CI). All four or none. */
@@ -57,6 +67,27 @@ const schema = z.object({
   // Live Display hub (apps/realtime). Without it, screens poll the feed (still within LIV-2's 5 s).
   REALTIME_URL: z.url().optional(),
   REALTIME_SIGNING_SECRET: z.string().min(32).optional(),
+  /**
+   * Server render fallback (apps/render-worker). The worker authenticates to /api/render-worker/* with
+   * this shared secret (32+ random bytes: `openssl rand -base64 32`). Unset: the `server` rung of the
+   * render ladder is off and booths simply never offer it.
+   */
+  RENDER_WORKER_SECRET: optional(z.string().min(32, 'RENDER_WORKER_SECRET must be at least 32 characters')),
+  /** Fly Machines API: queued jobs start the scale-to-zero worker machine. Both unset: no-op (the worker runs elsewhere). */
+  FLY_API_TOKEN: optional(z.string().min(1)),
+  FLY_APP: optional(z.string().regex(/^[a-z0-9][a-z0-9-]{0,62}$/, 'FLY_APP must be a Fly app name')),
+  FLY_API_URL: optional(z.url()),
+  /** Server renders cost money per render: how many one event may queue per hour, in all, and one organization per day. */
+  SERVER_RENDER_LIMIT_EVENT_HOURLY: intEnv(60),
+  SERVER_RENDER_LIMIT_EVENT_TOTAL: intEnv(500),
+  SERVER_RENDER_LIMIT_ORG_DAILY: intEnv(1000),
+  /**
+   * Platform admins: a comma-separated list of email addresses allowed into /admin (success metrics,
+   * the reports queue). Checked on the server on every admin page and action; everyone else gets a 404.
+   */
+  ADMIN_EMAILS: optional(z.string().max(4000)),
+  /** Where escalated reports are sent for a legal or trust decision. Optional. */
+  TRUST_EMAIL: optional(z.email()),
   /** Enables test-only endpoints (the e2e mailbox). Refused on any Vercel deployment. */
   E2E: z.enum(['0', '1']).default('0'),
   /** Required with E2E=1: test-only routes also demand it as the x-e2e-token header (fail closed). */
@@ -85,6 +116,12 @@ export function env(): ServerEnv {
 }
 
 export const isProduction = () => process.env.VERCEL_ENV === 'production';
+
+/** The contact for privacy and support requests: SUPPORT_EMAIL, with a fallback (see lib/support-email.ts). */
+export function supportEmail(): string {
+  const e = env();
+  return resolveSupportEmail({ supportEmail: e.SUPPORT_EMAIL, emailFrom: e.EMAIL_FROM, origin: appOrigin() });
+}
 
 /** Public origin of this deployment, for links in emails and QR codes. */
 export function appOrigin(): string {

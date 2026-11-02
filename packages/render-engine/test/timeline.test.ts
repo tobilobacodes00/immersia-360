@@ -4,6 +4,7 @@ import {
   frameAtOrBefore,
   frameRuns,
   needsInterpolation,
+  plannedDurationFromCards,
   resolveFrames,
   timelineDuration,
   uniformPts,
@@ -153,5 +154,31 @@ describe('frameRuns', () => {
       reverse: 'boomerang',
     });
     expect(frameRuns(tl).map((r) => r.direction)).toEqual(['forward', 'backward', 'forward']);
+  });
+});
+
+describe('plannedDurationFromCards (the length a soundtrack, and a server render, are planned to)', () => {
+  const job = (patch: Partial<TimelineInput> = {}) => ({
+    slowMotion: base.slowMotion,
+    reverse: base.reverse,
+    output: { fps: base.outputFps },
+    ...patch,
+  });
+
+  it('is the take plus the cards', () => {
+    expect(plannedDurationFromCards(job(), { intro: 0, outro: 0, end: 0 }, 8)).toBeCloseTo(8, 6);
+    expect(plannedDurationFromCards(job(), { intro: 2, outro: 1, end: 2 }, 8)).toBeCloseTo(13, 6);
+  });
+
+  it('follows slow motion and reverse', () => {
+    const slow = job({ slowMotion: { enabled: true, startS: 2, endS: 6, speed: 0.5 } });
+    // 4 s at half speed take 8 s: 2 + 8 + 2.
+    expect(plannedDurationFromCards(slow, { intro: 0, outro: 0, end: 0 }, 8)).toBeCloseTo(12, 1);
+    expect(plannedDurationFromCards(job({ reverse: 'reverse' }), { intro: 0, outro: 0, end: 0 }, 2)).toBeCloseTo(4, 1);
+  });
+
+  it('agrees with the timeline it is built on', () => {
+    const frames = buildSourceTimes({ ...base, durationS: 5 }).length;
+    expect(plannedDurationFromCards(job(), { intro: 1, outro: 0, end: 2 }, 5)).toBeCloseTo(frames / 30 + 3, 6);
   });
 });

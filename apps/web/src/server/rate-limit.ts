@@ -25,10 +25,58 @@ export const LIMITS = {
   emailPerDevice: { limit: 120, windowS: 3600 },
   /** Each asset upload is a database row and a presigned URL: bound them per organization. */
   assetUploadPerOrg: { limit: 300, windowS: 3600 },
+  /** LIV-14: publishing a highlight reel reserves a large upload and replaces the gallery's reel. */
+  highlightPerOrg: { limit: 30, windowS: 3600 },
   /** LIV-1: a six-character pairing code must not be guessable by brute force. */
   displayPairPerIp: { limit: 20, windowS: 600 },
   /** SHR-5: gallery passwords are short; slow guessing right down. */
   galleryUnlockPerIp: { limit: 10, windowS: 600 },
+  /**
+   * ACC-3: an invitation is an email to someone who never asked for it, and every signed-in user
+   * owns an organization, so the invite form must not become a mailer. Each email sent (new or
+   * re-sent) counts against the inviter, the address it goes to, and the network it came from.
+   */
+  inviteSendPerUser: { limit: 30, windowS: 3600 },
+  inviteSendPerRecipient: { limit: 5, windowS: 86_400 },
+  inviteSendPerIp: { limit: 60, windowS: 3600 },
+  /** Re-sending one invitation: a nudge, not a loop. */
+  inviteResendPerInvitation: { limit: 3, windowS: 3600 },
+  /** SHR-6: the guest form is a public write endpoint: bound it per visitor, per session and per event. */
+  guestFormPerIp: { limit: 20, windowS: 600 },
+  guestFormPerTarget: { limit: 10, windowS: 3600 },
+  guestFormPerEvent: { limit: 600, windowS: 3600 },
+  /** Erasing a session needs only its link: keep a leaked or guessed link from being hammered. */
+  eraseSessionPerIp: { limit: 10, windowS: 600 },
+  eraseSessionPerLink: { limit: 5, windowS: 600 },
+  /** Operators: exports and the by-email privacy search are heavy or sensitive, so they are bounded too. */
+  privacyExportPerOrg: { limit: 12, windowS: 3600 },
+  privacyLookupPerOrg: { limit: 60, windowS: 600 },
+  /**
+   * Server renders (apps/render-worker): a presigned upload and a queued job per request. The money
+   * limits are per event and organization, in the database (render-jobs-core.ts); these only bound
+   * how fast one device can hammer the endpoints.
+   */
+  serverFilesPerDevice: { limit: 180, windowS: 3600 },
+  serverRenderPerDevice: { limit: 240, windowS: 3600 },
+  /** A booth tells the server which rung of the render ladder worked (the device's record). */
+  renderPathPerDevice: { limit: 600, windowS: 3600 },
+  /** HLP-1: the setup check's test QR and upload test (a presigned URL and a small object each). */
+  setupCheckPerDevice: { limit: 30, windowS: 3600 },
+  /** HLP-1: the booth asks every ~2 s while the test QR is on screen (at most its 10 minutes). */
+  setupCheckPollPerDevice: { limit: 400, windowS: 600 },
+  /** HLP-1: a phone opening the test QR. */
+  setupCheckScanPerIp: { limit: 30, windowS: 600 },
+  /** HLP-2: the help centre's contact form is public, so it can't be turned into a mailer. */
+  supportPerIp: { limit: 5, windowS: 3600 },
+  supportPerEmail: { limit: 3, windowS: 3600 },
+  /** POST /api/t: batches per booth, display or operator (a booth flushes every ~10 s while busy)… */
+  analyticsIngest: { limit: 120, windowS: 60 },
+  /** …and per address, so one network full of booths is not throttled by a single bad actor's key. */
+  analyticsIngestIp: { limit: 900, windowS: 60 },
+  /** Abuse: a report per reporter (a salted daily hash, never the address), per session, and per event. */
+  reportPerReporter: { limit: 5, windowS: 86_400 },
+  reportPerSession: { limit: 10, windowS: 3600 },
+  reportPerEvent: { limit: 60, windowS: 3600 },
 } satisfies Record<string, Limit>;
 
 type Name = keyof typeof LIMITS;

@@ -30,8 +30,19 @@ const config: NextConfig = {
     '@immersia/layout',
     '@immersia/fonts',
     '@immersia/effects',
+    // The companion's native recorder (CAP-14): loaded with a dynamic import, only inside the companion app.
+    '@immersia/capacitor-high-speed',
   ],
   typedRoutes: true,
+  // The help articles and the status incident log are read from disk when a page renders (HLP-2,
+  // HLP-4); nothing imports them, so the tracer has to be told to ship them with a serverless deploy.
+  outputFileTracingIncludes: {
+    '/help': ['./content/help/**/*'],
+    '/help/[slug]': ['./content/help/**/*'],
+    '/studio/help': ['./content/help/**/*'],
+    '/studio/help/[slug]': ['./content/help/**/*'],
+    '/status': ['./content/status/**/*'],
+  },
   env: {
     // Cache-busts public/workers/*.js per deploy (see src/lib/workers.ts).
     NEXT_PUBLIC_BUILD_ID: process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GITHUB_SHA ?? 'dev',

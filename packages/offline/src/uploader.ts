@@ -1,5 +1,7 @@
 import {
   UPLOAD_PRIORITY,
+  UPLOAD_REFUSAL_CODES,
+  isUploadRefusalCode,
   type OutputKind,
   type RegisterSessionInput,
   type RegisterSessionResult,
@@ -38,6 +40,11 @@ export class BoothApiError extends Error {
   }
 }
 
+/** The server's answer (HTTP 410) when a guest deleted the session being uploaded. */
+export const SESSION_ERASED = UPLOAD_REFUSAL_CODES.erased;
+/** The server's answer (HTTP 410) when the platform took the session being uploaded down. */
+export const SESSION_REMOVED = UPLOAD_REFUSAL_CODES.removed;
+
 /** Presigned uploads last an hour; refresh well before. */
 const TICKET_TTL_MS = 45 * 60_000;
 
@@ -61,7 +68,8 @@ export function backoffMs(attempts: number, random = Math.random): number {
 
 export type UploadStep =
   | { kind: 'idle' }
-  | { kind: 'uploaded'; sessionId: string; outputId: string; bytes: number }
+  /** `retries`: how many attempts failed in a row before this one got through. */
+  | { kind: 'uploaded'; sessionId: string; outputId: string; bytes: number; retries: number }
   | { kind: 'registered'; sessionId: string }
   | { kind: 'emailed'; sessionId: string }
   | { kind: 'opted_out'; sessionId: string }
@@ -190,7 +198,13 @@ export class UploadQueue {
       if (confirmed !== 'ok') throw new BoothApiError(409, `upload_${confirmed}`, true);
       await this.db.outputs.update(next.id, { uploadedAt: this.now() });
       await this.db.sessions.update(session.id, { attempts: 0, lastError: undefined, updatedAt: this.now() });
-      return { kind: 'uploaded', sessionId: session.id, outputId: next.id, bytes: next.bytes };
+      return {
+        kind: 'uploaded',
+        sessionId: session.id,
+        outputId: next.id,
+        bytes: next.bytes,
+        retries: session.attempts,
+      };
     }
 
     // Nothing to upload. Done once every take has finished rendering; until then, check back later
@@ -233,6 +247,20 @@ export class UploadQueue {
     this.tickets.delete(session.id);
     const apiErr = err instanceof BoothApiError ? err : null;
     if (apiErr?.deviceRevoked) return { kind: 'revoked' };
+    // The server will never take this session again: the guest deleted it (privacy) or the platform
+    // took it down (reports). There is nothing left to upload and nothing for the operator to fix:
+    // settle it quietly, and drop the address of any email still waiting (its link would lead to a
+    // "deleted" or "removed" page).
+    if (apiErr && isUploadRefusalCode(apiErr.code)) {
+      await this.db.sessions.update(session.id, {
+        state: 'done',
+        lastError: undefined,
+        pendingEmails: [],
+        displayOptOutPending: false,
+        updatedAt: this.now(),
+      });
+      return { kind: 'done', sessionId: session.id };
+    }
     const message = apiErr ? apiErr.code : err instanceof Error ? err.message : String(err);
     const retryable = apiErr ? apiErr.retryable : true; // network errors and storage hiccups retry
     if (!retryable) {

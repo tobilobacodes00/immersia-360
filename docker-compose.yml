@@ -1,0 +1,33 @@
+# Everything the app needs to run on your own machine: the same Postgres and the same S3-compatible
+# store CI uses, so what works here works there. Production uses Neon and Cloudflare R2 instead.
+#
+#   docker compose up -d     start them
+#   docker compose down      stop them (the data stays)
+#   docker compose down -v   stop them and throw the data away
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: immersia
+    ports: ['5432:5432']
+    volumes: ['immersia-db:/var/lib/postgresql/data']
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Guest files. S3Mock ignores signatures, so presigned uploads and downloads behave as they do on R2.
+  s3:
+    image: adobe/s3mock:5.2.3
+    environment:
+      COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS: immersia-local
+      COM_ADOBE_TESTING_S3MOCK_RETAIN_FILES_ON_EXIT: 'true'
+    ports: ['9090:9090']
+    volumes: ['immersia-files:/s3mockroot']
+
+volumes:
+  immersia-db:
+  immersia-files:

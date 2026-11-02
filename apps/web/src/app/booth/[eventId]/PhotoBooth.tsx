@@ -34,6 +34,7 @@ import {
 import { Pill } from '@immersia/ui';
 import { CountdownDisc, GuestButton, GuestScreen, Headline, fade } from '@immersia/ui/guest';
 import { readDeviceIdentity, type DeviceIdentity } from '@/lib/device-identity';
+import { localEncoder, warmWasmEncoder } from '@/lib/device-ladder';
 import { pageSegmenter } from '@/lib/segmenter';
 import { workerUrl } from '@/lib/workers';
 import { useLiveBackground, useWarmSegmenter } from './background-source';
@@ -41,6 +42,7 @@ import { useCaptureKeys, useHeartbeat, useOnline, useWakeLock } from './booth-ho
 import type { AssetView } from '@/server/assets';
 import { fillAssets } from './event-assets';
 import { fitted, templateResources } from './media';
+import { CameraErrorHelp, StatusHelp } from './BoothHelp';
 import { Confetti } from './Confetti';
 import { Gallery } from './Gallery';
 import { KioskLockLayer, useKioskLock } from './KioskLock';
@@ -50,10 +52,13 @@ import { RegisterDevice } from './RegisterDevice';
 import { ResultScreen } from './ResultScreen';
 import { SettingsDrawer } from './SettingsDrawer';
 import { describeCamera, reconcileWithCamera, type ActiveCamera } from './active-camera';
-import { fillLightOf, needsReopen, type CameraChoice } from './camera-choice';
+import { fillLightOf, needsReopen, usableChoice, type CameraChoice } from './camera-choice';
 import { FillLightFrame } from './FillLightFrame';
 import { useOpenGuard } from './open-guard';
 import { useCameraChoice } from './use-camera-choice';
+import { SetupCheckPrompt } from './SetupCheckPrompt';
+import { useSetupCheckPrompt } from './use-setup-check-prompt';
+import { boothBrowser, useBoothAnalytics } from './use-booth-analytics';
 import { useUploadQueue } from './use-upload-queue';
 
 export interface PhotoBoothEvent {
@@ -71,6 +76,8 @@ export interface PhotoBoothEvent {
   layout: Template | null;
   /** LIV-8: guests are told their capture may appear on the Live Display, and can opt out. */
   liveDisplay: boolean;
+  /** HLP-1: the setup check for this booth. */
+  checkHref: string;
   /** Dynamic fields and every file the layout draws (screen 5). */
   media: { branding: { hashtag: string; custom1: string; custom2: string; custom3: string }; assets: AssetView[] };
 }
@@ -86,7 +93,7 @@ type Phase =
   | { kind: 'review'; preview: string }
   | { kind: 'making' }
   /** `strip`: the kept strip at print resolution, for the guest's reprints. */
-  | { kind: 'result'; session: LocalSession; preview: string; strip: Blob }
+  | { kind: 'result'; session: LocalSession; preview: string; strip: Blob; endedAt: number }
   | { kind: 'error'; code: string };
 
 /** Frames per second of the motion clips (PHO-2). */
@@ -137,6 +144,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
   const p = event.photo;
   const wantsClips = p.outputs.boomerang || p.outputs.shortVideo;
   const kiosk = useKioskLock(event.kioskPinHash);
+  const setupCheck = useSetupCheckPrompt(identity?.id ?? null);
   // A session is under way, from the first countdown until the strip is kept: the gallery stays out of its way.
   const capturing =
     phase.kind === 'starting' ||
@@ -146,7 +154,10 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
     phase.kind === 'review' ||
     phase.kind === 'making';
   const closeGallery = useCallback(() => setGalleryOpen(false), []);
-  const uploads = useUploadQueue({ eventId: event.id, token: identity?.token ?? null, store });
+  const track = useBoothAnalytics({ eventId: event.id, mode: 'photo', token: identity?.token ?? null });
+  const uploads = useUploadQueue({ eventId: event.id, token: identity?.token ?? null, store, onTrack: track });
+  // When a guest's session began and its last shot was taken (analytics), and how they started it.
+  const timing = useRef({ startedAt: 0, lastShotAt: 0, trigger: 'tap' as 'tap' | 'keyboard' });
   useWakeLock(phase.kind !== 'idle');
   useHeartbeat(
     identity?.token ?? null,
@@ -162,6 +173,11 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
       renderer.current?.dispose();
       renderer.current = null;
     };
+  }, []);
+
+  // A browser without an H.264 encoder fetches the WebAssembly one now, while online, for the boomerang and the short video.
+  useEffect(() => {
+    void warmWasmEncoder(false);
   }, []);
 
   const releaseShots = useCallback(() => {
@@ -191,7 +207,10 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
   );
 
   const startCamera = useCallback(
-    async (choice: CameraChoice) => {
+    async (saved: CameraChoice) => {
+      // The photo booth has no use for the companion's native high-speed camera (CAP-14), which the 360
+      // booth may have left as the saved choice: it opens a browser camera.
+      const choice = usableChoice(saved, false);
       // This open supersedes any other in flight (a double tap): only the newest may use its camera.
       const token = openGuard.begin();
       setPhase({ kind: 'starting' });
@@ -304,13 +323,19 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
           twoUp: p.print.doubleStrip && p.printSize === '2x6',
         });
         setPrintsLeft((n) => Math.max(0, n - 1));
+        track({
+          name: 'print_sent',
+          size: p.printSize,
+          copies: p.print.copies,
+          double_strip: p.print.doubleStrip && p.printSize === '2x6',
+        });
       } catch (err) {
         console.warn('[print]', err);
       } finally {
         setPrinting(false);
       }
     },
-    [p],
+    [p, track],
   );
 
   /** PHO-2 extras, made after the guest already has their QR: GIF, boomerang, short video. */
@@ -415,20 +440,22 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
           clips.push(graded);
         }
         const client = renderer.current;
+        // The browser's H.264 encoder, or the WebAssembly one on a browser that has none.
+        const encoder = await localEncoder();
         if (client && p.outputs.boomerang && clips.at(-1)?.length) {
           // The last shot's moment, forward and back. The worker takes ownership of the frames it
           // gets, so when the short video also needs them, the boomerang gets copies.
           const last = clips.at(-1)!;
           const frames = p.outputs.shortVideo ? await Promise.all(last.map((f) => createImageBitmap(f))) : last;
           const { width, height } = frames[0]!;
-          const mp4 = await client.clip(`${session.id}:boomerang`, frames, CLIP_FPS, true);
+          const mp4 = await client.clip(`${session.id}:boomerang`, frames, CLIP_FPS, true, encoder);
           if (!p.outputs.shortVideo) clips[clips.length - 1] = [];
           await save('boomerang', mp4, width, height, Math.round(((frames.length * 2 - 2) / CLIP_FPS) * 1000));
         }
         const all = clips.flat();
         if (client && p.outputs.shortVideo && all.length) {
           const { width, height } = all[0]!;
-          const mp4 = await client.clip(`${session.id}:short`, all, CLIP_FPS, false);
+          const mp4 = await client.clip(`${session.id}:short`, all, CLIP_FPS, false, encoder);
           await save('short_video', mp4, width, height, Math.round((all.length / CLIP_FPS) * 1000));
         } else all.forEach((f) => f.close());
       } catch (err) {
@@ -448,7 +475,15 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
     // Leaves 'review' at once, so a second tap (or the review timer) cannot keep the strip twice.
     enter({ kind: 'making' });
     const session = await mintSession(db, { eventId: event.id, takeIds: [], capturedAt: Date.now() });
-    const image = await composeStrip(session, 1);
+    const renderStarted = performance.now();
+    let image: Blob;
+    try {
+      image = await composeStrip(session, 1);
+    } catch (err) {
+      track({ name: 'render_failed', error_code: 'strip_failed', path: 'local', browser: boothBrowser() });
+      throw err;
+    }
+    const renderMs = performance.now() - renderStarted;
     const { width, height } = canvasSizeFor(p.printSize);
     await putOutput(db, s, {
       takeId: null,
@@ -461,19 +496,41 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
       durationMs: 0,
     });
     uploads.nudgeSession(session.id);
+    // Usage and capture-to-QR timing (success metrics).
+    const { startedAt, lastShotAt, trigger } = timing.current;
+    const cam = camera.current?.settings;
+    track({
+      name: 'take_recorded',
+      mode: 'photo',
+      duration_s: Math.min(86_400, Math.max(0, (lastShotAt - startedAt) / 1000)),
+      fps: Math.round(cam?.frameRate ?? 30),
+      resolution: cam ? `${cam.width}x${cam.height}` : '1920x1080',
+      trigger,
+    });
+    track({
+      name: 'render_completed',
+      render_ms: Math.min(3_600_000, Math.round(renderMs)),
+      path: 'local',
+      preset: `strip-${p.printSize}`,
+      effects_count: (p.filterId ? 1 : 0) + (p.effectId ? 1 : 0),
+      seconds_since_take: Math.min(86_400, Math.max(0, (performance.now() - lastShotAt) / 1000)),
+      mode: 'photo',
+    });
     setPrintsLeft(p.print.enabled ? p.print.maxGuestCopies : 0);
-    setPhase({ kind: 'result', session, preview: URL.createObjectURL(image), strip: image });
+    setPhase({ kind: 'result', session, preview: URL.createObjectURL(image), strip: image, endedAt: lastShotAt });
     if (p.print.enabled && p.print.autoPrint) void print(image);
     void makeExtras(session);
-  }, [composeStrip, db, enter, event.id, makeExtras, p, print, store, uploads]);
+  }, [composeStrip, db, enter, event.id, makeExtras, p, print, store, track, uploads]);
 
   /** One session: every shot with its countdown, then the reveal. */
   const runSession = useCallback(
-    async (force = false) => {
+    async (force = false, via?: 'tap' | 'keyboard') => {
       if (!force && !ARMED.includes(phaseRef.current.kind)) return;
       const v = videoRef.current;
       if (!v) return;
       releaseShots();
+      timing.current.startedAt = performance.now();
+      if (via) timing.current.trigger = via;
       for (let shot = 0; shot < p.shots; shot++) {
         let remaining = shot === 0 ? p.countdownSeconds : Math.round(p.secondsBetweenShots);
         while (remaining > 0) {
@@ -485,6 +542,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
         const clip = motionBuffer.current ? motionBuffer.current.clip(500) : null;
         const still = await grade(await createImageBitmap(v));
         shots.current.push({ still, clip });
+        timing.current.lastShotAt = performance.now();
         setPhase({ kind: 'flash', shot });
         await wait(450);
       }
@@ -516,7 +574,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
     });
   }, []);
 
-  useCaptureKeys(event.triggers.keyboard && ARMED.includes(phase.kind), () => void runSession());
+  useCaptureKeys(event.triggers.keyboard && ARMED.includes(phase.kind), () => void runSession(false, 'keyboard'));
 
   const themeVars = useMemo(() => guestThemeVars(event.theme), [event.theme]);
 
@@ -562,22 +620,33 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
           </Link>
         )}
         <div className="flex flex-wrap items-center justify-end gap-2" role="status" aria-live="polite">
+          {/* The "?" beside a pill is for the operator: never while the kiosk is PIN-locked. */}
           {!online && (
-            <Pill tone="warn" className="text-[0.8rem]">
-              <WifiOff className="size-3.5" aria-hidden /> {t('offline')}
-            </Pill>
+            <>
+              <Pill tone="warn" className="text-[0.8rem]">
+                <WifiOff className="size-3.5" aria-hidden /> {t('offline')}
+              </Pill>
+              {!kiosk.locked && <StatusHelp kind="offline" />}
+            </>
           )}
           {backgroundUnavailable && !kiosk.locked && (
-            <Pill tone="warn" className="text-[0.8rem]">
-              {t('backgroundUnavailable')}
-            </Pill>
+            <>
+              <Pill tone="warn" className="text-[0.8rem]">
+                {t('backgroundUnavailable')}
+              </Pill>
+              <StatusHelp kind="background" />
+            </>
           )}
           {uploads.status.waiting > 0 && (
-            <Pill tone={online ? 'neutral' : 'warn'} className="text-[0.8rem]">
-              {online
-                ? t('uploads.waiting', { count: uploads.status.waiting })
-                : t('uploads.offline', { count: uploads.status.waiting })}
-            </Pill>
+            <>
+              <Pill tone={online ? 'neutral' : 'warn'} className="text-[0.8rem]">
+                {online
+                  ? t('uploads.waiting', { count: uploads.status.waiting })
+                  : t('uploads.offline', { count: uploads.status.waiting })}
+              </Pill>
+              {/* Offline, the offline pill already carries the same "?". */}
+              {online && !kiosk.locked && <StatusHelp kind="offline" />}
+            </>
           )}
           {!kiosk.locked && (
             <>
@@ -620,6 +689,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
               >
                 {t('startBooth')}
               </GuestButton>
+              {setupCheck.due && <SetupCheckPrompt href={event.checkHref} onSkip={setupCheck.skip} />}
             </div>
           </GuestScreen>
         )}
@@ -644,7 +714,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
               {event.attract.headline}
             </Headline>
             {event.triggers.tap && (
-              <GuestButton primary className="min-w-[16rem]" onClick={() => void runSession()}>
+              <GuestButton primary className="min-w-[16rem]" onClick={() => void runSession(false, 'tap')}>
                 <Camera className="size-6" aria-hidden /> {event.attract.cta}
               </GuestButton>
             )}
@@ -723,6 +793,14 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
             liveDisplay={event.liveDisplay}
             onOptOut={() => optOutOfDisplay(db, phase.session.id).then(() => uploads.nudgeSession(phase.session.id))}
             onDone={backToReady}
+            // The QR is on screen: the capture-to-QR time, from the last shot.
+            onShown={() =>
+              track({
+                name: 'qr_shown',
+                seconds_since_take: Math.max(0, (performance.now() - phase.endedAt) / 1000),
+                mode: 'photo',
+              })
+            }
             actions={
               p.print.enabled ? (
                 <GuestButton
@@ -743,6 +821,8 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
             <div role="alert" className="max-w-md text-center">
               <h2 className="text-[1.6rem] font-bold">{t('errors.title')}</h2>
               <p className="mt-2 opacity-70">{t(`errors.${errorKey(phase.code)}`)}</p>
+              {/* The steps for this very error, for the operator; a guest-facing kiosk shows none. */}
+              {!kiosk.locked && <CameraErrorHelp code={phase.code} className="mt-3" />}
               <GuestButton primary className="mt-6" onClick={() => void startCamera(cameraChoice)}>
                 {t('errors.retry')}
               </GuestButton>
@@ -771,6 +851,7 @@ export function PhotoBooth({ event }: { event: PhotoBoothEvent }) {
         }}
         camera={phase.kind === 'error' ? null : activeCamera}
         cameraBusy={cameraBusy}
+        checkHref={event.checkHref}
       />
 
       <KioskLockLayer eventId={event.id} pinHash={event.kioskPinHash} kiosk={kiosk} />

@@ -14,7 +14,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@mediapipe/tasks-vision": "catalog:"
+    "@mediapipe/tasks-vision": "catalog:",
+    "@immersia/capacitor-high-speed": "workspace:*"
   },
   "devDependencies": {
     "typescript": "catalog:",

@@ -1,7 +1,7 @@
 import type { Rotation } from 'mediabunny';
 import { parseHexColor, type PersonMask } from '../background-math';
 import { BackgroundStage } from './background';
-import { coverCrop } from './crop';
+import { coverCrop, zoomedCrop } from './crop';
 import {
   GLError,
   bindTexture,
@@ -15,7 +15,7 @@ import {
   type Target,
 } from './gl';
 import { GradeStage, type Clock, type EffectPass, type LookPass } from './grade';
-import { BLIT, CARD, DOWN, FINAL, LK, LUMA, SELECT, SMOOTH, SYNTH } from './shaders';
+import { BLIT, CARD, DOWN, FINAL, LK, LUMA, MIX, SELECT, SMOOTH, SYNTH } from './shaders';
 
 // Five levels: coarse-to-fine reach of roughly 200 px of motion per frame at 1080p output, which
 // covers a fast platform sweep; the coarsest levels are tiny, so the cost is negligible.
@@ -28,6 +28,16 @@ export interface SourceGeometry {
   width: number;
   height: number;
   rotation: Rotation;
+}
+
+/** One layer of a highlight-reel frame (LIV-14): a decoded video frame or a picture, framed on its own. */
+export interface ReelLayer {
+  source: TexImageSource;
+  geo: SourceGeometry;
+  /** Ken Burns: 1 = the plain cover crop, above 1 = closer in. */
+  zoom?: number;
+  /** −1 … 1 per axis (y down): where the zoomed window sits in the room the picture leaves around it. */
+  pan?: [number, number];
 }
 
 /** What goes behind the person when a background is set (CAP-10). */
@@ -54,6 +64,10 @@ export class Compositor {
   private srcA: WebGLTexture;
   private srcB: WebGLTexture;
   private overlayTex: WebGLTexture | null = null;
+  /** The highlight reel's layers (LIV-14), created on first use so a booth render never pays for them. */
+  private mixProgram: Program | null = null;
+  private layerTex: [WebGLTexture, WebGLTexture] | null = null;
+  private layerLoaded: [TexImageSource | null, TexImageSource | null] = [null, null];
   /** Look and effects (VID-7, VID-11), created on first use. */
   private grade: GradeStage | null = null;
   /** Background replacement (CAP-10), alive only while a background is set. */
@@ -263,6 +277,43 @@ export class Compositor {
     this.draw();
   }
 
+  /**
+   * A highlight-reel frame (LIV-14): layer `a` alone, or `a` cross-faded into `b` (`mix` 0 = all `a`, 1 = all
+   * `b`), each cover-cropped to the output with its own Ken Burns zoom. Like `composeReal`, the result waits in
+   * the working frame: `finish(false)` puts it on the canvas (nothing graded, no overlay).
+   */
+  composeLayers(a: ReelLayer, b: ReelLayer | null, mix: number) {
+    const gl = this.gl;
+    const prog = (this.mixProgram ??= compile(gl, MIX));
+    const tex = (this.layerTex ??= [texture(gl), texture(gl)]);
+    this.loadLayer(0, a);
+    if (b) this.loadLayer(1, b);
+    this.flowKey = null;
+    this.use(prog, this.frame);
+    bindTexture(gl, 0, tex[0]);
+    bindTexture(gl, 1, b ? tex[1] : tex[0]);
+    gl.uniform1i(prog.uniform('uSrcA'), 0);
+    gl.uniform1i(prog.uniform('uSrcB'), 1);
+    const frame = (suffix: 'A' | 'B', layer: ReelLayer) => {
+      const cover = coverCrop(layer.geo.width, layer.geo.height, layer.geo.rotation, this.width, this.height);
+      const crop = layer.zoom ? zoomedCrop(cover, layer.zoom, layer.pan?.[0] ?? 0, layer.pan?.[1] ?? 0) : cover;
+      gl.uniform2f(prog.uniform(`uScale${suffix}`), crop.scale[0], crop.scale[1]);
+      gl.uniform2f(prog.uniform(`uOffset${suffix}`), crop.offset[0], crop.offset[1]);
+      gl.uniform1i(prog.uniform(`uRot${suffix}`), layer.geo.rotation);
+    };
+    frame('A', a);
+    frame('B', b ?? a);
+    gl.uniform1f(prog.uniform('uMix'), b ? Math.min(1, Math.max(0, mix)) : 0);
+    this.draw();
+  }
+
+  /** Upload a layer unless the texture already holds it: a picture stays on screen for seconds, a video frame is new every time. */
+  private loadLayer(i: 0 | 1, layer: ReelLayer) {
+    if (this.layerLoaded[i] === layer.source) return;
+    upload(this.gl, this.layerTex![i], layer.source);
+    this.layerLoaded[i] = layer.source instanceof ImageBitmap ? layer.source : null;
+  }
+
   /** A still card covering the frame (no overlay on cards). */
   drawCard(image: TexImageSource, imageWidth: number, imageHeight: number) {
     const gl = this.gl;
@@ -461,7 +512,8 @@ export class Compositor {
       deleteTarget(gl, this.flow.smoothAB);
       deleteTarget(gl, this.flow.smoothBA);
     }
-    for (const t of [this.srcA, this.srcB, this.overlayTex]) if (t) gl.deleteTexture(t);
+    for (const t of [this.srcA, this.srcB, this.overlayTex, ...(this.layerTex ?? [])]) if (t) gl.deleteTexture(t);
+    if (this.mixProgram) gl.deleteProgram(this.mixProgram.program);
     this.grade?.dispose();
     this.background?.dispose();
     gl.getExtension('WEBGL_lose_context')?.loseContext();

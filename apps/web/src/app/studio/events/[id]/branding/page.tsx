@@ -39,7 +39,8 @@ export default async function BrandingPage({ params }: { params: Promise<{ id: s
       const designId = kind === 'layout' ? output.photo.layoutTemplateId : output.video360.overlayTemplateId;
       const [design, library, uploads] = await Promise.all([
         designId ? getTemplate(op.organizationId, designId) : null,
-        listLibraryTemplates(op.organizationId, kind),
+        // The built-in library is browsed on its own screen: the chooser lists the organisation's saved designs.
+        listLibraryTemplates(op.organizationId, kind, { builtIns: false }),
         // Uploaded frames and overlays can become the design directly.
         listAssets(op.organizationId, kind === 'overlay' ? ['overlay'] : ['layout', 'overlay']),
       ]);
