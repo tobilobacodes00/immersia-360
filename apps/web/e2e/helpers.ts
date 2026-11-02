@@ -86,14 +86,18 @@ export interface SeededSession {
 }
 
 /**
- * Register this browser as a booth device and give the event one finished guest session (a photo
+ * Register this browser as a booth device (once: a browser that already is one keeps its device, and
+ * the booth no longer offers to register) and give the event one finished guest session (a photo
  * strip, uploaded and confirmed), through the same API a booth uses. For specs about what happens to
- * a guest's page, not about capturing it.
+ * a guest's page, not about capturing it. Call it again for a second session on the same event.
  */
 export async function seedSession(page: Page, request: APIRequestContext, eventId: string): Promise<SeededSession> {
   await open(page, `/booth/${eventId}`);
-  await page.getByRole('button', { name: 'Register and continue' }).click();
-  await page.waitForFunction(() => localStorage.getItem('immersia.device.v1') !== null);
+  const registered = await page.evaluate(() => localStorage.getItem('immersia.device.v1') !== null);
+  if (!registered) {
+    await page.getByRole('button', { name: 'Register and continue' }).click();
+    await page.waitForFunction(() => localStorage.getItem('immersia.device.v1') !== null);
+  }
   const device = await page.evaluate(
     () => JSON.parse(localStorage.getItem('immersia.device.v1')!) as { id: string; token: string },
   );
