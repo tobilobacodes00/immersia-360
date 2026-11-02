@@ -2827,6 +2827,10 @@
       "title": "Privacy notice",
       "lede": "What Immersia 360 stores when you use a photo or 360 video booth, why, for how long, who else handles it, and how to use your rights.",
       "sections": {
+        "who": {
+          "title": "Who runs Immersia 360",
+          "p1": "Immersia 360 is operated by Immersia VR, a company established in Nigeria. Immersia VR is responsible for this notice and for the service described in it. Write to tech@immersiavr.com about anything on this page."
+        },
         "roles": {
           "title": "Who is responsible for your data",
           "p1": "Two parties are involved, and their roles differ.",
@@ -2904,6 +2908,10 @@
       "title": "Terms of use",
       "lede": "The rules for using Immersia 360, a free photo and 360 video booth that runs in the browser.",
       "sections": {
+        "who": {
+          "title": "Who runs Immersia 360",
+          "p1": "Immersia 360 is operated by Immersia VR, a company established in Nigeria. In these terms, “we” and “us” mean Immersia VR. Write to tech@immersiavr.com with any question about them."
+        },
         "agreement": {
           "title": "These terms",
           "p1": "These terms apply when you use Immersia 360, whether you run events (an operator) or open a link from a booth (a guest). By using the service you agree to them. If you use it for a business, you confirm you can bind it."
@@ -2951,6 +2959,10 @@
         "changes": {
           "title": "Changes",
           "p1": "We may update these terms; the date above shows the latest version. Using the service after a change means you accept it."
+        },
+        "law": {
+          "title": "Governing law",
+          "p1": "These terms are governed by the laws of the Federal Republic of Nigeria, and the courts of Nigeria have jurisdiction over any dispute arising from them. If you are a consumer, this does not remove the protection of the mandatory law of the country you live in, nor your right to bring a claim there."
         },
         "contact": {
           "title": "Contact",

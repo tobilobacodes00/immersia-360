@@ -10,14 +10,15 @@ import { LanguagePicker } from '@/components/LanguagePicker';
  *
  * LEGAL REVIEW REQUIRED BEFORE LAUNCH. The wording of both documents (src/…/messages/*.json, the
  * `legal` namespace) is a good-faith draft written from the product's actual behaviour. It has not
- * been reviewed by a lawyer. Before launch, have counsel confirm at least: the legal entity and
- * address that must be named, governing law and venue (deliberately absent), the controller/processor
- * split, the lawful bases, international-transfer mechanisms, backup retention, the sub-processor
- * list and the NDPA/GDPR representative requirements, and review the Spanish and Portuguese texts.
+ * been reviewed by a lawyer. The operating entity (Immersia VR, Nigeria) and the governing-law
+ * clause are now named, at the owner's instruction. Before launch, have counsel confirm at least:
+ * the registered name and address, the venue, the controller/processor split, the lawful bases,
+ * international-transfer mechanisms, backup retention, the sub-processor list and the NDPA/GDPR
+ * representative requirements, and review the Spanish and Portuguese texts.
  */
 
 /** The date shown as "last updated"; bump it whenever the wording changes. */
-export const LEGAL_UPDATED = '2026-10-20';
+export const LEGAL_UPDATED = '2026-11-02';
 
 /** A paragraph (string/node) or a bulleted list. */
 export type LegalBlock = ReactNode | { list: ReactNode[] };

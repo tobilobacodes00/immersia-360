@@ -4,8 +4,9 @@ import { getTranslations } from 'next-intl/server';
 import { LegalPage, withEmail, type LegalSection } from '@/components/legal/LegalPage';
 import { supportEmail } from '@/server/env';
 
-// NEEDS LEGAL REVIEW before launch: see the note in components/legal/LegalPage.tsx. In particular
-// there is deliberately no governing-law or venue clause: that is a decision for the operating entity.
+// NEEDS LEGAL REVIEW before launch: see the note in components/legal/LegalPage.tsx. The operating
+// entity and the governing-law clause are now named (Immersia VR, Nigeria); counsel should confirm
+// the registered name and address, the venue, and the liability wording.
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('legal.terms');
@@ -17,6 +18,11 @@ export default async function TermsPage() {
   const t = await getTranslations('legal.terms');
   const email = supportEmail();
   const sections: LegalSection[] = [
+    {
+      id: 'who',
+      title: t('sections.who.title'),
+      blocks: [withEmail(t('sections.who.p1', { email }), email)],
+    },
     { id: 'agreement', title: t('sections.agreement.title'), blocks: [t('sections.agreement.p1')] },
     { id: 'service', title: t('sections.service.title'), blocks: [t('sections.service.p1')] },
     {
@@ -65,6 +71,7 @@ export default async function TermsPage() {
     { id: 'liability', title: t('sections.liability.title'), blocks: [t('sections.liability.p1')] },
     { id: 'ending', title: t('sections.ending.title'), blocks: [t('sections.ending.p1')] },
     { id: 'changes', title: t('sections.changes.title'), blocks: [t('sections.changes.p1')] },
+    { id: 'law', title: t('sections.law.title'), blocks: [t('sections.law.p1')] },
     {
       id: 'contact',
       title: t('sections.contact.title'),

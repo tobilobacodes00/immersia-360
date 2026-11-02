@@ -2827,6 +2827,10 @@
       "title": "Aviso de privacidad",
       "lede": "Qué guarda Immersia 360 cuando usas una cabina de fotos o de vídeo 360, por qué, durante cuánto tiempo, quién más lo trata y cómo ejercer tus derechos.",
       "sections": {
+        "who": {
+          "title": "Quién opera Immersia 360",
+          "p1": "Immersia 360 es operado por Immersia VR, una empresa constituida en Nigeria. Immersia VR es responsable de este aviso y del servicio que describe. Escribe a tech@immersiavr.com por cualquier tema de esta página."
+        },
         "roles": {
           "title": "Quién es responsable de tus datos",
           "p1": "Intervienen dos partes y sus funciones son distintas.",
@@ -2904,6 +2908,10 @@
       "title": "Términos de uso",
       "lede": "Las reglas para usar Immersia 360, una cabina de fotos y vídeo 360 gratuita que funciona en el navegador.",
       "sections": {
+        "who": {
+          "title": "Quién opera Immersia 360",
+          "p1": "Immersia 360 es operado por Immersia VR, una empresa constituida en Nigeria. En estos términos, «nosotros» significa Immersia VR. Escribe a tech@immersiavr.com si tienes alguna consulta sobre ellos."
+        },
         "agreement": {
           "title": "Estos términos",
           "p1": "Estos términos se aplican cuando usas Immersia 360, ya sea que organices eventos (operador) o abras un enlace de una cabina (invitado). Al usar el servicio los aceptas. Si lo usas para un negocio, confirmas que puedes obligarlo."
@@ -2951,6 +2959,10 @@
         "changes": {
           "title": "Cambios",
           "p1": "Podemos actualizar estos términos; la fecha de arriba indica la versión más reciente. Usar el servicio después de un cambio significa que lo aceptas."
+        },
+        "law": {
+          "title": "Ley aplicable",
+          "p1": "Estos términos se rigen por las leyes de la República Federal de Nigeria, y los tribunales de Nigeria son competentes para cualquier controversia que surja de ellos. Si eres consumidor, esto no te quita la protección de las normas imperativas del país donde vives, ni tu derecho a reclamar allí."
         },
         "contact": {
           "title": "Contacto",

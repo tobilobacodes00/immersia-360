@@ -2827,6 +2827,10 @@
       "title": "Aviso de privacidade",
       "lede": "O que a Immersia 360 guarda quando você usa uma cabine de fotos ou de vídeo 360, por quê, por quanto tempo, quem mais trata os dados e como exercer seus direitos.",
       "sections": {
+        "who": {
+          "title": "Quem opera o Immersia 360",
+          "p1": "O Immersia 360 é operado pela Immersia VR, uma empresa constituída na Nigéria. A Immersia VR é responsável por este aviso e pelo serviço nele descrito. Escreva para tech@immersiavr.com sobre qualquer assunto desta página."
+        },
         "roles": {
           "title": "Quem é responsável pelos seus dados",
           "p1": "Há duas partes envolvidas, com papéis diferentes.",
@@ -2904,6 +2908,10 @@
       "title": "Termos de uso",
       "lede": "As regras para usar a Immersia 360, uma cabine de fotos e vídeo 360 gratuita que funciona no navegador.",
       "sections": {
+        "who": {
+          "title": "Quem opera o Immersia 360",
+          "p1": "O Immersia 360 é operado pela Immersia VR, uma empresa constituída na Nigéria. Nestes termos, “nós” significa Immersia VR. Escreva para tech@immersiavr.com com qualquer dúvida sobre eles."
+        },
         "agreement": {
           "title": "Estes termos",
           "p1": "Estes termos valem quando você usa a Immersia 360, seja para fazer eventos (operador) ou para abrir um link de uma cabine (convidado). Ao usar o serviço, você concorda com eles. Se usa para um negócio, confirma que pode vinculá-lo."
@@ -2951,6 +2959,10 @@
         "changes": {
           "title": "Mudanças",
           "p1": "Podemos atualizar estes termos; a data acima indica a versão mais recente. Usar o serviço depois de uma mudança significa que você a aceita."
+        },
+        "law": {
+          "title": "Lei aplicável",
+          "p1": "Estes termos são regidos pelas leis da República Federal da Nigéria, e os tribunais da Nigéria têm competência sobre qualquer litígio deles decorrente. Se você é consumidor, isto não afasta a proteção das normas imperativas do país onde você vive, nem o seu direito de reclamar ali."
         },
         "contact": {
           "title": "Contato",

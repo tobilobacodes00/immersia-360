@@ -16,6 +16,11 @@ export default async function PrivacyPage() {
   const email = supportEmail();
   const sections: LegalSection[] = [
     {
+      id: 'who',
+      title: t('sections.who.title'),
+      blocks: [withEmail(t('sections.who.p1', { email }), email)],
+    },
+    {
       id: 'roles',
       title: t('sections.roles.title'),
       blocks: [t('sections.roles.p1'), { list: [t('sections.roles.operator'), t('sections.roles.immersia')] }],
