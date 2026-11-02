@@ -105,13 +105,46 @@ describe('printer calibration sheet (HLP-1)', () => {
     expect(sheet('6x4').rulers.map((r) => r.orientation)).toEqual(['v', 'h']);
   });
 
-  it('draws a 20 mm circle in the middle', () => {
+  it('draws a 20 mm circle, centred across a portrait sheet and 36 mm down from the top', () => {
     const s = sheet('4x6');
     const c = s.primitives.find((p): p is Extract<Primitive, { kind: 'circle' }> => p.kind === 'circle')!;
     expect(c.r * 2).toBeCloseTo(20 * mm, 6);
     expect(c.cx).toBeCloseTo(s.width / 2, 6);
-    expect(c.cy).toBeCloseTo(s.height / 2, 6);
+    // The sheet stacks its marks down the middle: words, then the circle, then the 50 mm rulers. The
+    // sheet's own centre (76.2 mm down) is where the vertical ruler runs, so the circle sits above it.
+    expect(c.cy).toBeCloseTo(36 * mm, 6);
+    expect(c.cy).toBeLessThan(s.height / 2);
   });
+
+  it.each(['2x6', '4x4', '4x6', '6x4', '5x7'] as const)(
+    '%s: the circle and its cross are 20 mm wide and clear of every word, ruler and mark',
+    (size) => {
+      const s = sheet(size);
+      const c = s.primitives.find((p): p is Extract<Primitive, { kind: 'circle' }> => p.kind === 'circle')!;
+      expect((c.r * 2) / mm).toBeCloseTo(20, 9);
+      // The cross through its centre: one horizontal and one vertical line.
+      const through = (a: number, b: number, mid: number) => Math.min(a, b) < mid && Math.max(a, b) > mid;
+      const cross = lines(s.primitives).filter(
+        (l) =>
+          (Math.abs(l.y1 - c.cy) < 1e-6 && Math.abs(l.y2 - c.cy) < 1e-6 && through(l.x1, l.x2, c.cx)) ||
+          (Math.abs(l.x1 - c.cx) < 1e-6 && Math.abs(l.x2 - c.cx) < 1e-6 && through(l.y1, l.y2, c.cy)),
+      );
+      expect(cross).toHaveLength(2);
+      const box = [c, ...cross].map(bounds).reduce((a, b) => ({
+        minX: Math.min(a.minX, b.minX),
+        minY: Math.min(a.minY, b.minY),
+        maxX: Math.max(a.maxX, b.maxX),
+        maxY: Math.max(a.maxY, b.maxY),
+      }));
+      // Everything else but the frames, which enclose it by design. Text counts by its anchor only.
+      const own = new Set<Primitive>([c, ...cross]);
+      for (const p of s.primitives.filter((q) => !own.has(q) && q.kind !== 'rect')) {
+        const b = bounds(p);
+        const touches = b.minX < box.maxX && b.maxX > box.minX && b.minY < box.maxY && b.maxY > box.minY;
+        expect(touches, JSON.stringify(p)).toBe(false);
+      }
+    },
+  );
 
   it('carries names and numbers only, so it needs no translation', () => {
     const texts = sheet('4x6')
