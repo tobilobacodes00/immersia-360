@@ -15,6 +15,7 @@ import {
 import { decodeMusic, mixReelMusic, reelBeats } from '@immersia/render-engine/audio';
 import { RenderClient, RenderFailure } from '@immersia/render-engine/client';
 import { uuidv7 } from '@immersia/shared';
+import { localEncoder } from '@/lib/device-ladder';
 import { workerUrl } from '@/lib/workers';
 import type { HighlightItem, HighlightPlan, ReelLengthS, ReelQuality } from '@/server/highlights-core';
 import { REEL_END_S, REEL_INTRO_S, renderReelEnd, renderReelIntro } from './reel-cards';
@@ -179,6 +180,9 @@ export async function buildHighlightReel(input: ReelBuildInput): Promise<BuiltRe
       },
     );
     if (reel.clips === 0) throw new ReelError('nothing');
+    // The render ladder's on-device rungs (the same choice the booth makes): the browser's own H.264 encoder, or the
+    // WebAssembly one where it has none, so an operator on such a browser can still build a reel.
+    const encoder = await localEncoder();
     signal.throwIfAborted();
 
     const [audio, intro, end] = await Promise.all([
@@ -217,6 +221,7 @@ export async function buildHighlightReel(input: ReelBuildInput): Promise<BuiltRe
         audio,
       },
       (fraction) => onProgress({ stage: 'rendering', fraction }),
+      encoder,
     );
     const cancel = () => handle.cancel();
     if (signal.aborted) cancel();

@@ -34,6 +34,7 @@ import {
 import { Pill } from '@immersia/ui';
 import { CountdownDisc, GuestButton, GuestScreen, Headline, fade } from '@immersia/ui/guest';
 import { readDeviceIdentity, type DeviceIdentity } from '@/lib/device-identity';
+import { localEncoder, warmWasmEncoder } from '@/lib/device-ladder';
 import { pageSegmenter } from '@/lib/segmenter';
 import { workerUrl } from '@/lib/workers';
 import { useLiveBackground, useWarmSegmenter } from './background-source';
@@ -51,7 +52,6 @@ import { RegisterDevice } from './RegisterDevice';
 import { ResultScreen } from './ResultScreen';
 import { SettingsDrawer } from './SettingsDrawer';
 import { describeCamera, reconcileWithCamera, type ActiveCamera } from './active-camera';
-import { localEncoder, warmWasmEncoder } from './device-ladder';
 import { fillLightOf, needsReopen, usableChoice, type CameraChoice } from './camera-choice';
 import { FillLightFrame } from './FillLightFrame';
 import { useOpenGuard } from './open-guard';

@@ -27,8 +27,8 @@ import {
   type TakeStore,
 } from '@immersia/offline';
 import type { EventFrom, Video360Settings } from '@immersia/shared';
+import { availability, warmWasmEncoder } from '@/lib/device-ladder';
 import { workerUrl } from '@/lib/workers';
-import { availability, warmWasmEncoder } from './device-ladder';
 import { codeOfFailure, runLadder } from './ladder-run';
 import { cardSecondsOf, planTiming, seedOf } from './render-plan';
 import { renderCompleted, renderFailed } from './render-events';
