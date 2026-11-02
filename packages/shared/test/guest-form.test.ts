@@ -5,6 +5,7 @@ import {
   cleanName,
   consentFingerprint,
   guestFormCookie,
+  guestFormGalleryCookie,
   guestFormSettingsSchema,
   isGuestFormChoice,
   isSafePolicyUrl,
@@ -140,6 +141,10 @@ describe('the remembered choice', () => {
     expect(guestFormCookie('0199c8a2-5b3e-7d10-8a4f-0c1d2e3f4a5b')).toBe(
       'immersia_gf_0199c8a25b3e7d108a4f0c1d2e3f4a5b',
     );
+    // The share pages' cookie and the gallery's are set in one response, so they cannot share a name.
+    const event = '0199c8a2-5b3e-7d10-8a4f-0c1d2e3f4a5b';
+    expect(guestFormGalleryCookie(event)).toBe('immersia_gf_0199c8a25b3e7d108a4f0c1d2e3f4a5b_g');
+    expect(guestFormGalleryCookie(event)).not.toBe(guestFormCookie(event));
     expect(isGuestFormChoice('submitted')).toBe(true);
     expect(isGuestFormChoice('skipped')).toBe(true);
     expect(isGuestFormChoice('1')).toBe(false);

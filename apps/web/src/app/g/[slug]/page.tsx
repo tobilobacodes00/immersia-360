@@ -5,7 +5,7 @@ import { getFormatter, getTranslations } from 'next-intl/server';
 import { Search } from 'lucide-react';
 import {
   formatShortCode,
-  guestFormCookie,
+  guestFormGalleryCookie,
   guestThemeVars,
   isGuestFormChoice,
   isLinkPreviewBot,
@@ -65,8 +65,8 @@ export default async function GalleryPage({ params, searchParams }: Props) {
       </div>
     );
 
-  // SHR-6: the optional guest form, once per browser (a first-party cookie covers sessions too).
-  const choice = (await cookies()).get(guestFormCookie(ev.id))?.value;
+  // SHR-6: the optional guest form, once per browser (this gallery's own first-party cookie).
+  const choice = (await cookies()).get(guestFormGalleryCookie(ev.id))?.value;
   const consent =
     ev.guestForm.enabled && !isGuestFormChoice(choice)
       ? await guestConsent({ operator: ev.operator, eventName: ev.name, settings: ev.guestForm })

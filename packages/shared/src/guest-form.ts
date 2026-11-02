@@ -118,14 +118,23 @@ export function parseGuestContact(
 export type GuestFormScope = 'session' | 'gallery';
 
 /**
- * What the form remembers about a browser, in a first-party cookie scoped to the share and gallery
- * paths: `submitted` or `skipped`. It only stops the form from reappearing; downloads never depend
+ * What the form remembers about a browser, in first-party cookies scoped to the share and gallery
+ * paths (one each, see `guestFormCookie` and `guestFormGalleryCookie`): `submitted` or `skipped`. It only stops the form from reappearing; downloads never depend
  * on it.
  */
 export type GuestFormChoice = 'submitted' | 'skipped';
 
 /** Cookie name for an event's choice: its compact id keeps events apart without exposing anything. */
 export const guestFormCookie = (eventId: string) => `immersia_gf_${eventId.replace(/-/g, '')}`;
+
+/**
+ * The same choice, for the event's gallery page. It needs a name of its own: the share pages' cookie
+ * lives on `/s` and this one on `/g/<slug>`, and a response can carry only one cookie per name (the
+ * framework keys them by name alone, so setting the same name for a second path silently replaces
+ * the first). Sharing one name left the browser with the gallery cookie only, and a guest who had
+ * skipped the form was asked again on every share-page visit.
+ */
+export const guestFormGalleryCookie = (eventId: string) => `${guestFormCookie(eventId)}_g`;
 
 export function isGuestFormChoice(value: string | undefined): value is GuestFormChoice {
   return value === 'submitted' || value === 'skipped';

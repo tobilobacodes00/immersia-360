@@ -5,6 +5,7 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import {
   guestFormCookie,
+  guestFormGalleryCookie,
   isLinkId,
   parseRoute,
   type GuestFormChoice,
@@ -42,17 +43,18 @@ const text = (data: FormData, key: string, max: number) => {
 const NINETY_DAYS_S = 90 * 24 * 3600;
 
 /**
- * Remember that this browser has dealt with the form, so it does not ask again. A first-party,
- * httpOnly cookie scoped to the share pages and to this event's gallery only; it carries no
- * identity and nothing depends on it (downloads never check it).
+ * Remember that this browser has dealt with the form, so it does not ask again. Two first-party,
+ * httpOnly cookies: one scoped to the share pages, one to this event's gallery only. They carry no
+ * identity and nothing depends on them (downloads never check them). Each has its own name because
+ * a response keeps one cookie per name, whatever its path: the same name for both would leave only
+ * the second one set.
  */
 async function rememberChoice(target: FormTarget, choice: GuestFormChoice) {
   const proto = (await headers()).get('x-forwarded-proto') ?? 'http';
   const jar = await cookies();
   const base = { httpOnly: true, sameSite: 'lax' as const, secure: proto === 'https', maxAge: NINETY_DAYS_S };
-  const name = guestFormCookie(target.eventId);
-  jar.set(name, choice, { ...base, path: '/s' });
-  jar.set(name, choice, { ...base, path: `/g/${target.gallerySlug}` });
+  jar.set(guestFormCookie(target.eventId), choice, { ...base, path: '/s' });
+  jar.set(guestFormGalleryCookie(target.eventId), choice, { ...base, path: `/g/${target.gallerySlug}` });
 }
 
 function backTo(scope: GuestFormScope, ref: string, route: string, extra?: Record<string, string>): Route {
