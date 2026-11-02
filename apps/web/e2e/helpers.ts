@@ -93,8 +93,8 @@ export interface SeededSession {
  */
 export async function seedSession(page: Page, request: APIRequestContext, eventId: string): Promise<SeededSession> {
   await open(page, `/booth/${eventId}`);
-  const registered = await page.evaluate(() => localStorage.getItem('immersia.device.v1') !== null);
-  if (!registered) {
+  const hasDevice = await page.evaluate(() => localStorage.getItem('immersia.device.v1') !== null);
+  if (!hasDevice) {
     await page.getByRole('button', { name: 'Register and continue' }).click();
     await page.waitForFunction(() => localStorage.getItem('immersia.device.v1') !== null);
   }
