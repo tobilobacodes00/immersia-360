@@ -1,6 +1,6 @@
 import { ALL_FORMATS, BlobSource, Input, VideoSampleSink } from 'mediabunny';
 import { describe, expect, it } from 'vitest';
-import { renderMontage, type MontageFile, type MontageJob } from '../src/montage';
+import { renderMontage, type MontageFile, type MontageJob, type MontageResult } from '../src/montage';
 import { planFrames, planReel, sourceRefs, type ReelClip, type ReelPlan } from '../src/montage-plan';
 import { uniformPts } from '../src/timeline';
 import { H, W, makeClip, readIndex } from './fixtures';
@@ -9,6 +9,10 @@ import { H, W, makeClip, readIndex } from './fixtures';
  * The highlight reel (LIV-14) rendered for real, in Chrome: a few seconds of fixture clips, a photo strip
  * and two cards through the montage renderer. The fixture clips carry each frame's index in black and
  * white bars, so every output frame can be checked against the plan.
+ *
+ * Every test that renders has 300 s instead of the project's 120: a render of several seconds is slow here (the
+ * compositor runs on software WebGL, the decoders and the encoder on the CPU) and CI runs the other browser test
+ * files beside it. The first test of this file once ran out of the 120 s, fixtures included.
  */
 const FPS = 30;
 const CLIP_FRAMES = 90; // 3 s
@@ -103,17 +107,40 @@ describe('highlight reel montage (LIV-14)', () => {
   const videos = (style: 'cut' | 'crossfade') =>
     planReel([video('a', 1), video('b', 2)], { targetS: 8, fps: FPS, introS: 1, endS: 1, style, beats: [] });
 
+  /**
+   * The cut reel (a strip and two videos, with a soundtrack): two tests judge it, so it is rendered once, by
+   * whichever asks first. Progress is logged so a slow CI run can be told from a stuck one.
+   */
+  let cutReel: Promise<{ plan: ReelPlan; result: MontageResult }> | null = null;
+  const renderCutReel = () =>
+    (cutReel ??= (async () => {
+      const t0 = performance.now();
+      const secs = () => ((performance.now() - t0) / 1000).toFixed(1);
+      const f = await files();
+      console.info(`[montage] fixtures ready after ${secs()} s`);
+      const plan = mixed('cut');
+      const sampleRate = 48_000;
+      const tone = new Float32Array(sampleRate * Math.ceil(plan.totalS)).map(
+        (_, i) => 0.2 * Math.sin((2 * Math.PI * 440 * i) / sampleRate),
+      );
+      let logged = 0;
+      const result = await renderMontage(
+        await job(plan, [f.strip, f.a, f.b], { audio: { sampleRate, channels: [tone, tone.slice()] } }),
+        {
+          onProgress: (v) => {
+            if (v >= logged + 0.25 || v === 1) {
+              logged = v;
+              console.info(`[montage] cut reel ${Math.round(v * 100)}% after ${secs()} s`);
+            }
+          },
+        },
+      );
+      return { plan, result };
+    })());
+
   it('cuts between clips: every video frame is the source frame the plan asks for, in order', async () => {
-    const f = await files();
-    const p = mixed('cut');
+    const { plan: p, result } = await renderCutReel();
     expect(p.clips).toBe(3);
-    const sampleRate = 48_000;
-    const tone = new Float32Array(sampleRate * Math.ceil(p.totalS)).map(
-      (_, i) => 0.2 * Math.sin((2 * Math.PI * 440 * i) / sampleRate),
-    );
-    const result = await renderMontage(
-      await job(p, [f.strip, f.a, f.b], { audio: { sampleRate, channels: [tone, tone.slice()] } }),
-    );
     expect(result.frames).toBe(p.frames);
     expect(result.durationS).toBeCloseTo(p.totalS, 1);
     expect(result.clips).toBe(3);
@@ -137,7 +164,7 @@ describe('highlight reel montage (LIV-14)', () => {
     const input = new Input({ source: new BlobSource(result.mp4), formats: ALL_FORMATS });
     expect(Boolean(await input.getPrimaryAudioTrack())).toBe(true);
     input.dispose();
-  });
+  }, 300_000);
 
   it('opens on the intro card, cross-fades into the first clip and closes on the end card', async () => {
     const f = await files();
@@ -158,12 +185,10 @@ describe('highlight reel montage (LIV-14)', () => {
     expect(reds[0]!).toBeLessThan(reds.at(-1)!);
     expect(reds.some((r) => r > 60 && r < 115)).toBe(true);
     for (let i = 1; i < reds.length; i++) expect(reds[i]!).toBeGreaterThanOrEqual(reds[i - 1]! - 6);
-  });
+  }, 300_000);
 
   it('pans a tall photo strip: the top of it first, the bottom of it last', async () => {
-    const f = await files();
-    const p = mixed('cut');
-    const result = await renderMontage(await job(p, [f.strip, f.a, f.b]));
+    const { plan: p, result } = await renderCutReel();
     const out = await decode(result.mp4, [[W / 2, H / 2]]);
     const own = planFrames(p, FPS).flatMap((frame, n) => {
       const entry = p.entries[frame.layers[0]!.entry]!;
@@ -174,7 +199,7 @@ describe('highlight reel montage (LIV-14)', () => {
     const [r1, g1] = out[own.at(-1)!]!.px[0]!;
     expect([r0! > 150, g0! < 100]).toEqual([true, true]); // red: the top of the strip
     expect([g1! > 150, r1! < 100]).toEqual([true, true]); // green: the bottom of it
-  });
+  }, 300_000);
 
   it('reports progress, and refuses a plan whose cards are missing', async () => {
     const f = await files();
@@ -184,7 +209,7 @@ describe('highlight reel montage (LIV-14)', () => {
     expect(progress.at(-1)).toBe(1);
     expect(progress).toEqual([...progress].sort((a, b) => a - b));
     await expect(renderMontage(await job(p, [f.a, f.b], { intro: null }))).rejects.toMatchObject({ code: 'failed' });
-  });
+  }, 300_000);
 
   it('cancels promptly', async () => {
     const f = await files();

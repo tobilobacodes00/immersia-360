@@ -15,6 +15,8 @@ export default defineConfig({
           name: 'browser',
           include: ['test-browser/**/*.browser.test.ts'],
           testTimeout: 120_000,
+          // Hooks make the fixture clips (software H.264 encoding, beside the other test files): the default 10 s is too tight.
+          hookTimeout: 120_000,
           browser: {
             enabled: true,
             headless: true,

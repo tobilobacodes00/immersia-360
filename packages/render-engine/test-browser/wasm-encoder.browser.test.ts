@@ -11,6 +11,9 @@ import { H, W, decodeOutput, makeClip } from './fixtures';
  * WebCodecs'. The output is judged by what a viewer's decoder makes of it, not by looking inside.
  * The encoder's worker script is built here the way scripts/h264-worker.mjs builds the served one:
  * the encoder's web bundle, then our glue.
+ *
+ * The renders have 300 s each, not the project's 120: the encoder is WebAssembly on the CPU, beside software
+ * WebGL, and CI runs the other browser test files (and the type checks) at the same time.
  */
 const SRC_FPS = 30;
 const SRC_FRAMES = 60;
@@ -46,7 +49,7 @@ describe('wasm rung: the WebAssembly H.264 encoder', () => {
     expect(out.frames).toHaveLength(SRC_FRAMES);
     expect(out.frames.map((f) => f.index)).toEqual(Array.from({ length: SRC_FRAMES }, (_, i) => i));
     expect(out.fps).toBeCloseTo(30, 0);
-  }, 120_000);
+  }, 300_000);
 
   it('writes a real key frame first and P-frames after (not "every frame is a sync sample")', async () => {
     const { mp4 } = await render(job(clip), { encoder: 'wasm' });
@@ -62,7 +65,7 @@ describe('wasm rung: the WebAssembly H.264 encoder', () => {
     expect(config.codec).toMatch(/^avc1\.[0-9a-f]{6}$/);
     expect(parseInt(config.codec.slice(-2), 16)).toBeGreaterThanOrEqual(30);
     input.dispose();
-  }, 120_000);
+  }, 300_000);
 
   it('adds the AAC soundtrack like the other rungs, and stays near its bitrate', async () => {
     const sampleRate = 48_000;
@@ -74,7 +77,7 @@ describe('wasm rung: the WebAssembly H.264 encoder', () => {
     expect(out.hasAudio).toBe(true);
     expect(out.durationS).toBeCloseTo(2, 1);
     expect(result.mp4.size).toBeLessThan((TARGET_BITRATE / 8) * 2 * 3);
-  }, 120_000);
+  }, 300_000);
 
   it('renders slow motion and intro cards the same way', async () => {
     const card = new OffscreenCanvas(W, H);
@@ -94,7 +97,7 @@ describe('wasm rung: the WebAssembly H.264 encoder', () => {
     const out = await decodeOutput(result.mp4);
     expect(out.frames).toHaveLength(result.frames);
     expect(out.frames[30]!.index).toBe(0);
-  }, 120_000);
+  }, 300_000);
 
   it('reports a worker that cannot start as a missing encoder, so the ladder moves on', async () => {
     configureWasmEncoder({

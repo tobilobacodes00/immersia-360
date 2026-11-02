@@ -5,13 +5,19 @@
  * and serves the result as `h264-encoder.js`, next to the app's own workers.
  *
  * Protocol (everything is request → reply, one frame in flight per ack):
- *   init   { width, height, fps, qp, speed, gop }  → ready
- *   frame  { i420: ArrayBuffer, qp }               → ack { bytes }   (bytes: the MP4 written so far)
- *   finish {}                                      → done { mp4: ArrayBuffer }
- *   abort  {}                                      → (frees the encoder)
+ *   init   { width, height, fps, kbps, speed, gop }  → ready
+ *   frame  { i420: ArrayBuffer }                    → ack
+ *   finish {}                                       → done { mp4: ArrayBuffer }
+ *   abort  {}                                       → (frees the encoder)
  * Any failure replies `error { message }`.
+ *
+ * The library freezes every setting at `initialize()` (setting one afterwards aborts the whole
+ * WebAssembly module), so the bitrate is handed over once, up front, and the encoder's own rate
+ * control steers the quantizer from frame to frame.
  */
 let enc = null;
+/** True from `initialize()` until `finalize()`: the library aborts if it is deleted in between. */
+let started = false;
 let file = 'out.mp4';
 
 const describe = (err) =>
@@ -19,6 +25,13 @@ const describe = (err) =>
 
 function free() {
   if (!enc) return;
+  try {
+    // An encoder that was never finalized (a cancelled or failed render) must be, before it is deleted.
+    if (started) enc.finalize();
+  } catch {
+    // The module may already be dead; the worker is about to be discarded either way.
+  }
+  started = false;
   try {
     enc.delete();
   } catch {
@@ -38,27 +51,22 @@ self.onmessage = async (e) => {
       enc.height = m.height;
       enc.frameRate = m.fps;
       enc.speed = m.speed;
-      enc.quantizationParameter = m.qp;
       enc.groupOfPictures = m.gop;
-      // Fixed-quantizer mode: the render steers the quantizer from the sizes reported by `ack`.
-      enc.kbps = 0;
+      // Rate-controlled mode: with a bitrate set, the library ignores its fixed quantizer and picks one
+      // per frame (between 10 and 50) to land near this many kilobits per second.
+      enc.kbps = m.kbps;
       enc.temporalDenoise = false;
       enc.initialize();
+      started = true;
       self.postMessage({ type: 'ready' });
     } else if (m.type === 'frame') {
       if (!enc) throw new Error('encoder is not initialised');
-      enc.quantizationParameter = m.qp;
       enc.addFrameYuv(new Uint8Array(m.i420));
-      let bytes = 0;
-      try {
-        bytes = enc.FS.stat(file).size;
-      } catch {
-        // No size to report: the render keeps its quantizer.
-      }
-      self.postMessage({ type: 'ack', bytes });
+      self.postMessage({ type: 'ack' });
     } else if (m.type === 'finish') {
       if (!enc) throw new Error('encoder is not initialised');
       enc.finalize();
+      started = false;
       const mp4 = enc.FS.readFile(file).slice();
       try {
         enc.FS.unlink(file);

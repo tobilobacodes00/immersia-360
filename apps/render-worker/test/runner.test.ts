@@ -303,6 +303,7 @@ describe('the loop', () => {
     const rendered: string[] = [];
     const queue = [job({ id: 'a' }), job({ id: 'b' })];
     const api = idle({ claim: async () => queue.shift() ?? null });
+    // The override replaces fakeIO's own render, which is what records 'render' in its calls: record here.
     const { io } = fakeIO({
       render: async (claimed) => {
         rendered.push(claimed.id);
