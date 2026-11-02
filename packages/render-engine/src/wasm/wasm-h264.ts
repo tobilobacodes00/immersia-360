@@ -9,7 +9,7 @@ import {
   type VideoCodec,
   type VideoSample,
 } from 'mediabunny';
-import { avcCodecString, initialQp, minAvcLevel, nextQp, rgbaToI420, sampleIsKey, withMinimumLevel } from './avc';
+import { avcCodecString, minAvcLevel, rgbaToI420, sampleIsKey, withMinimumLevel } from './avc';
 
 /**
  * The `wasm` rung of the render ladder: H.264 from a WebAssembly encoder (minih264, via the
@@ -60,10 +60,7 @@ function defaultWorker(): Worker {
 // The Mediabunny encoder
 
 type Reply =
-  | { type: 'ready' }
-  | { type: 'ack'; bytes: number }
-  | { type: 'done'; mp4: ArrayBuffer }
-  | { type: 'error'; message: string };
+  { type: 'ready' } | { type: 'ack' } | { type: 'done'; mp4: ArrayBuffer } | { type: 'error'; message: string };
 
 /** Frames handed to the worker before waiting for it: enough to keep it busy, few enough to bound memory. */
 const MAX_IN_FLIGHT = 2;
@@ -107,9 +104,7 @@ class WasmH264Encoder extends CustomVideoEncoder {
   private height = 0;
   private fps = 30;
   private bitrate = 4_000_000;
-  private qp = 30;
   private inFlight = 0;
-  private acked = 0;
   /** Presentation times of the frames in, in order (there are no B-frames: output order is input order). */
   private timestamps: number[] = [];
 
@@ -118,7 +113,6 @@ class WasmH264Encoder extends CustomVideoEncoder {
     this.height = this.config.height;
     this.fps = Math.max(1, Math.round(this.config.framerate ?? 30));
     this.bitrate = this.config.bitrate ?? 4_000_000;
-    this.qp = initialQp(this.bitrate, this.width, this.height, this.fps);
     let worker: Worker;
     try {
       worker = (workerFactory ?? defaultWorker)();
@@ -133,7 +127,8 @@ class WasmH264Encoder extends CustomVideoEncoder {
       width: this.width,
       height: this.height,
       fps: this.fps,
-      qp: this.qp,
+      // The encoder's own rate control does the steering: its settings cannot change once it has started.
+      kbps: Math.max(1, Math.round(this.bitrate / 1000)),
       speed: ENCODER_SPEED,
       // Two seconds between key frames: the encoder is weak enough that a one-second GOP would cost
       // visible quality at the same bitrate.
@@ -157,14 +152,6 @@ class WasmH264Encoder extends CustomVideoEncoder {
         break;
       case 'ack':
         this.inFlight--;
-        this.acked++;
-        this.qp = nextQp({
-          qp: this.qp,
-          producedBytes: m.bytes,
-          frames: this.acked,
-          fps: this.fps,
-          bitrate: this.bitrate,
-        });
         this.wake();
         break;
       case 'done':
@@ -211,7 +198,7 @@ class WasmH264Encoder extends CustomVideoEncoder {
     const i420 = rgbaToI420(rgba, this.width, this.height);
     this.timestamps.push(sample.timestamp);
     this.inFlight++;
-    this.worker!.postMessage({ type: 'frame', i420: i420.buffer, qp: this.qp }, [i420.buffer]);
+    this.worker!.postMessage({ type: 'frame', i420: i420.buffer }, [i420.buffer]);
   }
 
   override async flush(): Promise<void> {

@@ -1,15 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  QP_MAX,
-  QP_MIN,
-  avcCodecString,
-  initialQp,
-  minAvcLevel,
-  nextQp,
-  rgbaToI420,
-  sampleIsKey,
-  withMinimumLevel,
-} from '../src/wasm/avc';
+import { avcCodecString, minAvcLevel, rgbaToI420, sampleIsKey, withMinimumLevel } from '../src/wasm/avc';
 
 /** A w×h RGBA image of one colour. */
 const solid = (w: number, h: number, [r, g, b]: [number, number, number]) => {
@@ -53,38 +43,6 @@ describe('RGBA → I420 (BT.709, limited range)', () => {
   it('refuses odd sizes and short buffers', () => {
     expect(() => rgbaToI420(new Uint8Array(3 * 2 * 4), 3, 2)).toThrow(RangeError);
     expect(() => rgbaToI420(new Uint8Array(4), 2, 2)).toThrow(RangeError);
-  });
-});
-
-describe('rate control', () => {
-  it('starts at QP 30 for the Balanced preset and moves with bits per pixel', () => {
-    const base = initialQp(1080 * 1920 * 30 * 0.085, 1080, 1920, 30);
-    expect(base).toBe(30);
-    expect(initialQp(1080 * 1920 * 30 * 0.045, 1080, 1920, 30)).toBeGreaterThan(base);
-    expect(initialQp(1080 * 1920 * 30 * 0.25, 1080, 1920, 30)).toBeLessThan(base);
-    expect(initialQp(1, 1080, 1920, 30)).toBe(40);
-    expect(initialQp(1e12, 1080, 1920, 30)).toBe(22);
-  });
-
-  const at = (producedBytes: number, frames: number, qp = 30) =>
-    nextQp({ qp, producedBytes, frames, fps: 30, bitrate: 8_000_000 }); // 33 333 bytes per frame
-
-  it('holds the quantizer until it has seen enough frames', () => {
-    expect(at(10_000_000, 3)).toBe(30);
-    expect(at(0, 100)).toBe(30);
-  });
-
-  it('raises it when the file runs over budget and lowers it when under', () => {
-    expect(at(33_333 * 60 * 1.3, 60)).toBe(31);
-    expect(at(33_333 * 60 * 2, 60)).toBe(32);
-    expect(at(33_333 * 60 * 0.8, 60)).toBe(29);
-    expect(at(33_333 * 60 * 0.5, 60)).toBe(28);
-    expect(at(33_333 * 60, 60)).toBe(30);
-  });
-
-  it('never leaves its limits', () => {
-    expect(at(1e9, 60, QP_MAX)).toBe(QP_MAX);
-    expect(at(1, 60, QP_MIN)).toBe(QP_MIN);
   });
 });
 

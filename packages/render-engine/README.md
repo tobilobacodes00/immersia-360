@@ -78,10 +78,13 @@ Why this one:
   from a CDN at runtime. Single-threaded: it needs no `SharedArrayBuffer`, so no COOP/COEP on booth routes.
 - **Speed and quality.** minih264 is a deliberately small baseline-profile encoder (no B-frames, no CABAC).
   Its author measures it near x264 `veryfast` baseline at the same quantizer, with outputs about 20% larger
-  at equal quality. The booth steers the quantizer from the written size (`nextQp` in `src/wasm/avc.ts`) to
-  land near the preset's bitrate, since the library's own rate control is too coarse to trust. Frame
-  throughput was not benchmarked here; the browser test in CI exercises the path end to end, and the M3
-  benchmark on real devices is the place to put a number on it.
+  at equal quality. The preset's bitrate goes to the library once, at start (its `kbps` mode): every
+  setting is frozen by `initialize()` (setting one afterwards aborts the WebAssembly module), so the booth
+  cannot steer the quantizer itself, and the library's own rate control does it, frame by frame, between
+  QP 10 and 50. Measured in Node on synthetic 640x480 and 1280x720 clips of busy content, it landed within
+  about +10% to +30% of the target (and far under it on easy content, where it runs out of quality to spend).
+  Frame throughput was not benchmarked on devices; the browser test in CI exercises the path end to end,
+  and the M3 benchmark on real devices is the place to put a number on it.
 
 **Patents.** H.264 is a patent-encumbered format, and that is true of every encoder, whatever its source
 licence. The WASM rung exists for browsers that ship without an H.264 encoder; deployments that distribute
@@ -92,7 +95,7 @@ How the pieces fit (`src/wasm/`):
 - `wasm-h264.ts` — a Mediabunny `CustomVideoEncoder`. It claims AVC only while a WASM render is running
   (`withVideoEncoder`), so the browser's own encoder is untouched otherwise. Frames reach it from the same
   `CanvasSource` the other rungs use.
-- `avc.ts` — RGBA → I420 (BT.709, limited range, tagged as such), the quantizer controller, key-frame
+- `avc.ts` — RGBA → I420 (BT.709, limited range, tagged as such), key-frame
   detection from the bitstream (the library marks every sample as a sync sample), and the level fix (the
   library stamps a low H.264 level whatever the picture size; the decoder configuration is raised to what
   the size and frame rate need).
