@@ -17,7 +17,7 @@
  */
 let enc = null;
 /** True from `initialize()` until `finalize()`: the library aborts if it is deleted in between. */
-let open = false;
+let started = false;
 let file = 'out.mp4';
 
 const describe = (err) =>
@@ -27,11 +27,11 @@ function free() {
   if (!enc) return;
   try {
     // An encoder that was never finalized (a cancelled or failed render) must be, before it is deleted.
-    if (open) enc.finalize();
+    if (started) enc.finalize();
   } catch {
     // The module may already be dead; the worker is about to be discarded either way.
   }
-  open = false;
+  started = false;
   try {
     enc.delete();
   } catch {
@@ -57,7 +57,7 @@ self.onmessage = async (e) => {
       enc.kbps = m.kbps;
       enc.temporalDenoise = false;
       enc.initialize();
-      open = true;
+      started = true;
       self.postMessage({ type: 'ready' });
     } else if (m.type === 'frame') {
       if (!enc) throw new Error('encoder is not initialised');
@@ -66,7 +66,7 @@ self.onmessage = async (e) => {
     } else if (m.type === 'finish') {
       if (!enc) throw new Error('encoder is not initialised');
       enc.finalize();
-      open = false;
+      started = false;
       const mp4 = enc.FS.readFile(file).slice();
       try {
         enc.FS.unlink(file);
