@@ -300,8 +300,11 @@ describe('the loop', () => {
     const sleeps: number[] = [];
     const queue = [job({ id: 'a' }), job({ id: 'b' })];
     const api = idle({ claim: async () => queue.shift() ?? null });
-    const { io, calls } = fakeIO({
+    // The override replaces fakeIO's own render, which is what records 'render' in its calls: count here.
+    let renders = 0;
+    const { io } = fakeIO({
       render: async () => {
+        renders++;
         clock += 30_000; // a render takes 30 s
         return { outputs: [file('mp4')], renderMs: 30_000 };
       },
@@ -322,7 +325,7 @@ describe('the loop', () => {
       new AbortController().signal,
     );
     expect(result).toBe('idle');
-    expect(calls.filter((c) => c === 'render')).toHaveLength(2);
+    expect(renders).toBe(2);
     // After the last job the loop polled every 5 s until 20 s had passed.
     expect(sleeps).toEqual([5_000, 5_000, 5_000, 5_000]);
   });
