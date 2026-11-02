@@ -24,6 +24,8 @@ export type AnalyticsEvent =
   | { name: 'render_failed'; error_code: string; path: RenderPath; browser: string }
   | { name: 'qr_shown'; seconds_since_take: number }
   | { name: 'share_page_viewed'; output_kind: OutputKind | 'session'; route: DownloadRoute }
+  /** SHR-5, DL-7: the event gallery, by how guests reached it (event QR, display, NFC…). */
+  | { name: 'gallery_viewed'; route: DownloadRoute }
   | { name: 'file_downloaded'; output_kind: OutputKind; bytes: number }
   | { name: 'print_sent'; size: string; copies: number; double_strip: boolean }
   | { name: 'upload_completed'; target: UploadTarget; bytes: number; retries: number }

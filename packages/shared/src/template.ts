@@ -7,7 +7,7 @@
  * millimetres convert exactly: px = mm / 25.4 × 300.
  */
 import { z } from 'zod';
-import { PRINT_SIZES } from './event';
+import { ASPECTS, PRINT_SIZES } from './event';
 
 export const TEMPLATE_SCHEMA_VERSION = 1;
 export const PRINT_DPI = 300;
@@ -121,3 +121,79 @@ export const templateCanvasSchema = z.object({
 
 export type TemplateElement = z.infer<typeof templateElementSchema>;
 export type TemplateCanvas = z.infer<typeof templateCanvasSchema>;
+
+/** A template document: what the editor edits, the database stores and the renderer draws. */
+export const MAX_TEMPLATE_ELEMENTS = 200;
+
+export const templateDocumentSchema = z
+  .object({
+    canvas: templateCanvasSchema,
+    elements: z.array(templateElementSchema).max(MAX_TEMPLATE_ELEMENTS),
+  })
+  .superRefine((doc, ctx) => {
+    const seen = new Set<string>();
+    for (const el of doc.elements) {
+      if (seen.has(el.id)) ctx.addIssue({ code: 'custom', message: 'duplicate_element_id', path: ['elements'] });
+      seen.add(el.id);
+    }
+  });
+
+export type TemplateDocument = z.infer<typeof templateDocumentSchema>;
+
+/**
+ * Overlay canvases (VID-4, PHO-6) are authored at the 360 output's aspect, 1080 px on the short side;
+ * the renderer scales them to the output resolution (720p … 4K).
+ */
+export function overlayCanvasFor(aspect: (typeof ASPECTS)[number]): { width: number; height: number } {
+  if (aspect === '1:1') return { width: 1080, height: 1080 };
+  if (aspect === '16:9') return { width: 1920, height: 1080 };
+  return { width: 1080, height: 1920 };
+}
+
+/** The aspect an overlay canvas was authored for, or null when it matches none (resized by hand). */
+export function aspectOfCanvas(c: { width: number; height: number }): (typeof ASPECTS)[number] | null {
+  for (const a of ASPECTS) {
+    const s = overlayCanvasFor(a);
+    if (s.width === c.width && s.height === c.height) return a;
+  }
+  return null;
+}
+
+/**
+ * Uploaded fonts (PHO-9) are referenced from text elements as `asset:<uuid>`; library and built-in
+ * fonts by their family name.
+ */
+export const ASSET_FONT_PREFIX = 'asset:';
+export const assetFontFamily = (assetId: string) => `${ASSET_FONT_PREFIX}${assetId}`;
+export const assetIdOfFont = (family: string): string | null =>
+  family.startsWith(ASSET_FONT_PREFIX) ? family.slice(ASSET_FONT_PREFIX.length) : null;
+
+/** Every asset a template draws (images, background, uploaded fonts): what a booth must cache offline. */
+export function templateAssetIds(doc: { canvas: TemplateCanvas; elements: TemplateElement[] }): string[] {
+  const ids = new Set<string>();
+  if (doc.canvas.backgroundAssetId) ids.add(doc.canvas.backgroundAssetId);
+  for (const el of doc.elements) {
+    if (el.type === 'image') ids.add(el.assetId);
+    if (el.type === 'text') {
+      const font = assetIdOfFont(el.fontFamily);
+      if (font) ids.add(font);
+    }
+  }
+  return [...ids];
+}
+
+/** The font faces a template's visible text needs, per family (library, built-in or uploaded). */
+export function templateFontFaces(doc: {
+  elements: TemplateElement[];
+}): { family: string; weight: number; style: 'normal' | 'italic' }[] {
+  const faces = new Map<string, { family: string; weight: number; style: 'normal' | 'italic' }>();
+  for (const el of doc.elements) {
+    if (el.type !== 'text' || el.hidden) continue;
+    faces.set(`${el.fontFamily}|${el.fontWeight}|${el.fontStyle}`, {
+      family: el.fontFamily,
+      weight: el.fontWeight,
+      style: el.fontStyle,
+    });
+  }
+  return [...faces.values()];
+}

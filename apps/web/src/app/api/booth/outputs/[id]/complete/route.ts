@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import { authenticateDevice } from '@/server/devices';
 import { completeUpload } from '@/server/sessions';
 
+// Work scheduled with after() (the copy to the operator's own cloud, SHR-7) runs inside this
+// function's time limit, so allow the longest the platform offers.
+export const maxDuration = 300;
+
 /** Confirm an upload: the server checks the object really landed at the expected size. */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const device = await authenticateDevice(request);

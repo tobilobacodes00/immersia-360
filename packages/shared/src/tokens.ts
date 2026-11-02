@@ -290,3 +290,30 @@ export const TOKEN_CATALOGUE = [
     ],
   },
 ] as const satisfies readonly { family: string; tokens: readonly { token: string; hint: string }[] }[];
+
+/**
+ * The token context for an event's templates (PHO-3 dynamic fields). One builder for the editor
+ * preview, the photo strip and the 360 overlay, so the same text renders the same everywhere.
+ * `date` is the event's ISO date; formatted dates (`%d %B %Y`) read it at local noon so no time zone
+ * can move it to the day before.
+ */
+export function eventTokens(
+  event: { name: string; date: string },
+  branding: { hashtag?: string; custom1?: string; custom2?: string; custom3?: string },
+  session?: { shortCode: string; url: string } | null,
+  shot?: { number: number; count: number },
+): StandardTokenContext {
+  return {
+    eventName: event.name,
+    eventDate: event.date,
+    hashtag: branding.hashtag ?? '',
+    custom1: branding.custom1 ?? '',
+    custom2: branding.custom2 ?? '',
+    custom3: branding.custom3 ?? '',
+    shortCode: session?.shortCode ?? '',
+    sessionUrl: session?.url ?? '',
+    shotNumber: shot?.number,
+    shotCount: shot?.count,
+    __date: new Date(`${event.date}T12:00:00`),
+  };
+}

@@ -50,6 +50,16 @@ export function createBoothApi(token: string): BoothApi & {
       }
     },
 
+    async optOutOfDisplay(sessionId) {
+      const res = await fetch(`/api/booth/sessions/${sessionId}/display`, {
+        method: 'DELETE',
+        headers: { authorization: `Device ${token}` },
+      });
+      // 404: the server has no such session for this device's account; nothing left to take down.
+      if (res.ok || res.status === 404) return;
+      throw new BoothApiError(res.status, `http_${res.status}`, retryable(res.status));
+    },
+
     async sendEmail(sessionId, to) {
       try {
         await call(`/api/booth/sessions/${sessionId}/email`, { email: to });

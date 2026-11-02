@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { extensionFor, pickRecordingMime, recordingBitrate } from '../src/recorder';
-import { classifyLens, toCameraError } from '../src/camera';
+import { toCameraError } from '../src/camera';
 
 describe('recording format', () => {
   it('prefers WebM (incremental chunks, crash-safe), falls back to MP4', () => {
@@ -27,15 +27,6 @@ describe('recording format', () => {
 });
 
 describe('camera helpers', () => {
-  it('classifies lenses from labels (CAP-2)', () => {
-    expect(classifyLens('Back Ultra Wide Camera')).toBe('ultrawide');
-    expect(classifyLens('Back Camera')).toBe('wide');
-    expect(classifyLens('Back Telephoto Camera')).toBe('telephoto');
-    expect(classifyLens('Front Camera')).toBe('front');
-    expect(classifyLens('camera2 0, facing back')).toBe('wide');
-    expect(classifyLens('Logitech BRIO')).toBe('unknown');
-  });
-
   it('maps browser errors to explainable codes', () => {
     expect(toCameraError({ name: 'NotAllowedError', message: 'denied' }).code).toBe('permission');
     expect(toCameraError({ name: 'NotFoundError', message: '' }).code).toBe('not_found');

@@ -3,6 +3,7 @@
  * video's length. Runs on the main thread — OfflineAudioContext doesn't exist in workers — and
  * returns planar float32 channels the render worker encodes as AAC.
  */
+import { analyseBeats } from './beats';
 
 export interface MusicSettings {
   trimStartMs: number;
@@ -60,4 +61,21 @@ export async function mixSoundtrack(
     sampleRate: rendered.sampleRate,
     channels: [rendered.getChannelData(0).slice(), rendered.getChannelData(1).slice()],
   };
+}
+
+/**
+ * VID-12: the song's beat times (seconds from the song's start), analysed over the stretch a video
+ * can use: from the trim start, `maxSeconds` long. Main thread (decodeAudioData); pure analysis.
+ */
+export async function musicBeats(
+  music: Blob,
+  settings: Pick<MusicSettings, 'trimStartMs' | 'trimEndMs'>,
+  maxSeconds: number,
+): Promise<{ beats: number[]; bpm: number; confidence: number }> {
+  const ctx = new OfflineAudioContext({ numberOfChannels: 1, length: 1, sampleRate: MIX_SAMPLE_RATE });
+  const decoded = await ctx.decodeAudioData(await music.arrayBuffer());
+  const channels = Array.from({ length: decoded.numberOfChannels }, (_, i) => decoded.getChannelData(i));
+  const start = settings.trimStartMs / 1000;
+  const end = settings.trimEndMs === null ? decoded.duration : settings.trimEndMs / 1000;
+  return analyseBeats(channels, decoded.sampleRate, { startS: start, durationS: Math.min(maxSeconds, end - start) });
 }

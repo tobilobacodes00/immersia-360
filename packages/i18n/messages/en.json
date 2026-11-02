@@ -146,7 +146,9 @@
       },
       "home": "Home",
       "events": "Events",
+      "assets": "Assets",
       "devices": "Devices",
+      "integrations": "Integrations",
       "signOut": "Sign out",
       "openMenu": "Open menu",
       "closeMenu": "Close menu"
@@ -233,7 +235,10 @@
     "eventTabs": {
       "label": "Event sections",
       "overview": "Overview",
-      "setup": "Setup"
+      "setup": "Setup",
+      "branding": "Branding",
+      "live": "Live Display",
+      "signage": "QR signage"
     },
     "dashboard": {
       "capture": "Captured",
@@ -258,7 +263,13 @@
       "extend": "Extend by {days} days",
       "extendHelp": "Gives every live guest link more time. Files that have already expired can’t be brought back.",
       "extended": "{count, plural, =0 {No live links to extend} one {# link extended by {days} days} other {# links extended by {days} days}}",
-      "extendFailed": "Couldn’t extend the links. Try again."
+      "extendFailed": "Couldn’t extend the links. Try again.",
+      "cloudTitle": "Copies to {provider} need your attention",
+      "cloudNeedsReauth": "Access to {provider} was revoked or has expired, so new files aren't being copied there. They're safe on Immersia and copy by themselves, without duplicates, once you reconnect.",
+      "cloudWaiting": "{count, plural, one {# file is waiting.} other {# files are waiting.}}",
+      "cloudDisconnected": "This event copies to {provider}, but {provider} isn't connected. Connect it and this event's files catch up.",
+      "cloudFailed": "{count, plural, one {# file hasn't reached {provider}.} other {# files haven't reached {provider}.}}",
+      "cloudFix": "Open Integrations"
     },
     "setup": {
       "title": "Event setup",
@@ -286,7 +297,9 @@
         "expiry": "Keep guest files for",
         "expiryHelp": "Hosted downloads are deleted after this. You can extend it before it runs out.",
         "prefix": "Number the files",
-        "prefixHelp": "Add 0001_, 0002_ … in front of every file name."
+        "prefixHelp": "Add 0001_, 0002_ … in front of every file name.",
+        "secondBooth": "Also run a {booth}",
+        "secondBoothHelp": "Both booths share this event: its share pages, gallery and Live Display."
       },
       "video": {
         "title": "360 video",
@@ -383,7 +396,21 @@
         "consent": "Consent text",
         "consentHelp": "What guests agree to, in your words.",
         "contact": "Contact for guests",
-        "contactHelp": "Shown on guest pages once this event’s files have expired, so guests can reach you. An email address or phone number."
+        "contactHelp": "Shown on guest pages once this event’s files have expired, so guests can reach you. An email address or phone number.",
+        "cloud": "Also copy to my cloud",
+        "cloudHelp": "Saves every finished file to your own Google Drive or Dropbox too. Guests still get their files from Immersia.",
+        "cloudNone": "Immersia only",
+        "cloudState": {
+          "unavailable": "{provider} (not set up)",
+          "disconnected": "{provider} (not connected)",
+          "needs_reauth": "{provider} (sign in again)"
+        },
+        "cloudNote": {
+          "unavailable": "{provider} isn't set up on this server.",
+          "disconnected": "{provider} isn't connected, so this event isn't copied there.",
+          "needs_reauth": "{provider} needs you to sign in again; new files stay safe and copy once you do."
+        },
+        "cloudManage": "Manage integrations"
       },
       "kiosk": {
         "title": "Kiosk",
@@ -401,6 +428,33 @@
         "invalid": "Use 4 to 8 digits.",
         "failed": "Couldn’t save the PIN. Try again."
       }
+    },
+    "audioEditor": {
+      "empty": "Add a song to edit it here.",
+      "loading": "Reading the song…",
+      "decodeError": "This audio file couldn’t be read. Try an MP3, M4A or WAV file.",
+      "song": "Song",
+      "songHelp": "Drag the handles to choose the part of the song that plays.",
+      "waveform": "Song waveform",
+      "trimStart": "Trim start",
+      "trimEnd": "Trim end",
+      "from": "From {time}",
+      "to": "To {time}",
+      "length": "Length {time}",
+      "inVideo": "In the video",
+      "inVideoHelp": "Where the music sits on the video’s timeline, and how loud it is.",
+      "stripLabel": "Plays from {from} to {to} at {volume}% volume.",
+      "stripEmpty": "The music doesn’t play within the video. Start it earlier or keep a longer part of the song.",
+      "clipped": "The video ends before the song does, so the fade-out lands at the end of the video.",
+      "play": "Play preview",
+      "stop": "Stop preview",
+      "offset": "Start music at",
+      "offsetHelp": "Seconds into the video when the music begins.",
+      "fadeIn": "Fade in",
+      "fadeInHelp": "How long the music takes to rise from silence.",
+      "fadeOut": "Fade out",
+      "fadeOutHelp": "How long it takes to sink back to silence at the end.",
+      "volume": "Volume"
     },
     "devices": {
       "title": "Devices",
@@ -437,12 +491,728 @@
         "rename": "Couldn't rename the device.",
         "revoke": "Couldn't revoke the device."
       }
+    },
+    "assets": {
+      "title": "Assets",
+      "subtitle": "Overlays, intros, music, fonts and logos, shared by every event on this account. Upload once, use anywhere.",
+      "groupsLabel": "Asset type",
+      "groups": {
+        "overlays": "Overlays & frames",
+        "intros": "Intros & outros",
+        "music": "Music",
+        "fonts": "Fonts",
+        "logos": "Logos",
+        "backgrounds": "Backgrounds"
+      },
+      "types": {
+        "overlay": "Overlay",
+        "layout": "Frame",
+        "intro": "Intro",
+        "outro": "Outro",
+        "audio": "Music",
+        "font": "Font",
+        "logo": "Logo",
+        "background": "Background"
+      },
+      "accepts": {
+        "overlays": "Overlays: PNG or WebP with transparency. Frames: PNG, JPEG or WebP. Up to 25 MB each.",
+        "intros": "Video (MP4, MOV or WebM) up to 30 seconds and 200 MB, or an image (PNG, JPEG or WebP) up to 25 MB.",
+        "music": "MP3, M4A, AAC or WAV, up to 15 minutes and 50 MB.",
+        "fonts": "WOFF2, WOFF, TTF or OTF, up to 10 MB.",
+        "logos": "PNG, JPEG or WebP, up to 10 MB. SVG isn’t supported.",
+        "backgrounds": "Images (PNG, JPEG or WebP) up to 25 MB, or video (MP4 or WebM) up to 200 MB."
+      },
+      "upload": "Upload files",
+      "uploadAs": "Upload as",
+      "dropHint": "Drag files here, or use the button.",
+      "dropActive": "Drop to upload",
+      "progress": {
+        "checking": "Checking…",
+        "uploading": "Uploading {percent}",
+        "finishing": "Finishing…"
+      },
+      "cancel": "Cancel",
+      "retry": "Retry",
+      "dismiss": "Dismiss",
+      "renameNamed": "Rename {name}",
+      "renameLabel": "Asset name",
+      "play": "Play {name}",
+      "pause": "Pause {name}",
+      "delete": "Delete",
+      "deleteNamed": "Delete {name}",
+      "deleteTitle": "Delete {name}?",
+      "deleteBody": "The file is removed from your library for good. Events that use it have to be changed first.",
+      "usedTitle": "{name} is still in use",
+      "usedBody": "It can’t be deleted while these use it. Switch them to something else first, then delete it.",
+      "usedByTemplate": "{name} (template)",
+      "close": "Close",
+      "empty": {
+        "overlays": {
+          "title": "No overlays or frames yet",
+          "body": "Upload transparent PNGs or WebPs to frame your 360 videos, or frames for Photo Booth strips."
+        },
+        "intros": {
+          "title": "No intros or outros yet",
+          "body": "Add a short clip or an image to play before or after each video."
+        },
+        "music": {
+          "title": "No music yet",
+          "body": "Upload a track to play over your 360 videos and on the live display."
+        },
+        "fonts": {
+          "title": "No fonts yet",
+          "body": "Upload your brand’s typefaces, then pick them in overlays and layouts."
+        },
+        "logos": {
+          "title": "No logos yet",
+          "body": "Add your logo to show it on guest pages and in overlays."
+        },
+        "backgrounds": {
+          "title": "No backgrounds yet",
+          "body": "Upload an image or a looping video to sit behind your booth screens and layouts."
+        }
+      },
+      "picker": {
+        "title": "Choose an asset",
+        "search": "Search assets",
+        "loading": "Loading assets…",
+        "emptyTitle": "Nothing to choose yet",
+        "emptyBody": "Upload a file and it joins your library.",
+        "noMatchTitle": "No assets match",
+        "noMatchBody": "Try a different name.",
+        "selected": "Selected"
+      },
+      "storageOff": {
+        "title": "File storage isn’t set up",
+        "body": "The asset library keeps files in object storage. Add the S3 settings to this deployment to turn it on."
+      },
+      "uploaded": "Uploaded {name}",
+      "deleted": "Deleted {name}",
+      "errors": {
+        "wrongType": "This file type isn’t accepted here.",
+        "tooBig": "That file is larger than {max}.",
+        "tooLong": "That file is longer than {max}.",
+        "unreadable": "We couldn’t read this file. It may be damaged or in a format this browser can’t open.",
+        "quota": "Your asset library has reached its 5 GB limit. Delete something you no longer use, then try again.",
+        "failed": "The upload didn’t go through. Check your connection and try again.",
+        "load": "Couldn’t load your assets.",
+        "rename": "Couldn’t rename the asset.",
+        "delete": "Couldn’t delete the asset."
+      }
+    },
+    "editor": {
+      "titleLayout": "Layout editor",
+      "titleOverlay": "Overlay editor",
+      "toolbar": "Editor tools",
+      "canvasLabel": "Design canvas. Click an element to select it, drag to move it, use the handles to resize or rotate it. Arrow keys nudge the selection.",
+      "pickImage": "Choose an image",
+      "undo": "Undo (Ctrl+Z)",
+      "redo": "Redo (Ctrl+Shift+Z)",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "zoomFit": "Fit to screen",
+      "label": "Element",
+      "shotN": "Photo {n}",
+      "qrHint": "Printed QR codes stay at least 18 mm wide, so phones can read them from arm's length.",
+      "add": {
+        "photo": "Add a photo slot",
+        "text": "Add text",
+        "image": "Add an image",
+        "rect": "Add a rectangle",
+        "ellipse": "Add an ellipse",
+        "qr": "Add the guest QR code"
+      },
+      "status": {
+        "saved": "All changes saved",
+        "saving": "Saving…",
+        "error": "Couldn't save. Retrying…",
+        "conflict": "Not saved: changed elsewhere"
+      },
+      "conflict": {
+        "body": "This design was changed in another tab or on another device.",
+        "theirs": "Load their version",
+        "mine": "Keep mine"
+      },
+      "issues": {
+        "qr_too_small": "QR under 18 mm",
+        "qr_off_canvas": "QR off the page"
+      },
+      "panels": {
+        "label": "Panel",
+        "layers": "Layers",
+        "templates": "Templates",
+        "inspect": "Properties"
+      },
+      "layers": {
+        "title": "Layers",
+        "empty": "Nothing here yet. Add text, an image or a shape from the toolbar.",
+        "up": "Bring forward",
+        "down": "Send backward",
+        "show": "Show",
+        "hide": "Hide",
+        "lock": "Lock",
+        "unlock": "Unlock"
+      },
+      "types": {
+        "photo": "Photo slot",
+        "image": "Image",
+        "text": "Text",
+        "shape": "Shape",
+        "qr": "QR code"
+      },
+      "sections": {
+        "text": "Text",
+        "photo": "Photo",
+        "image": "Image",
+        "shape": "Shape",
+        "qr": "QR code"
+      },
+      "actions": {
+        "duplicate": "Duplicate (Ctrl+D)",
+        "delete": "Delete"
+      },
+      "multi": {
+        "title": "{count} selected",
+        "actions": "Selection"
+      },
+      "align": {
+        "label": "Align",
+        "left": "Align left",
+        "hcenter": "Centre horizontally",
+        "right": "Align right",
+        "top": "Align top",
+        "vcenter": "Centre vertically",
+        "bottom": "Align bottom"
+      },
+      "canvas": {
+        "title": "Canvas",
+        "size": "Size",
+        "dpi": "{width} × {height} px at 300 DPI: what you see is what prints.",
+        "background": "Background",
+        "backgroundColour": "Background colour",
+        "backgroundImage": "Background image",
+        "choose": "Choose…",
+        "replace": "Replace",
+        "removeImage": "Remove the background image",
+        "overlayHint": "Keep the background transparent so the video shows through.",
+        "tip": "Select an element to edit it. Shift-click or drag across the canvas to select several."
+      },
+      "printSizes": {
+        "2x6": "2 × 6 in strip",
+        "4x4": "4 × 4 in square",
+        "4x6": "4 × 6 in portrait",
+        "6x4": "6 × 4 in landscape",
+        "5x7": "5 × 7 in portrait"
+      },
+      "fields": {
+        "name": "Name",
+        "namePlaceholder": "Optional",
+        "x": "X position",
+        "y": "Y position",
+        "width": "Width",
+        "height": "Height",
+        "rotation": "Rotation",
+        "opacity": "Opacity",
+        "text": "Text",
+        "weight": "Weight",
+        "fontSize": "Size",
+        "lineHeight": "Line height",
+        "letterSpacing": "Letter spacing",
+        "colour": "Colour",
+        "colourOpacity": "Colour opacity",
+        "align": "Alignment",
+        "verticalAlign": "Vertical alignment",
+        "uppercase": "Capitals",
+        "autoFit": "Shrink to fit",
+        "shot": "Shows",
+        "fit": "Fit",
+        "cornerRadius": "Corner radius",
+        "asset": "Image",
+        "shape": "Shape",
+        "fill": "Fill",
+        "fillOpacity": "Fill opacity",
+        "stroke": "Outline",
+        "strokeColour": "Outline colour",
+        "strokeOpacity": "Outline opacity",
+        "strokeWidth": "Outline width",
+        "qrDark": "Code colour",
+        "qrDarkOpacity": "Code opacity",
+        "qrLight": "Background",
+        "qrLightOpacity": "Background opacity",
+        "showCode": "Show the short code"
+      },
+      "weights": {
+        "100": "Thin",
+        "200": "Extra light",
+        "300": "Light",
+        "400": "Regular",
+        "500": "Medium",
+        "600": "Semibold",
+        "700": "Bold",
+        "800": "Extra bold",
+        "900": "Black"
+      },
+      "alignText": {
+        "left": "Left",
+        "center": "Centre",
+        "right": "Right",
+        "top": "Top",
+        "middle": "Middle",
+        "bottom": "Bottom"
+      },
+      "fit": {
+        "cover": "Fill",
+        "contain": "Fit"
+      },
+      "shapes": {
+        "rect": "Rectangle",
+        "ellipse": "Ellipse"
+      },
+      "fonts": {
+        "title": "Fonts",
+        "change": "Change",
+        "search": "Search fonts",
+        "category": "Category",
+        "none": "No fonts match.",
+        "licence": "{count} open-licence fonts (SIL OFL and Apache), free for print and video. Upload your own in Assets.",
+        "categories": {
+          "all": "All",
+          "sans": "Sans",
+          "serif": "Serif",
+          "display": "Display",
+          "handwriting": "Script",
+          "mono": "Mono",
+          "uploaded": "Uploaded"
+        }
+      },
+      "templates": {
+        "presets": "Start from",
+        "presetShots": "{count, plural, one {# photo} other {# photos}}",
+        "overlayStyles": {
+          "band": "Name band",
+          "frame": "Frame",
+          "pill": "Name pill",
+          "blank": "Blank"
+        },
+        "saved": "Saved templates",
+        "savedEmpty": "Save a design here to reuse it at other events.",
+        "saveCurrent": "Save",
+        "saveTitle": "Save as a template",
+        "name": "Template name",
+        "namePlaceholder": "e.g. Gold wedding strip",
+        "saveFailed": "Couldn't save the template. Try again.",
+        "save": "Save template",
+        "cancel": "Cancel",
+        "delete": "Delete {name}",
+        "applyTitle": "Use “{name}”?",
+        "applyBody": "It replaces the current design. You can undo this.",
+        "apply": "Use this design"
+      }
+    },
+    "branding": {
+      "title": "Branding",
+      "readOnly": "Read only",
+      "theme": {
+        "title": "Theme",
+        "subtitle": "One accent colour for the booth, share pages, gallery and Live Display.",
+        "presets": "Presets",
+        "names": {
+          "Cobalt": "Cobalt",
+          "Vermilion": "Vermilion",
+          "Forest": "Forest",
+          "Champagne": "Champagne",
+          "Monochrome": "Monochrome"
+        },
+        "accent": "Accent",
+        "background": "Background",
+        "ink": "Text",
+        "font": "Type",
+        "sans": "Sans",
+        "serif": "Serif"
+      },
+      "logo": {
+        "label": "Logo",
+        "help": "Shown on the attract screen, share pages and Live Display."
+      },
+      "attract": {
+        "title": "Attract screen",
+        "subtitle": "What guests see while the booth waits.",
+        "headline": "Headline",
+        "subline": "Subline",
+        "cta": "Start button",
+        "ctaPlaceholder": "Tap to start",
+        "thanks": "Thank-you message",
+        "background": "Background",
+        "backgroundHelp": "A photo or a looping video behind the attract screen."
+      },
+      "fields": {
+        "title": "Dynamic fields",
+        "subtitle": "Values for the tokens you can place in layouts, overlays and messages.",
+        "hashtag": "Hashtag",
+        "custom1": "Custom text 1",
+        "custom2": "Custom text 2",
+        "custom3": "Custom text 3",
+        "token": "Token: {token}"
+      },
+      "design": {
+        "layoutTitle": "Print layout",
+        "layoutSubtitle": "The strip or print every guest takes home.",
+        "overlayTitle": "Video overlay",
+        "overlaySubtitle": "A transparent frame drawn over every 360 video.",
+        "currentLayout": "The event's print layout",
+        "currentOverlay": "The event's video overlay",
+        "noOverlay": "No overlay: videos play clean.",
+        "defaultLayout": "Using the standard layout for the print size.",
+        "layoutHelp": "Arrange the photo slots, text, logos and QR code in the editor, or start from a preset or a saved template.",
+        "overlayHelp": "Add the event name, a logo or a frame over the video. Upload a transparent PNG in Assets to use it as is.",
+        "edit": "Open the editor",
+        "design": "Design one",
+        "choose": "Choose a design",
+        "fullScreen": "Full screen",
+        "removeOverlay": "Remove overlay",
+        "chooserTitle": "Choose a design",
+        "chooserNote": "The chosen design replaces the event's current one and opens for editing like any other.",
+        "applyFailed": "Couldn't use that design. Try again.",
+        "viewerTitle": "Preview",
+        "noSaved": "No saved templates yet. Save one from the editor.",
+        "noUploads": "No uploaded frames yet. Upload transparent PNGs in Assets.",
+        "presetShots": "{count, plural, one {# photo} other {# photos}}",
+        "overlayStyles": {
+          "band": "Name band",
+          "frame": "Frame",
+          "pill": "Name pill",
+          "blank": "Blank"
+        },
+        "tabs": {
+          "presets": "Presets",
+          "saved": "Saved ({count})",
+          "uploads": "Uploaded ({count})"
+        }
+      },
+      "cards": {
+        "title": "Intro and outro",
+        "subtitle": "A short clip or a still card before and after every video.",
+        "intro": "Intro",
+        "introHelp": "Plays before the spin.",
+        "outro": "Outro",
+        "outroHelp": "Plays after the spin.",
+        "length": "Card length",
+        "lengthHelp": "How long a still card shows. Clips play up to this long."
+      },
+      "music": {
+        "title": "Music",
+        "subtitle": "One track under every video, trimmed, faded and levelled.",
+        "track": "Track",
+        "trackHelp": "MP3, M4A/AAC or WAV, from your assets.",
+        "loading": "Loading the track"
+      },
+      "media": {
+        "choose": "Choose…",
+        "replace": "Replace",
+        "remove": "Remove {name}"
+      },
+      "looks": {
+        "title": "Look and effects",
+        "subtitle": "A colour look for every capture, effects over the 360 videos, and a photo effect for the strip.",
+        "look": "Look",
+        "videoLook": "360 video look",
+        "photoLook": "Photo look",
+        "lookHelp": "One colour look for the whole event, applied when each capture is made.",
+        "effects": "Video effects",
+        "effectsHelp": "Up to {max}. They play over the guests' footage, not over the intro, outro or overlay.",
+        "strength": "{effect} strength",
+        "colourMode": "{effect} colour",
+        "modes": {
+          "colour": "Colour",
+          "white": "White",
+          "silver": "Silver",
+          "gold": "Gold"
+        },
+        "preview": "Preview of the chosen look and effects",
+        "previewUnavailable": "The preview needs WebGL2, which this browser or device can't provide here. Your choices are still saved and used.",
+        "beatSync": "Beat sync",
+        "beatSyncHelp": "Effects pulse on the music's beats, and slow motion starts and ends on a beat.",
+        "beatSyncNeedsMusic": "Add music to the event to sync effects to its beat.",
+        "photoEffect": "Photo effect",
+        "photoEffectHelp": "Applied to every photo before the strip is made."
+      },
+      "background": {
+        "title": "Background",
+        "subtitle": "Swap what is behind your guests. It is found on the device: no picture ever leaves it.",
+        "video": "360 video background",
+        "photo": "Photo background",
+        "off": "Off",
+        "blur": "Blur",
+        "colour": "Colour",
+        "image": "Picture",
+        "imageOrVideo": "Picture or video",
+        "colourLabel": "Background colour",
+        "imageHelp": "A picture, or a video that plays behind the guest and starts over if it is shorter than the spin.",
+        "photoImageHelp": "A picture for every photo. Videos are not used for photos.",
+        "preview": "Preview of the background",
+        "previewNote": "The preview uses a drawn silhouette. On the booth the cut-out follows each guest.",
+        "needsImage": "Choose a picture to see the preview."
+      }
+    },
+    "live": {
+      "title": "Live Display",
+      "settings": {
+        "title": "Live Display",
+        "subtitle": "Every video, strip and GIF on a TV or projector, each with its own QR code.",
+        "enabled": "Show captures on screens",
+        "enabledHelp": "Off until you turn it on. Guests are told on the result screen that their capture may appear, and can keep theirs off.",
+        "moderation": "Publishing",
+        "moderationHelp": "Approve first holds new captures here until you show them.",
+        "auto": "Show automatically",
+        "approve": "Approve first",
+        "station": "Open the Sharing Station"
+      },
+      "displays": {
+        "title": "Displays",
+        "subtitle": "Each screen has its own layout and playback. Changes reach it within a second.",
+        "pair": "Pair a display",
+        "emptyTitle": "No displays yet",
+        "emptyBody": "Open the pairing page on any TV browser, laptop on HDMI or casting device, and type the code.",
+        "name": "Display name",
+        "rename": "Rename",
+        "online": "Online",
+        "offline": "Offline",
+        "remove": "Remove {name}",
+        "removeTitle": "Remove {name}?",
+        "removeBody": "The screen stops showing captures at once and goes back to its pairing page.",
+        "removeConfirm": "Remove display",
+        "cancel": "Cancel",
+        "layout": "Layout",
+        "layouts": {
+          "spotlight": "Spotlight",
+          "mosaic": "Mosaic",
+          "ticker": "Ticker",
+          "counter": "Counter"
+        },
+        "dwell": "Time per item",
+        "dwellHelp": "Videos play to the end, up to three times this.",
+        "muted": "Mute videos",
+        "qrSize": "QR size",
+        "qrSizes": {
+          "s": "Small",
+          "m": "Medium",
+          "l": "Large"
+        },
+        "qrPosition": "Event QR corner",
+        "positions": {
+          "top-left": "Top left",
+          "top-right": "Top right",
+          "bottom-left": "Bottom left",
+          "bottom-right": "Bottom right"
+        },
+        "verticalFill": "Vertical videos",
+        "verticalFillHelp": "How 9:16 videos fill a landscape screen.",
+        "fills": {
+          "blur": "Blurred fill",
+          "columns": "Side by side"
+        }
+      },
+      "pair": {
+        "title": "Pair a display",
+        "steps": "On the TV, open {url} and type this code. Or scan the QR with the device that will be the display.",
+        "codeLabel": "Pairing code",
+        "expires": "Expires in {minutes}:{seconds}",
+        "newCode": "Get a new code",
+        "failed": "Couldn't make a pairing code. Try again.",
+        "qrLabel": "QR code that pairs the device that scans it",
+        "qrHint": "For a tablet or phone that will be the display.",
+        "paired": "Display paired. It's showing your event now.",
+        "done": "Done"
+      },
+      "moderation": {
+        "title": "On screen",
+        "subtitle": "Hide anything at once; it disappears from every display.",
+        "pending": "Waiting ({count})",
+        "shown": "On screen ({count})",
+        "hidden": "Hidden ({count})",
+        "empty": {
+          "pending": "Nothing waiting for approval.",
+          "shown": "Nothing on screen yet. New captures appear here within seconds of their upload.",
+          "hidden": "Nothing hidden."
+        },
+        "itemLabel": "Capture {code}",
+        "approve": "Show on screen",
+        "restore": "Show again",
+        "hide": "Hide from screens"
+      }
+    },
+    "integrations": {
+      "title": "Integrations",
+      "subtitle": "Copy every finished file to your own Google Drive or Dropbox, as well as the guest's Immersia link. Guests always download from Immersia; the copy is yours to keep.",
+      "providers": {
+        "drive": "Google Drive",
+        "dropbox": "Dropbox",
+        "generic": "your cloud storage"
+      },
+      "about": {
+        "drive": "Immersia only sees the folders and files it creates itself, never the rest of your Drive.",
+        "dropbox": "Immersia only works inside the folder it creates in your Dropbox."
+      },
+      "status": {
+        "connected": "Connected",
+        "needsReauth": "Sign in again",
+        "notConnected": "Not connected",
+        "notConfigured": "Not configured"
+      },
+      "notConfigured": "This Immersia server isn't set up for {provider} yet. If you host it yourself, add its credentials and INTEGRATION_TOKEN_KEY to the environment (see .env.example).",
+      "connect": "Connect {provider}",
+      "reconnect": "Reconnect {provider}",
+      "connectedAs": "Connected as {email}",
+      "ownerOnly": "Only the account owner can connect or disconnect a cloud.",
+      "folder": {
+        "label": "Folder",
+        "none": "Not created yet. It's created with the first copy.",
+        "open": "Open folder",
+        "help": "Each event gets its own subfolder named with its date. Files already copied stay where they are.",
+        "name": "Folder name",
+        "placeholder": "Immersia 360",
+        "save": "Use this folder"
+      },
+      "disconnect": {
+        "button": "Disconnect",
+        "title": "Disconnect {provider}?",
+        "body": "Immersia stops copying to {provider}, revokes its access and deletes the saved connection. Files already copied stay in your {provider}. Copies that haven't happened yet are dropped; connect again later to catch up.",
+        "confirm": "Disconnect",
+        "cancel": "Cancel"
+      },
+      "reauth": {
+        "title": "{provider} needs you to sign in again",
+        "body": "Immersia can't reach your {provider} any more: access was revoked or has expired. Nothing is lost. New files stay safe on Immersia, and every waiting copy goes through, without duplicates, as soon as you reconnect.",
+        "waiting": "{count, plural, one {# file is waiting.} other {# files are waiting.}}"
+      },
+      "failed": {
+        "title": "{count, plural, one {# file couldn't be copied to {provider}} other {# files couldn't be copied to {provider}}}",
+        "retry": "Retry",
+        "retrying": "Retrying…"
+      },
+      "flash": {
+        "connected": "{provider} is connected. Copying has started."
+      },
+      "connectErrors": {
+        "denied": "You cancelled the connection, so nothing changed. Press Connect to try again.",
+        "state": "That sign-in link expired or didn't come from this account. Press Connect to start again.",
+        "scope": "{provider} didn't grant the permission Immersia needs. Press Connect again and leave the access box ticked.",
+        "no_refresh": "{provider} didn't give Immersia lasting access. Remove Immersia from your {provider} connected apps, then connect again.",
+        "exchange": "{provider} refused the sign-in. Press Connect to try again.",
+        "unreachable": "Couldn't reach {provider}. Check the connection and try again in a minute.",
+        "unavailable": "This server isn't set up for {provider}.",
+        "forbidden": "Only the account owner can connect a cloud.",
+        "failed": "Something went wrong while connecting {provider}. Please try again."
+      },
+      "actionErrors": {
+        "reauth_required": "{provider} needs you to sign in again first. Press Reconnect.",
+        "quota_exceeded": "Your {provider} is full. Free up space, then try again.",
+        "unreachable": "Couldn't reach {provider}. Try again in a minute.",
+        "forbidden": "Only the account owner can change this.",
+        "failed": "That didn't work. Please try again."
+      },
+      "copyErrors": {
+        "reauth_required": "Access to {provider} was revoked or has expired. Reconnect {provider} and this file copies by itself.",
+        "quota_exceeded": "Your {provider} is full. Free up space, then press Retry.",
+        "transient": "Couldn't reach {provider} after several tries. Press Retry.",
+        "retrying": "{provider} didn't respond. Trying again {when}.",
+        "folder_missing": "The folder was deleted from {provider}. Choose a folder above; failed copies restart by themselves.",
+        "folder_inaccessible": "Immersia can't write to that folder. Create a new folder above; failed copies restart by themselves.",
+        "source_gone": "This file expired on Immersia before it could be copied, so it can't be sent any more.",
+        "other": "Couldn't copy this file. Press Retry; if it keeps failing, reconnect {provider}."
+      },
+      "copies": {
+        "title": "Recent copies",
+        "subtitle": "The last 20 files sent to your cloud.",
+        "emptyTitle": "Nothing copied yet",
+        "emptyBody": "Choose Google Drive or Dropbox under Sharing in an event's setup, and finished files appear here.",
+        "to": "to {provider}",
+        "open": "Open in {provider}",
+        "soon": "in a moment",
+        "status": {
+          "pending": "Waiting",
+          "uploading": "Copying",
+          "done": "Copied",
+          "failed": "Failed"
+        }
+      }
+    },
+    "galleryCard": {
+      "title": "Event gallery",
+      "subtitle": "{count, plural, =0 {Every capture, for your client and for guests who scan the event QR.} one {# capture so far, for your client and for guests who scan the event QR.} other {# captures so far, for your client and for guests who scan the event QR.}}",
+      "link": "Gallery link",
+      "copy": "Copy",
+      "copied": "Copied",
+      "openLink": "Open",
+      "password": "Password",
+      "passwordHelp": "Optional. Anyone with the link needs it once per browser. Hidden captures and guests who asked to stay off screen never appear here.",
+      "locked": "Protected",
+      "unlocked": "Open to anyone with the link",
+      "setPassword": "Set a password",
+      "newPassword": "New password",
+      "set": "Set",
+      "change": "Change",
+      "remove": "Remove password",
+      "passwordSet": "Password saved. Anyone already in needs to enter it again.",
+      "passwordRemoved": "Password removed.",
+      "passwordShort": "Use at least 6 characters.",
+      "failed": "Couldn't save. Try again.",
+      "export": "All files",
+      "exportHelp": "Every full-quality file of the event as one ZIP, including hidden captures, saved straight from storage by your browser.",
+      "exportButton": "Download every file (ZIP)"
+    },
+    "signage": {
+      "title": "QR signage",
+      "format": {
+        "title": "Format",
+        "subtitle": "One QR code for the whole event gallery, in your event’s colours and logo.",
+        "label": "Signage format"
+      },
+      "formats": {
+        "a4": "A4 poster",
+        "a5": "A5 flyer",
+        "tent": "Table tent"
+      },
+      "hints": {
+        "a4": "For a wall, a door or an easel. 210 × 297 mm.",
+        "a5": "For tables, hand-outs and the bar. 148 × 210 mm.",
+        "tent": "Print on A4, fold along the dashed line and stand it on the table: both sides read upright. 210 × 297 mm sheet."
+      },
+      "wording": {
+        "title": "Wording",
+        "subtitle": "Change the text, or leave a line empty to drop it. The event name, logo and hashtag come from Branding.",
+        "headline": "Headline",
+        "cta": "Call to action"
+      },
+      "defaults": {
+        "headline": "Get your photos & videos",
+        "cta": "Scan with your phone camera"
+      },
+      "link": {
+        "title": "Gallery link",
+        "subtitle": "What the code opens. You can share it in a message too.",
+        "label": "Gallery link",
+        "copy": "Copy link",
+        "copied": "Copied"
+      },
+      "preview": {
+        "title": "Preview",
+        "label": "Preview of the {format}",
+        "loading": "Loading fonts and your logo…",
+        "tip": "Print at actual size (100%), not “fit to page”. Nothing is printed closer than {mm} mm to the edge, so office printers won’t cut it off."
+      },
+      "download": {
+        "pdf": "Download PDF",
+        "png": "Download PNG",
+        "failed": "Couldn’t make the file. Try again."
+      }
     }
   },
   "booth": {
     "startBooth": "Start booth",
     "startHint": "Check the camera, then hand over to your guests.",
     "startingCamera": "Starting the camera…",
+    "backgroundUnavailable": "Background replacement is not available on this device; guests get the plain background.",
     "offline": "Offline",
     "lowStorage": "Storage low",
     "motionArmed": "Motion start on",
@@ -477,17 +1247,47 @@
       "camera": "Camera",
       "defaultCamera": "Default camera",
       "simulator": "Simulated camera (no hardware)",
-      "lens": {
-        "wide": "wide",
-        "ultrawide": "ultra-wide",
-        "telephoto": "telephoto",
-        "front": "front"
+      "lenses": {
+        "groupBack": "Back cameras",
+        "groupFront": "Front cameras",
+        "groupExternal": "External cameras",
+        "groupOther": "Other cameras",
+        "front": "Front camera",
+        "back": "Back camera",
+        "backWide": "Back wide camera",
+        "backUltraWide": "Back ultra-wide camera",
+        "backTelephoto": "Back telephoto camera",
+        "backDual": "Back dual camera",
+        "backTriple": "Back triple camera",
+        "numbered": "Camera {n}",
+        "saved": "Camera chosen earlier",
+        "inUse": "In use",
+        "namesLater": "Camera names appear once the camera has started."
       },
+      "cameraBusy": "Camera changes pause while a guest is using the booth.",
       "delivering": "Delivering {width}×{height} at {fps} fps",
       "mirror": "Mirror the preview",
       "mirrorHelp": "Only on this screen. Recordings are never mirrored.",
+      "zoom": "Zoom",
       "torch": "Torch",
-      "noTorch": "This camera has no controllable light.",
+      "noTorch": "Not supported: this camera or browser can't switch its light on.",
+      "torchNeedsCamera": "Start the booth to check whether this camera has a light.",
+      "torchFailed": "Couldn't switch the torch. Try again.",
+      "fill": {
+        "title": "Fill light",
+        "help": "Lights guests' faces with a glowing frame around the edge of this screen. It doesn't appear in recordings.",
+        "level": {
+          "off": "Off",
+          "soft": "Soft",
+          "bright": "Bright"
+        },
+        "tint": "Light colour",
+        "tints": {
+          "neutral": "Neutral",
+          "warm": "Warm"
+        },
+        "brightness": "For the most light, set this device's screen brightness to maximum. A web page can't do that for you."
+      },
       "motion": "Start on motion",
       "motionHelp": "Recording starts when the platform starts turning.",
       "sensitivity": "Motion needed",
@@ -571,7 +1371,12 @@
       "next": "Next guest",
       "titlePhoto": "Scan for your photos",
       "subtitlePhoto": "The link works right away; your photos land there in a moment.",
-      "previewAlt": "Your photo strip"
+      "previewAlt": "Your photo strip",
+      "display": {
+        "notice": "Your capture may appear on the event's big screen.",
+        "optOut": "Keep mine off the screen",
+        "optedOut": "Yours won't be shown on screen"
+      }
     },
     "uploads": {
       "waiting": "{count, plural, one {# upload waiting} other {# uploads waiting}}",
@@ -603,7 +1408,88 @@
       "printing": "Printing…",
       "printLimit": "That’s all the prints for this session",
       "flash": "Photo taken"
-    }
+    },
+    "gallery": {
+      "open": "Gallery",
+      "title": "Event gallery",
+      "close": "Close gallery",
+      "loading": "Loading…",
+      "summary": "{count, plural, =0 {Nothing on this device yet} one {# file on this device} other {# files on this device}}",
+      "filters": "Filter by type",
+      "filter": {
+        "all": "All",
+        "videos": "Videos",
+        "strips": "Strips",
+        "motion": "GIFs & motion"
+      },
+      "kinds": {
+        "mp4": "Video",
+        "small_mp4": "Smaller video",
+        "gif": "GIF",
+        "strip": "Photo strip",
+        "short_video": "Short video",
+        "boomerang": "Boomerang"
+      },
+      "upload": {
+        "local": "On this device",
+        "uploading": "Uploading",
+        "uploaded": "Uploaded",
+        "failed": "Needs attention"
+      },
+      "codePending": "Code pending",
+      "card": "{kind}, {code}",
+      "previewAlt": "{kind} preview",
+      "empty": "Nothing here yet",
+      "emptyBody": "Videos and photo strips appear here as soon as they are made.",
+      "emptyFilter": "Nothing of this type yet",
+      "select": "Select",
+      "selected": "{count, plural, =0 {None selected} one {# selected} other {# selected}}",
+      "selectAll": "Select all",
+      "clearSelection": "Clear",
+      "importOriginals": "Import originals",
+      "importing": "Importing…",
+      "importDone": "{count, plural, one {Imported # video. It renders in the background.} other {Imported # videos. They render in the background.}}",
+      "importSkipped": "{count, plural, one {# file wasn’t a video and was skipped.} other {# files weren’t videos and were skipped.}}",
+      "importFailed": "{count, plural, one {# video couldn’t be saved. Check free storage.} other {# videos couldn’t be saved. Check free storage.}}",
+      "exportAll": "Export all ({count})",
+      "exportSelected": "Export selected ({count})",
+      "exporting": "Exporting file {index} of {count} · {done} of {total}",
+      "exportPaused": "Export paused while a guest is at the booth",
+      "exportProgress": "Export progress",
+      "exportSaved": "Saved {name}.",
+      "exportDownloaded": "{name} was sent to this browser’s downloads.",
+      "exportMissing": "{count, plural, one {# file couldn’t be read from this device and was left out.} other {# files couldn’t be read from this device and were left out.}}",
+      "exportCancelled": "Export cancelled. Nothing was saved.",
+      "exportFailed": "The export didn’t finish. Check free storage, then try again.",
+      "capturingNote": "Exports and imports wait while a guest is at the booth.",
+      "cancel": "Cancel",
+      "dismiss": "Dismiss",
+      "memoryTitle": "This export is large",
+      "memoryBody": "This browser can’t stream a file to disk, so the whole ZIP ({size}) is built in memory first, and that can fail on this device. Export a few at a time with Select, or use Chrome or Edge on a computer.",
+      "exportAnyway": "Export anyway",
+      "stopTitle": "Stop the export?",
+      "stopBody": "Closing the gallery cancels the export in progress. Nothing is saved.",
+      "keepExporting": "Keep exporting",
+      "stopAndClose": "Stop and close",
+      "detail": {
+        "reshare": "Reshare",
+        "qrAlt": "QR code for this guest’s files",
+        "reshareHint": "A guest who missed their QR can scan this one to open their files.",
+        "noLink": "This file has no guest link.",
+        "type": "Type",
+        "status": "Upload",
+        "made": "Made",
+        "size": "Size",
+        "dimensions": "Dimensions",
+        "pixels": "{width}×{height}",
+        "duration": "Length",
+        "file": "File name",
+        "save": "Save to this device",
+        "saveFailed": "Couldn’t read this file from the device."
+      }
+    },
+    "startOther": "Start {booth}",
+    "endCard": "Scan to get your video"
   },
   "share": {
     "metaTitle": "{event}: your files",
@@ -648,6 +1534,173 @@
       "not_found": "We couldn’t find that code. Check it and try again.",
       "expired": "That event has ended and its files have been removed.",
       "too_many": "Too many tries. Wait a few minutes, then try again."
+    }
+  },
+  "station": {
+    "subtitle": "Find yours, tap it and scan the code.",
+    "findLabel": "Find by code",
+    "findPlaceholder": "Your code",
+    "clear": "Clear",
+    "empty": "New photos and videos appear here a few seconds after they're taken.",
+    "noMatch": "No capture with that code yet. It may still be on its way.",
+    "open": "Open capture {code}",
+    "offline": "Offline: showing what was already here",
+    "detail": "Capture {code}",
+    "qr": "QR code for this capture",
+    "scan": "Scan with your phone's camera to download.",
+    "close": "Back to all",
+    "start": "Start the Sharing Station"
+  },
+  "gallery": {
+    "metaTitle": "{event}: photos and videos",
+    "notFound": "Gallery not found",
+    "downloadAll": "Download all",
+    "filters": {
+      "label": "Booth",
+      "all": "All",
+      "video360": "360 videos",
+      "photo": "Photos"
+    },
+    "searchLabel": "Find by code",
+    "searchPlaceholder": "Your code",
+    "search": "Find",
+    "empty": "Photos and videos appear here as soon as they're uploaded.",
+    "noMatch": "Nothing with that code yet. It may still be on its way.",
+    "open": "Open capture {code}",
+    "older": "Older",
+    "newest": "Back to the newest",
+    "lock": {
+      "body": "This gallery is protected.",
+      "label": "Password",
+      "open": "Open",
+      "errors": {
+        "wrong": "That password isn't right.",
+        "tooMany": "Too many tries. Wait a few minutes and try again.",
+        "failed": "Couldn't check the password. Check your connection and try again."
+      }
+    }
+  },
+  "zip": {
+    "progress": "{files, plural, one {# file} other {# files}} · {size}",
+    "cancel": "Cancel",
+    "done": "Saved {files, plural, one {# file} other {# files}}.{skipped, plural, =0 {} one { # file couldn't be fetched.} other { # files couldn't be fetched.}}",
+    "failed": "The download stopped. Check your connection and try again.",
+    "cancelled": "Download cancelled."
+  },
+  "tv": {
+    "pair": {
+      "metaTitle": "Connect a screen",
+      "title": "Connect this screen",
+      "body": "Enter the six-character code from Live Display in Studio, or open the pairing link from its QR code.",
+      "codeLabel": "Pairing code",
+      "character": "Character {n} of {total}",
+      "hint": "Letters and numbers, like K7M-2QX. Never I, L, O, 0 or 1.",
+      "submit": "Connect screen",
+      "connecting": "Connecting…",
+      "connected": "Connected",
+      "backToDisplay": "Back to the display",
+      "errors": {
+        "incomplete": "Enter all six characters.",
+        "invalid": "That code isn’t right. Check it and try again.",
+        "expired": "That code has expired. Create a new one in Studio.",
+        "too_many": "Too many tries. Wait a few minutes, then try again.",
+        "offline": "This screen can’t reach the internet. Check the connection and try again.",
+        "storage": "This browser can’t save the pairing. Turn off private browsing and try again.",
+        "unavailable": "Something went wrong on our side. Try again in a moment."
+      }
+    },
+    "display": {
+      "metaTitle": "Live Display",
+      "connecting": "Connecting…",
+      "gallery": "Event gallery",
+      "galleryAlt": "QR code for the event gallery",
+      "galleryScan": "Scan to see every moment",
+      "itemScan": "Scan to get this moment",
+      "itemAlt": "QR code for this moment, code {code}",
+      "enterCode": "Or enter the code at {host}",
+      "justIn": "Just in",
+      "recent": "Recent moments",
+      "moments": "{count, plural, one {moment captured} other {moments captured}}",
+      "idleLive": "Moments from the booth appear here as soon as they’re ready.",
+      "fullscreen": "Full screen",
+      "exitFullscreen": "Exit full screen",
+      "soundHint": "Press OK to turn on sound",
+      "status": {
+        "socket": "Live",
+        "polling": "Live, refreshing",
+        "offline": "Offline, looping saved moments"
+      }
+    }
+  },
+  "effects": {
+    "looks": {
+      "none": "Original",
+      "mono": "Mono",
+      "noir": "Noir",
+      "silver": "Silver",
+      "sepia": "Sepia",
+      "vivid": "Vivid",
+      "cinematic": "Cinematic",
+      "film": "Film",
+      "golden-hour": "Golden hour",
+      "soft-pastel": "Soft pastel",
+      "cool-breeze": "Cool breeze",
+      "warm-portrait": "Warm portrait",
+      "matte": "Matte",
+      "bleach-bypass": "Bleach bypass",
+      "cross-process": "Cross process",
+      "retro-70s": "Retro 70s",
+      "night-neon": "Night neon",
+      "rose-gold": "Rose gold",
+      "emerald": "Emerald",
+      "high-key": "High key",
+      "blue-hour": "Blue hour",
+      "duotone-midnight": "Midnight duotone",
+      "duotone-sunset": "Sunset duotone",
+      "duotone-ocean": "Ocean duotone",
+      "black-gold": "Black & gold"
+    },
+    "photo": {
+      "none": "None",
+      "mirror": "Mirror",
+      "bulge": "Bulge",
+      "pinch": "Pinch",
+      "swirl": "Swirl",
+      "ripple": "Ripple",
+      "glass": "Glass",
+      "prism": "Prism",
+      "kaleidoscope": "Kaleidoscope",
+      "op-art": "Op art",
+      "halftone": "Halftone",
+      "thermal": "Thermal",
+      "pop-art": "Pop art",
+      "pixelate": "Pixelate",
+      "sketch": "Sketch",
+      "posterize": "Posterize",
+      "duotone-pop": "Duotone pop",
+      "comic": "Comic",
+      "neon-edges": "Neon edges",
+      "glitch": "Glitch"
+    },
+    "video": {
+      "light-rings": "Light rings",
+      "confetti": "Confetti",
+      "sparkle": "Sparkle",
+      "hearts": "Hearts",
+      "bubbles": "Bubbles",
+      "snow": "Snowfall",
+      "smoke": "Smoke",
+      "aura": "Aura",
+      "disco": "Disco",
+      "prism-flare": "Prism flare",
+      "light-leak": "Light leak",
+      "film-burn": "Film burn",
+      "strobe": "Strobe",
+      "glitch": "Glitch",
+      "rgb-shift": "RGB shift",
+      "vhs": "VHS tape",
+      "echo-trail": "Echo trail",
+      "clones": "Clones"
     }
   }
 }

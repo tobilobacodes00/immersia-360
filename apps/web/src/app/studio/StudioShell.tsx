@@ -6,7 +6,17 @@ import type { Route } from 'next';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { AnimatePresence, motion } from 'motion/react';
-import { CalendarDays, LayoutDashboard, LogOut, Menu, MonitorSmartphone, X, type LucideIcon } from 'lucide-react';
+import {
+  CalendarDays,
+  Cloud,
+  FolderOpen,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  MonitorSmartphone,
+  X,
+  type LucideIcon,
+} from 'lucide-react';
 import { BrandMark, IconButton, cx, spring } from '@immersia/ui';
 import { LanguagePicker } from '@/components/LanguagePicker';
 import { authClient } from '@/lib/auth-client';
@@ -15,7 +25,7 @@ import { OperatorProvider } from './operator-context';
 
 interface NavItem {
   href: Route;
-  key: 'home' | 'events' | 'devices';
+  key: 'home' | 'events' | 'assets' | 'devices' | 'integrations';
   icon: LucideIcon;
   match: (path: string) => boolean;
 }
@@ -29,6 +39,7 @@ const NAV: { group: 'overview' | 'prepare' | 'system'; items: NavItem[] }[] = [
     group: 'prepare',
     items: [
       { href: '/studio/events', key: 'events', icon: CalendarDays, match: (p) => p.startsWith('/studio/events') },
+      { href: '/studio/assets', key: 'assets', icon: FolderOpen, match: (p) => p.startsWith('/studio/assets') },
     ],
   },
   {
@@ -39,6 +50,12 @@ const NAV: { group: 'overview' | 'prepare' | 'system'; items: NavItem[] }[] = [
         key: 'devices',
         icon: MonitorSmartphone,
         match: (p) => p.startsWith('/studio/devices'),
+      },
+      {
+        href: '/studio/integrations',
+        key: 'integrations',
+        icon: Cloud,
+        match: (p) => p.startsWith('/studio/integrations'),
       },
     ],
   },

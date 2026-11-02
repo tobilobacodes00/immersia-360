@@ -28,6 +28,8 @@ const config: NextConfig = {
     '@immersia/capture',
     '@immersia/offline',
     '@immersia/layout',
+    '@immersia/fonts',
+    '@immersia/effects',
   ],
   typedRoutes: true,
   env: {

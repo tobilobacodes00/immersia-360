@@ -52,6 +52,26 @@ share page's "Save to Photos" fetches from it, so the bucket needs a CORS rule f
 
 Expired sessions are swept hourly by Vercel Cron (`apps/web/vercel.json`, authorised by `CRON_SECRET`).
 
+### Bring-your-own cloud (Google Drive and Dropbox)
+
+An operator can have every finished file copied to their own Drive or Dropbox as well. The booth uploads
+once, to the bucket above; the server then streams each file from there to the operator's cloud (8 MiB parts,
+so memory stays flat for any size), into `<folder>/<Event name YYYY-MM-DD>/`. Guests still use the hosted
+share page. Nothing is deleted from the bucket, a failed or revoked connection only pauses the copies (they
+resume, without duplicates, after reconnecting), and the retries run from the hourly cron.
+
+It is off until the server has a token key and credentials (the Integrations screen shows "not configured"):
+
+- `INTEGRATION_TOKEN_KEY`: `openssl rand -base64 32`. Encrypts the refresh tokens (AES-256-GCM) in the database.
+- Google Drive: a Web-application OAuth client with the redirect URI
+  `{origin}/api/integrations/drive/callback`, using only the `drive.file` scope (Immersia sees only what it
+  creates). `GOOGLE_DRIVE_CLIENT_ID` / `GOOGLE_DRIVE_CLIENT_SECRET`, or the sign-in `GOOGLE_CLIENT_ID` /
+  `GOOGLE_CLIENT_SECRET` if that client also lists the Drive redirect URI. While the OAuth consent screen is in
+  "Testing", Google expires refresh tokens after 7 days; publish it to avoid re-authorising weekly.
+- Dropbox: an app with access type "App folder", the redirect URI `{origin}/api/integrations/dropbox/callback`
+  and the scopes `account_info.read`, `files.metadata.read`, `files.metadata.write`, `files.content.write`.
+  `DROPBOX_APP_KEY` / `DROPBOX_APP_SECRET`.
+
 ## Principles
 
 - **Nothing behind payment.** Costs are held down by design: on-device rendering, expiring guest files,

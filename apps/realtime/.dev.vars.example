@@ -1,0 +1,2 @@
+# Copy to .dev.vars for `wrangler dev` (git-ignored). Same value as the web app's REALTIME_SIGNING_SECRET.
+REALTIME_SIGNING_SECRET=

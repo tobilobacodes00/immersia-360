@@ -106,6 +106,7 @@ export class RenderClient {
               });
               const transfer: Transferable[] = [];
               if (job.overlay) transfer.push(job.overlay);
+              if (job.background?.kind === 'image') transfer.push(job.background.image);
               if (job.intro?.kind === 'still') transfer.push(job.intro.image);
               if (job.outro?.kind === 'still') transfer.push(job.outro.image);
               if (job.endCard) transfer.push(job.endCard.image);

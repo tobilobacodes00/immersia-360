@@ -69,6 +69,8 @@ export const assetType = pgEnum('asset_type', [
   'logo',
   'background',
 ]);
+/** An upload is `pending` until its object is verified (size and magic bytes); only `ready` assets are usable. */
+export const assetStatus = pgEnum('asset_status', ['pending', 'ready']);
 export const templateKind = pgEnum('template_kind', ['layout', 'overlay']);
 export const takeStatus = pgEnum('take_status', ['local', 'uploading', 'uploaded', 'failed']);
 export const captureTrigger = pgEnum('capture_trigger', ['tap', 'timer', 'motion', 'remote', 'keyboard', 'import']);
@@ -163,6 +165,7 @@ export const asset = pgTable(
     id: uuid('id').primaryKey(),
     organizationId: orgId(),
     type: assetType('type').notNull(),
+    status: assetStatus('status').notNull().default('pending'),
     name: text('name').notNull(),
     objectKey: text('object_key').notNull(),
     mime: text('mime').notNull(),
@@ -245,6 +248,14 @@ export const captureSession = pgTable(
     status: sessionStatus('status').notNull().default('pending'),
     /** Guest chose "don't show on screen" (LIV-8): never published to displays. */
     optedOutOfDisplay: boolean('opted_out_of_display').notNull().default(false),
+    /**
+     * The session as one Live Display item (LIV-7): pending (not ready, or awaiting approval),
+     * shown, hidden by the operator, or opted_out (the guest declined, or the display was off when
+     * they captured it, so they were never told it might appear).
+     */
+    displayStatus: displayStatus('display_status').notNull().default('pending'),
+    /** When it went on screen: approve-first items are timed at approval, so they appear as new. */
+    displayedAt: ts('displayed_at'),
     capturedAt: ts('captured_at').notNull(),
     receivedAt: ts('received_at').notNull().defaultNow(),
     expiresAt: ts('expires_at').notNull(),
@@ -254,6 +265,7 @@ export const captureSession = pgTable(
     uniqueIndex('capture_session_link_idx').on(t.linkId),
     uniqueIndex('capture_session_code_idx').on(t.shortCode),
     index('capture_session_event_idx').on(t.eventId, t.capturedAt),
+    index('capture_session_display_idx').on(t.eventId, t.displayStatus, t.displayedAt),
     index('capture_session_expiry_idx')
       .on(t.expiresAt)
       .where(sql`${t.expiredAt} is null`),
@@ -384,11 +396,24 @@ export const uploadObject = pgTable(
     remoteUrl: text('remote_url'),
     status: uploadStatus('status').notNull().default('pending'),
     attempts: smallint('attempts').notNull().default(0),
+    /** A stable code (see apps/web/src/server/cloud/copy-core.ts), never provider text or tokens. */
     lastError: text('last_error'),
+    /**
+     * Cloud copies: while `pending`, the earliest time to try again (exponential backoff, or the
+     * provider's Retry-After); while `uploading`, when the claim's lease runs out, so a worker that
+     * died mid-upload does not park the row forever.
+     */
+    nextAttemptAt: ts('next_attempt_at'),
     createdAt: createdAt(),
     completedAt: ts('completed_at'),
   },
-  (t) => [uniqueIndex('upload_object_idem_idx').on(t.idempotencyKey)],
+  (t) => [
+    uniqueIndex('upload_object_idem_idx').on(t.idempotencyKey),
+    index('upload_object_output_idx').on(t.outputId),
+    index('upload_object_queue_idx')
+      .on(t.status, t.nextAttemptAt)
+      .where(sql`${t.status} in ('pending', 'uploading')`),
+  ],
 );
 
 // ---------------------------------------------------------------------------------------------

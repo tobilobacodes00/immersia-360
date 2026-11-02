@@ -146,7 +146,9 @@
       },
       "home": "Inicio",
       "events": "Eventos",
+      "assets": "Recursos",
       "devices": "Dispositivos",
+      "integrations": "Integraciones",
       "signOut": "Cerrar sesión",
       "openMenu": "Abrir menú",
       "closeMenu": "Cerrar menú"
@@ -233,7 +235,10 @@
     "eventTabs": {
       "label": "Secciones del evento",
       "overview": "Resumen",
-      "setup": "Configuración"
+      "setup": "Configuración",
+      "branding": "Marca",
+      "live": "Live Display",
+      "signage": "Carteles con QR"
     },
     "dashboard": {
       "capture": "Capturado",
@@ -258,7 +263,13 @@
       "extend": "Ampliar {days} días",
       "extendHelp": "Da más tiempo a todos los enlaces activos. Los archivos ya caducados no se pueden recuperar.",
       "extended": "{count, plural, =0 {No hay enlaces activos que ampliar} one {# enlace ampliado {days} días} other {# enlaces ampliados {days} días}}",
-      "extendFailed": "No se pudieron ampliar los enlaces. Inténtalo de nuevo."
+      "extendFailed": "No se pudieron ampliar los enlaces. Inténtalo de nuevo.",
+      "cloudTitle": "Las copias a {provider} necesitan tu atención",
+      "cloudNeedsReauth": "Se revocó o venció el acceso a {provider}, así que los archivos nuevos no se están copiando allí. Están a salvo en Immersia y se copiarán solos, sin duplicados, cuando vuelvas a conectar.",
+      "cloudWaiting": "{count, plural, one {Hay # archivo en espera.} other {Hay # archivos en espera.}}",
+      "cloudDisconnected": "Este evento se copia a {provider}, pero {provider} no está conectado. Conéctalo y los archivos de este evento se pondrán al día.",
+      "cloudFailed": "{count, plural, one {# archivo no llegó a {provider}.} other {# archivos no llegaron a {provider}.}}",
+      "cloudFix": "Abrir Integraciones"
     },
     "setup": {
       "title": "Configuración del evento",
@@ -286,7 +297,9 @@
         "expiry": "Conservar los archivos durante",
         "expiryHelp": "Las descargas alojadas se eliminan después. Puedes ampliar el plazo antes de que termine.",
         "prefix": "Numerar los archivos",
-        "prefixHelp": "Añade 0001_, 0002_ … delante de cada nombre de archivo."
+        "prefixHelp": "Añade 0001_, 0002_ … delante de cada nombre de archivo.",
+        "secondBooth": "También usar {booth}",
+        "secondBoothHelp": "Ambas cabinas comparten este evento: sus páginas para compartir, la galería y Live Display."
       },
       "video": {
         "title": "Video 360",
@@ -383,7 +396,21 @@
         "consent": "Texto de consentimiento",
         "consentHelp": "Lo que aceptan los invitados, con tus palabras.",
         "contact": "Contacto para invitados",
-        "contactHelp": "Se muestra en las páginas de invitados cuando los archivos del evento han caducado, para que puedan contactarte. Un correo o un teléfono."
+        "contactHelp": "Se muestra en las páginas de invitados cuando los archivos del evento han caducado, para que puedan contactarte. Un correo o un teléfono.",
+        "cloud": "Copiar también a mi nube",
+        "cloudHelp": "Guarda cada archivo terminado también en tu propio Google Drive o Dropbox. Los invitados siguen recibiendo sus archivos desde Immersia.",
+        "cloudNone": "Solo Immersia",
+        "cloudState": {
+          "unavailable": "{provider} (sin configurar)",
+          "disconnected": "{provider} (sin conectar)",
+          "needs_reauth": "{provider} (vuelve a iniciar sesión)"
+        },
+        "cloudNote": {
+          "unavailable": "{provider} no está configurado en este servidor.",
+          "disconnected": "{provider} no está conectado, así que este evento no se copia allí.",
+          "needs_reauth": "{provider} necesita que vuelvas a iniciar sesión; los archivos nuevos quedan a salvo y se copian cuando lo hagas."
+        },
+        "cloudManage": "Administrar integraciones"
       },
       "kiosk": {
         "title": "Quiosco",
@@ -401,6 +428,33 @@
         "invalid": "Usa de 4 a 8 dígitos.",
         "failed": "No se pudo guardar el PIN. Inténtalo de nuevo."
       }
+    },
+    "audioEditor": {
+      "empty": "Añade una canción para editarla aquí.",
+      "loading": "Leyendo la canción…",
+      "decodeError": "No se pudo leer este archivo de audio. Prueba con un MP3, M4A o WAV.",
+      "song": "Canción",
+      "songHelp": "Arrastra los controles para elegir la parte de la canción que suena.",
+      "waveform": "Forma de onda de la canción",
+      "trimStart": "Inicio del recorte",
+      "trimEnd": "Fin del recorte",
+      "from": "Desde {time}",
+      "to": "Hasta {time}",
+      "length": "Duración {time}",
+      "inVideo": "En el video",
+      "inVideoHelp": "Dónde queda la música en la línea de tiempo del video y a qué volumen suena.",
+      "stripLabel": "Suena de {from} a {to} con el volumen al {volume}%.",
+      "stripEmpty": "La música no suena dentro del video. Haz que empiece antes o conserva una parte más larga de la canción.",
+      "clipped": "El video termina antes que la canción, así que el fundido de salida ocurre al final del video.",
+      "play": "Reproducir vista previa",
+      "stop": "Detener vista previa",
+      "offset": "Inicio de la música",
+      "offsetHelp": "Segundo del video en el que empieza a sonar.",
+      "fadeIn": "Fundido de entrada",
+      "fadeInHelp": "Cuánto tarda la música en subir desde el silencio.",
+      "fadeOut": "Fundido de salida",
+      "fadeOutHelp": "Cuánto tarda en bajar hasta el silencio al final.",
+      "volume": "Volumen"
     },
     "devices": {
       "title": "Dispositivos",
@@ -437,12 +491,728 @@
         "rename": "No se pudo renombrar el dispositivo.",
         "revoke": "No se pudo revocar el dispositivo."
       }
+    },
+    "assets": {
+      "title": "Recursos",
+      "subtitle": "Superposiciones, intros, música, fuentes y logotipos que comparten todos los eventos de esta cuenta. Súbelos una vez y úsalos donde quieras.",
+      "groupsLabel": "Tipo de recurso",
+      "groups": {
+        "overlays": "Superposiciones y marcos",
+        "intros": "Intros y cierres",
+        "music": "Música",
+        "fonts": "Fuentes",
+        "logos": "Logotipos",
+        "backgrounds": "Fondos"
+      },
+      "types": {
+        "overlay": "Superposición",
+        "layout": "Marco",
+        "intro": "Intro",
+        "outro": "Cierre",
+        "audio": "Música",
+        "font": "Fuente",
+        "logo": "Logotipo",
+        "background": "Fondo"
+      },
+      "accepts": {
+        "overlays": "Superposiciones: PNG o WebP con transparencia. Marcos: PNG, JPEG o WebP. Hasta 25 MB cada uno.",
+        "intros": "Video (MP4, MOV o WebM) de hasta 30 segundos y 200 MB, o una imagen (PNG, JPEG o WebP) de hasta 25 MB.",
+        "music": "MP3, M4A, AAC o WAV, hasta 15 minutos y 50 MB.",
+        "fonts": "WOFF2, WOFF, TTF u OTF, hasta 10 MB.",
+        "logos": "PNG, JPEG o WebP, hasta 10 MB. No se admite SVG.",
+        "backgrounds": "Imágenes (PNG, JPEG o WebP) de hasta 25 MB, o video (MP4 o WebM) de hasta 200 MB."
+      },
+      "upload": "Subir archivos",
+      "uploadAs": "Subir como",
+      "dropHint": "Arrastra archivos aquí o usa el botón.",
+      "dropActive": "Suelta para subir",
+      "progress": {
+        "checking": "Revisando…",
+        "uploading": "Subiendo {percent}",
+        "finishing": "Terminando…"
+      },
+      "cancel": "Cancelar",
+      "retry": "Reintentar",
+      "dismiss": "Descartar",
+      "renameNamed": "Renombrar {name}",
+      "renameLabel": "Nombre del recurso",
+      "play": "Reproducir {name}",
+      "pause": "Pausar {name}",
+      "delete": "Eliminar",
+      "deleteNamed": "Eliminar {name}",
+      "deleteTitle": "¿Eliminar {name}?",
+      "deleteBody": "El archivo se quita de tu biblioteca para siempre. Los eventos que lo usan deben cambiarse antes.",
+      "usedTitle": "{name} sigue en uso",
+      "usedBody": "No se puede eliminar mientras lo usen estos elementos. Cámbialos por otro recurso y vuelve a intentarlo.",
+      "usedByTemplate": "{name} (plantilla)",
+      "close": "Cerrar",
+      "empty": {
+        "overlays": {
+          "title": "Aún no hay superposiciones ni marcos",
+          "body": "Sube PNG o WebP transparentes para enmarcar tus videos 360, o marcos para las tiras de la cabina de fotos."
+        },
+        "intros": {
+          "title": "Aún no hay intros ni cierres",
+          "body": "Agrega un clip corto o una imagen para mostrar antes o después de cada video."
+        },
+        "music": {
+          "title": "Aún no hay música",
+          "body": "Sube una pista para reproducirla sobre tus videos 360 y en la pantalla en vivo."
+        },
+        "fonts": {
+          "title": "Aún no hay fuentes",
+          "body": "Sube las tipografías de tu marca y elígelas en superposiciones y diseños."
+        },
+        "logos": {
+          "title": "Aún no hay logotipos",
+          "body": "Agrega tu logotipo para mostrarlo en las páginas de los invitados y en las superposiciones."
+        },
+        "backgrounds": {
+          "title": "Aún no hay fondos",
+          "body": "Sube una imagen o un video en bucle para usarlo detrás de las pantallas y los diseños de la cabina."
+        }
+      },
+      "picker": {
+        "title": "Elegir un recurso",
+        "search": "Buscar recursos",
+        "loading": "Cargando recursos…",
+        "emptyTitle": "Aún no hay nada que elegir",
+        "emptyBody": "Sube un archivo y pasará a tu biblioteca.",
+        "noMatchTitle": "Ningún recurso coincide",
+        "noMatchBody": "Prueba con otro nombre.",
+        "selected": "Seleccionado"
+      },
+      "storageOff": {
+        "title": "El almacenamiento de archivos no está configurado",
+        "body": "La biblioteca guarda los archivos en almacenamiento de objetos. Agrega la configuración S3 a este despliegue para activarla."
+      },
+      "uploaded": "Se subió {name}",
+      "deleted": "Se eliminó {name}",
+      "errors": {
+        "wrongType": "Este tipo de archivo no se acepta aquí.",
+        "tooBig": "El archivo supera {max}.",
+        "tooLong": "El archivo dura más de {max}.",
+        "unreadable": "No pudimos leer este archivo. Puede estar dañado o tener un formato que este navegador no abre.",
+        "quota": "Tu biblioteca alcanzó el límite de 5 GB. Elimina lo que ya no uses e inténtalo de nuevo.",
+        "failed": "La subida no se completó. Revisa tu conexión e inténtalo de nuevo.",
+        "load": "No se pudieron cargar los recursos.",
+        "rename": "No se pudo renombrar el recurso.",
+        "delete": "No se pudo eliminar el recurso."
+      }
+    },
+    "editor": {
+      "titleLayout": "Editor de diseño",
+      "titleOverlay": "Editor de superposición",
+      "toolbar": "Herramientas del editor",
+      "canvasLabel": "Lienzo de diseño. Haz clic en un elemento para seleccionarlo, arrástralo para moverlo y usa los controles para cambiar su tamaño o girarlo. Las flechas mueven la selección.",
+      "pickImage": "Elegir una imagen",
+      "undo": "Deshacer (Ctrl+Z)",
+      "redo": "Rehacer (Ctrl+Mayús+Z)",
+      "zoomIn": "Acercar",
+      "zoomOut": "Alejar",
+      "zoomFit": "Ajustar a la pantalla",
+      "label": "Elemento",
+      "shotN": "Foto {n}",
+      "qrHint": "Los códigos QR impresos miden al menos 18 mm para que los teléfonos los lean con el brazo extendido.",
+      "add": {
+        "photo": "Agregar un espacio de foto",
+        "text": "Agregar texto",
+        "image": "Agregar una imagen",
+        "rect": "Agregar un rectángulo",
+        "ellipse": "Agregar una elipse",
+        "qr": "Agregar el código QR del invitado"
+      },
+      "status": {
+        "saved": "Todos los cambios guardados",
+        "saving": "Guardando…",
+        "error": "No se pudo guardar. Reintentando…",
+        "conflict": "Sin guardar: se cambió en otro lugar"
+      },
+      "conflict": {
+        "body": "Este diseño se cambió en otra pestaña o en otro dispositivo.",
+        "theirs": "Cargar su versión",
+        "mine": "Conservar la mía"
+      },
+      "issues": {
+        "qr_too_small": "QR de menos de 18 mm",
+        "qr_off_canvas": "QR fuera de la página"
+      },
+      "panels": {
+        "label": "Panel",
+        "layers": "Capas",
+        "templates": "Plantillas",
+        "inspect": "Propiedades"
+      },
+      "layers": {
+        "title": "Capas",
+        "empty": "Todavía no hay nada. Agrega texto, una imagen o una forma desde la barra de herramientas.",
+        "up": "Traer adelante",
+        "down": "Enviar atrás",
+        "show": "Mostrar",
+        "hide": "Ocultar",
+        "lock": "Bloquear",
+        "unlock": "Desbloquear"
+      },
+      "types": {
+        "photo": "Espacio de foto",
+        "image": "Imagen",
+        "text": "Texto",
+        "shape": "Forma",
+        "qr": "Código QR"
+      },
+      "sections": {
+        "text": "Texto",
+        "photo": "Foto",
+        "image": "Imagen",
+        "shape": "Forma",
+        "qr": "Código QR"
+      },
+      "actions": {
+        "duplicate": "Duplicar (Ctrl+D)",
+        "delete": "Eliminar"
+      },
+      "multi": {
+        "title": "{count} seleccionados",
+        "actions": "Selección"
+      },
+      "align": {
+        "label": "Alinear",
+        "left": "Alinear a la izquierda",
+        "hcenter": "Centrar horizontalmente",
+        "right": "Alinear a la derecha",
+        "top": "Alinear arriba",
+        "vcenter": "Centrar verticalmente",
+        "bottom": "Alinear abajo"
+      },
+      "canvas": {
+        "title": "Lienzo",
+        "size": "Tamaño",
+        "dpi": "{width} × {height} px a 300 DPI: lo que ves es lo que se imprime.",
+        "background": "Fondo",
+        "backgroundColour": "Color de fondo",
+        "backgroundImage": "Imagen de fondo",
+        "choose": "Elegir…",
+        "replace": "Reemplazar",
+        "removeImage": "Quitar la imagen de fondo",
+        "overlayHint": "Deja el fondo transparente para que se vea el video.",
+        "tip": "Selecciona un elemento para editarlo. Mayús+clic o arrastra sobre el lienzo para seleccionar varios."
+      },
+      "printSizes": {
+        "2x6": "Tira de 2 × 6 in",
+        "4x4": "Cuadrado de 4 × 4 in",
+        "4x6": "Vertical de 4 × 6 in",
+        "6x4": "Horizontal de 6 × 4 in",
+        "5x7": "Vertical de 5 × 7 in"
+      },
+      "fields": {
+        "name": "Nombre",
+        "namePlaceholder": "Opcional",
+        "x": "Posición X",
+        "y": "Posición Y",
+        "width": "Ancho",
+        "height": "Alto",
+        "rotation": "Rotación",
+        "opacity": "Opacidad",
+        "text": "Texto",
+        "weight": "Grosor",
+        "fontSize": "Tamaño",
+        "lineHeight": "Interlineado",
+        "letterSpacing": "Espaciado",
+        "colour": "Color",
+        "colourOpacity": "Opacidad del color",
+        "align": "Alineación",
+        "verticalAlign": "Alineación vertical",
+        "uppercase": "Mayúsculas",
+        "autoFit": "Reducir para ajustar",
+        "shot": "Muestra",
+        "fit": "Ajuste",
+        "cornerRadius": "Radio de esquina",
+        "asset": "Imagen",
+        "shape": "Forma",
+        "fill": "Relleno",
+        "fillOpacity": "Opacidad del relleno",
+        "stroke": "Contorno",
+        "strokeColour": "Color del contorno",
+        "strokeOpacity": "Opacidad del contorno",
+        "strokeWidth": "Grosor del contorno",
+        "qrDark": "Color del código",
+        "qrDarkOpacity": "Opacidad del código",
+        "qrLight": "Fondo",
+        "qrLightOpacity": "Opacidad del fondo",
+        "showCode": "Mostrar el código corto"
+      },
+      "weights": {
+        "100": "Delgada",
+        "200": "Extraligera",
+        "300": "Ligera",
+        "400": "Normal",
+        "500": "Media",
+        "600": "Seminegrita",
+        "700": "Negrita",
+        "800": "Extranegrita",
+        "900": "Black"
+      },
+      "alignText": {
+        "left": "Izquierda",
+        "center": "Centro",
+        "right": "Derecha",
+        "top": "Arriba",
+        "middle": "Medio",
+        "bottom": "Abajo"
+      },
+      "fit": {
+        "cover": "Llenar",
+        "contain": "Ajustar"
+      },
+      "shapes": {
+        "rect": "Rectángulo",
+        "ellipse": "Elipse"
+      },
+      "fonts": {
+        "title": "Fuentes",
+        "change": "Cambiar",
+        "search": "Buscar fuentes",
+        "category": "Categoría",
+        "none": "Ninguna fuente coincide.",
+        "licence": "{count} fuentes de licencia abierta (SIL OFL y Apache), libres para impresión y video. Sube las tuyas en Recursos.",
+        "categories": {
+          "all": "Todas",
+          "sans": "Sans",
+          "serif": "Serif",
+          "display": "Display",
+          "handwriting": "Manuscrita",
+          "mono": "Mono",
+          "uploaded": "Subidas"
+        }
+      },
+      "templates": {
+        "presets": "Empezar desde",
+        "presetShots": "{count, plural, one {# foto} other {# fotos}}",
+        "overlayStyles": {
+          "band": "Franja con nombre",
+          "frame": "Marco",
+          "pill": "Etiqueta con nombre",
+          "blank": "En blanco"
+        },
+        "saved": "Plantillas guardadas",
+        "savedEmpty": "Guarda un diseño aquí para reutilizarlo en otros eventos.",
+        "saveCurrent": "Guardar",
+        "saveTitle": "Guardar como plantilla",
+        "name": "Nombre de la plantilla",
+        "namePlaceholder": "p. ej. Tira dorada de boda",
+        "saveFailed": "No se pudo guardar la plantilla. Inténtalo de nuevo.",
+        "save": "Guardar plantilla",
+        "cancel": "Cancelar",
+        "delete": "Eliminar {name}",
+        "applyTitle": "¿Usar «{name}»?",
+        "applyBody": "Reemplaza el diseño actual. Puedes deshacerlo.",
+        "apply": "Usar este diseño"
+      }
+    },
+    "branding": {
+      "title": "Marca",
+      "readOnly": "Solo lectura",
+      "theme": {
+        "title": "Tema",
+        "subtitle": "Un color de acento para la cabina, las páginas para compartir, la galería y Live Display.",
+        "presets": "Predefinidos",
+        "names": {
+          "Cobalt": "Cobalto",
+          "Vermilion": "Bermellón",
+          "Forest": "Bosque",
+          "Champagne": "Champán",
+          "Monochrome": "Monocromo"
+        },
+        "accent": "Acento",
+        "background": "Fondo",
+        "ink": "Texto",
+        "font": "Tipografía",
+        "sans": "Sans",
+        "serif": "Serif"
+      },
+      "logo": {
+        "label": "Logo",
+        "help": "Aparece en la pantalla de espera, las páginas para compartir y Live Display."
+      },
+      "attract": {
+        "title": "Pantalla de espera",
+        "subtitle": "Lo que ven los invitados mientras la cabina espera.",
+        "headline": "Título",
+        "subline": "Subtítulo",
+        "cta": "Botón de inicio",
+        "ctaPlaceholder": "Toca para empezar",
+        "thanks": "Mensaje de agradecimiento",
+        "background": "Fondo",
+        "backgroundHelp": "Una foto o un video en bucle detrás de la pantalla de espera."
+      },
+      "fields": {
+        "title": "Campos dinámicos",
+        "subtitle": "Valores para los tokens que puedes colocar en diseños, superposiciones y mensajes.",
+        "hashtag": "Hashtag",
+        "custom1": "Texto personalizado 1",
+        "custom2": "Texto personalizado 2",
+        "custom3": "Texto personalizado 3",
+        "token": "Token: {token}"
+      },
+      "design": {
+        "layoutTitle": "Diseño de impresión",
+        "layoutSubtitle": "La tira o impresión que cada invitado se lleva.",
+        "overlayTitle": "Superposición de video",
+        "overlaySubtitle": "Un marco transparente sobre cada video 360.",
+        "currentLayout": "El diseño de impresión del evento",
+        "currentOverlay": "La superposición de video del evento",
+        "noOverlay": "Sin superposición: los videos se ven limpios.",
+        "defaultLayout": "Se usa el diseño estándar para el tamaño de impresión.",
+        "layoutHelp": "Organiza los espacios de foto, el texto, los logos y el código QR en el editor, o empieza desde un predefinido o una plantilla guardada.",
+        "overlayHelp": "Agrega el nombre del evento, un logo o un marco sobre el video. Sube un PNG transparente en Recursos para usarlo tal cual.",
+        "edit": "Abrir el editor",
+        "design": "Diseñar uno",
+        "choose": "Elegir un diseño",
+        "fullScreen": "Pantalla completa",
+        "removeOverlay": "Quitar la superposición",
+        "chooserTitle": "Elegir un diseño",
+        "chooserNote": "El diseño elegido reemplaza el actual del evento y se puede editar como cualquier otro.",
+        "applyFailed": "No se pudo usar ese diseño. Inténtalo de nuevo.",
+        "viewerTitle": "Vista previa",
+        "noSaved": "Todavía no hay plantillas guardadas. Guarda una desde el editor.",
+        "noUploads": "Todavía no hay marcos subidos. Sube PNG transparentes en Recursos.",
+        "presetShots": "{count, plural, one {# foto} other {# fotos}}",
+        "overlayStyles": {
+          "band": "Franja con nombre",
+          "frame": "Marco",
+          "pill": "Etiqueta con nombre",
+          "blank": "En blanco"
+        },
+        "tabs": {
+          "presets": "Predefinidos",
+          "saved": "Guardados ({count})",
+          "uploads": "Subidos ({count})"
+        }
+      },
+      "cards": {
+        "title": "Intro y cierre",
+        "subtitle": "Un clip corto o una tarjeta fija antes y después de cada video.",
+        "intro": "Intro",
+        "introHelp": "Se reproduce antes del giro.",
+        "outro": "Cierre",
+        "outroHelp": "Se reproduce después del giro.",
+        "length": "Duración de la tarjeta",
+        "lengthHelp": "Cuánto dura una tarjeta fija. Los clips duran como máximo esto."
+      },
+      "music": {
+        "title": "Música",
+        "subtitle": "Una pista bajo cada video, recortada, con fundidos y nivelada.",
+        "track": "Pista",
+        "trackHelp": "MP3, M4A/AAC o WAV, de tus recursos.",
+        "loading": "Cargando la pista"
+      },
+      "media": {
+        "choose": "Elegir…",
+        "replace": "Reemplazar",
+        "remove": "Quitar {name}"
+      },
+      "looks": {
+        "title": "Estilo y efectos",
+        "subtitle": "Un estilo de color para cada captura, efectos sobre los videos 360 y un efecto de foto para la tira.",
+        "look": "Estilo",
+        "videoLook": "Estilo de los videos 360",
+        "photoLook": "Estilo de las fotos",
+        "lookHelp": "Un solo estilo de color para todo el evento, aplicado al crear cada captura.",
+        "effects": "Efectos de video",
+        "effectsHelp": "Hasta {max}. Se ven sobre las tomas de los invitados, no sobre la intro, el cierre ni la superposición.",
+        "strength": "Intensidad de {effect}",
+        "colourMode": "Color de {effect}",
+        "modes": {
+          "colour": "Color",
+          "white": "Blanco",
+          "silver": "Plata",
+          "gold": "Dorado"
+        },
+        "preview": "Vista previa del estilo y los efectos elegidos",
+        "previewUnavailable": "La vista previa necesita WebGL2, que este navegador o dispositivo no puede ofrecer aquí. Tus elecciones se guardan y se usan igualmente.",
+        "beatSync": "Sincronizar con el ritmo",
+        "beatSyncHelp": "Los efectos laten con el ritmo de la música, y la cámara lenta empieza y termina en un tiempo.",
+        "beatSyncNeedsMusic": "Agrega música al evento para sincronizar los efectos con su ritmo.",
+        "photoEffect": "Efecto de foto",
+        "photoEffectHelp": "Se aplica a cada foto antes de crear la tira."
+      },
+      "background": {
+        "title": "Fondo",
+        "subtitle": "Cambia lo que hay detrás de tus invitados. Se detecta en el dispositivo: ninguna imagen sale de él.",
+        "video": "Fondo del video 360",
+        "photo": "Fondo de las fotos",
+        "off": "Sin fondo",
+        "blur": "Desenfoque",
+        "colour": "Color",
+        "image": "Imagen",
+        "imageOrVideo": "Imagen o video",
+        "colourLabel": "Color de fondo",
+        "imageHelp": "Una imagen, o un video que se reproduce detrás del invitado y vuelve a empezar si es más corto que la vuelta.",
+        "photoImageHelp": "Una imagen para todas las fotos. Los videos no se usan en las fotos.",
+        "preview": "Vista previa del fondo",
+        "previewNote": "La vista previa usa una silueta dibujada. En la cabina el recorte sigue a cada invitado.",
+        "needsImage": "Elige una imagen para ver la vista previa."
+      }
+    },
+    "live": {
+      "title": "Live Display",
+      "settings": {
+        "title": "Live Display",
+        "subtitle": "Cada video, tira y GIF en una TV o un proyector, cada uno con su propio código QR.",
+        "enabled": "Mostrar las capturas en pantallas",
+        "enabledHelp": "Apagado hasta que lo actives. En la pantalla de resultado se avisa a los invitados de que su captura puede aparecer, y pueden excluir la suya.",
+        "moderation": "Publicación",
+        "moderationHelp": "Con aprobación previa, las nuevas capturas esperan aquí hasta que las muestres.",
+        "auto": "Mostrar automáticamente",
+        "approve": "Aprobar primero",
+        "station": "Abrir la Sharing Station"
+      },
+      "displays": {
+        "title": "Pantallas",
+        "subtitle": "Cada pantalla tiene su propio diseño y reproducción. Los cambios llegan en menos de un segundo.",
+        "pair": "Vincular una pantalla",
+        "emptyTitle": "Todavía no hay pantallas",
+        "emptyBody": "Abre la página de vinculación en el navegador de cualquier TV, laptop conectada por HDMI o dispositivo de transmisión, y escribe el código.",
+        "name": "Nombre de la pantalla",
+        "rename": "Renombrar",
+        "online": "En línea",
+        "offline": "Sin conexión",
+        "remove": "Quitar {name}",
+        "removeTitle": "¿Quitar {name}?",
+        "removeBody": "La pantalla deja de mostrar capturas de inmediato y vuelve a su página de vinculación.",
+        "removeConfirm": "Quitar la pantalla",
+        "cancel": "Cancelar",
+        "layout": "Diseño",
+        "layouts": {
+          "spotlight": "Destacado",
+          "mosaic": "Mosaico",
+          "ticker": "Cinta",
+          "counter": "Contador"
+        },
+        "dwell": "Tiempo por elemento",
+        "dwellHelp": "Los videos se reproducen hasta el final, hasta tres veces este tiempo.",
+        "muted": "Silenciar videos",
+        "qrSize": "Tamaño del QR",
+        "qrSizes": {
+          "s": "Pequeño",
+          "m": "Mediano",
+          "l": "Grande"
+        },
+        "qrPosition": "Esquina del QR del evento",
+        "positions": {
+          "top-left": "Arriba a la izquierda",
+          "top-right": "Arriba a la derecha",
+          "bottom-left": "Abajo a la izquierda",
+          "bottom-right": "Abajo a la derecha"
+        },
+        "verticalFill": "Videos verticales",
+        "verticalFillHelp": "Cómo llenan los videos 9:16 una pantalla horizontal.",
+        "fills": {
+          "blur": "Relleno difuminado",
+          "columns": "Lado a lado"
+        }
+      },
+      "pair": {
+        "title": "Vincular una pantalla",
+        "steps": "En la TV, abre {url} y escribe este código. O escanea el QR con el dispositivo que será la pantalla.",
+        "codeLabel": "Código de vinculación",
+        "expires": "Vence en {minutes}:{seconds}",
+        "newCode": "Obtener un código nuevo",
+        "failed": "No se pudo crear un código de vinculación. Inténtalo de nuevo.",
+        "qrLabel": "Código QR que vincula el dispositivo que lo escanea",
+        "qrHint": "Para una tableta o un teléfono que será la pantalla.",
+        "paired": "Pantalla vinculada. Ya está mostrando tu evento.",
+        "done": "Listo"
+      },
+      "moderation": {
+        "title": "En pantalla",
+        "subtitle": "Oculta cualquier cosa al instante; desaparece de todas las pantallas.",
+        "pending": "En espera ({count})",
+        "shown": "En pantalla ({count})",
+        "hidden": "Ocultos ({count})",
+        "empty": {
+          "pending": "Nada esperando aprobación.",
+          "shown": "Todavía no hay nada en pantalla. Las nuevas capturas aparecen aquí segundos después de subirse.",
+          "hidden": "Nada oculto."
+        },
+        "itemLabel": "Captura {code}",
+        "approve": "Mostrar en pantalla",
+        "restore": "Mostrar de nuevo",
+        "hide": "Ocultar de las pantallas"
+      }
+    },
+    "integrations": {
+      "title": "Integraciones",
+      "subtitle": "Copia cada archivo terminado en tu propio Google Drive o Dropbox, además del enlace de Immersia para el invitado. Los invitados siempre descargan desde Immersia; la copia es tuya.",
+      "providers": {
+        "drive": "Google Drive",
+        "dropbox": "Dropbox",
+        "generic": "tu almacenamiento en la nube"
+      },
+      "about": {
+        "drive": "Immersia solo ve las carpetas y los archivos que crea ella misma, nunca el resto de tu Drive.",
+        "dropbox": "Immersia solo trabaja dentro de la carpeta que crea en tu Dropbox."
+      },
+      "status": {
+        "connected": "Conectado",
+        "needsReauth": "Vuelve a iniciar sesión",
+        "notConnected": "Sin conectar",
+        "notConfigured": "Sin configurar"
+      },
+      "notConfigured": "Este servidor de Immersia aún no está configurado para {provider}. Si lo alojas tú mismo, agrega sus credenciales y INTEGRATION_TOKEN_KEY al entorno (consulta .env.example).",
+      "connect": "Conectar {provider}",
+      "reconnect": "Volver a conectar {provider}",
+      "connectedAs": "Conectado como {email}",
+      "ownerOnly": "Solo el propietario de la cuenta puede conectar o desconectar una nube.",
+      "folder": {
+        "label": "Carpeta",
+        "none": "Aún no se crea. Se crea con la primera copia.",
+        "open": "Abrir carpeta",
+        "help": "Cada evento tiene su propia subcarpeta con su fecha en el nombre. Los archivos ya copiados se quedan donde están.",
+        "name": "Nombre de la carpeta",
+        "placeholder": "Immersia 360",
+        "save": "Usar esta carpeta"
+      },
+      "disconnect": {
+        "button": "Desconectar",
+        "title": "¿Desconectar {provider}?",
+        "body": "Immersia dejará de copiar a {provider}, revocará su acceso y borrará la conexión guardada. Los archivos ya copiados se quedan en tu {provider}. Las copias que aún no se hicieron se descartan; vuelve a conectar más adelante para ponerte al día.",
+        "confirm": "Desconectar",
+        "cancel": "Cancelar"
+      },
+      "reauth": {
+        "title": "{provider} necesita que vuelvas a iniciar sesión",
+        "body": "Immersia ya no puede acceder a tu {provider}: el acceso se revocó o venció. No se pierde nada. Los archivos nuevos quedan a salvo en Immersia y cada copia en espera se completa, sin duplicados, en cuanto vuelvas a conectar.",
+        "waiting": "{count, plural, one {Hay # archivo en espera.} other {Hay # archivos en espera.}}"
+      },
+      "failed": {
+        "title": "{count, plural, one {No se pudo copiar # archivo a {provider}} other {No se pudieron copiar # archivos a {provider}}}",
+        "retry": "Reintentar",
+        "retrying": "Reintentando…"
+      },
+      "flash": {
+        "connected": "{provider} está conectado. Ya empezó a copiar."
+      },
+      "connectErrors": {
+        "denied": "Cancelaste la conexión, así que no cambió nada. Pulsa Conectar para intentarlo de nuevo.",
+        "state": "Ese enlace de inicio de sesión venció o no se generó desde esta cuenta. Pulsa Conectar para empezar de nuevo.",
+        "scope": "{provider} no concedió el permiso que necesita Immersia. Pulsa Conectar otra vez y deja marcada la casilla de acceso.",
+        "no_refresh": "{provider} no le dio a Immersia un acceso duradero. Quita Immersia de las aplicaciones conectadas de tu {provider} y vuelve a conectar.",
+        "exchange": "{provider} rechazó el inicio de sesión. Pulsa Conectar para intentarlo de nuevo.",
+        "unreachable": "No se pudo contactar con {provider}. Revisa la conexión e inténtalo de nuevo en un minuto.",
+        "unavailable": "Este servidor no está configurado para {provider}.",
+        "forbidden": "Solo el propietario de la cuenta puede conectar una nube.",
+        "failed": "Algo salió mal al conectar {provider}. Inténtalo de nuevo."
+      },
+      "actionErrors": {
+        "reauth_required": "{provider} necesita que vuelvas a iniciar sesión primero. Pulsa Volver a conectar.",
+        "quota_exceeded": "Tu {provider} está lleno. Libera espacio e inténtalo de nuevo.",
+        "unreachable": "No se pudo contactar con {provider}. Inténtalo de nuevo en un minuto.",
+        "forbidden": "Solo el propietario de la cuenta puede cambiar esto.",
+        "failed": "No funcionó. Inténtalo de nuevo."
+      },
+      "copyErrors": {
+        "reauth_required": "Se revocó o venció el acceso a {provider}. Vuelve a conectar {provider} y este archivo se copiará solo.",
+        "quota_exceeded": "Tu {provider} está lleno. Libera espacio y pulsa Reintentar.",
+        "transient": "No se pudo contactar con {provider} tras varios intentos. Pulsa Reintentar.",
+        "retrying": "{provider} no respondió. Se volverá a intentar {when}.",
+        "folder_missing": "La carpeta se eliminó de {provider}. Elige una carpeta arriba; las copias fallidas se reinician solas.",
+        "folder_inaccessible": "Immersia no puede escribir en esa carpeta. Crea una carpeta nueva arriba; las copias fallidas se reinician solas.",
+        "source_gone": "Este archivo venció en Immersia antes de poder copiarse, así que ya no se puede enviar.",
+        "other": "No se pudo copiar este archivo. Pulsa Reintentar; si sigue fallando, vuelve a conectar {provider}."
+      },
+      "copies": {
+        "title": "Copias recientes",
+        "subtitle": "Los últimos 20 archivos enviados a tu nube.",
+        "emptyTitle": "Aún no se copió nada",
+        "emptyBody": "Elige Google Drive o Dropbox en Compartir, dentro de la configuración de un evento, y los archivos terminados aparecerán aquí.",
+        "to": "a {provider}",
+        "open": "Abrir en {provider}",
+        "soon": "en un momento",
+        "status": {
+          "pending": "En espera",
+          "uploading": "Copiando",
+          "done": "Copiado",
+          "failed": "Falló"
+        }
+      }
+    },
+    "galleryCard": {
+      "title": "Galería del evento",
+      "subtitle": "{count, plural, =0 {Cada captura, para tu cliente y para los invitados que escanean el QR del evento.} one {# captura hasta ahora, para tu cliente y para los invitados que escanean el QR del evento.} other {# capturas hasta ahora, para tu cliente y para los invitados que escanean el QR del evento.}}",
+      "link": "Enlace de la galería",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "openLink": "Abrir",
+      "password": "Contraseña",
+      "passwordHelp": "Opcional. Quien tenga el enlace la necesita una vez por navegador. Las capturas ocultas y los invitados que pidieron no salir en pantalla nunca aparecen aquí.",
+      "locked": "Protegida",
+      "unlocked": "Abierta para quien tenga el enlace",
+      "setPassword": "Definir una contraseña",
+      "newPassword": "Nueva contraseña",
+      "set": "Definir",
+      "change": "Cambiar",
+      "remove": "Quitar la contraseña",
+      "passwordSet": "Contraseña guardada. Quien ya había entrado tendrá que volver a escribirla.",
+      "passwordRemoved": "Contraseña eliminada.",
+      "passwordShort": "Usa al menos 6 caracteres.",
+      "failed": "No se pudo guardar. Inténtalo de nuevo.",
+      "export": "Todos los archivos",
+      "exportHelp": "Todos los archivos en calidad completa del evento en un solo ZIP, incluidas las capturas ocultas, guardados por tu navegador directamente desde el almacenamiento.",
+      "exportButton": "Descargar todos los archivos (ZIP)"
+    },
+    "signage": {
+      "title": "Carteles con QR",
+      "format": {
+        "title": "Formato",
+        "subtitle": "Un solo código QR para toda la galería del evento, con los colores y el logo de tu evento.",
+        "label": "Formato del cartel"
+      },
+      "formats": {
+        "a4": "Póster A4",
+        "a5": "Volante A5",
+        "tent": "Cartel de mesa"
+      },
+      "hints": {
+        "a4": "Para una pared, una puerta o un caballete. 210 × 297 mm.",
+        "a5": "Para mesas, para entregar en mano y para la barra. 148 × 210 mm.",
+        "tent": "Imprime en A4, dobla por la línea punteada y colócalo sobre la mesa: los dos lados se leen derechos. Hoja de 210 × 297 mm."
+      },
+      "wording": {
+        "title": "Texto",
+        "subtitle": "Cambia el texto o deja una línea vacía para quitarla. El nombre del evento, el logo y el hashtag vienen de Marca.",
+        "headline": "Titular",
+        "cta": "Llamada a la acción"
+      },
+      "defaults": {
+        "headline": "Recibe tus fotos y videos",
+        "cta": "Escanea con la cámara de tu teléfono"
+      },
+      "link": {
+        "title": "Enlace de la galería",
+        "subtitle": "Es lo que abre el código. También puedes compartirlo en un mensaje.",
+        "label": "Enlace de la galería",
+        "copy": "Copiar enlace",
+        "copied": "Copiado"
+      },
+      "preview": {
+        "title": "Vista previa",
+        "label": "Vista previa: {format}",
+        "loading": "Cargando tipografías y tu logo…",
+        "tip": "Imprime a tamaño real (100 %), no con “ajustar a la página”. Nada se imprime a menos de {mm} mm del borde, así las impresoras de oficina no lo cortan."
+      },
+      "download": {
+        "pdf": "Descargar PDF",
+        "png": "Descargar PNG",
+        "failed": "No se pudo crear el archivo. Inténtalo de nuevo."
+      }
     }
   },
   "booth": {
     "startBooth": "Iniciar cabina",
     "startHint": "Revisa la cámara y luego cede el turno a tus invitados.",
     "startingCamera": "Iniciando la cámara…",
+    "backgroundUnavailable": "El reemplazo de fondo no está disponible en este dispositivo; los invitados verán el fondo real.",
     "offline": "Sin conexión",
     "lowStorage": "Poco almacenamiento",
     "motionArmed": "Inicio por movimiento activo",
@@ -477,17 +1247,47 @@
       "camera": "Cámara",
       "defaultCamera": "Cámara predeterminada",
       "simulator": "Cámara simulada (sin hardware)",
-      "lens": {
-        "wide": "gran angular",
-        "ultrawide": "ultra gran angular",
-        "telephoto": "teleobjetivo",
-        "front": "frontal"
+      "lenses": {
+        "groupBack": "Cámaras traseras",
+        "groupFront": "Cámaras frontales",
+        "groupExternal": "Cámaras externas",
+        "groupOther": "Otras cámaras",
+        "front": "Cámara frontal",
+        "back": "Cámara trasera",
+        "backWide": "Cámara trasera gran angular",
+        "backUltraWide": "Cámara trasera ultra gran angular",
+        "backTelephoto": "Cámara trasera con teleobjetivo",
+        "backDual": "Cámara trasera doble",
+        "backTriple": "Cámara trasera triple",
+        "numbered": "Cámara {n}",
+        "saved": "Cámara elegida antes",
+        "inUse": "En uso",
+        "namesLater": "Los nombres de las cámaras aparecen cuando la cámara ya está en marcha."
       },
+      "cameraBusy": "Los cambios de cámara se pausan mientras un invitado usa la cabina.",
       "delivering": "Entrega {width}×{height} a {fps} fps",
       "mirror": "Reflejar la vista previa",
       "mirrorHelp": "Solo en esta pantalla. Las grabaciones nunca se reflejan.",
+      "zoom": "Zoom",
       "torch": "Linterna",
-      "noTorch": "Esta cámara no tiene una luz controlable.",
+      "noTorch": "No compatible: esta cámara o este navegador no puede encender su luz.",
+      "torchNeedsCamera": "Inicia la cabina para comprobar si esta cámara tiene luz.",
+      "torchFailed": "No se pudo cambiar la linterna. Inténtalo de nuevo.",
+      "fill": {
+        "title": "Luz de relleno",
+        "help": "Ilumina el rostro de los invitados con un marco luminoso en el borde de esta pantalla. No aparece en las grabaciones.",
+        "level": {
+          "off": "Apagada",
+          "soft": "Suave",
+          "bright": "Intensa"
+        },
+        "tint": "Color de la luz",
+        "tints": {
+          "neutral": "Neutra",
+          "warm": "Cálida"
+        },
+        "brightness": "Para tener más luz, sube el brillo de la pantalla de este dispositivo al máximo. Una página web no puede hacerlo por ti."
+      },
       "motion": "Iniciar con movimiento",
       "motionHelp": "La grabación empieza cuando la plataforma empieza a girar.",
       "sensitivity": "Movimiento necesario",
@@ -571,7 +1371,12 @@
       "next": "Siguiente invitado",
       "titlePhoto": "Escanea para ver tus fotos",
       "subtitlePhoto": "El enlace funciona ya; tus fotos llegan en un momento.",
-      "previewAlt": "Tu tira de fotos"
+      "previewAlt": "Tu tira de fotos",
+      "display": {
+        "notice": "Tu captura puede aparecer en la pantalla grande del evento.",
+        "optOut": "No mostrar la mía en pantalla",
+        "optedOut": "La tuya no se mostrará en pantalla"
+      }
     },
     "uploads": {
       "waiting": "{count, plural, one {# subida pendiente} other {# subidas pendientes}}",
@@ -603,7 +1408,88 @@
       "printing": "Imprimiendo…",
       "printLimit": "Ya no quedan impresiones para esta sesión",
       "flash": "Foto tomada"
-    }
+    },
+    "gallery": {
+      "open": "Galería",
+      "title": "Galería del evento",
+      "close": "Cerrar la galería",
+      "loading": "Cargando…",
+      "summary": "{count, plural, =0 {Aún no hay nada en este dispositivo} one {# archivo en este dispositivo} other {# archivos en este dispositivo}}",
+      "filters": "Filtrar por tipo",
+      "filter": {
+        "all": "Todo",
+        "videos": "Videos",
+        "strips": "Tiras",
+        "motion": "GIF y movimiento"
+      },
+      "kinds": {
+        "mp4": "Video",
+        "small_mp4": "Video más ligero",
+        "gif": "GIF",
+        "strip": "Tira de fotos",
+        "short_video": "Video corto",
+        "boomerang": "Boomerang"
+      },
+      "upload": {
+        "local": "En este dispositivo",
+        "uploading": "Subiendo",
+        "uploaded": "Subido",
+        "failed": "Requiere atención"
+      },
+      "codePending": "Código pendiente",
+      "card": "{kind}, {code}",
+      "previewAlt": "Vista previa: {kind}",
+      "empty": "Aún no hay nada",
+      "emptyBody": "Los videos y las tiras de fotos aparecen aquí en cuanto se crean.",
+      "emptyFilter": "Aún no hay nada de este tipo",
+      "select": "Seleccionar",
+      "selected": "{count, plural, =0 {Ninguno seleccionado} one {# seleccionado} other {# seleccionados}}",
+      "selectAll": "Seleccionar todo",
+      "clearSelection": "Quitar selección",
+      "importOriginals": "Importar originales",
+      "importing": "Importando…",
+      "importDone": "{count, plural, one {Se importó # video. Se renderiza en segundo plano.} other {Se importaron # videos. Se renderizan en segundo plano.}}",
+      "importSkipped": "{count, plural, one {# archivo no era un video y se omitió.} other {# archivos no eran videos y se omitieron.}}",
+      "importFailed": "{count, plural, one {No se pudo guardar # video. Revisa el almacenamiento libre.} other {No se pudieron guardar # videos. Revisa el almacenamiento libre.}}",
+      "exportAll": "Exportar todo ({count})",
+      "exportSelected": "Exportar selección ({count})",
+      "exporting": "Exportando archivo {index} de {count} · {done} de {total}",
+      "exportPaused": "Exportación en pausa mientras un invitado está en la cabina",
+      "exportProgress": "Progreso de la exportación",
+      "exportSaved": "Se guardó {name}.",
+      "exportDownloaded": "{name} se envió a las descargas de este navegador.",
+      "exportMissing": "{count, plural, one {No se pudo leer # archivo de este dispositivo y se dejó fuera.} other {No se pudieron leer # archivos de este dispositivo y se dejaron fuera.}}",
+      "exportCancelled": "Exportación cancelada. No se guardó nada.",
+      "exportFailed": "La exportación no terminó. Revisa el almacenamiento libre y vuelve a intentarlo.",
+      "capturingNote": "Las exportaciones y las importaciones esperan mientras un invitado está en la cabina.",
+      "cancel": "Cancelar",
+      "dismiss": "Cerrar",
+      "memoryTitle": "Esta exportación es grande",
+      "memoryBody": "Este navegador no puede transmitir un archivo al disco, así que todo el ZIP ({size}) se arma primero en la memoria y puede fallar en este dispositivo. Exporta unos cuantos a la vez con Seleccionar, o usa Chrome o Edge en una computadora.",
+      "exportAnyway": "Exportar de todos modos",
+      "stopTitle": "¿Detener la exportación?",
+      "stopBody": "Al cerrar la galería se cancela la exportación en curso. No se guarda nada.",
+      "keepExporting": "Seguir exportando",
+      "stopAndClose": "Detener y cerrar",
+      "detail": {
+        "reshare": "Volver a compartir",
+        "qrAlt": "Código QR de los archivos de este invitado",
+        "reshareHint": "Un invitado que se perdió su QR puede escanear este para abrir sus archivos.",
+        "noLink": "Este archivo no tiene enlace para el invitado.",
+        "type": "Tipo",
+        "status": "Subida",
+        "made": "Creado",
+        "size": "Tamaño",
+        "dimensions": "Dimensiones",
+        "pixels": "{width}×{height}",
+        "duration": "Duración",
+        "file": "Nombre del archivo",
+        "save": "Guardar en este dispositivo",
+        "saveFailed": "No se pudo leer este archivo del dispositivo."
+      }
+    },
+    "startOther": "Iniciar {booth}",
+    "endCard": "Escanea para tener tu video"
   },
   "share": {
     "metaTitle": "{event}: tus archivos",
@@ -648,6 +1534,173 @@
       "not_found": "No encontramos ese código. Revísalo e inténtalo de nuevo.",
       "expired": "Ese evento ha terminado y sus archivos se han eliminado.",
       "too_many": "Demasiados intentos. Espera unos minutos y vuelve a intentarlo."
+    }
+  },
+  "station": {
+    "subtitle": "Busca la tuya, tócala y escanea el código.",
+    "findLabel": "Buscar por código",
+    "findPlaceholder": "Tu código",
+    "clear": "Borrar",
+    "empty": "Las nuevas fotos y videos aparecen aquí unos segundos después de tomarse.",
+    "noMatch": "Todavía no hay una captura con ese código. Puede que siga en camino.",
+    "open": "Abrir la captura {code}",
+    "offline": "Sin conexión: se muestra lo que ya estaba aquí",
+    "detail": "Captura {code}",
+    "qr": "Código QR de esta captura",
+    "scan": "Escanéalo con la cámara de tu teléfono para descargarla.",
+    "close": "Volver a todas",
+    "start": "Iniciar la Sharing Station"
+  },
+  "gallery": {
+    "metaTitle": "{event}: fotos y videos",
+    "notFound": "No se encontró la galería",
+    "downloadAll": "Descargar todo",
+    "filters": {
+      "label": "Cabina",
+      "all": "Todo",
+      "video360": "Videos 360",
+      "photo": "Fotos"
+    },
+    "searchLabel": "Buscar por código",
+    "searchPlaceholder": "Tu código",
+    "search": "Buscar",
+    "empty": "Las fotos y los videos aparecen aquí en cuanto se suben.",
+    "noMatch": "Todavía no hay nada con ese código. Puede que siga en camino.",
+    "open": "Abrir la captura {code}",
+    "older": "Anteriores",
+    "newest": "Volver a lo más reciente",
+    "lock": {
+      "body": "Esta galería está protegida.",
+      "label": "Contraseña",
+      "open": "Abrir",
+      "errors": {
+        "wrong": "La contraseña no es correcta.",
+        "tooMany": "Demasiados intentos. Espera unos minutos y vuelve a intentarlo.",
+        "failed": "No se pudo comprobar la contraseña. Revisa tu conexión y vuelve a intentarlo."
+      }
+    }
+  },
+  "zip": {
+    "progress": "{files, plural, one {# archivo} other {# archivos}} · {size}",
+    "cancel": "Cancelar",
+    "done": "Se guardaron {files, plural, one {# archivo} other {# archivos}}.{skipped, plural, =0 {} one { No se pudo obtener # archivo.} other { No se pudieron obtener # archivos.}}",
+    "failed": "La descarga se detuvo. Revisa tu conexión y vuelve a intentarlo.",
+    "cancelled": "Descarga cancelada."
+  },
+  "tv": {
+    "pair": {
+      "metaTitle": "Conectar una pantalla",
+      "title": "Conecta esta pantalla",
+      "body": "Escribe el código de seis caracteres que aparece en Pantalla en vivo, dentro de Estudio, o abre el enlace de emparejamiento de su código QR.",
+      "codeLabel": "Código de emparejamiento",
+      "character": "Carácter {n} de {total}",
+      "hint": "Letras y números, como K7M-2QX. Nunca I, L, O, 0 ni 1.",
+      "submit": "Conectar pantalla",
+      "connecting": "Conectando…",
+      "connected": "Conectada",
+      "backToDisplay": "Volver a la pantalla",
+      "errors": {
+        "incomplete": "Escribe los seis caracteres.",
+        "invalid": "Ese código no es correcto. Revísalo e inténtalo de nuevo.",
+        "expired": "Ese código venció. Crea uno nuevo en Estudio.",
+        "too_many": "Demasiados intentos. Espera unos minutos y vuelve a intentarlo.",
+        "offline": "Esta pantalla no tiene conexión a internet. Revisa la conexión e inténtalo de nuevo.",
+        "storage": "Este navegador no puede guardar el emparejamiento. Desactiva la navegación privada e inténtalo de nuevo.",
+        "unavailable": "Algo salió mal de nuestro lado. Inténtalo de nuevo en un momento."
+      }
+    },
+    "display": {
+      "metaTitle": "Pantalla en vivo",
+      "connecting": "Conectando…",
+      "gallery": "Galería del evento",
+      "galleryAlt": "Código QR de la galería del evento",
+      "galleryScan": "Escanea para ver todos los momentos",
+      "itemScan": "Escanea para llevarte este momento",
+      "itemAlt": "Código QR de este momento, código {code}",
+      "enterCode": "O escribe el código en {host}",
+      "justIn": "Recién llegado",
+      "recent": "Momentos recientes",
+      "moments": "{count, plural, one {momento capturado} other {momentos capturados}}",
+      "idleLive": "Los momentos de la cabina aparecen aquí en cuanto estén listos.",
+      "fullscreen": "Pantalla completa",
+      "exitFullscreen": "Salir de pantalla completa",
+      "soundHint": "Pulsa OK para activar el sonido",
+      "status": {
+        "socket": "En vivo",
+        "polling": "En vivo, actualizando",
+        "offline": "Sin conexión, repitiendo los momentos guardados"
+      }
+    }
+  },
+  "effects": {
+    "looks": {
+      "none": "Original",
+      "mono": "Monocromo",
+      "noir": "Noir",
+      "silver": "Plata",
+      "sepia": "Sepia",
+      "vivid": "Vívido",
+      "cinematic": "Cinematográfico",
+      "film": "Película",
+      "golden-hour": "Hora dorada",
+      "soft-pastel": "Pastel suave",
+      "cool-breeze": "Brisa fresca",
+      "warm-portrait": "Retrato cálido",
+      "matte": "Mate",
+      "bleach-bypass": "Bleach bypass",
+      "cross-process": "Proceso cruzado",
+      "retro-70s": "Retro años 70",
+      "night-neon": "Neón nocturno",
+      "rose-gold": "Oro rosa",
+      "emerald": "Esmeralda",
+      "high-key": "Clave alta",
+      "blue-hour": "Hora azul",
+      "duotone-midnight": "Duotono medianoche",
+      "duotone-sunset": "Duotono atardecer",
+      "duotone-ocean": "Duotono océano",
+      "black-gold": "Negro y oro"
+    },
+    "photo": {
+      "none": "Ninguno",
+      "mirror": "Espejo",
+      "bulge": "Esferizar",
+      "pinch": "Pellizcar",
+      "swirl": "Molinete",
+      "ripple": "Ondas",
+      "glass": "Cristal",
+      "prism": "Prisma",
+      "kaleidoscope": "Caleidoscopio",
+      "op-art": "Op art",
+      "halftone": "Semitono",
+      "thermal": "Térmico",
+      "pop-art": "Pop art",
+      "pixelate": "Pixelado",
+      "sketch": "Boceto",
+      "posterize": "Posterizar",
+      "duotone-pop": "Duotono pop",
+      "comic": "Cómic",
+      "neon-edges": "Bordes neón",
+      "glitch": "Glitch"
+    },
+    "video": {
+      "light-rings": "Anillos de luz",
+      "confetti": "Confeti",
+      "sparkle": "Destellos",
+      "hearts": "Corazones",
+      "bubbles": "Burbujas",
+      "snow": "Nieve",
+      "smoke": "Humo",
+      "aura": "Aura",
+      "disco": "Disco",
+      "prism-flare": "Destello prismático",
+      "light-leak": "Fuga de luz",
+      "film-burn": "Película quemada",
+      "strobe": "Estroboscopio",
+      "glitch": "Glitch",
+      "rgb-shift": "Desfase RGB",
+      "vhs": "Cinta VHS",
+      "echo-trail": "Estela de eco",
+      "clones": "Clones"
     }
   }
 }

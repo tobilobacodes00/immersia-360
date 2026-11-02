@@ -1,10 +1,17 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { Stat } from '@immersia/ui';
+import { AlertTriangle } from 'lucide-react';
+import { Stat, buttonClass } from '@immersia/ui';
 import { formatBytes } from '@/lib/format';
+import { galleryUrl } from '@immersia/shared';
+import { eventCloudAlert } from '@/server/cloud/integrations';
+import { appOrigin } from '@/server/env';
 import { eventStats, getEvent, guestFilesSummary } from '@/server/events';
+import { galleryStats } from '@/server/gallery';
 import { requireOperator } from '@/server/session';
 import { ExtendGuestFiles } from './ExtendGuestFiles';
+import { GalleryCard } from './GalleryCard';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const op = await requireOperator();
@@ -16,15 +23,54 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function EventDashboardPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const op = await requireOperator({ event: ['read'] });
-  const [t, locale, s, files] = await Promise.all([
+  const [t, ti, locale, s, files, event, gallery, cloud] = await Promise.all([
     getTranslations('studio.dashboard'),
+    getTranslations('studio.integrations'),
     getLocale(),
     eventStats(op.organizationId, id),
     guestFilesSummary(op.organizationId, id),
+    getEvent(op.organizationId, id),
+    galleryStats(id),
+    eventCloudAlert(op.organizationId, id),
   ]);
   const n = (v: number) => v.toLocaleString(locale);
+  const cloudName = cloud ? ti(`providers.${cloud.provider}`) : '';
   return (
     <div className="space-y-6">
+      {cloud && (
+        // HLP-3: the event copies to the operator's own cloud and that needs them — what failed, what to do.
+        <section
+          aria-labelledby="cloud-heading"
+          className="flex flex-wrap items-start gap-3 rounded-xl border border-warn/25 bg-warn/[0.07] p-4"
+        >
+          <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warn" aria-hidden />
+          <div className="min-w-0 flex-1 space-y-1">
+            <h2 id="cloud-heading" className="text-sm font-semibold">
+              {t('cloudTitle', { provider: cloudName })}
+            </h2>
+            {cloud.reason === 'needs_reauth' && (
+              <p className="text-[13px] leading-relaxed text-muted">
+                {t('cloudNeedsReauth', { provider: cloudName })}
+                {cloud.waiting > 0 && ` ${t('cloudWaiting', { count: cloud.waiting })}`}
+              </p>
+            )}
+            {cloud.reason === 'disconnected' && (
+              <p className="text-[13px] leading-relaxed text-muted">
+                {t('cloudDisconnected', { provider: cloudName })}
+              </p>
+            )}
+            {cloud.failed > 0 && cloud.failedKey && (
+              <p className="text-[13px] leading-relaxed text-muted">
+                {t('cloudFailed', { count: cloud.failed, provider: cloudName })}{' '}
+                {ti(`copyErrors.${cloud.failedKey}`, { provider: cloudName })}
+              </p>
+            )}
+          </div>
+          <Link href="/studio/integrations" className={buttonClass({ variant: 'secondary', size: 'sm' })}>
+            {t('cloudFix')}
+          </Link>
+        </section>
+      )}
       <section aria-labelledby="capture-heading">
         <h2 id="capture-heading" className="sr-only">
           {t('capture')}
@@ -70,6 +116,15 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
         </div>
         <ExtendGuestFiles eventId={id} live={files.live} />
       </section>
+      {event && (
+        <GalleryCard
+          eventId={id}
+          eventName={event.name}
+          url={galleryUrl(appOrigin(), event.gallerySlug, 'direct')}
+          items={gallery.items}
+          locked={event.galleryPasswordHash !== null}
+        />
+      )}
     </div>
   );
 }

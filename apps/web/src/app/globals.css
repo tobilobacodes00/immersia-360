@@ -3,3 +3,16 @@
 
 /* Workspace packages live behind node_modules symlinks, which Tailwind does not scan by default. */
 @source '../../../../packages/ui/src';
+
+/*
+ * TV screens (/tv, /tv/live; the marker is in app/tv/layout.tsx). 1rem is a fixed share of the short
+ * side of the screen, so everything sized in rem reads the same from 720p (13px) through 1080p (20px)
+ * to 4K (40px), and a TV never scrolls.
+ */
+html:has(.tv-root) {
+  font-size: clamp(10px, 1.85vmin, 48px);
+}
+html:has(.tv-root) body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}

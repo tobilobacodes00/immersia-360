@@ -11,6 +11,7 @@ import { useTranslations } from 'next-intl';
 import { TOKEN_CATALOGUE, evaluate, type TokenContext } from '@immersia/shared/tokens';
 import { cx, softSpring, spring } from './cx';
 import { IconButton } from './primitives';
+import { useRadioGroup } from './radio-group';
 
 export function Toggle({
   checked,
@@ -213,7 +214,7 @@ export function Select<T extends string>({
 }: {
   value: T;
   onChange: (v: T) => void;
-  options: readonly { value: T; label: string }[];
+  options: readonly { value: T; label: string; disabled?: boolean }[];
   className?: string;
   label?: string;
   id?: string;
@@ -230,7 +231,7 @@ export function Select<T extends string>({
         className="h-9 w-full cursor-pointer appearance-none rounded-[10px] border border-line-strong bg-elev pr-8 pl-3 text-sm outline-none transition-colors hover:border-[#c9c6bd] focus:border-accent focus:ring-3 focus:ring-accent-soft disabled:cursor-wait disabled:opacity-60"
       >
         {options.map((o) => (
-          <option key={o.value} value={o.value}>
+          <option key={o.value} value={o.value} disabled={o.disabled}>
             {o.label}
           </option>
         ))}
@@ -284,9 +285,10 @@ export function Segmented<T extends string>({
   label?: string;
 }) {
   const lid = useId();
+  const radios = useRadioGroup({ values: options.map((o) => o.value), value, onChange });
   return (
     <div
-      role="radiogroup"
+      {...radios.group}
       aria-label={label}
       className="inline-flex max-w-full overflow-x-auto rounded-[10px] bg-sunken p-0.5 [scrollbar-width:none]"
     >
@@ -294,9 +296,7 @@ export function Segmented<T extends string>({
         <button
           key={o.value}
           type="button"
-          role="radio"
-          aria-checked={value === o.value}
-          onClick={() => onChange(o.value)}
+          {...radios.item(o.value)}
           className={cx(
             'focus-ring relative shrink-0 rounded-lg font-medium transition-colors',
             size === 'sm' ? 'h-7 px-2.5 text-xs' : 'h-8 px-3 text-[13px]',

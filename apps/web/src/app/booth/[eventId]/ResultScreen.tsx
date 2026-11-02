@@ -3,7 +3,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion } from 'motion/react';
-import { Mail, MessageCircle, MessageSquareText, Link2, Check } from 'lucide-react';
+import { Mail, MessageCircle, MessageSquareText, Link2, Check, MonitorOff } from 'lucide-react';
 import type { LocalSession } from '@immersia/offline';
 import { formatShortCode, sessionUrl } from '@immersia/shared';
 import { QrCode, cx } from '@immersia/ui';
@@ -37,8 +37,13 @@ export function ResultScreen({
   kind = 'video',
   preview,
   actions,
+  liveDisplay = false,
+  onOptOut,
 }: {
   session: LocalSession;
+  /** LIV-8: the event's Live Display is on, so the guest is told and may keep theirs off it. */
+  liveDisplay?: boolean;
+  onOptOut?: () => Promise<void>;
   /** Wording: a video (360) or photos (photo booth). */
   kind?: 'video' | 'photo';
   /** The guest's strip, shown beside the QR (photo booth). */
@@ -56,6 +61,7 @@ export function ResultScreen({
   const [emailError, setEmailError] = useState(false);
   const [sentTo, setSentTo] = useState<string[]>([]);
   const [touched, setTouched] = useState(0);
+  const [optedOut, setOptedOut] = useState(session.optedOutOfDisplay);
 
   // Back to ready after a quiet spell; any interaction restarts the clock.
   useEffect(() => {
@@ -200,6 +206,28 @@ export function ResultScreen({
           )}
 
           {actions && <div className="mt-6 flex flex-wrap gap-3">{actions}</div>}
+
+          {liveDisplay && (
+            <div className="mt-6 w-full text-[1rem]">
+              <p className="opacity-70">{t('display.notice')}</p>
+              {optedOut ? (
+                <p role="status" className="mt-2 flex items-center gap-2 font-semibold">
+                  <Check className="size-5" aria-hidden /> {t('display.optedOut')}
+                </p>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOptedOut(true);
+                    void onOptOut?.();
+                  }}
+                  className="focus-ring mt-2 flex min-h-12 items-center gap-2 rounded-full border-2 border-g-ink/15 px-5 text-[1.1rem] font-semibold"
+                >
+                  <MonitorOff className="size-5" aria-hidden /> {t('display.optOut')}
+                </button>
+              )}
+            </div>
+          )}
 
           <GuestButton primary className="mt-8 min-w-[14rem]" onClick={onDone}>
             {t('next')}

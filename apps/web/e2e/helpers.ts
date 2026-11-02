@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 /** The test-only routes demand this run's secret (see src/server/e2e.ts). */
 export const e2eHeaders = { 'x-e2e-token': process.env.E2E_TOKEN ?? '' };
@@ -47,4 +47,27 @@ export async function createEvent(page: Page, name: string, mode: '360 Booth' | 
   await expect(page).toHaveURL(/\/studio\/events\/[0-9a-f-]{36}\/setup$/);
   await page.locator('html[data-hydrated="1"]').waitFor({ state: 'attached' });
   return page.url().split('/').at(-2)!;
+}
+
+/**
+ * Wait until `locator` and everything it sits inside have finished fading in. Playwright calls an
+ * element visible as soon as it has a box, and opacity plays no part in that, so a scan started
+ * straight after `toBeVisible()` can read a panel that is still half transparent: axe then measures
+ * text blended with whatever is behind it and reports contrast failures that no one ever sees
+ * (the modal's spring made the red "Delete" fail that way). Checked as the product of the opacities
+ * up the tree, since the modal fades its backdrop and its panel separately.
+ */
+export async function settled(locator: Locator) {
+  await expect
+    .poll(
+      () =>
+        locator.evaluate((el) => {
+          let opacity = 1;
+          for (let node: Element | null = el; node; node = node.parentElement)
+            opacity *= Number(getComputedStyle(node).opacity);
+          return opacity;
+        }),
+      { timeout: 10_000 },
+    )
+    .toBeGreaterThan(0.999);
 }

@@ -1,8 +1,13 @@
 import 'server-only';
 import { and, count, desc, eq, gte, ilike, inArray, isNotNull, isNull, lte, ne, sql, sum } from 'drizzle-orm';
 import { db, schema } from '@immersia/db';
+import { z } from 'zod';
 import {
+  backgroundSchema,
   brandingSchema,
+  effectSchema,
+  mediaAssetRefs,
+  musicSchema,
   defaultBranding,
   defaultOutputSettings,
   defaultShareSettings,
@@ -10,6 +15,7 @@ import {
   newLinkId,
   outputSettingsSchema,
   shareSettingsSchema,
+  unmetAssetRefs,
   uuidv7,
   type BrandingSettings,
   type CreateEventInput,
@@ -218,17 +224,148 @@ export async function updateSection<S extends JsonSection>(
   const parsed = SECTION_SCHEMA[section].safeParse(value);
   if (!parsed.success)
     return { ok: false, issues: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`) };
-  const set = { [section]: parsed.data } as Partial<{
-    outputSettings: OutputSettings;
-    shareSettings: ShareSettings;
-    branding: BrandingSettings;
-  }>;
-  const rows = await db()
-    .update(event)
-    .set(set)
-    .where(and(eq(event.id, id), eq(event.organizationId, organizationId)))
-    .returning({ id: event.id });
-  return rows.length ? { ok: true } : { ok: false, issues: ['event not found'] };
+  return db().transaction(async (tx) => {
+    const [current] = await tx
+      .select({ outputSettings: event.outputSettings })
+      .from(event)
+      .where(and(eq(event.id, id), eq(event.organizationId, organizationId)))
+      .for('update');
+    if (!current) return { ok: false as const, issues: ['event not found'] };
+    // The setup screen sends the whole output section, but the media references in it belong to the
+    // branding screen and the editor: keep the stored ones, so a stale setup tab can't unset them.
+    const data =
+      section === 'outputSettings'
+        ? withMedia(parsed.data as OutputSettings, outputSettingsSchema.parse(current.outputSettings))
+        : parsed.data;
+    const set = { [section]: data } as Partial<{
+      outputSettings: OutputSettings;
+      shareSettings: ShareSettings;
+      branding: BrandingSettings;
+    }>;
+    await tx.update(event).set(set).where(eq(event.id, id));
+    return { ok: true as const };
+  });
+}
+
+/** `next` with the media references (overlay, intro, outro, music, layout, look, effects, background) taken from `from`. */
+export function withMedia(next: OutputSettings, from: OutputSettings): OutputSettings {
+  const { overlayTemplateId, introAssetId, outroAssetId, cardSeconds, music, filterId, effects, beatSync, background } =
+    from.video360;
+  return {
+    ...next,
+    video360: {
+      ...next.video360,
+      overlayTemplateId,
+      introAssetId,
+      outroAssetId,
+      cardSeconds,
+      music,
+      filterId,
+      effects,
+      beatSync,
+      background,
+    },
+    photo: {
+      ...next.photo,
+      layoutTemplateId: from.photo.layoutTemplateId,
+      filterId: from.photo.filterId,
+      effectId: from.photo.effectId,
+      background: from.photo.background,
+    },
+  };
+}
+
+/** What the branding screen (screen 5) and the editor change in the output settings. */
+export const mediaPatchSchema = z
+  .object({
+    overlayTemplateId: z.uuid().nullable(),
+    introAssetId: z.uuid().nullable(),
+    outroAssetId: z.uuid().nullable(),
+    cardSeconds: z.number().min(1).max(5),
+    music: musicSchema.nullable(),
+    layoutTemplateId: z.uuid().nullable(),
+    // Looks and effects (VID-7, VID-11, VID-12, PHO-10): ids are checked against the library on render.
+    filterId: z.string().max(60).nullable(),
+    effects: z.array(effectSchema).max(8),
+    beatSync: z.boolean(),
+    photoFilterId: z.string().max(60).nullable(),
+    photoEffectId: z.string().max(60).nullable(),
+    // CAP-10: what replaces the background behind guests, per booth (null = off).
+    background: backgroundSchema,
+    photoBackground: backgroundSchema,
+  })
+  .partial();
+export type MediaPatch = z.infer<typeof mediaPatchSchema>;
+
+/**
+ * Change the event's media references. Every id must belong to this event (templates) or this
+ * organisation (assets, of the right type), so an event can never point at another account's files.
+ */
+export async function patchMedia(
+  organizationId: string,
+  eventId: string,
+  patch: MediaPatch,
+): Promise<{ ok: true } | { ok: false; issues: string[] }> {
+  return db().transaction(async (tx) => {
+    const [current] = await tx
+      .select({ outputSettings: event.outputSettings })
+      .from(event)
+      .where(and(eq(event.id, eventId), eq(event.organizationId, organizationId)))
+      .for('update');
+    if (!current) return { ok: false as const, issues: ['event not found'] };
+
+    const templateIds = [patch.overlayTemplateId, patch.layoutTemplateId].filter((x): x is string => !!x);
+    if (templateIds.length) {
+      const found = await tx
+        .select({ id: template.id, kind: template.kind })
+        .from(template)
+        .where(and(inArray(template.id, templateIds), eq(template.eventId, eventId)));
+      const kinds = new Map(found.map((t) => [t.id, t.kind]));
+      if (patch.overlayTemplateId && kinds.get(patch.overlayTemplateId) !== 'overlay')
+        return { ok: false as const, issues: ['overlayTemplateId'] };
+      if (patch.layoutTemplateId && kinds.get(patch.layoutTemplateId) !== 'layout')
+        return { ok: false as const, issues: ['layoutTemplateId'] };
+    }
+    // Every asset the patch names must be a ready asset of THIS organization and of the type its slot
+    // takes (a background picture for a photo booth, a picture or video for the 360 booth: see
+    // mediaAssetRefs in @immersia/shared).
+    const wanted = mediaAssetRefs(patch);
+    if (wanted.length) {
+      const rows = await tx
+        .select({ id: schema.asset.id, type: schema.asset.type, mime: schema.asset.mime })
+        .from(schema.asset)
+        .where(
+          and(
+            inArray(
+              schema.asset.id,
+              wanted.map((w) => w.id),
+            ),
+            eq(schema.asset.organizationId, organizationId),
+            eq(schema.asset.status, 'ready'),
+            isNull(schema.asset.deletedAt),
+          ),
+        );
+      const bad = unmetAssetRefs(wanted, rows);
+      if (bad.length) return { ok: false as const, issues: bad };
+    }
+
+    const out = outputSettingsSchema.parse(current.outputSettings);
+    const { layoutTemplateId, photoFilterId, photoEffectId, photoBackground, ...video } = patch;
+    const next = outputSettingsSchema.safeParse({
+      ...out,
+      video360: { ...out.video360, ...video },
+      photo: {
+        ...out.photo,
+        ...(layoutTemplateId !== undefined ? { layoutTemplateId } : {}),
+        ...(photoFilterId !== undefined ? { filterId: photoFilterId } : {}),
+        ...(photoEffectId !== undefined ? { effectId: photoEffectId } : {}),
+        ...(photoBackground !== undefined ? { background: photoBackground } : {}),
+      },
+    });
+    if (!next.success) return { ok: false as const, issues: next.error.issues.map((i) => i.path.join('.')) };
+    await tx.update(event).set({ outputSettings: next.data }).where(eq(event.id, eventId));
+    return { ok: true as const };
+  });
 }
 
 export interface EventStats {
@@ -264,7 +401,8 @@ export async function eventStats(organizationId: string, id: string): Promise<Ev
       .innerJoin(output, eq(output.id, uploadObject.outputId))
       .innerJoin(captureSession, eq(captureSession.id, output.sessionId))
       .innerJoin(event, eq(event.id, captureSession.eventId))
-      .where(and(scoped, ne(uploadObject.status, 'done'))),
+      // Booth uploads only: copies to the operator's cloud have their own status (HLP-3 warning).
+      .where(and(scoped, eq(uploadObject.target, 'hosted'), ne(uploadObject.status, 'done'))),
     db()
       .select({ status: device.status })
       .from(device)

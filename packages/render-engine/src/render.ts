@@ -8,6 +8,17 @@ import {
   VideoSampleSink,
   canEncodeAudio,
 } from 'mediabunny';
+import {
+  LOOK_FRAG,
+  STROBE_MAX_BPM,
+  findEffect,
+  findLook,
+  lookUniforms,
+  type ColorMode,
+} from '@immersia/effects/shaders';
+import type { MaskSource } from './background-math';
+import { BackgroundRun, type BackgroundOutcome } from './background-run';
+import { beatState, foldTempo } from './beats';
 import { FrameSource } from './frame-source';
 import { Compositor } from './gl/compositor';
 import { probeTake, type TakeProbe } from './probe';
@@ -30,6 +41,17 @@ export interface ClipCard {
 
 export type Card = StillCard | ClipCard;
 
+/**
+ * CAP-10: what replaces everything but the person in the guest's footage (cards and the overlay are
+ * untouched). An image is transferred to the worker; a video is decoded there and played in step with the
+ * take, starting over if it is shorter.
+ */
+export type RenderBackground =
+  | { kind: 'color'; color: string }
+  | { kind: 'blur' }
+  | { kind: 'image'; image: ImageBitmap }
+  | { kind: 'video'; file: Blob };
+
 export interface RenderJob {
   take: Blob;
   output: { width: number; height: number; fps: number; bitrate: number };
@@ -43,6 +65,19 @@ export interface RenderJob {
   endCard?: StillCard | null;
   /** Pre-mixed soundtrack covering the whole output (planar float32). */
   audio?: { sampleRate: number; channels: Float32Array[] } | null;
+  /** VID-11: the event's colour look (an @immersia/effects id). */
+  look?: { id: string; intensity: number } | null;
+  /** VID-7: effects in order, each with its strength and colour mode. */
+  effects?: { id: string; intensity: number; colorMode: ColorMode | null }[];
+  /** VID-12: beat times on the output timeline in seconds; none = a steady 120 BPM grid. */
+  beats?: number[];
+  /** Makes effects' randomness repeatable: the same take always renders the same way. */
+  seed?: number;
+  /**
+   * CAP-10: replace the background on-device, before the look is applied. Unset (or null) costs nothing
+   * and renders exactly what a job without this field renders.
+   */
+  background?: RenderBackground | null;
 }
 
 export interface RenderResult {
@@ -53,6 +88,12 @@ export interface RenderResult {
   frames: number;
   interpolatedFrames: number;
   renderMs: number;
+  /**
+   * `applied`: the background was replaced. `unavailable`: one was asked for but the segmenter or the
+   * background could not be started on this device, so the take was rendered as filmed. `none`: no
+   * background was set.
+   */
+  background: 'none' | 'applied' | 'unavailable';
   source: { fps: number; durationS: number; codec: string | null };
 }
 
@@ -108,6 +149,12 @@ export async function render(
     signal?: AbortSignal;
     /** Awaited before the render starts and after every frame: a pause hook (e.g. while the booth records). */
     gate?: () => Promise<void>;
+    /**
+     * Opens the person segmenter for a job with a background (CAP-10). The render closes what it gets, so a
+     * caller that shares one returns a handle whose `close` does nothing. Without it such a job renders
+     * as filmed.
+     */
+    segmenter?: () => Promise<MaskSource>;
   } = {},
 ): Promise<RenderResult> {
   const { signal, onProgress, gate } = opts;
@@ -156,6 +203,21 @@ export async function render(
   } catch (err) {
     throw new RenderError('gpu', err instanceof Error ? err.message : String(err));
   }
+  try {
+    const look = job.look ? findLook(job.look.id) : null;
+    compositor.setGrade(
+      look && look.id !== 'none' ? { frag: LOOK_FRAG, uniforms: lookUniforms(look.params, job.look!.intensity) } : null,
+      (job.effects ?? []).flatMap((e) => {
+        const def = findEffect(e.id);
+        return def ? [{ def, intensity: e.intensity, colorMode: e.colorMode }] : [];
+      }),
+      job.seed ?? 0,
+    );
+  } catch (err) {
+    // A shader that won't compile on this GPU: render without the look and effects, never fail the take.
+    console.warn('[render] look/effects unavailable', err);
+    compositor.setGrade(null, [], 0);
+  }
   const target = new BufferTarget();
   const output = new Output({ format: new Mp4OutputFormat({ fastStart: 'in-memory' }), target });
   const video = new CanvasSource(compositor.canvas, {
@@ -199,34 +261,57 @@ export async function render(
     await pause();
   };
 
+  // The strobe flashes on every beat: a fast song drives it in half time (host requirement, see
+  // @immersia/effects' EFFECTS).
+  const beats = (job.effects ?? []).some((e) => e.id === 'strobe')
+    ? foldTempo(job.beats ?? [], STROBE_MAX_BPM)
+    : (job.beats ?? []);
   const frames = new FrameSource(probe);
+  let background: BackgroundRun | null = null;
+  let backgroundOutcome: BackgroundOutcome;
   try {
+    // CAP-10, started up front so a missing model shows before the first frame, not in the middle.
+    ({ run: background, outcome: backgroundOutcome } = await BackgroundRun.start(job.background, compositor, {
+      segmenter: opts.segmenter,
+      fps,
+      frames: refs.length,
+    }));
     await drawCard(job.intro, introFrames, compositor, fps, add, check);
     // The event overlay frames the guests' footage only, not the intro/outro.
     compositor.setOverlay(job.overlay ?? null);
+    // The guest's footage starts with no history, whatever was drawn before it.
+    compositor.resetHistory();
     for await (const pair of frames.pairs(refs, signal)) {
       check();
       const geo = { width: probe.width, height: probe.height, rotation: probe.rotation };
+      const takeT = pair.index / fps;
+      const { phase, pulse } = beatState(introFrames / fps + takeT, beats);
+      compositor.setClock({ time: takeT, duration: refs.length / fps, beat: phase, pulse });
       const a = pair.a.toVideoFrame();
       try {
         if (pair.b) {
           const b = pair.b.toVideoFrame();
           try {
             const ref = refs[pair.index]!;
-            compositor.drawBlend(a, b, pair.alpha, geo, `${ref.a}:${ref.b}`);
+            compositor.composeBlend(a, b, pair.alpha, geo, `${ref.a}:${ref.b}`);
           } finally {
             b.close();
           }
           interpolated++;
         } else {
-          compositor.drawReal(a, geo);
+          compositor.composeReal(a, geo);
         }
       } finally {
         a.close();
       }
+      // The person is found in the frame as composed (real or interpolated), then the background goes
+      // behind them, then the look, effects and overlay.
+      await background?.prepare(pair.index);
+      compositor.finish();
       await add();
     }
     check();
+    background?.endFootage();
     compositor.setOverlay(null);
     await drawCard(job.outro, outroFrames, compositor, fps, add, check);
     await drawCard(job.endCard, endFrames, compositor, fps, add, check);
@@ -252,10 +337,12 @@ export async function render(
     if (signal?.aborted) throw new RenderError('cancelled', 'Render cancelled');
     throw new RenderError('failed', err instanceof Error ? err.message : String(err));
   } finally {
+    background?.stop();
     frames.dispose();
     compositor.dispose();
     probe.input.dispose();
   }
+  if (background && !background.ok) backgroundOutcome = 'unavailable';
 
   return {
     mp4: new Blob([target.buffer!], { type: 'video/mp4' }),
@@ -265,6 +352,7 @@ export async function render(
     frames: n,
     interpolatedFrames: interpolated,
     renderMs: Math.round(performance.now() - started - pausedMs),
+    background: backgroundOutcome,
     source: { fps: probe.fps, durationS: probe.durationS, codec: probe.codec },
   };
 }
@@ -305,7 +393,8 @@ async function drawCard(
       }
       const f = sample.toVideoFrame();
       try {
-        compositor.drawReal(f, geo);
+        // Cards are never graded, and their frames must stay out of the effect history.
+        compositor.drawReal(f, geo, false);
       } finally {
         f.close();
         sample.close();

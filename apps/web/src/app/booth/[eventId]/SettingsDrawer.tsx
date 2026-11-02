@@ -3,44 +3,15 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { AnimatePresence, motion } from 'motion/react';
-import { Flashlight, X } from 'lucide-react';
-import { listCameras, type CameraInfo } from '@immersia/capture';
+import { Sun, X } from 'lucide-react';
+import { listLenses, type Lens } from '@immersia/capture';
 import type { LocalTake } from '@immersia/offline';
-import { Field, IconButton, Select, Slider, Toggle, softSpring } from '@immersia/ui';
+import { Field, IconButton, Segmented, Slider, Toggle, cx, softSpring } from '@immersia/ui';
 import { formatBytes, formatRelative } from '@/lib/format';
-import type { ActiveCamera } from './Booth360';
+import { zoomUnit, type ActiveCamera } from './active-camera';
+import { FILL_LEVELS, FILL_TINTS, fillLightOf, switchCamera, type CameraChoice } from './camera-choice';
+import { DEFAULT_CAMERA, LensPicker, SIMULATOR } from './LensPicker';
 import { TakeBadges } from './TakeBadges';
-
-export interface CameraChoice {
-  source: 'camera' | 'simulator';
-  deviceId: string | null;
-  /** Mirror the on-screen preview only (front cameras feel natural mirrored). */
-  mirror: boolean;
-}
-
-const KEY = 'immersia.booth.camera.v1';
-
-export function readCameraChoice(): CameraChoice {
-  try {
-    const v = JSON.parse(localStorage.getItem(KEY) ?? 'null') as Partial<CameraChoice> | null;
-    if (v && (v.source === 'camera' || v.source === 'simulator'))
-      return { source: v.source, deviceId: v.deviceId ?? null, mirror: Boolean(v.mirror) };
-  } catch {
-    // Storage unavailable: fall through to the default.
-  }
-  return { source: 'camera', deviceId: null, mirror: false };
-}
-
-function saveCameraChoice(c: CameraChoice) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(c));
-  } catch {
-    // The choice still applies for this session.
-  }
-}
-
-const SIMULATOR = '__simulator__';
-const DEFAULT = '__default__';
 
 export function SettingsDrawer({
   open,
@@ -48,49 +19,92 @@ export function SettingsDrawer({
   choice,
   onChoice,
   camera,
+  cameraBusy,
   capture360,
 }: {
   open: boolean;
   onClose: () => void;
   choice: CameraChoice;
-  onChoice: (c: CameraChoice) => void;
+  /** Report a change to the saved camera choice; the booth reopens the camera if it needs to. */
+  onChoice: (patch: Partial<CameraChoice>) => void;
+  /** The open camera, or null while none is (before Start, during startup, after an error). */
   camera: ActiveCamera | null;
+  /** A guest is using the booth: the camera is left exactly as it is (no reopen, zoom or torch). */
+  cameraBusy: boolean;
   /** The 360 booth's motion trigger, video import and takes; the photo booth has none of these. */
   capture360?: Capture360Props;
 }) {
   const t = useTranslations('booth.settings');
-  const [cameras, setCameras] = useState<CameraInfo[]>([]);
-  const [torch, setTorch] = useState(false);
+  const [lenses, setLenses] = useState<Lens[]>([]);
+  const [torchFailure, setTorchFailure] = useState<ActiveCamera | null>(null);
 
+  // The drawer is re-rendered by its parent all the time (the recording clock); the listener must
+  // not be re-bound, nor the cameras re-listed, each time.
+  const closeRef = useRef(onClose);
+  useEffect(() => {
+    closeRef.current = onClose;
+  });
+
+  // A modal dialog takes focus when it opens and gives it back where it came from when it closes.
+  const panel = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const before = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    panel.current?.focus({ preventScroll: true });
+    return () => before?.focus({ preventScroll: true });
+  }, [open]);
+
+  // Names and ids arrive with camera permission, so list again whenever a camera opens; and when a
+  // camera is plugged in or removed.
+  const hasCamera = camera !== null;
+  const cameraId = camera?.deviceId ?? null;
+  const cameraFacing = camera?.facingMode ?? null;
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
-    void listCameras().then((list) => {
-      if (!cancelled) setCameras(list);
+    const load = () => listLenses(hasCamera ? { deviceId: cameraId, facingMode: cameraFacing } : undefined);
+    void load().then((list) => {
+      if (!cancelled) setLenses(list);
     });
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    const onDevicesChanged = () =>
+      void load().then((list) => {
+        if (!cancelled) setLenses(list);
+      });
+    const devices = typeof navigator === 'undefined' ? undefined : navigator.mediaDevices;
+    devices?.addEventListener('devicechange', onDevicesChanged);
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRef.current();
     window.addEventListener('keydown', onKey);
     return () => {
       cancelled = true;
+      devices?.removeEventListener('devicechange', onDevicesChanged);
       window.removeEventListener('keydown', onKey);
     };
-  }, [open, onClose]);
+  }, [open, hasCamera, cameraId, cameraFacing]);
 
-  const update = (patch: Partial<CameraChoice>) => {
-    const next = { ...choice, ...patch };
-    saveCameraChoice(next);
-    onChoice(next);
+  const selected = choice.source === 'simulator' ? SIMULATOR : (choice.deviceId ?? DEFAULT_CAMERA);
+  const range = camera?.zoom.range ?? null;
+  const zoom = choice.zoom ?? camera?.zoomAtOpen ?? range?.min ?? 1;
+  const fill = fillLightOf(choice);
+  // The glow is for a screen that faces the guest; a back camera's screen faces the operator.
+  const canFill = camera?.lens.facing !== 'back';
+
+  const torchOn = Boolean(camera?.torch.supported && choice.torch);
+  const torchNote = !camera
+    ? t('torchNeedsCamera')
+    : !camera.torch.supported
+      ? t('noTorch')
+      : torchFailure === camera
+        ? t('torchFailed')
+        : cameraBusy
+          ? t('cameraBusy')
+          : null;
+
+  const switchTorch = async (on: boolean) => {
+    if (!camera) return;
+    const result = await camera.torch.set(on);
+    setTorchFailure(result.ok ? null : camera);
+    if (result.ok) onChoice({ torch: on });
   };
-
-  const selected = choice.source === 'simulator' ? SIMULATOR : (choice.deviceId ?? DEFAULT);
-  const options = [
-    { value: DEFAULT, label: t('defaultCamera') },
-    ...cameras.map((c) => ({
-      value: c.deviceId,
-      label: c.lens !== 'unknown' ? `${c.label} · ${t(`lens.${c.lens}`)}` : c.label,
-    })),
-    { value: SIMULATOR, label: t('simulator') },
-  ];
 
   return (
     <AnimatePresence>
@@ -103,6 +117,8 @@ export function SettingsDrawer({
         >
           <div className="absolute inset-0 bg-[#111110]/30" onClick={onClose} />
           <motion.aside
+            ref={panel}
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-label={t('title')}
@@ -110,7 +126,7 @@ export function SettingsDrawer({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={softSpring}
-            className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-bg text-fg shadow-pop"
+            className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-bg text-fg shadow-pop outline-none"
             style={{ fontSize: 15 }}
           >
             <header className="flex items-center justify-between border-b border-line px-6 py-4">
@@ -121,45 +137,98 @@ export function SettingsDrawer({
             </header>
             <div className="flex-1 divide-y divide-line overflow-y-auto px-6">
               <Field label={t('camera')} stack>
-                <Select
-                  label={t('camera')}
-                  value={selected}
-                  options={options}
-                  onChange={(v) =>
-                    update(
-                      v === SIMULATOR
-                        ? { source: 'simulator', deviceId: null }
-                        : { source: 'camera', deviceId: v === DEFAULT ? null : v },
-                    )
-                  }
-                />
-                {camera && (
-                  <p className="text-[13px] text-muted">
-                    {t('delivering', { width: camera.width, height: camera.height, fps: camera.frameRate })}
-                  </p>
-                )}
-              </Field>
-              <Field label={t('mirror')} help={t('mirrorHelp')}>
-                <Toggle checked={choice.mirror} onChange={(mirror) => update({ mirror })} label={t('mirror')} />
-              </Field>
-              {camera?.torch.supported && (
-                <Field label={t('torch')}>
-                  <Toggle
-                    checked={torch}
-                    label={t('torch')}
-                    onChange={async (on) => {
-                      if (await camera.torch.set(on)) setTorch(on);
-                    }}
+                <div className="space-y-3">
+                  <LensPicker
+                    lenses={lenses}
+                    selected={selected}
+                    inUse={camera?.deviceId ?? null}
+                    simulatorInUse={camera !== null && choice.source === 'simulator'}
+                    disabled={cameraBusy}
+                    onSelect={(value) =>
+                      onChoice(
+                        switchCamera(
+                          value === SIMULATOR
+                            ? { source: 'simulator', deviceId: null }
+                            : { source: 'camera', deviceId: value === DEFAULT_CAMERA ? null : value },
+                        ),
+                      )
+                    }
                   />
+                  {camera && (
+                    <p className="text-[13px] text-muted">
+                      {t('delivering', { width: camera.width, height: camera.height, fps: camera.frameRate })}
+                    </p>
+                  )}
+                  {cameraBusy && (
+                    <p role="status" className="text-[13px] text-faint">
+                      {t('cameraBusy')}
+                    </p>
+                  )}
+                </div>
+              </Field>
+              {camera && range && (
+                <Field label={t('zoom')} stack>
+                  {/* A disabled fieldset disables the slider and its number box together. */}
+                  <fieldset disabled={cameraBusy} className={cx('min-w-0', cameraBusy && 'opacity-50')}>
+                    <Slider
+                      label={t('zoom')}
+                      value={zoom}
+                      min={range.min}
+                      max={range.max}
+                      step={range.step}
+                      unit={zoomUnit(range)}
+                      onChange={(z) => {
+                        // The camera takes the newest of a drag's many values; the choice is saved as it goes.
+                        void camera.zoom.set(z);
+                        onChoice({ zoom: z });
+                      }}
+                    />
+                  </fieldset>
                 </Field>
               )}
+              <Field label={t('torch')} help={torchNote && <span aria-live="polite">{torchNote}</span>}>
+                <Toggle
+                  checked={torchOn}
+                  label={t('torch')}
+                  disabled={!camera?.torch.supported || cameraBusy}
+                  onChange={(on) => void switchTorch(on)}
+                />
+              </Field>
+              {canFill && (
+                <Field label={t('fill.title')} help={t('fill.help')} stack>
+                  <div className="space-y-3">
+                    <Segmented
+                      label={t('fill.title')}
+                      value={fill.level}
+                      options={FILL_LEVELS.map((level) => ({ value: level, label: t(`fill.level.${level}`) }))}
+                      onChange={(level) => onChoice({ fillLight: { ...fill, level } })}
+                    />
+                    {fill.level !== 'off' && (
+                      <>
+                        <div className="flex flex-wrap items-center gap-3">
+                          <span className="text-[13px] text-muted">{t('fill.tint')}</span>
+                          <Segmented
+                            size="sm"
+                            label={t('fill.tint')}
+                            value={fill.tint}
+                            options={FILL_TINTS.map((tint) => ({ value: tint, label: t(`fill.tints.${tint}`) }))}
+                            onChange={(tint) => onChoice({ fillLight: { ...fill, tint } })}
+                          />
+                        </div>
+                        <p className="flex items-start gap-2 text-[13px] leading-relaxed text-muted">
+                          <Sun className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                          {t('fill.brightness')}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </Field>
+              )}
+              <Field label={t('mirror')} help={t('mirrorHelp')}>
+                <Toggle checked={choice.mirror} onChange={(mirror) => onChoice({ mirror })} label={t('mirror')} />
+              </Field>
               {capture360 && <Capture360 {...capture360} />}
             </div>
-            {camera?.torch.supported === false && choice.source === 'camera' && (
-              <p className="flex items-center gap-2 border-t border-line px-6 py-3 text-[12px] text-faint">
-                <Flashlight className="size-3.5" aria-hidden /> {t('noTorch')}
-              </p>
-            )}
           </motion.aside>
         </motion.div>
       )}

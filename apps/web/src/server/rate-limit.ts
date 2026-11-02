@@ -23,6 +23,12 @@ export const LIMITS = {
   /** SHR-2: a booth can't be turned into a mailer. */
   emailPerSession: { limit: 5, windowS: 3600 },
   emailPerDevice: { limit: 120, windowS: 3600 },
+  /** Each asset upload is a database row and a presigned URL: bound them per organization. */
+  assetUploadPerOrg: { limit: 300, windowS: 3600 },
+  /** LIV-1: a six-character pairing code must not be guessable by brute force. */
+  displayPairPerIp: { limit: 20, windowS: 600 },
+  /** SHR-5: gallery passwords are short; slow guessing right down. */
+  galleryUnlockPerIp: { limit: 10, windowS: 600 },
 } satisfies Record<string, Limit>;
 
 type Name = keyof typeof LIMITS;
