@@ -118,6 +118,63 @@ void main() {
 }`;
 
 /**
+ * Candidate selection before a level's Lucas–Kanade iterations. LK only refines locally: started in
+ * a wrong basin (a coarse level misled by aliasing or codec noise), it converges there and the
+ * finer levels inherit the error. So each pixel first picks its starting flow by patch matching
+ * cost (mean absolute difference over 5×5) among: the flow inherited from the coarser level, zero,
+ * and the inherited flows of its neighbours near and far (propagation). The inherited flow wins
+ * ties, so a good field is left alone.
+ */
+export const SELECT = /* glsl */ `#version 300 es
+precision highp float;
+in vec2 vUv;
+out vec4 oFlow;
+uniform sampler2D uA;
+uniform sampler2D uB;
+uniform sampler2D uFlow;
+uniform vec2 uSize;
+uniform float uFlowScale;
+float inFrame(vec2 uv, vec2 px) {
+  vec2 lo = step(px, uv);
+  vec2 hi = step(uv, 1.0 - px);
+  return lo.x * lo.y * hi.x * hi.y;
+}
+float cost(vec2 w, vec2 px) {
+  float c = 0.0;
+  float n = 0.0;
+  for (int j = -2; j <= 2; j++) {
+    for (int i = -2; i <= 2; i++) {
+      vec2 p = vUv + vec2(float(i), float(j)) * px;
+      vec2 q = p + w * px;
+      float m = inFrame(p, px) * inFrame(q, px);
+      c += m * abs(texture(uB, q).r - texture(uA, p).r);
+      n += m;
+    }
+  }
+  // A start that maps most of the patch off the frame can't be judged: it loses.
+  return n > 6.0 ? c / n : 1e3;
+}
+void main() {
+  vec2 px = 1.0 / uSize;
+  vec2 best = texture(uFlow, vUv).xy * uFlowScale;
+  float bestCost = cost(best, px);
+  vec2 offsets[9] = vec2[9](
+    vec2(0.0), vec2(3.0, 0.0), vec2(-3.0, 0.0), vec2(0.0, 3.0), vec2(0.0, -3.0),
+    vec2(8.0, 0.0), vec2(-8.0, 0.0), vec2(0.0, 8.0), vec2(0.0, -8.0)
+  );
+  for (int k = 0; k < 9; k++) {
+    // k = 0 is the zero-flow candidate; the rest propagate neighbours' inherited flow.
+    vec2 cand = k == 0 ? vec2(0.0) : texture(uFlow, vUv + offsets[k] * px).xy * uFlowScale;
+    float c = cost(cand, px);
+    if (c < bestCost * 0.97 - 1e-4) {
+      best = cand;
+      bestCost = c;
+    }
+  }
+  oFlow = vec4(best, 0.0, 1.0);
+}`;
+
+/**
  * Confidence-weighted smoothing of a flow field (5×5). Weak-texture pixels (low contrast, flat)
  * take their neighbours' motion instead of keeping a guess. Between pyramid levels it runs without
  * the range term (uRange = 0), so textured regions propagate their motion across contrast edges
